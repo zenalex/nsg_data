@@ -1,22 +1,10 @@
-A library for Dart developers.
+# nsg_data
 
-Created from templates made available by Stagehand under a BSD-style
-[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+Network data exchange framework between Dart, Flutter client and C# serber applecations
 
-## Usage
+## Getting Started
 
-A simple usage example:
-
-```dart
-import 'package:nsg_data/nsg_data.dart';
-
-main() {
-  var awesome = new Awesome();
-}
-```
-
-## Features and bugs
-
-Please file feature requests and bugs at the [issue tracker][tracker].
-
-[tracker]: http://example.com/issues/replaceme
+See example folder
+You can contact me:
+e-mail: zenalex@nsgsoft.com
+telegram: @zenalex
