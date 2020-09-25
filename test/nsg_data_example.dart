@@ -1,4 +1,5 @@
 import 'package:nsg_data/nsg_data_client.dart';
+import 'package:nsg_data/nsg_data_provider.dart';
 import 'package:nsg_data/nsg_data_request.dart';
 import 'package:nsg_data/nsg_data_request_filter.dart';
 
@@ -14,8 +15,10 @@ void main() {
 }
 
 Future init() async {
-  NsgDataClient.client.registerDataItem(NewsItem());
-  NsgDataClient.client.registerDataItem(CardItem());
+  var provider = NsgDataProvider();
+  provider.serverUri = 'http://192.168.1.20:5073';
+  NsgDataClient.client.registerDataItem(NewsItem(), remoteProvider: provider);
+  NsgDataClient.client.registerDataItem(CardItem(), remoteProvider: provider);
 
   print('request start');
   var filter = NsgDataRequestFilter(top: 10, count: 25);

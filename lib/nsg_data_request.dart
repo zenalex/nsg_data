@@ -18,23 +18,32 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
   }
 
-  Future<NsgDataRequest<T>> requestItems({NsgDataRequestFilter filter}) async {
+  Future<NsgDataRequest<T>> requestItems(
+      {NsgDataRequestFilter filter, bool autoAuthorize = true}) async {
     var dataItem = NsgDataClient.client.getNewObject(T);
     Map<String, String> filterMap = {};
     if (filter != null) filterMap = filter.toJson();
+    var header = <String, String>{};
+    if (dataItem.remoteProvider.token != '')
+      header['Authorization'] = dataItem.remoteProvider.token;
     var response = await http
-        .post(NsgDataClient.client.serverUri + dataItem.apiRequestItems,
-            body: filterMap)
-        .timeout(NsgDataClient.client.requestDuration)
+        .post(dataItem.remoteProvider.serverUri + dataItem.apiRequestItems,
+            headers: header, body: filterMap)
+        .timeout(dataItem.remoteProvider.requestDuration)
         .catchError((e) {
       print(e);
     });
     if (response.statusCode == 200) {
       _fromJson(json.decode(response.body));
       return this;
-    } else {
-      throw Exception(
-          'request items failed, error code is ${response.statusCode}');
+    } else if (response.statusCode == 401) {
+      //Authorization error
+      if (autoAuthorize) {
+        await dataItem.remoteProvider.getToken();
+        return await requestItems(filter: filter, autoAuthorize: false);
+      }
     }
+    throw Exception(
+        'request items failed, error code is ${response.statusCode}');
   }
 }

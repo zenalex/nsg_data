@@ -1,23 +1,17 @@
-import 'package:nsg_data/nsg_data_client.dart';
-import 'package:nsg_data/nsg_data_request.dart';
+import 'package:nsg_data/nsg_data_provider.dart';
 
-import '../example/newsItem.dart';
+void main() async {
+  print('started init');
 
-void main() {
-  print('started');
-  init().then((value) => print('successful')).catchError((e) {
-    print("Got error: ${e.error}"); // Finally, callback fires.
-    return true; // Future completes with 42.
-  }).whenComplete(() => print('compleated'));
-  print('finished');
+  await init();
+
+  print('finished init');
 }
 
 Future init() async {
-  NsgDataClient.client.registerDataItem(NewsItem());
-  print('request start');
-  var request = await NsgDataRequest<NewsItem>().requestItems();
-  print('request finished');
-  request.items.forEach((element) {
-    print('date = ${element.date}, title = ${element.title}');
-  });
+  var provider = NsgDataProvider();
+  provider.serverUri = 'http://192.168.1.20:5073';
+  await provider.connect();
+  print('token ${provider.token}');
+  print('is anonymous ${provider.isAnonymous}');
 }

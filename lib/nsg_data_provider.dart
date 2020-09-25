@@ -1,0 +1,73 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'models/nsgLoginModel.dart';
+
+class NsgDataProvider {
+  ///Token saved after authorization
+  String token = '';
+  String serverUri = 'http://192.168.1.20:5073';
+  String authorizationApi = 'Api/Auth/Login';
+  String name;
+  bool useNsgAuthorization = true;
+  bool _initialized = false;
+  bool isAnonymous = true;
+
+  Duration requestDuration = Duration(seconds: 15);
+
+  NsgDataProvider(
+      {this.name,
+      this.serverUri = 'http://192.168.1.20:5073',
+      this.authorizationApi = 'Api/Auth',
+      this.useNsgAuthorization = true});
+
+  ///Initialization. Load saved token if useNsgAuthorization == true
+  void initialize() async {
+    if (_initialized) return;
+    if (useNsgAuthorization) {
+      if (name == '' || name == null) name = authorizationApi;
+      var _prefs = await SharedPreferences.getInstance();
+      if (_prefs.containsKey(name)) token = _prefs.getString(name);
+    }
+  }
+
+  ///Connect to server
+  void connect() async {
+    if (!_initialized) await initialize();
+    if (useNsgAuthorization) {
+      if (token == '')
+        await _anonymousLogin();
+      else
+        await _checkToken();
+    }
+  }
+
+  void getToken() async {
+    var login = NsgLoginModel();
+    // login.login = _GUEST_LOGIN;
+    // login.password = '';
+    var s = login.toJson();
+    var response = await http
+        .post(serverUri + '/' + authorizationApi, body: s)
+        .catchError((e) {
+      return;
+    });
+    token = NsgLoginResponse.fromJson(json.decode(response.body)).token;
+  }
+
+  void _anonymousLogin() async {
+    var response = await http
+        .get('${serverUri}/${authorizationApi}/AnonymousLogin')
+        .catchError((e) {
+      return;
+    });
+    if (response.statusCode == 200) {
+      var loginResponse = NsgLoginResponse.fromJson(json.decode(response.body));
+      token = loginResponse.token;
+      isAnonymous = loginResponse.isAnonymous;
+    }
+  }
+
+  void _checkToken() async {}
+}

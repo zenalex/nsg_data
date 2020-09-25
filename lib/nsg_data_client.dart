@@ -1,20 +1,20 @@
 import 'package:nsg_data/nsg_data_fieldlist.dart';
+import 'package:nsg_data/nsg_data_provider.dart';
 import 'nsg_data_item.dart';
+import 'nsg_data_paramList.dart';
 
 class NsgDataClient {
   NsgDataClient._();
 
   static NsgDataClient client = NsgDataClient._();
-  String serverUri = 'http://192.168.1.20:5073';
-  List<String> serversUri;
-  Duration requestDuration = Duration(seconds: 15);
-  //static final String serverUri1 = "http://alex.nsgsoft.ru:5073";
-  //static final String serverUri2 = "http://192.168.1.20:5073";
 
   final Map<Type, NsgDataItem> _registeredItems = <Type, NsgDataItem>{};
   final Map<Type, NsgFieldList> _fieldList = <Type, NsgFieldList>{};
+  final Map<Type, NsgParamList> _paramList = <Type, NsgParamList>{};
 
-  void registerDataItem(NsgDataItem item) {
+  void registerDataItem(NsgDataItem item, {NsgDataProvider remoteProvider}) {
+    if (remoteProvider != null) item.remoteProvider = remoteProvider;
+    assert(item.remoteProvider != null);
     _registeredItems[item.runtimeType] = item;
     _fieldList[item.runtimeType] = NsgFieldList();
     item.initialize();
@@ -28,5 +28,11 @@ class NsgDataClient {
   NsgDataItem getNewObject(Type type) {
     assert(_registeredItems.containsKey(type));
     return _registeredItems[type].getNewObject();
+  }
+
+  NsgParamList getParamList(NsgDataItem item) {
+    if (!_paramList.containsKey(item.runtimeType))
+      _paramList[item.runtimeType] = NsgParamList();
+    return _paramList[item.runtimeType];
   }
 }
