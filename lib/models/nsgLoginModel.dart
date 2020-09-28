@@ -18,4 +18,8 @@ class NsgLoginResponse {
 class NsgPhoneLoginModel extends NsgLoginModel {
   String phoneNumber;
   String securityCode;
+  @override
+  Map<String, dynamic> toJson() {
+    return {'PhoneNumber': phoneNumber, 'SecurityCode': securityCode};
+  }
 }

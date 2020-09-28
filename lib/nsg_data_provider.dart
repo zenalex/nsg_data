@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/nsgLoginModel.dart';
@@ -56,6 +57,41 @@ class NsgDataProvider {
     token = NsgLoginResponse.fromJson(json.decode(response.body)).token;
   }
 
+  Future<Image> getCaptcha() async {
+    var response = await http
+        .get('${serverUri}/${authorizationApi}/GetCaptcha',
+            headers: _getAuthorizationHeader())
+        .catchError((e) {
+      return;
+    });
+    if (response.statusCode == 200)
+      return Image.memory(response.bodyBytes);
+    else
+      return null;
+  }
+
+  Future<int> phoneLoginRequestSMS(
+      String phoneNumber, String securityCode) async {
+    var login = NsgPhoneLoginModel();
+    login.phoneNumber = phoneNumber;
+    login.securityCode = securityCode;
+    var s = login.toJson();
+
+    var response = await http
+        .post('${serverUri}/${authorizationApi}/PhoneLoginRequestSMS',
+            headers: _getAuthorizationHeader(), body: s)
+        .catchError((e) {
+      return 1;
+    });
+    if (response.statusCode == 200) {
+      var loginResponse = NsgLoginResponse.fromJson(json.decode(response.body));
+      //var isError = loginResponse.isError;
+      //var errorMessage = loginResponse.errorMessage;
+      return 0;
+    }
+    return 2;
+  }
+
   void _anonymousLogin() async {
     var response = await http
         .get('${serverUri}/${authorizationApi}/AnonymousLogin')
@@ -70,4 +106,10 @@ class NsgDataProvider {
   }
 
   void _checkToken() async {}
+
+  Map<String, String> _getAuthorizationHeader() {
+    var map = <String, String>{};
+    if (token != '') map['Authorization'] = token;
+    return map;
+  }
 }
