@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nsg_data/authorize/nsgPhoneLoginWidget.dart';
+import 'package:nsg_data/authorize/nsgPhoneLoginWidgetParams.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
 //import 'package:http/http.dart' as http;
 
@@ -12,10 +14,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     //S.load(Locale('ru', ''));
     var app = MaterialApp(
-      onGenerateTitle: (BuildContext context) => 'NSG_DATA TEST',
-      debugShowCheckedModeBanner: false,
-      home: MainScreen(),
-    );
+        onGenerateTitle: (BuildContext context) => 'NSG_DATA TEST',
+        debugShowCheckedModeBanner: false,
+        home: MainScreen());
     return app;
   }
 }
@@ -34,11 +35,15 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     if (!initialized) {
-      init().then((value) => setState(() {
-            initialized = true;
-          }));
+      init().then((value) => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => NsgPhoneLoginWidget(provider,
+                  widgetParams: NsgPhoneLoginWidgetParams.defaultParams))));
+      //setState(() {
+      //      initialized = true;
+      //    }));
     }
-    ;
   }
 
   // Формирование виджета
@@ -72,9 +77,9 @@ class _MainScreenState extends State<MainScreen> {
     captha = await provider.getCaptcha();
   }
 
-  String captchaText = "";
+  String captchaText = '';
   List<Widget> getBody() {
-    var list = List<Widget>();
+    var list = <Widget>[];
     if (initialized) {
       list.add(Text('INITIALIZED'));
       list.add(Text('isAnonymous = ${provider.isAnonymous}'));
@@ -93,7 +98,7 @@ class _MainScreenState extends State<MainScreen> {
     return list;
   }
 
-  requestSMS() {
+  void requestSMS() {
     provider.phoneLoginRequestSMS('79210000000', captchaText);
   }
 }

@@ -53,10 +53,11 @@ class NsgDataItem {
 
   static const String _PARAM_REMOTE_PROVIDER = 'RemoteProvider';
   NsgDataProvider get remoteProvider {
-    if (paramList.params.containsKey(_PARAM_REMOTE_PROVIDER))
+    if (paramList.params.containsKey(_PARAM_REMOTE_PROVIDER)) {
       return paramList.params[_PARAM_REMOTE_PROVIDER];
-    else
+    } else {
       return null;
+    }
   }
 
   set remoteProvider(NsgDataProvider value) =>

@@ -31,8 +31,9 @@ class NsgDataClient {
   }
 
   NsgParamList getParamList(NsgDataItem item) {
-    if (!_paramList.containsKey(item.runtimeType))
+    if (!_paramList.containsKey(item.runtimeType)) {
       _paramList[item.runtimeType] = NsgParamList();
+    }
     return _paramList[item.runtimeType];
   }
 }

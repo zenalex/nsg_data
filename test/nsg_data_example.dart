@@ -9,7 +9,7 @@ import 'newsItem.dart';
 void main() {
   print('started');
   init().then((value) => print('successful')).catchError((e) {
-    print("Got error: ${e.error}");
+    print('Got error: ${e.error}');
   }).whenComplete(() => print('compleated'));
   print('finished');
 }

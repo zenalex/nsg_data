@@ -12,7 +12,7 @@ class NsgDataProvider {
   String authorizationApi = 'Api/Auth/Login';
   String name;
   bool useNsgAuthorization = true;
-  bool _initialized = false;
+  final bool _initialized = false;
   bool isAnonymous = true;
 
   Duration requestDuration = Duration(seconds: 15);
@@ -37,10 +37,11 @@ class NsgDataProvider {
   void connect() async {
     if (!_initialized) await initialize();
     if (useNsgAuthorization) {
-      if (token == '')
+      if (token == '') {
         await _anonymousLogin();
-      else
+      } else {
         await _checkToken();
+      }
     }
   }
 
@@ -64,10 +65,11 @@ class NsgDataProvider {
         .catchError((e) {
       return;
     });
-    if (response.statusCode == 200)
+    if (response.statusCode == 200) {
       return Image.memory(response.bodyBytes);
-    else
+    } else {
       return null;
+    }
   }
 
   Future<int> phoneLoginRequestSMS(
@@ -84,7 +86,7 @@ class NsgDataProvider {
       return 1;
     });
     if (response.statusCode == 200) {
-      var loginResponse = NsgLoginResponse.fromJson(json.decode(response.body));
+      //var loginResponse = NsgLoginResponse.fromJson(json.decode(response.body));
       //var isError = loginResponse.isError;
       //var errorMessage = loginResponse.errorMessage;
       return 0;

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../lib/nsg_data_provider.dart';
+import 'package:nsg_data/nsg_data_provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -70,7 +69,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   List<Widget> getBody() {
-    var list = List<Widget>();
+    var list = <Widget>[];
     if (initialized) {
       list.add(Text('INITIALIZED'));
       list.add(Text('isAnonymous = ${provider.isAnonymous}'));

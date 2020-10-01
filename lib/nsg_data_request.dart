@@ -21,11 +21,12 @@ class NsgDataRequest<T extends NsgDataItem> {
   Future<NsgDataRequest<T>> requestItems(
       {NsgDataRequestFilter filter, bool autoAuthorize = true}) async {
     var dataItem = NsgDataClient.client.getNewObject(T);
-    Map<String, String> filterMap = {};
+    var filterMap = <String, String>{};
     if (filter != null) filterMap = filter.toJson();
     var header = <String, String>{};
-    if (dataItem.remoteProvider.token != '')
+    if (dataItem.remoteProvider.token != '') {
       header['Authorization'] = dataItem.remoteProvider.token;
+    }
     var response = await http
         .post(dataItem.remoteProvider.serverUri + dataItem.apiRequestItems,
             headers: header, body: filterMap)
