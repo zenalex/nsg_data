@@ -9,10 +9,10 @@ class NsgLoginResponse {
   bool isAnonymous;
 
   NsgLoginResponse.fromJson(Map<String, dynamic> json)
-      : token = json['Token'],
-        isError = json['IsError'],
-        errorMessage = json['ErrorMessage'],
-        isAnonymous = json['IsAnonymous'];
+      : token = json['Token'].toString(),
+        isError = json['IsError'] as bool,
+        errorMessage = json['ErrorMessage'].toString(),
+        isAnonymous = json['IsAnonymous'] as bool;
 }
 
 class NsgPhoneLoginModel extends NsgLoginModel {

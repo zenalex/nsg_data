@@ -7,7 +7,7 @@ class NsgDataDateField extends NsgDataField {
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {
-    return DateTime.fromMillisecondsSinceEpoch(int.parse(jsonValue),
+    return DateTime.fromMillisecondsSinceEpoch(int.parse(jsonValue.toString()),
         isUtc: true);
   }
 }

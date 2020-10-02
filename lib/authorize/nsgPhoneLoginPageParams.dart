@@ -4,15 +4,16 @@ class NsgPhoneLoginWidgetParams {
   double cardSize;
   double iconSize;
   double buttonSize;
-  String textMessage;
-  TextStyle textMessageStyle;
-  String textDescription;
+  String headerMessage;
+  TextStyle headerMessageStyle;
+  String textEnterPhone;
   String textSendSms;
   String textEnterCaptcha;
-  TextStyle textDescriptionStyle;
+  TextStyle descriptionStyle;
   TextStyle textPhoneField;
   Color cardColor;
   Color textColor;
+  Color fillColor;
   Color sendSmsButtonColor;
   Color sendSmsBorderColor;
   Color phoneIconColor;
@@ -24,20 +25,21 @@ class NsgPhoneLoginWidgetParams {
       {this.cardSize = 345.0,
       this.iconSize = 28.0,
       this.buttonSize = 48.0,
-      this.textMessage = 'Welcome',
-      this.textMessageStyle,
-      this.textDescription = 'Enter your phone number',
-      this.textDescriptionStyle,
+      this.headerMessage = 'Welcome',
+      this.headerMessageStyle,
+      this.textEnterPhone = 'Enter your phone',
+      this.descriptionStyle,
       this.textSendSms = 'Send SMS',
       this.textEnterCaptcha = 'Enter captcha text',
       this.textPhoneField,
       this.cardColor,
-      this.textColor = Colors.white,
+      this.textColor = Colors.black,
+      this.fillColor = Colors.black,
       this.sendSmsButtonColor,
       this.sendSmsBorderColor,
       this.phoneIconColor,
       this.phoneFieldColor}) {
-    textMessageStyle ??= TextStyle(
+    headerMessageStyle ??= TextStyle(
       fontFamily: 'Roboto',
       fontSize: 18.0,
       fontWeight: FontWeight.bold,
@@ -49,7 +51,7 @@ class NsgPhoneLoginWidgetParams {
       color: Color.fromRGBO(2, 54, 92, 1.0),
       fontWeight: FontWeight.normal,
     );
-    textDescriptionStyle ??= textMessageStyle;
+    descriptionStyle ??= headerMessageStyle;
     cardColor ??= Colors.white;
     sendSmsButtonColor ??= Color.fromRGBO(0, 101, 175, 1.0);
     sendSmsBorderColor ??= Color.fromRGBO(0, 301, 175, 1.0);

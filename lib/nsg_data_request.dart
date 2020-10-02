@@ -12,8 +12,8 @@ class NsgDataRequest<T extends NsgDataItem> {
       items = <T>[];
       json['Items'].forEach((v) {
         var elem = NsgDataClient.client.getNewObject(T);
-        elem.fromJson(v);
-        items.add(elem);
+        elem.fromJson(v as Map<String, dynamic>);
+        items.add(elem as T);
       });
     }
   }
@@ -35,7 +35,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       print(e);
     });
     if (response.statusCode == 200) {
-      _fromJson(json.decode(response.body));
+      _fromJson(json.decode(response.body) as Map<String, dynamic>);
       return this;
     } else if (response.statusCode == 401) {
       //Authorization error

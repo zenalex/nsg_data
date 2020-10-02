@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nsg_data/authorize/nsgPhoneLoginWidget.dart';
-import 'package:nsg_data/authorize/nsgPhoneLoginWidgetParams.dart';
+import 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
+import 'package:nsg_data/authorize/nsgPhoneLoginPageParams.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
 //import 'package:http/http.dart' as http;
 
@@ -38,7 +38,7 @@ class _MainScreenState extends State<MainScreen> {
       init().then((value) => Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => NsgPhoneLoginWidget(provider,
+              builder: (context) => NsgPhoneLoginPage(provider,
                   widgetParams: NsgPhoneLoginWidgetParams.defaultParams))));
       //setState(() {
       //      initialized = true;

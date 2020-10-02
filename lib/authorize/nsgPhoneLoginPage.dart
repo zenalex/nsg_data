@@ -1,28 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
-import 'package:nsg_data/authorize/nsgPhoneLoginWidgetParams.dart';
+import 'package:nsg_data/authorize/nsgPhoneLoginPageParams.dart';
 
 import '../nsg_data_provider.dart';
 
-class NsgPhoneLoginWidget extends StatefulWidget {
+class NsgPhoneLoginPage extends StatefulWidget {
   @override
   _NsgPhoneLoginWidgetState createState() => _NsgPhoneLoginWidgetState();
 
   final NsgPhoneLoginWidgetParams widgetParams;
   final NsgDataProvider provider;
 
-  NsgPhoneLoginWidget(this.provider, {this.widgetParams}) : super();
+  NsgPhoneLoginPage(this.provider, {this.widgetParams}) : super();
 }
 
-class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
+class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginPage> {
   Image captureImage;
+  String phoneNumber = '';
+  String captchaCode = '';
+  bool isCaptchaLoading = false;
+  int currentStage = _NsgPhoneLoginWidgetState.stagePreLogin;
+  bool isSMSRequested = false;
+
+  ///Get captcha and send request for SMS
+  ///This is first stage of authorization
+  static int stagePreLogin = 1;
+
+  ///After SMS is recieved, send verification code to the server.
+  ///This is the last stage of authorization
+  static int stageVerification = 2;
 
   @override
   void initState() {
     super.initState();
+    isCaptchaLoading = true;
     if (captureImage == null) {
       _loadCaptureImage().then((value) => setState(() {
             captureImage = value;
+            isCaptchaLoading = false;
           }));
     }
   }
@@ -89,19 +104,19 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 5.0),
                       child: Text(
-                        widget.widgetParams.textMessage,
-                        style: widget.widgetParams.textMessageStyle,
+                        widget.widgetParams.headerMessage,
+                        style: widget.widgetParams.headerMessageStyle,
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.0),
-                      child: Text(
-                        widget.widgetParams.textDescription,
-                        style: widget.widgetParams.textDescriptionStyle,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                    // Padding(
+                    //   padding: EdgeInsets.symmetric(vertical: 10.0),
+                    //   child: Text(
+                    //     widget.widgetParams.description,
+                    //     style: widget.widgetParams.descriptionStyle,
+                    //     textAlign: TextAlign.center,
+                    //   ),
+                    // ),
                     SizedBox(height: 5.0),
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 5.0),
@@ -116,10 +131,11 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                             keyboardType: TextInputType.phone,
                             inputFormatters: [PhoneInputFormatter()],
                             style: widget.widgetParams.textPhoneField,
-                            textAlign: TextAlign.center,
+                            textAlign: TextAlign.left,
                             decoration: InputDecoration(
+                              hintText: widget.widgetParams.textEnterPhone,
                               contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 5.0, vertical: 10.0),
+                                  horizontal: 5.0, vertical: 13.0),
                               prefixIcon: Icon(
                                 Icons.smartphone,
                                 size: widget.widgetParams.iconSize,
@@ -127,33 +143,59 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                               ),
                               border: InputBorder.none,
                             ),
+                            onChanged: (value) => phoneNumber = value,
                           ),
                         ),
                       ),
                     ),
                     Padding(
                         padding: EdgeInsets.symmetric(vertical: 5.0),
-                        child: getcaptureImage()),
+                        child: Row(children: [
+                          Expanded(child: getcaptchaImage()),
+                          TextButton(
+                            child: Icon(
+                              Icons.refresh,
+                              color: widget.widgetParams.phoneIconColor,
+                              size: widget.widgetParams.buttonSize,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                isCaptchaLoading = true;
+                              });
+                              _loadCaptureImage().then((value) => setState(() {
+                                    captureImage = value;
+                                    isCaptchaLoading = false;
+                                  }));
+                            },
+                          )
+                        ])),
                     Padding(
-                      padding: EdgeInsets.symmetric(vertical: 5.0),
-                      child: Container(
-                        height: widget.widgetParams.buttonSize,
-                        width: double.infinity,
-                        child: TextFormField(
-                          decoration: InputDecoration(
-                              fillColor: widget.widgetParams.textColor,
-                              labelText: widget.widgetParams.textEnterCaptcha),
-                          //elevation: 0.0,
-                          //shape: RoundedRectangleBorder(
-                          //  borderRadius: BorderRadius.circular(5.0),
-                          //side: BorderSide(
-                          //color: widget.widgetParams.color0,
-                          //),
-                          //),
-                          style: widget.widgetParams.textMessageStyle,
-                        ),
-                      ),
-                    ),
+                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                        child: Container(
+                            decoration: BoxDecoration(
+                              color: widget.widgetParams.phoneFieldColor,
+                              borderRadius: BorderRadius.circular(5.0),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 5.0),
+                              child: Container(
+                                height: widget.widgetParams.buttonSize,
+                                width: double.infinity,
+                                child: TextFormField(
+                                  decoration: InputDecoration(
+                                      fillColor: widget.widgetParams.fillColor,
+                                      hintText:
+                                          widget.widgetParams.textEnterCaptcha,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 5.0, vertical: 10.0),
+                                      border: InputBorder.none),
+                                  style: widget.widgetParams.textPhoneField,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  onChanged: (value) => captchaCode = value,
+                                ),
+                              ),
+                            ))),
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 5.0),
                       child: Container(
@@ -162,16 +204,32 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         child: RaisedButton(
                           elevation: 0.0,
                           color: widget.widgetParams.sendSmsButtonColor,
+                          disabledColor: widget.widgetParams.fillColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(5.0),
                             side: BorderSide(
                               color: widget.widgetParams.sendSmsBorderColor,
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: isSMSRequested
+                              ? null
+                              : () {
+                                  setState(() {
+                                    isSMSRequested = true;
+                                  });
+                                  widget.provider
+                                      .phoneLoginRequestSMS(
+                                          phoneNumber, captchaCode)
+                                      .then((value) => setState(() {
+                                            currentStage =
+                                                _NsgPhoneLoginWidgetState
+                                                    .stageVerification;
+                                            isSMSRequested = false;
+                                          }));
+                                },
                           child: Text(
                             widget.widgetParams.textSendSms,
-                            style: widget.widgetParams.textMessageStyle,
+                            style: widget.widgetParams.headerMessageStyle,
                           ),
                         ),
                       ),
@@ -186,8 +244,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     );
   }
 
-  Widget getcaptureImage() {
-    if (captureImage == null) {
+  Widget getcaptchaImage() {
+    if (captureImage == null || isCaptchaLoading) {
       return Icon(Icons.hourglass_empty, color: widget.widgetParams.textColor);
     }
     return captureImage;

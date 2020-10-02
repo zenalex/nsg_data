@@ -55,7 +55,9 @@ class NsgDataProvider {
         .catchError((e) {
       return;
     });
-    token = NsgLoginResponse.fromJson(json.decode(response.body)).token;
+    token = NsgLoginResponse.fromJson(
+            json.decode(response.body) as Map<String, dynamic>)
+        .token;
   }
 
   Future<Image> getCaptcha() async {
@@ -101,7 +103,8 @@ class NsgDataProvider {
       return;
     });
     if (response.statusCode == 200) {
-      var loginResponse = NsgLoginResponse.fromJson(json.decode(response.body));
+      var loginResponse = NsgLoginResponse.fromJson(
+          json.decode(response.body) as Map<String, dynamic>);
       token = loginResponse.token;
       isAnonymous = loginResponse.isAnonymous;
     }

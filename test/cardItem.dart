@@ -27,7 +27,7 @@ class CardItem extends NsgDataItem {
   set issueDate(DateTime value) => setFieldValue('IssueDate', value);
   DateTime get validUntil => getFieldValue('ValidUntil') as DateTime;
   set validUntil(DateTime value) => setFieldValue('ValidUntil', value);
-  bool get activated => getFieldValue('Activated');
+  bool get activated => getFieldValue('Activated') as bool;
   set activated(bool value) => setFieldValue('Activated', value);
 
   @override
