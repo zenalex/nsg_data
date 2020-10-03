@@ -88,12 +88,11 @@ class NsgDataProvider {
       return 1;
     });
     if (response.statusCode == 200) {
-      //var loginResponse = NsgLoginResponse.fromJson(json.decode(response.body));
-      //var isError = loginResponse.isError;
-      //var errorMessage = loginResponse.errorMessage;
-      return 0;
+      var loginResponse = NsgLoginResponse.fromJson(
+          json.decode(response.body) as Map<String, dynamic>);
+      return loginResponse.errorCode ?? 5000;
     }
-    return 2;
+    return 6000;
   }
 
   void _anonymousLogin() async {

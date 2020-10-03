@@ -7,11 +7,13 @@ class NsgLoginResponse {
   bool isError;
   String errorMessage;
   bool isAnonymous;
+  int errorCode;
 
   NsgLoginResponse.fromJson(Map<String, dynamic> json)
       : token = json['Token'].toString(),
         isError = json['IsError'] as bool,
         errorMessage = json['ErrorMessage'].toString(),
+        errorCode = json['ErrorCode'] as int,
         isAnonymous = json['IsAnonymous'] as bool;
 }
 
