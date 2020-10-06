@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
@@ -40,6 +39,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   String captchaCode = '';
   bool isCaptchaLoading = false;
   int currentStage = _NsgPhoneLoginWidgetState.stagePreLogin;
+  bool isLoginSuccessfull = false;
   bool isSMSRequested = false;
   BuildContext contextForSnackBar;
   PhoneInputFormatter phoneFormatter = PhoneInputFormatter();
@@ -109,6 +109,9 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController _captchaController;
   Widget _getContext(BuildContext context) {
+    if (isLoginSuccessfull) {
+      return _getContextSuccessful(context);
+    }
     _captchaController ??= TextEditingController();
     return Form(
       key: _formKey,
@@ -350,15 +353,45 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void gotoNextPage(BuildContext context) async {
-    final result = await Navigator.push<bool>(
+    var result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
             builder: (context) => NsgPhoneLoginVerificationPage(widget.provider,
                 widgetParams: widget.widgetParams)));
-    if (result) {
-      //login successful
+    if (result ??= false) {
+      setState(() {
+        isLoginSuccessfull = true;
+      });
     } else {
       refreshCaptcha();
     }
+  }
+
+  Widget _getContextSuccessful(BuildContext context) {
+    return SizedBox(
+        width: widget.widgetParams.cardSize,
+        child: Card(
+            margin: EdgeInsets.symmetric(horizontal: 15.0),
+            color: widget.widgetParams.cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                          child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                            Text(
+                              'Login successful',
+                              style: widget.widgetParams.headerMessageStyle,
+                            )
+                          ]))
+                    ]))));
   }
 }
