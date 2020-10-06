@@ -1,6 +1,6 @@
 name: nsg_data
 description: Data object model and data exchange with C# server
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/zenalex/nsg_data
 
 environment:
