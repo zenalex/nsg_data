@@ -2,13 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
-import 'package:nsg_data/authorize/nsgPhoneLoginPageParams.dart';
+import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
+import 'package:nsg_data/authorize/nsgPhoneLoginVerificationPage.dart';
 
 import '../nsg_data_provider.dart';
 
 class NsgPhoneLoginPage extends StatelessWidget {
   final NsgDataProvider provider;
-  final NsgPhoneLoginWidgetParams widgetParams;
+  final NsgPhoneLoginParams widgetParams;
   NsgPhoneLoginPage(this.provider, {this.widgetParams}) : super();
 
   @override
@@ -27,7 +28,7 @@ class NsgPhoneLoginWidget extends StatefulWidget {
   @override
   _NsgPhoneLoginWidgetState createState() => _NsgPhoneLoginWidgetState();
 
-  final NsgPhoneLoginWidgetParams widgetParams;
+  final NsgPhoneLoginParams widgetParams;
   final NsgDataProvider provider;
 
   NsgPhoneLoginWidget(this.provider, {this.widgetParams}) : super();
@@ -51,10 +52,6 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   ///Get captcha and send request for SMS
   ///This is first stage of authorization
   static int stagePreLogin = 1;
-
-  ///After SMS is recieved, send verification code to the server.
-  ///This is the last stage of authorization
-  static int stageVerification = 2;
 
   @override
   void initState() {
@@ -110,7 +107,9 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   final _formKey = GlobalKey<FormState>();
+  TextEditingController _captchaController;
   Widget _getContext(BuildContext context) {
+    _captchaController ??= TextEditingController();
     return Form(
       key: _formKey,
       child: SizedBox(
@@ -140,14 +139,6 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      // Padding(
-                      //   padding: EdgeInsets.symmetric(vertical: 10.0),
-                      //   child: Text(
-                      //     widget.widgetParams.description,
-                      //     style: widget.widgetParams.descriptionStyle,
-                      //     textAlign: TextAlign.center,
-                      //   ),
-                      // ),
                       SizedBox(height: 5.0),
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 5.0),
@@ -213,6 +204,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                                   height: widget.widgetParams.buttonSize,
                                   width: double.infinity,
                                   child: TextFormField(
+                                    controller: _captchaController,
                                     decoration: InputDecoration(
                                         fillColor:
                                             widget.widgetParams.fillColor,
@@ -280,46 +272,32 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     return await widget.provider.getCaptcha();
   }
 
-  void showError(BuildContext context, String message) {
-    final snackBar = SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.red,
-    );
-    Scaffold.of(context).showSnackBar(snackBar);
-  }
-
   void checkRequestSMSanswer(BuildContext context, int answerCode) {
     if (answerCode == 0) {
       setState(() {
-        currentStage = _NsgPhoneLoginWidgetState.stageVerification;
+        //currentStage = _NsgPhoneLoginWidgetState.stageVerification;
         isSMSRequested = false;
       });
+      if (updateTimer != null) {
+        updateTimer.cancel();
+      }
+      gotoNextPage(context);
+      return;
     }
     var needRefreshCaptcha = false;
-    var errorMessage = '';
+    var errorMessage = widget.widgetParams.errorMessageByStatusCode(answerCode);
     switch (answerCode) {
-      case 40101:
-        errorMessage = 'You have to get captha first';
-        break;
       case 40102:
-        errorMessage = 'Captcha is obsolet. Try again!';
         needRefreshCaptcha = true;
         break;
       case 40103:
-        errorMessage = 'Captcha text is wrong. Try again!';
         needRefreshCaptcha = true;
         break;
-      case 40104:
-        errorMessage = 'You have to enter you phone number!';
-        break;
-      case 40105:
-        errorMessage = 'You have to enter captcha text!';
-        break;
       default:
-        errorMessage = 'Error is occured. Try again!';
+        needRefreshCaptcha = false;
     }
     isSMSRequested = false;
-    showError(context, errorMessage);
+    widget.widgetParams.showError(context, errorMessage);
 
     if (needRefreshCaptcha) {
       refreshCaptcha();
@@ -339,7 +317,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
         .phoneLoginRequestSMS(phoneNumber, captchaCode)
         .then((value) => checkRequestSMSanswer(context, value))
         .catchError((e) {
-      showError(context,
+      widget.widgetParams.showError(context,
           'Cannot compleate request. Check internet connection and repeate.');
     });
   }
@@ -348,6 +326,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     isCaptchaLoading = true;
     _loadCaptureImage().then((value) => setState(() {
           captureImage = value;
+          _captchaController.value = TextEditingValue.empty;
           isCaptchaLoading = false;
           if (updateTimer != null) {
             updateTimer.cancel();
@@ -366,6 +345,19 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     } else {
       updateTimer.cancel();
       updateTimer = null;
+      refreshCaptcha();
+    }
+  }
+
+  void gotoNextPage(BuildContext context) async {
+    final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+            builder: (context) => NsgPhoneLoginVerificationPage(widget.provider,
+                widgetParams: widget.widgetParams)));
+    if (result) {
+      //login successful
+    } else {
       refreshCaptcha();
     }
   }

@@ -14,6 +14,8 @@ class NsgDataProvider {
   bool useNsgAuthorization = true;
   final bool _initialized = false;
   bool isAnonymous = true;
+  String phoneNumber;
+  DateTime smsRequestedTime;
 
   Duration requestDuration = Duration(seconds: 15);
 
@@ -76,6 +78,7 @@ class NsgDataProvider {
 
   Future<int> phoneLoginRequestSMS(
       String phoneNumber, String securityCode) async {
+    this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
     login.securityCode = securityCode;
@@ -90,6 +93,34 @@ class NsgDataProvider {
     if (response.statusCode == 200) {
       var loginResponse = NsgLoginResponse.fromJson(
           json.decode(response.body) as Map<String, dynamic>);
+      if (loginResponse.errorCode == 0) {
+        smsRequestedTime = DateTime.now();
+      }
+      return loginResponse.errorCode ?? 5000;
+    }
+    return 6000;
+  }
+
+  Future<int> phoneLogin(String phoneNumber, String securityCode) async {
+    this.phoneNumber = phoneNumber;
+    var login = NsgPhoneLoginModel();
+    login.phoneNumber = phoneNumber;
+    login.securityCode = securityCode;
+    var s = login.toJson();
+
+    var response = await http
+        .post('${serverUri}/${authorizationApi}/PhoneLogin',
+            headers: _getAuthorizationHeader(), body: s)
+        .catchError((e) {
+      return 1;
+    });
+    if (response.statusCode == 200) {
+      var loginResponse = NsgLoginResponse.fromJson(
+          json.decode(response.body) as Map<String, dynamic>);
+      if (loginResponse.errorCode == 0) {
+        token = loginResponse.token;
+        isAnonymous = loginResponse.isAnonymous;
+      }
       return loginResponse.errorCode ?? 5000;
     }
     return 6000;
