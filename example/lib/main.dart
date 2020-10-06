@@ -43,9 +43,6 @@ class _MainScreenState extends State<MainScreen> {
                   builder: (context) => NsgPhoneLoginPage(provider,
                       widgetParams: NsgPhoneLoginParams.defaultParams)))
           .then((value) => loginResult(value)));
-      //setState(() {
-      //      initialized = true;
-      //    }));
     }
   }
 
