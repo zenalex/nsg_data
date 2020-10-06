@@ -26,7 +26,7 @@ class NsgDataProvider {
       this.useNsgAuthorization = true});
 
   ///Initialization. Load saved token if useNsgAuthorization == true
-  void initialize() async {
+  Future initialize() async {
     if (_initialized) return;
     if (useNsgAuthorization) {
       if (name == '' || name == null) name = authorizationApi;
@@ -36,7 +36,7 @@ class NsgDataProvider {
   }
 
   ///Connect to server
-  void connect() async {
+  Future connect() async {
     if (!_initialized) await initialize();
     if (useNsgAuthorization) {
       if (token == '') {
@@ -45,21 +45,6 @@ class NsgDataProvider {
         await _checkToken();
       }
     }
-  }
-
-  void getToken() async {
-    var login = NsgLoginModel();
-    // login.login = _GUEST_LOGIN;
-    // login.password = '';
-    var s = login.toJson();
-    var response = await http
-        .post(serverUri + '/' + authorizationApi, body: s)
-        .catchError((e) {
-      return;
-    });
-    token = NsgLoginResponse.fromJson(
-            json.decode(response.body) as Map<String, dynamic>)
-        .token;
   }
 
   Future<Image> getCaptcha() async {
@@ -126,7 +111,7 @@ class NsgDataProvider {
     return 6000;
   }
 
-  void _anonymousLogin() async {
+  Future _anonymousLogin() async {
     var response = await http
         .get('${serverUri}/${authorizationApi}/AnonymousLogin')
         .catchError((e) {
@@ -140,7 +125,7 @@ class NsgDataProvider {
     }
   }
 
-  void _checkToken() async {}
+  Future _checkToken() async {}
 
   Map<String, String> _getAuthorizationHeader() {
     var map = <String, String>{};

@@ -49,7 +49,7 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  void loginSuccessful() {
+  void loginSuccessful(BuildContext context, dynamic parameter) {
     Navigator.pop<bool>(context, true);
   }
 

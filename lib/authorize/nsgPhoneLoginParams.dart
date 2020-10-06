@@ -22,8 +22,9 @@ class NsgPhoneLoginParams {
   Color sendSmsBorderColor;
   Color phoneIconColor;
   Color phoneFieldColor;
+  dynamic parameter;
   String Function(int) errorMessageByStatusCode;
-  void Function() loginSuccessful;
+  void Function(BuildContext context, dynamic parameter) loginSuccessful;
   void Function() loginFailed;
 
   static NsgPhoneLoginParams defaultParams = NsgPhoneLoginParams();

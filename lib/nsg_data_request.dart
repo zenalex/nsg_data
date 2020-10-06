@@ -38,13 +38,10 @@ class NsgDataRequest<T extends NsgDataItem> {
       _fromJson(json.decode(response.body) as Map<String, dynamic>);
       return this;
     } else if (response.statusCode == 401) {
-      //Authorization error
-      if (autoAuthorize) {
-        await dataItem.remoteProvider.getToken();
-        return await requestItems(filter: filter, autoAuthorize: false);
-      }
+      throw Exception('Authorization error. Request items failed.');
+    } else {
+      throw Exception(
+          'Request items failed, error code is ${response.statusCode}');
     }
-    throw Exception(
-        'request items failed, error code is ${response.statusCode}');
   }
 }

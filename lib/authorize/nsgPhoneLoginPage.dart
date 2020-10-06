@@ -15,11 +15,16 @@ class NsgPhoneLoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (Scaffold.of(context, nullOk: true) == null) {
       return Scaffold(
+        appBar: getAppBar(context),
         backgroundColor: Colors.blue,
         body: NsgPhoneLoginWidget(provider, widgetParams: widgetParams),
       );
     }
     return NsgPhoneLoginWidget(provider, widgetParams: widgetParams);
+  }
+
+  AppBar getAppBar(BuildContext context) {
+    return AppBar(title: Text(''), centerTitle: true);
   }
 }
 
@@ -363,7 +368,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
         isLoginSuccessfull = true;
       });
       if (widget.widgetParams.loginSuccessful != null) {
-        widget.widgetParams.loginSuccessful();
+        widget.widgetParams
+            .loginSuccessful(context, widget.widgetParams.parameter);
       }
     } else {
       refreshCaptcha();
