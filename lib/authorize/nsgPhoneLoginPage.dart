@@ -362,6 +362,9 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
       setState(() {
         isLoginSuccessfull = true;
       });
+      if (widget.widgetParams.loginSuccessful != null) {
+        widget.widgetParams.loginSuccessful();
+      }
     } else {
       refreshCaptcha();
     }

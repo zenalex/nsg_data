@@ -62,7 +62,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Future init() async {
     provider = NsgDataProvider();
-    provider.serverUri = 'http://alex.nsgsoft.ru:5073';
+    provider.serverUri = 'https://alex.nsgsoft.ru:5073';
     await provider.connect();
     print('token ${provider.token}');
     print('is anonymous ${provider.isAnonymous}');

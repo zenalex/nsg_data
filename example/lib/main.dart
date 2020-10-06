@@ -28,6 +28,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   bool initialized = false;
+  bool isLoginSuccessful = false;
   NsgDataProvider provider;
   Image captha;
 
@@ -35,15 +36,29 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     if (!initialized) {
-      init().then((value) => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => NsgPhoneLoginPage(provider,
-                  widgetParams: NsgPhoneLoginParams.defaultParams))));
+      NsgPhoneLoginParams.defaultParams.loginSuccessful = loginSuccessful;
+      init().then((value) => Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => NsgPhoneLoginPage(provider,
+                      widgetParams: NsgPhoneLoginParams.defaultParams)))
+          .then((value) => loginResult(value)));
       //setState(() {
       //      initialized = true;
       //    }));
     }
+  }
+
+  void loginSuccessful() {
+    Navigator.pop<bool>(context, true);
+  }
+
+  void loginResult(bool loginResult) {
+    loginResult ??= false;
+    setState(() {
+      initialized = true;
+      isLoginSuccessful = loginResult;
+    });
   }
 
   // Формирование виджета
@@ -70,35 +85,21 @@ class _MainScreenState extends State<MainScreen> {
   Future init() async {
     provider = NsgDataProvider();
     provider.serverUri = 'http://alex.nsgsoft.ru:5073';
-    //await _testAccess();
     await provider.connect();
     print('token ${provider.token}');
     print('is anonymous ${provider.isAnonymous}');
-    captha = await provider.getCaptcha();
   }
 
   String captchaText = '';
   List<Widget> getBody() {
     var list = <Widget>[];
     if (initialized) {
-      list.add(Text('INITIALIZED'));
+      list.add(Text('is login successful = $isLoginSuccessful'));
       list.add(Text('isAnonymous = ${provider.isAnonymous}'));
       list.add(Divider());
-      list.add(TextField(
-        textCapitalization: TextCapitalization.characters,
-        maxLength: 6,
-        onChanged: (value) => captchaText = value,
-      ));
-      list.add(FlatButton(onPressed: () => requestSMS(), child: Text('Login')));
-
-      list.add(captha);
     } else {
       list.add(CircularProgressIndicator());
     }
     return list;
-  }
-
-  void requestSMS() {
-    provider.phoneLoginRequestSMS('79210000000', captchaText);
   }
 }
