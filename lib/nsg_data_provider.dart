@@ -12,7 +12,7 @@ class NsgDataProvider {
   String authorizationApi = 'Api/Auth/Login';
   String name;
   bool useNsgAuthorization = true;
-  final bool _initialized = false;
+  bool _initialized = false;
   bool isAnonymous = true;
   String phoneNumber;
   DateTime smsRequestedTime;
@@ -33,6 +33,7 @@ class NsgDataProvider {
       var _prefs = await SharedPreferences.getInstance();
       if (_prefs.containsKey(name)) token = _prefs.getString(name);
     }
+    _initialized = true;
   }
 
   ///Connect to server
@@ -105,10 +106,29 @@ class NsgDataProvider {
       if (loginResponse.errorCode == 0) {
         token = loginResponse.token;
         isAnonymous = loginResponse.isAnonymous;
+        if (!isAnonymous) {
+          if (name == '' || name == null) name = authorizationApi;
+          var _prefs = await SharedPreferences.getInstance();
+          await _prefs.setString(name, token);
+        }
       }
       return loginResponse.errorCode ?? 5000;
     }
     return 6000;
+  }
+
+  Future logout() async {
+    await http
+        .get('${serverUri}/${authorizationApi}/Logout',
+            headers: _getAuthorizationHeader())
+        .catchError((e) {});
+    if (!isAnonymous) {
+      if (name == '' || name == null) name = authorizationApi;
+      var _prefs = await SharedPreferences.getInstance();
+      await _prefs.remove(name);
+      isAnonymous = true;
+      token = '';
+    }
   }
 
   Future _anonymousLogin() async {
@@ -125,7 +145,24 @@ class NsgDataProvider {
     }
   }
 
-  Future _checkToken() async {}
+  Future _checkToken() async {
+    var response = await http
+        .get('${serverUri}/${authorizationApi}/CheckToken',
+            headers: _getAuthorizationHeader())
+        .catchError((e) {
+      return;
+    });
+    if (response.statusCode == 200) {
+      var loginResponse = NsgLoginResponse.fromJson(
+          json.decode(response.body) as Map<String, dynamic>);
+      if (loginResponse.errorCode == 0 || loginResponse.errorCode == 402) {
+        token = loginResponse.token;
+        isAnonymous = loginResponse.isAnonymous;
+      } else if (loginResponse.errorCode == 401) {
+        await _anonymousLogin();
+      }
+    }
+  }
 
   Map<String, String> _getAuthorizationHeader() {
     var map = <String, String>{};
