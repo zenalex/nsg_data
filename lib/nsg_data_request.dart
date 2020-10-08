@@ -40,8 +40,8 @@ class NsgDataRequest<T extends NsgDataItem> {
     } else if (response.statusCode == 401) {
       throw Exception('Authorization error. Request items failed.');
     } else {
-      throw Exception(
-          'Request items failed, error code is ${response.statusCode}');
+      var errorCode = response == null ? 'unknown' : response.statusCode;
+      throw Exception('Request items failed, error code is ${errorCode}');
     }
   }
 }
