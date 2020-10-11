@@ -1,4 +1,3 @@
-import 'package:nsg_data/dataFields/boolfield.dart';
 import 'package:nsg_data/dataFields/dateField.dart';
 import 'package:nsg_data/dataFields/stringField.dart';
 import 'package:nsg_data/nsg_data_item.dart';
@@ -11,7 +10,7 @@ class CardItem extends NsgDataItem {
     addfield(NsgDataStringField('Title')); //Name of card
     addfield(NsgDataDateField('IssueDate')); //Date of issue
     addfield(NsgDataDateField('ValidUntil')); //Valid until date
-    addfield(NsgDataBoolField('Activated')); //Is card activated
+    //addfield(NsgDataBoolField('Activated')); //Is card activated
   }
 
   @override
@@ -27,8 +26,6 @@ class CardItem extends NsgDataItem {
   set issueDate(DateTime value) => setFieldValue('IssueDate', value);
   DateTime get validUntil => getFieldValue('ValidUntil') as DateTime;
   set validUntil(DateTime value) => setFieldValue('ValidUntil', value);
-  bool get activated => getFieldValue('Activated') as bool;
-  set activated(bool value) => setFieldValue('Activated', value);
 
   @override
   String get apiRequestItems {

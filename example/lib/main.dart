@@ -1,7 +1,13 @@
+import 'package:example/model/cardItem.dart';
+import 'package:example/model/cityItem.dart';
 import 'package:flutter/material.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
+import 'package:nsg_data/nsg_data_client.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
+import 'package:nsg_data/nsg_data_request.dart';
+
+import 'model/UserSettings.dart';
 //import 'package:http/http.dart' as http;
 
 void main() {
@@ -35,15 +41,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    if (!initialized) {
-      NsgPhoneLoginParams.defaultParams.loginSuccessful = loginSuccessful;
-      init().then((value) => Navigator.push<bool>(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => NsgPhoneLoginPage(provider,
-                      widgetParams: NsgPhoneLoginParams.defaultParams)))
-          .then((value) => loginResult(value)));
-    }
+    init(context);
   }
 
   void loginSuccessful(BuildContext context, dynamic parameter) {
@@ -56,6 +54,19 @@ class _MainScreenState extends State<MainScreen> {
       initialized = true;
       isLoginSuccessful = loginResult;
     });
+    loadData();
+  }
+
+  Future loadData() async {
+    var items = await NsgDataRequest<UserSettingsItem>().requestItems();
+    if (items == null || items.items == null || items.items.isEmpty) {
+      return;
+    }
+    var userSettingsItem = items.items[0];
+    var city = await userSettingsItem.cityAsync();
+    if (city != null) {
+      print('My city name = ' + city.title);
+    }
   }
 
   // Формирование виджета
@@ -79,12 +90,34 @@ class _MainScreenState extends State<MainScreen> {
         ));
   }
 
-  Future init() async {
+  Future init(BuildContext context) async {
+    if (provider != null) {
+      return;
+    }
     provider = NsgDataProvider();
     provider.serverUri = 'http://alex.nsgsoft.ru:5073';
+
+    NsgDataClient.client
+        .registerDataItem(UserSettingsItem(), remoteProvider: provider);
+    NsgDataClient.client.registerDataItem(CardItem(), remoteProvider: provider);
+    NsgDataClient.client.registerDataItem(CityItem(), remoteProvider: provider);
+
     await provider.connect();
     print('token ${provider.token}');
     print('is anonymous ${provider.isAnonymous}');
+
+    if (provider.isAnonymous) {
+      NsgPhoneLoginParams.defaultParams.loginSuccessful = loginSuccessful;
+      await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => NsgPhoneLoginPage(provider,
+                      widgetParams: NsgPhoneLoginParams.defaultParams)))
+          .then((value) => loginResult(value));
+    } else {
+      await loadData();
+    }
+    return;
   }
 
   String captchaText = '';

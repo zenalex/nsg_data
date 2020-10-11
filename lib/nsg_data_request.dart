@@ -6,12 +6,17 @@ import 'nsg_data_request_filter.dart';
 
 class NsgDataRequest<T extends NsgDataItem> {
   List<T> items;
+  Type dataItemType;
+
+  NsgDataRequest({this.dataItemType}) {
+    dataItemType ??= T;
+  }
 
   void _fromJson(Map<String, dynamic> json) {
     if (json['Items'] != null) {
       items = <T>[];
       json['Items'].forEach((v) {
-        var elem = NsgDataClient.client.getNewObject(T);
+        var elem = NsgDataClient.client.getNewObject(dataItemType);
         elem.fromJson(v as Map<String, dynamic>);
         items.add(elem as T);
       });
@@ -19,8 +24,10 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   Future<NsgDataRequest<T>> requestItems(
-      {NsgDataRequestFilter filter, bool autoAuthorize = true}) async {
-    var dataItem = NsgDataClient.client.getNewObject(T);
+      {NsgDataRequestFilter filter,
+      bool autoAuthorize = true,
+      String tag}) async {
+    var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, String>{};
     if (filter != null) filterMap = filter.toJson();
     var header = <String, String>{};
@@ -34,8 +41,9 @@ class NsgDataRequest<T extends NsgDataItem> {
         .catchError((e) {
       print(e);
     });
-    if (response.statusCode == 200) {
+    if (response != null && response.statusCode == 200) {
       _fromJson(json.decode(response.body) as Map<String, dynamic>);
+      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
       return this;
     } else if (response.statusCode == 401) {
       throw Exception('Authorization error. Request items failed.');
