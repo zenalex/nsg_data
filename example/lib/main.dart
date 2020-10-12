@@ -63,7 +63,10 @@ class _MainScreenState extends State<MainScreen> {
       return;
     }
     var userSettingsItem = items.items[0];
-    var city = await userSettingsItem.cityAsync();
+    await NsgDataRequest()
+        .loadAllReferents([userSettingsItem], [UserSettingsItem.name_cityId]);
+    //var city = await userSettingsItem.cityAsync();
+    var city = userSettingsItem.city;
     if (city != null) {
       print('My city name = ' + city.title);
     }

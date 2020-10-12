@@ -2,22 +2,26 @@ import 'package:nsg_data/dataFields/stringField.dart';
 import 'package:nsg_data/nsg_data_item.dart';
 
 class CityItem extends NsgDataItem {
+  static String get name_id => 'Id';
+  static String get name_title => 'Title';
+  static String get name_countryId => 'CountryId';
+
   @override
   void initialize() {
-    addfield(NsgDataStringField('Id'), primaryKey: true);
-    addfield(NsgDataStringField('Title'));
-    addfield(NsgDataStringField('CountryId'));
+    addfield(NsgDataStringField(name_id), primaryKey: true);
+    addfield(NsgDataStringField(name_title));
+    addfield(NsgDataStringField(name_countryId));
   }
 
   @override
   NsgDataItem getNewObject() => CityItem();
 
-  String get id => getFieldValue('Id').toString();
-  set id(String value) => setFieldValue('Id', value);
-  String get title => getFieldValue('Title').toString();
-  set title(String value) => setFieldValue('Title', value);
-  String get countryId => getFieldValue('CountryId').toString();
-  set countryId(String value) => setFieldValue('CountryId', value);
+  String get id => getFieldValue(name_id).toString();
+  set id(String value) => setFieldValue(name_id, value);
+  String get title => getFieldValue(name_title).toString();
+  set title(String value) => setFieldValue(name_title, value);
+  String get countryId => getFieldValue(name_countryId).toString();
+  set countryId(String value) => setFieldValue(name_countryId, value);
 
   @override
   String get apiRequestItems {

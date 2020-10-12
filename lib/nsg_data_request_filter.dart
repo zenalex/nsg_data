@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class NsgDataRequestFilter {
   final int top;
   final int count;
@@ -6,7 +8,7 @@ class NsgDataRequestFilter {
     var filter = <String, String>{};
     if (top != 0) filter['Top'] = top.toString();
     if (count != 0) filter['Count'] = count.toString();
-    if (idList != null) filter['IdList'] = idList.asMap().toString();
+    if (idList != null) filter['IdList'] = jsonEncode(idList);
     return filter;
   }
 

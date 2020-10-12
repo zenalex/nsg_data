@@ -15,6 +15,8 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataField {
   @override
   dynamic get defaultValue => '';
 
+  Type get referentType => T;
+
   static const String _ZERO_GUID = '00000000-0000-0000-0000-000000000000';
   T getReferent(NsgDataItem dataItem) {
     var id = dataItem.getFieldValue(name).toString();
@@ -29,7 +31,7 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataField {
     var item = getReferent(dataItem);
     if (item == null) {
       var id = dataItem.getFieldValue(name).toString();
-      var filter = NsgDataRequestFilter(idList: [id]);
+      var filter = NsgDataRequestFilter(idList: [id, id]);
       var request = NsgDataRequest<T>();
       await request.requestItems(filter: filter);
       item = NsgDataClient.client.getItemsFromCache(T, id) as T;
