@@ -71,7 +71,9 @@ class NsgDataRequest<T extends NsgDataItem> {
         var field = item.fieldList.fields[fieldName];
         if (field is NsgDataReferenceField) {
           if (field.getReferent(item) == null) {
-            var fieldType = item.fieldList.fields[fieldName].runtimeType;
+            var fieldType =
+                (item.fieldList.fields[fieldName] as NsgDataReferenceField)
+                    .referentType;
             var fieldValue = item.getFieldValue(fieldName).toString();
             if (!allRefs.containsKey(fieldType)) {
               allRefs[fieldType] = <String>[];
