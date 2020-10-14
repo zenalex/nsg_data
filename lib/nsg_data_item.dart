@@ -100,7 +100,15 @@ class NsgDataItem {
   set primaryKeyField(String value) =>
       paramList.params[_PRIMARY_KEY_FIELD] = value;
 
-  /*Future checkReferences(List<String> references){
-    references.forEach((element) { })
-  }*/
+  List<String> getAllReferenceFields() {
+    var list = <String>[];
+    fieldValues.fields.keys.forEach((name) {
+      var field = fieldList.fields[name];
+      if (field is NsgDataReferenceField) {
+        list.add(name);
+      }
+    });
+
+    return list;
+  }
 }

@@ -106,8 +106,6 @@ class _MainScreenState extends State<MainScreen> {
     NsgDataClient.client.registerDataItem(CityItem(), remoteProvider: provider);
 
     await provider.connect();
-    print('token ${provider.token}');
-    print('is anonymous ${provider.isAnonymous}');
 
     if (provider.isAnonymous) {
       NsgPhoneLoginParams.defaultParams.loginSuccessful = loginSuccessful;

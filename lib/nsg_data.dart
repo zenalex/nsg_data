@@ -3,6 +3,20 @@
 /// More dartdocs go here.
 library nsg_data;
 
-//export 'src/nsg_data_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
+export 'package:nsg_data/authorize/nsgPhoneLoginVerificationPage.dart';
+export 'package:nsg_data/dataFields/datafield.dart';
+export 'package:nsg_data/dataFields/boolfield.dart';
+export 'package:nsg_data/dataFields/dataImage.dart';
+export 'package:nsg_data/dataFields/dateField.dart';
+export 'package:nsg_data/dataFields/doubleField.dart';
+export 'package:nsg_data/dataFields/intfield.dart';
+export 'package:nsg_data/dataFields/referenceField.dart';
+export 'package:nsg_data/dataFields/stringField.dart';
+export 'package:nsg_data/models/nsgLoginModel.dart';
+export 'package:nsg_data/nsg_data_client.dart';
+export 'package:nsg_data/nsg_data_fieldlist.dart';
+export 'package:nsg_data/nsg_data_item.dart';
+export 'package:nsg_data/nsg_data_provider.dart';
+export 'package:nsg_data/nsg_data_request_filter.dart';
+export 'package:nsg_data/nsg_data_request.dart';
