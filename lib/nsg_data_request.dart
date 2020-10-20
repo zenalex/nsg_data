@@ -39,7 +39,6 @@ class NsgDataRequest<T extends NsgDataItem> {
     var response = await http
         .post(dataItem.remoteProvider.serverUri + dataItem.apiRequestItems,
             headers: header, body: filterMap)
-        .timeout(dataItem.remoteProvider.requestDuration)
         .catchError((e) {
       print(e);
     });

@@ -10,9 +10,13 @@ dependencies:
   flutter:
     sdk: flutter
 
-  http: ^0.12.2
+  #http: ^0.12.2
   shared_preferences: '>=0.5.12 <2.0.0'
   flutter_multi_formatter: ^1.1.6
+  dio: ^3.0.10
+  get: ^3.13.2
+  either_option: ^1.0.6
+  connectivity: ^0.4.9+5
 
 dev_dependencies:
   flutter_test:
