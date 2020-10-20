@@ -28,6 +28,10 @@ class NsgDataClient {
     return _fieldList[item.runtimeType];
   }
 
+  bool isRegistered(Type type) {
+    return (_registeredItems.containsKey(type));
+  }
+
   NsgDataItem getNewObject(Type type) {
     assert(_registeredItems.containsKey(type));
     return _registeredItems[type].getNewObject();

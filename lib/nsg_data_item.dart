@@ -11,8 +11,6 @@ class NsgDataItem {
     throw Exception('api Request Items is not overrided');
   }
 
-  NsgDataItem();
-
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
       if (fieldList.fields.containsKey(name)) {
