@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:either_option/either_option.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginVerificationPage.dart';
+import 'package:nsg_data/nsgDataApiError.dart';
 
 import '../nsg_data_provider.dart';
 
@@ -277,10 +279,25 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
 
   ///Get captcha from server
   Future<Image> _loadCaptureImage() async {
-    return await widget.provider.getCaptcha();
+    var response = await widget.provider.getCaptcha();
+    Image image;
+    response.fold((error) => {}, (data) => image = data);
+    if (response.isLeft) {
+      //Загрузить картинку-ошибку в случае невозможности получения капчи с сервера
+      //image = ...
+    }
+    return image;
   }
 
-  void checkRequestSMSanswer(BuildContext context, int answerCode) {
+  void checkRequestSMSanswer(
+      BuildContext context, Either<NsgApiError, bool> response) {
+    var answerCode = 0;
+    response.fold((error) {
+      answerCode = error.code;
+      if (answerCode == null || answerCode == 0) {
+        answerCode = 5000;
+      }
+    }, (v) => {answerCode = 0});
     if (answerCode == 0) {
       setState(() {
         //currentStage = _NsgPhoneLoginWidgetState.stageVerification;

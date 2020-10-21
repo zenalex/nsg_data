@@ -3,6 +3,7 @@ import 'package:example/model/cityItem.dart';
 import 'package:flutter/material.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
+import 'package:nsg_data/nsgDataApiError.dart';
 import 'package:nsg_data/nsg_data_client.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
 import 'package:nsg_data/nsg_data_request.dart';
@@ -105,7 +106,15 @@ class _MainScreenState extends State<MainScreen> {
     NsgDataClient.client.registerDataItem(CardItem(), remoteProvider: provider);
     NsgDataClient.client.registerDataItem(CityItem(), remoteProvider: provider);
 
-    await provider.connect();
+    var result = await provider.connect();
+    NsgApiError error;
+    bool res;
+    result.fold((e) => error = e, (v) => res = v);
+    if (result.isLeft) {
+      print(error);
+    } else {
+      print(res);
+    }
 
     if (provider.isAnonymous) {
       NsgPhoneLoginParams.defaultParams.loginSuccessful = loginSuccessful;
