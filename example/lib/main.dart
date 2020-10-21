@@ -59,11 +59,13 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future loadData() async {
-    var items = await NsgDataRequest<UserSettingsItem>().requestItems();
-    if (items == null || items.items == null || items.items.isEmpty) {
+    List<UserSettingsItem> items;
+    (await NsgDataRequest<UserSettingsItem>().requestItems())
+        .fold((e) => print(e), (data) => items = data);
+    if (items == null || items == null || items.isEmpty) {
       return;
     }
-    var userSettingsItem = items.items[0];
+    var userSettingsItem = items[0];
     await NsgDataRequest()
         .loadAllReferents([userSettingsItem], [UserSettingsItem.name_cityId]);
     //var city = await userSettingsItem.cityAsync();

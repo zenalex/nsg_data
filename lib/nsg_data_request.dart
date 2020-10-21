@@ -1,6 +1,6 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:either_option/either_option.dart';
 import 'package:nsg_data/dataFields/referenceField.dart';
+import 'package:nsg_data/nsgDataApiError.dart';
 import 'nsg_data_client.dart';
 import 'nsg_data_item.dart';
 import 'nsg_data_request_filter.dart';
@@ -24,7 +24,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
   }
 
-  Future<NsgDataRequest<T>> requestItems(
+  Future<Either<NsgApiError, List<T>>> requestItems(
       {NsgDataRequestFilter filter,
       bool autoAuthorize = true,
       String tag,
@@ -36,27 +36,25 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (dataItem.remoteProvider.token != '') {
       header['Authorization'] = dataItem.remoteProvider.token;
     }
-    var response = await http
-        .post(dataItem.remoteProvider.serverUri + dataItem.apiRequestItems,
-            headers: header, body: filterMap)
-        .catchError((e) {
-      print(e);
+    var response = await dataItem.remoteProvider.baseRequest(
+        function: 'apiRequestItems ${dataItem.runtimeType}',
+        headers: dataItem.remoteProvider.getAuthorizationHeader(),
+        url: dataItem.remoteProvider.serverUri + dataItem.apiRequestItems,
+        method: 'POST',
+        params: filterMap);
+
+    NsgApiError error;
+    response.fold((e) => error = e, (data) {
+      _fromJson(data);
+      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
     });
-    if (response != null) {
-      if (response.statusCode == 200) {
-        _fromJson(json.decode(response.body) as Map<String, dynamic>);
-        NsgDataClient.client.addItemsToCache(items: items, tag: tag);
-        //Check referent field list
-        if (loadReference != null) {
-          await loadAllReferents(items, loadReference, tag: tag);
-        }
-        return this;
-      } else if (response.statusCode == 401) {
-        throw Exception('Authorization error. Request items failed.');
+    if (response.isRight) {
+      //Check referent field list
+      if (loadReference != null) {
+        await loadAllReferents(items, loadReference, tag: tag);
       }
     }
-    var errorCode = response == null ? 'unknown' : response.statusCode;
-    throw Exception('Request items failed, error code is ${errorCode}');
+    return response.fold((e) => Left(error), (data) => Right(items));
   }
 
   Future loadAllReferents(List<T> items, List<String> loadReference,
