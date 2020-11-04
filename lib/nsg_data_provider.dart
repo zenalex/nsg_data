@@ -5,7 +5,6 @@ import 'package:connectivity/connectivity.dart';
 import 'package:either_option/either_option.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:nsg_data/nsgApiException.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,7 +50,6 @@ class NsgDataProvider extends GetxController {
     final Map<String, String> headers,
     final String url,
     final int timeout = 15000,
-    final bool debug = false,
     final String method = 'GET',
   }) async {
     final _dio = Dio(BaseOptions(
@@ -71,7 +69,7 @@ class NsgDataProvider extends GetxController {
       } else if (method == 'POST') {
         response = await _dio.post(url, data: params);
       }
-      if (debug) {
+      if (isDebug) {
         print('HTTP STATUS: ${response.statusCode}');
         print(response.data);
       }
@@ -150,6 +148,7 @@ class NsgDataProvider extends GetxController {
       } else {
         var result = await _checkToken();
 
+        NsgApiError rError;
         result.fold((error) {
           if (error.errorType == null) {
             if (error.code != 401) {
@@ -175,23 +174,11 @@ class NsgDataProvider extends GetxController {
         function: 'GetCaptcha',
         url: '${serverUri}/${authorizationApi}/GetCaptcha',
         method: 'GET',
-        headers: _getAuthorizationHeader());
+        headers: getAuthorizationHeader());
 
     return response.fold((error) => Left(error), (data) {
       return Right(data);
     });
-
-    /*var response = await http
-        .get('${serverUri}/${authorizationApi}/GetCaptcha',
-            headers: _getAuthorizationHeader())
-        .catchError((e) {
-      return;
-    });
-    if (response.statusCode == 200) {
-      return;
-    } else {
-      return null;
-    }*/
   }
 
   Future<Either<NsgApiError, bool>> phoneLoginRequestSMS(
@@ -203,9 +190,8 @@ class NsgDataProvider extends GetxController {
     var s = login.toJson();
 
     var response = await baseRequest(
-        debug: isDebug,
         function: 'PhoneLoginRequestSMS',
-        headers: _getAuthorizationHeader(),
+        headers: getAuthorizationHeader(),
         url: '${serverUri}/${authorizationApi}/PhoneLoginRequestSMS',
         method: 'POST',
         params: s);
@@ -231,9 +217,8 @@ class NsgDataProvider extends GetxController {
     var s = login.toJson();
 
     var response = await baseRequest(
-        debug: isDebug,
         function: 'PhoneLogin',
-        headers: _getAuthorizationHeader(),
+        headers: getAuthorizationHeader(),
         url: '${serverUri}/${authorizationApi}/PhoneLogin',
         method: 'POST',
         params: s);
@@ -257,23 +242,26 @@ class NsgDataProvider extends GetxController {
     return response.fold((e) => left, (data) => Right(true));
   }
 
-  Future logout() async {
-    await http
-        .get('${serverUri}/${authorizationApi}/Logout',
-            headers: _getAuthorizationHeader())
-        .catchError((e) {});
-    if (!isAnonymous) {
-      if (name == '' || name == null) name = authorizationApi;
-      var _prefs = await SharedPreferences.getInstance();
-      await _prefs.remove(name);
-      isAnonymous = true;
-      token = '';
+  Future<Either<NsgApiError, bool>> logout() async {
+    var response = await baseRequest(
+        function: 'Logout',
+        headers: getAuthorizationHeader(),
+        url: '${serverUri}/${authorizationApi}/Logout',
+        method: 'GET');
+    if (response.isRight) {
+      if (!isAnonymous) {
+        if (name == '' || name == null) name = authorizationApi;
+        var _prefs = await SharedPreferences.getInstance();
+        await _prefs.remove(name);
+        isAnonymous = true;
+        token = '';
+      }
     }
+    return response.fold((e) => Left(e), (data) => Right(true));
   }
 
   Future<Either<NsgApiError, bool>> _anonymousLogin() async {
     var response = await baseRequest(
-        debug: isDebug,
         function: 'AnonymousLogin',
         url: '${serverUri}/${authorizationApi}/AnonymousLogin',
         method: 'GET',
@@ -289,9 +277,8 @@ class NsgDataProvider extends GetxController {
 
   Future<Either<NsgApiError, bool>> _checkToken() async {
     var response = await baseRequest(
-        debug: isDebug,
         function: 'CheckToken',
-        headers: _getAuthorizationHeader(),
+        headers: getAuthorizationHeader(),
         url: '${serverUri}/${authorizationApi}/CheckToken',
         method: 'GET',
         params: {});
@@ -307,7 +294,7 @@ class NsgDataProvider extends GetxController {
     });
   }
 
-  Map<String, String> _getAuthorizationHeader() {
+  Map<String, String> getAuthorizationHeader() {
     var map = <String, String>{};
     if (token != '') map['Authorization'] = token;
     return map;
