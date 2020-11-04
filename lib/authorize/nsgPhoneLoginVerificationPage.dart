@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:either_option/either_option.dart';
 import 'package:flutter/material.dart';
 import 'package:nsg_data/nsgDataApiError.dart';

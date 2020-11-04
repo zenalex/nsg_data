@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -8,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
+import 'package:nsg_data/nsgApiException.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/nsgLoginModel.dart';
 import 'nsgDataApiError.dart';
@@ -139,31 +139,34 @@ class NsgDataProvider extends GetxController {
   }
 
   ///Connect to server
-  Future<Either<NsgApiError, bool>> connect() async {
+  ///If error will be occured, NsgApiException will be generated
+  Future connect() async {
     if (!_initialized) await initialize();
     if (useNsgAuthorization) {
       if (token == '') {
         var result = await _anonymousLogin();
-        return result;
+        result.fold((error) => throw NsgApiException(error), (b) {});
+        return;
       } else {
         var result = await _checkToken();
 
         result.fold((error) {
           if (error.errorType == null) {
             if (error.code != 401) {
-              return Left(error);
+              throw NsgApiException(error);
             }
           } else {
-            return Left(error);
+            throw NsgApiException(error);
           }
         }, (b) {
-          return Right(true);
+          return;
         });
         result = await _anonymousLogin();
-        return result;
+        result.fold((error) => throw NsgApiException(error), (b) {});
+        return;
       }
     }
-    return Right(true);
+    return;
   }
 
   Future<Either<NsgApiError, Image>> getCaptcha() async {

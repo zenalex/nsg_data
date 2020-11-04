@@ -20,3 +20,4 @@ export 'package:nsg_data/nsg_data_item.dart';
 export 'package:nsg_data/nsg_data_provider.dart';
 export 'package:nsg_data/nsg_data_request_filter.dart';
 export 'package:nsg_data/nsg_data_request.dart';
+export 'package:nsg_data/nsgApiException.dart';
