@@ -1,6 +1,7 @@
 import 'package:either_option/either_option.dart';
 import 'package:nsg_data/dataFields/referenceField.dart';
 import 'package:nsg_data/nsgDataApiError.dart';
+import 'package:nsg_data/nsg_data.dart';
 import 'nsg_data_client.dart';
 import 'nsg_data_item.dart';
 import 'nsg_data_request_filter.dart';
@@ -24,7 +25,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
   }
 
-  Future<Either<NsgApiError, List<T>>> requestItems(
+  Future<List<T>> requestItems(
       {NsgDataRequestFilter filter,
       bool autoAuthorize = true,
       String tag,
@@ -54,7 +55,31 @@ class NsgDataRequest<T extends NsgDataItem> {
         await loadAllReferents(items, loadReference, tag: tag);
       }
     }
-    return response.fold((e) => Left(error), (data) => Right(items));
+    response.fold((e) => throw NsgApiException(error), (data) {});
+    return items;
+  }
+
+  Future<T> requestItem(
+      {NsgDataRequestFilter filter,
+      bool autoAuthorize = true,
+      String tag,
+      List<String> loadReference}) async {
+    NsgDataRequestFilter newFilter;
+    if (filter == null) {
+      newFilter = NsgDataRequestFilter(count: 1);
+    } else {
+      newFilter = NsgDataRequestFilter(
+          top: filter.top, count: 1, idList: filter.idList);
+    }
+    var data = await requestItems(
+        filter: newFilter,
+        autoAuthorize: autoAuthorize,
+        tag: tag,
+        loadReference: loadReference);
+    if (data == null || data.isEmpty) {
+      return null;
+    }
+    return data[0];
   }
 
   Future loadAllReferents(List<T> items, List<String> loadReference,

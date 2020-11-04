@@ -23,8 +23,7 @@ Future init() async {
   NsgDataClient.client.registerDataItem(CardItem(), remoteProvider: provider);
 
   var userSettings;
-  (await NsgDataRequest<UserSettingsItem>().requestItems())
-      .fold((e) => print(e), (items) => userSettings = items[0]);
+  userSettings = await NsgDataRequest<UserSettingsItem>().requestItems();
   print(userSettings.userId);
   var myCountry = userSettings.country;
   print(myCountry.title);

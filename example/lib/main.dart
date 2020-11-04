@@ -108,15 +108,7 @@ class _MainScreenState extends State<MainScreen> {
     NsgDataClient.client.registerDataItem(CardItem(), remoteProvider: provider);
     NsgDataClient.client.registerDataItem(CityItem(), remoteProvider: provider);
 
-    var result = await provider.connect();
-    NsgApiError error;
-    bool res;
-    result.fold((e) => error = e, (v) => res = v);
-    if (result.isLeft) {
-      print(error);
-    } else {
-      print(res);
-    }
+    await provider.connect();
 
     if (provider.isAnonymous) {
       NsgPhoneLoginParams.defaultParams.loginSuccessful = loginSuccessful;
