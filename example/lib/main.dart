@@ -3,7 +3,6 @@ import 'package:example/model/cityItem.dart';
 import 'package:flutter/material.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
-import 'package:nsg_data/nsgDataApiError.dart';
 import 'package:nsg_data/nsg_data_client.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
 import 'package:nsg_data/nsg_data_request.dart';
@@ -60,8 +59,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Future loadData() async {
     List<UserSettingsItem> items;
-    (await NsgDataRequest<UserSettingsItem>().requestItems())
-        .fold((e) => print(e), (data) => items = data);
+    items = (await NsgDataRequest<UserSettingsItem>().requestItems());
     if (items == null || items == null || items.isEmpty) {
       return;
     }

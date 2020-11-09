@@ -17,10 +17,9 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataField {
 
   Type get referentType => T;
 
-  static const String _ZERO_GUID = '00000000-0000-0000-0000-000000000000';
   T getReferent(NsgDataItem dataItem) {
     var id = dataItem.getFieldValue(name).toString();
-    if (id == '' || id == _ZERO_GUID) {
+    if (id == '' || id == NsgDataItem.ZERO_GUID) {
       return NsgDataClient.client.getNewObject(T) as T;
     }
     var item = NsgDataClient.client.getItemsFromCache(T, id) as T;

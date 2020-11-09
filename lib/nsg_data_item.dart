@@ -6,6 +6,8 @@ import 'package:nsg_data/nsg_data_provider.dart';
 import 'nsg_data_paramList.dart';
 
 class NsgDataItem {
+  static const String ZERO_GUID = '00000000-0000-0000-0000-000000000000';
+
   ///Get API path for request Items
   String get apiRequestItems {
     throw Exception('api Request Items is not overrided');
@@ -108,5 +110,24 @@ class NsgDataItem {
     });
 
     return list;
+  }
+
+  bool get isEmpty => getFieldValue(primaryKeyField).toString() == ZERO_GUID;
+  bool get isNotEmpty => !isEmpty;
+  @override
+  bool operator ==(Object other) => other is NsgDataItem && equal(other);
+  bool equal(NsgDataItem other) {
+    if (other.runtimeType == runtimeType) {
+      if (primaryKeyField == '') return hashCode == other.hashCode;
+      return (getFieldValue(primaryKeyField) ==
+          other.getFieldValue(primaryKeyField));
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode {
+    if (primaryKeyField == '') return super.hashCode;
+    return getFieldValue(primaryKeyField).hashCode;
   }
 }

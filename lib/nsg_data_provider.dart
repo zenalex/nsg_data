@@ -148,7 +148,6 @@ class NsgDataProvider extends GetxController {
       } else {
         var result = await _checkToken();
 
-        NsgApiError rError;
         result.fold((error) {
           if (error.errorType == null) {
             if (error.code != 401) {
@@ -157,10 +156,10 @@ class NsgDataProvider extends GetxController {
           } else {
             throw NsgApiException(error);
           }
-        }, (b) {
-          return;
-        });
-        result = await _anonymousLogin();
+        }, (b) {});
+        if (result.isLeft) {
+          result = await _anonymousLogin();
+        }
         result.fold((error) => throw NsgApiException(error), (b) {});
         return;
       }

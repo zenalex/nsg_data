@@ -1,4 +1,3 @@
-import 'package:either_option/either_option.dart';
 import 'package:nsg_data/dataFields/referenceField.dart';
 import 'package:nsg_data/nsgDataApiError.dart';
 import 'package:nsg_data/nsg_data.dart';
