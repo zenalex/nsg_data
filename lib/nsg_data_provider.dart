@@ -4,14 +4,13 @@ import 'dart:ui';
 import 'package:connectivity/connectivity.dart';
 import 'package:either_option/either_option.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:nsg_data/nsgApiException.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/nsgLoginModel.dart';
 import 'nsgDataApiError.dart';
 
-class NsgDataProvider extends GetxController {
+class NsgDataProvider {
   ///Token saved after authorization
   String token = '';
   String serverUri = 'http://192.168.1.20:5073';
@@ -257,6 +256,14 @@ class NsgDataProvider extends GetxController {
       }
     }
     return response.fold((e) => Left(e), (data) => Right(true));
+  }
+
+  Future resetUserToken() async {
+    if (name == '' || name == null) name = authorizationApi;
+    var _prefs = await SharedPreferences.getInstance();
+    await _prefs.remove(name);
+    isAnonymous = true;
+    token = '';
   }
 
   Future<Either<NsgApiError, bool>> _anonymousLogin() async {
