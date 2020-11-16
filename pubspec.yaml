@@ -18,6 +18,7 @@ dependencies:
   either_option: ^1.0.6
   connectivity: ^0.4.9+5
   retry: ^3.0.1
+  event: ^1.1.4
 
 dev_dependencies:
   flutter_test:

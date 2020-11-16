@@ -1,13 +1,25 @@
+import 'package:event/event.dart';
 import 'package:nsg_data/controllers/nsgBaseControllerData.dart';
 import 'package:nsg_data/controllers/nsgDataBinding.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'package:retry/retry.dart';
 
+//TODO: запрос данных с фильтром
 class NsgBaseController extends GetxController
     with StateMixin<NsgBaseControllerData> {
   Type dataType;
   bool requestOnInit;
+  bool selectedMasterRequired;
+  bool useDataCache;
+  bool autoSelectFirstItem;
+
+  List<NsgDataItem> dataItemList;
+  List<NsgDataItem> dataCache;
+
+  //Referenses to load
+  List<String> referenceList;
+  final selectedItemChanged = Event<GenericEventArgs1>();
 
   ///Use update method on data update
   bool useUpdate;
@@ -36,17 +48,13 @@ class NsgBaseController extends GetxController
   NsgDataItem _selectedItem;
   NsgDataItem get selectedItem => _selectedItem;
   set selectedItem(NsgDataItem newItem) {
-    if (_selectedItem != newItem && selectedItemChanged != null) {
-      selectedItemChanged(newItem);
+    var oldItem = _selectedItem;
+    if (_selectedItem != newItem) {
+      _selectedItem = newItem;
+      selectedItemChanged.broadcast(GenericEventArgs1(oldItem));
+      _sendNotify();
     }
-    _selectedItem = newItem;
   }
-
-  List<NsgDataItem> dataItemList;
-
-  //Referenses to load
-  List<String> referenceList;
-  void Function(NsgDataItem selectedItem) selectedItemChanged;
 
   NsgBaseController(
       {this.dataType,
@@ -55,25 +63,37 @@ class NsgBaseController extends GetxController
       this.useChange = true,
       this.builderIDs,
       this.masterController,
+      this.selectedMasterRequired = true,
       this.dataBinding,
       this.autoRepeate = false,
-      this.autoRepeateCount = 10})
+      this.autoRepeateCount = 10,
+      this.useDataCache = false,
+      this.autoSelectFirstItem = false})
       : super();
 
   @override
   void onInit() {
     super.onInit();
+    if (masterController != null) {
+      masterController.selectedItemChanged.subscribe(masterValueChanged);
+    }
     if (requestOnInit) requestItems();
   }
 
-  List<NsgDataItem> _itemList;
-  List<NsgDataItem> get itemList {
-    if (_itemList == null) {
-      _itemList = <NsgDataItem>[];
-      requestItems();
+  @override
+  void onClose() {
+    if (masterController != null) {
+      masterController.selectedItemChanged.unsubscribe(masterValueChanged);
     }
-    return _itemList;
   }
+  // List<NsgDataItem> _itemList;
+  // List<NsgDataItem> get itemList {
+  //   if (_itemList == null) {
+  //     _itemList = <NsgDataItem>[];
+  //     requestItems();
+  //   }
+  //   return _itemList;
+  // }
 
   ///Request Items
   void requestItems() async {
@@ -89,23 +109,53 @@ class NsgBaseController extends GetxController
   void _requestItems() async {
     try {
       assert(dataType != null);
-      var request = NsgDataRequest(dataItemType: dataType);
-      var newItemsList = await request.requestItems(
-          filter: getRequestFilter, loadReference: referenceList);
-      //service method for descendants
-      currentStatus = RxStatus.success();
-      afterRequestItems(newItemsList);
+      if (masterController != null &&
+          selectedMasterRequired &&
+          masterController.selectedItem == null) {
+        if (dataItemList != null && dataItemList.isNotEmpty) {
+          dataItemList.clear();
+        }
+        return;
+      }
+      List<NsgDataItem> newItemsList;
+      if (useDataCache && dataCache != null) {
+        newItemsList = dataCache;
+      } else {
+        newItemsList = await doRequestItems();
+
+        //service method for descendants
+        currentStatus = RxStatus.success();
+        afterRequestItems(newItemsList);
+        if (useDataCache) dataCache = newItemsList;
+      }
       dataItemList = filter(newItemsList);
+      if (!dataItemList.contains(selectedItem)) selectedItem = null;
       //notify builders
-      if (useUpdate) update(builderIDs);
-      if (useChange) {
-        change(NsgBaseControllerData(controller: this), status: currentStatus);
+      _sendNotify();
+      if (selectedItem == null &&
+          autoSelectFirstItem &&
+          dataItemList != null &&
+          dataItemList.isNotEmpty) {
+        selectedItem = dataItemList[0];
       }
       //service method for descendants
       afterUpdate();
     } catch (e) {
       _updateStatusError(e.toString());
     }
+  }
+
+  void _sendNotify() {
+    if (useUpdate) update(builderIDs);
+    if (useChange) {
+      change(NsgBaseControllerData(controller: this), status: currentStatus);
+    }
+  }
+
+  Future<List<NsgDataItem>> doRequestItems() async {
+    var request = NsgDataRequest(dataItemType: dataType);
+    return await request.requestItems(
+        filter: getRequestFilter, loadReference: referenceList);
   }
 
   ///is calling after new Items are putted in itemList
@@ -116,7 +166,7 @@ class NsgBaseController extends GetxController
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return newItemsList;
-    if (masterController.selectedItem == null &&
+    if (masterController.selectedItem == null ||
         !masterController.selectedItem.fieldList.fields
             .containsKey(dataBinding.masterFieldName)) return newItemsList;
     var masterValue = masterController
@@ -132,6 +182,11 @@ class NsgBaseController extends GetxController
     return list;
   }
 
+  bool matchFilter(NsgDataItem item) {
+    var list = [item];
+    return filter(list).isNotEmpty;
+  }
+
   NsgDataRequestFilter get getRequestFilter => null;
 
   void _updateStatusError(String e) {
@@ -140,5 +195,10 @@ class NsgBaseController extends GetxController
     if (useChange) {
       change(null, status: currentStatus);
     }
+  }
+
+  void masterValueChanged(GenericEventArgs1 args) async {
+    //if (!matchFilter(selectedItem)) selectedItem = null;
+    await requestItems();
   }
 }

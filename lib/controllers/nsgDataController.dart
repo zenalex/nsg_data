@@ -13,7 +13,10 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       NsgBaseController masterController,
       NsgDataBinding dataBindign,
       bool autoRepeate = false,
-      int autoRepeateCount = 10})
+      int autoRepeateCount = 10,
+      bool useDataCache = false,
+      bool selectedMasterRequired = true,
+      bool autoSelectFirstItem = false})
       : super(
             dataType: T,
             requestOnInit: requestOnInit,
@@ -23,5 +26,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
             masterController: masterController,
             dataBinding: dataBindign,
             autoRepeate: autoRepeate,
-            autoRepeateCount: autoRepeateCount);
+            autoRepeateCount: autoRepeateCount,
+            selectedMasterRequired: selectedMasterRequired,
+            useDataCache: useDataCache,
+            autoSelectFirstItem: autoSelectFirstItem);
 }
