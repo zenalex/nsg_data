@@ -16,7 +16,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       int autoRepeateCount = 10,
       bool useDataCache = false,
       bool selectedMasterRequired = true,
-      bool autoSelectFirstItem = false})
+      bool autoSelectFirstItem = false,
+      List<NsgBaseController> dependsOnControllers})
       : super(
             dataType: T,
             requestOnInit: requestOnInit,
@@ -29,5 +30,6 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
             autoRepeateCount: autoRepeateCount,
             selectedMasterRequired: selectedMasterRequired,
             useDataCache: useDataCache,
-            autoSelectFirstItem: autoSelectFirstItem);
+            autoSelectFirstItem: autoSelectFirstItem,
+            dependsOnControllers: dependsOnControllers);
 }

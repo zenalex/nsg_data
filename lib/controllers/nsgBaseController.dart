@@ -32,6 +32,7 @@ class NsgBaseController extends GetxController
 
   ///Master controller. Using for binding.
   NsgBaseController masterController;
+  List<NsgBaseController> dependsOnControllers;
 
   ///Binding rule
   NsgDataBinding dataBinding;
@@ -68,7 +69,8 @@ class NsgBaseController extends GetxController
       this.autoRepeate = false,
       this.autoRepeateCount = 10,
       this.useDataCache = false,
-      this.autoSelectFirstItem = false})
+      this.autoSelectFirstItem = false,
+      dependsOnControllers})
       : super();
 
   @override
@@ -77,6 +79,12 @@ class NsgBaseController extends GetxController
     if (masterController != null) {
       masterController.selectedItemChanged.subscribe(masterValueChanged);
     }
+    if (dependsOnControllers != null) {
+      dependsOnControllers.forEach((element) {
+        element.selectedItemChanged.subscribe(masterValueChanged);
+      });
+    }
+
     if (requestOnInit) requestItems();
   }
 
@@ -84,6 +92,11 @@ class NsgBaseController extends GetxController
   void onClose() {
     if (masterController != null) {
       masterController.selectedItemChanged.unsubscribe(masterValueChanged);
+    }
+    if (dependsOnControllers != null) {
+      dependsOnControllers.forEach((element) {
+        element.selectedItemChanged.unsubscribe(masterValueChanged);
+      });
     }
   }
   // List<NsgDataItem> _itemList;

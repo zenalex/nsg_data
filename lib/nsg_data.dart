@@ -5,6 +5,7 @@ library nsg_data;
 
 export 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 export 'package:nsg_data/authorize/nsgPhoneLoginVerificationPage.dart';
+export 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
 export 'package:nsg_data/dataFields/datafield.dart';
 export 'package:nsg_data/dataFields/boolfield.dart';
 export 'package:nsg_data/dataFields/dataImage.dart';
@@ -23,4 +24,5 @@ export 'package:nsg_data/nsg_data_request.dart';
 export 'package:nsg_data/nsgApiException.dart';
 export 'package:nsg_data/controllers/nsgDataController.dart';
 export 'package:nsg_data/controllers/nsgBaseController.dart';
+export 'package:nsg_data/controllers/nsgBaseControllerData.dart';
 export 'package:nsg_data/controllers/nsgDataBinding.dart';
