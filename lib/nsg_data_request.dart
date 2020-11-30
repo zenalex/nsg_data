@@ -24,6 +24,15 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
   }
 
+  void _fromJsonList(List<dynamic> maps) {
+    items = <T>[];
+    maps.forEach((m) {
+      var elem = NsgDataClient.client.getNewObject(dataItemType);
+      elem.fromJson(m as Map<String, dynamic>);
+      items.add(elem as T);
+    });
+  }
+
   Future<List<T>> requestItems(
       {NsgDataRequestFilter filter,
       bool autoAuthorize = true,
@@ -36,7 +45,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (dataItem.remoteProvider.token != '') {
       header['Authorization'] = dataItem.remoteProvider.token;
     }
-    var response = await dataItem.remoteProvider.baseRequest(
+    var response = await dataItem.remoteProvider.baseRequestList(
         function: 'apiRequestItems ${dataItem.runtimeType}',
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
         url: dataItem.remoteProvider.serverUri + dataItem.apiRequestItems,
@@ -45,7 +54,7 @@ class NsgDataRequest<T extends NsgDataItem> {
 
     NsgApiError error;
     response.fold((e) => error = e, (data) {
-      _fromJson(data);
+      _fromJsonList(data);
       NsgDataClient.client.addItemsToCache(items: items, tag: tag);
     });
     if (response.isRight) {

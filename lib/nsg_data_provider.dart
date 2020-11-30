@@ -43,6 +43,48 @@ class NsgDataProvider {
     _initialized = true;
   }
 
+  Future<Either<NsgApiError, List<dynamic>>> baseRequestList({
+    final String function,
+    final Map<String, dynamic> params,
+    final Map<String, String> headers,
+    final String url,
+    final int timeout = 15000,
+    final String method = 'GET',
+  }) async {
+    final _dio = Dio(BaseOptions(
+      headers: headers,
+      method: method,
+      responseType: ResponseType.json,
+      contentType: 'application/json',
+      connectTimeout: timeout,
+      receiveTimeout: timeout,
+    ));
+
+    Response<List<dynamic>> response;
+
+    try {
+      if (method == 'GET') {
+        response = await _dio.get(url, queryParameters: params);
+      } else if (method == 'POST') {
+        response = await _dio.post(url, data: params);
+      }
+      if (isDebug) {
+        print('HTTP STATUS: ${response.statusCode}');
+        print(response.data);
+      }
+
+      return Right(response.data);
+    } on DioError catch (e) {
+      print('dio error. function: $function, error: ${e.error ??= ''}');
+      return Left(NsgApiError(
+          code: 1, message: 'Internet connection error', errorType: e.type));
+    } catch (e) {
+      print(2);
+      print('network error. function: $function, error: $e');
+      return Left(NsgApiError(code: 0, message: '$e'));
+    }
+  }
+
   Future<Either<NsgApiError, Map<String, dynamic>>> baseRequest({
     final String function,
     final Map<String, dynamic> params,
