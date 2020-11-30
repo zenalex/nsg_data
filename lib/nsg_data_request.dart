@@ -40,7 +40,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         function: 'apiRequestItems ${dataItem.runtimeType}',
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
         url: dataItem.remoteProvider.serverUri + dataItem.apiRequestItems,
-        method: 'POST',
+        method: 'GET',
         params: filterMap);
 
     NsgApiError error;

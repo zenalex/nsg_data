@@ -53,7 +53,7 @@ class NsgBaseController extends GetxController
     if (_selectedItem != newItem) {
       _selectedItem = newItem;
       selectedItemChanged.broadcast(GenericEventArgs1(oldItem));
-      _sendNotify();
+      sendNotify();
     }
   }
 
@@ -144,7 +144,7 @@ class NsgBaseController extends GetxController
       dataItemList = filter(newItemsList);
       if (!dataItemList.contains(selectedItem)) selectedItem = null;
       //notify builders
-      _sendNotify();
+      sendNotify();
       if (selectedItem == null &&
           autoSelectFirstItem &&
           dataItemList != null &&
@@ -158,7 +158,7 @@ class NsgBaseController extends GetxController
     }
   }
 
-  void _sendNotify() {
+  void sendNotify() {
     if (useUpdate) update(builderIDs);
     if (useChange) {
       change(NsgBaseControllerData(controller: this), status: currentStatus);
