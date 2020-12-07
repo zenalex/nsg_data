@@ -37,7 +37,9 @@ class NsgDataRequest<T extends NsgDataItem> {
       {NsgDataRequestFilter filter,
       bool autoAuthorize = true,
       String tag,
-      List<String> loadReference}) async {
+      List<String> loadReference,
+      String function = '',
+      String method = 'GET'}) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, String>{};
     if (filter != null) filterMap = filter.toJson();
@@ -45,11 +47,16 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (dataItem.remoteProvider.token != '') {
       header['Authorization'] = dataItem.remoteProvider.token;
     }
+    if (function == '') {
+      function = dataItem.remoteProvider.serverUri + dataItem.apiRequestItems;
+    } else {
+      function = dataItem.remoteProvider.serverUri + function;
+    }
     var response = await dataItem.remoteProvider.baseRequestList(
-        function: 'apiRequestItems ${dataItem.runtimeType}',
+        function: '$function ${dataItem.runtimeType}',
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
-        url: dataItem.remoteProvider.serverUri + dataItem.apiRequestItems,
-        method: 'GET',
+        url: function,
+        method: method,
         params: filterMap);
 
     NsgApiError error;
@@ -71,19 +78,29 @@ class NsgDataRequest<T extends NsgDataItem> {
       {NsgDataRequestFilter filter,
       bool autoAuthorize = true,
       String tag,
-      List<String> loadReference}) async {
+      List<String> loadReference,
+      String function = '',
+      String method = 'GET',
+      bool addCount = true}) async {
     NsgDataRequestFilter newFilter;
-    if (filter == null) {
-      newFilter = NsgDataRequestFilter(count: 1);
-    } else {
-      newFilter = NsgDataRequestFilter(
-          top: filter.top, count: 1, idList: filter.idList);
+    if (addCount) {
+      if (filter == null) {
+        newFilter = NsgDataRequestFilter(count: 1);
+      } else {
+        newFilter = NsgDataRequestFilter(
+            top: filter.top,
+            count: 1,
+            idList: filter.idList,
+            params: filter.params);
+      }
     }
     var data = await requestItems(
         filter: newFilter,
         autoAuthorize: autoAuthorize,
         tag: tag,
-        loadReference: loadReference);
+        loadReference: loadReference,
+        function: function,
+        method: method);
     if (data == null || data.isEmpty) {
       return null;
     }
