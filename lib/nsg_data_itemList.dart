@@ -4,6 +4,7 @@ class NsgItemList {
   final Map<String, NsgDataCashedItem> items = <String, NsgDataCashedItem>{};
 
   void add({NsgDataItem item, DateTime time, String tag = ''}) {
+    if (item.primaryKeyField == '') return;
     var id = item.getFieldValue(item.primaryKeyField).toString();
     if (id == '') return;
     time ??= DateTime.now();
