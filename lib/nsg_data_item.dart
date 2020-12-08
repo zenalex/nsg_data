@@ -21,6 +21,14 @@ class NsgDataItem {
     });
   }
 
+  Map<String, dynamic> toJson() {
+    var map = <String, dynamic>{};
+    fieldList.fields.forEach((name, value) {
+      map[name] = value.convertToJson(getFieldValue(name));
+    });
+    return map;
+  }
+
   NsgDataItem getNewObject() {
     throw Exception('getNewObject for type {runtimeType} is not defined');
   }
