@@ -1,6 +1,6 @@
 # nsg_data
 
-Network data exchange framework between Dart, Flutter client and C# serber applecations
+Network data exchange framework between Dart, Flutter client and C# server applications
 
 ## Getting Started
 
