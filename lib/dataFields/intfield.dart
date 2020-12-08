@@ -5,7 +5,7 @@ class NsgDataIntField extends NsgDataField {
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {
-    return int.parse(jsonValue.toString());
+    return jsonValue as int;
   }
 
   @override
