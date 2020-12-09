@@ -5,7 +5,8 @@ class NsgDataDoubleField extends NsgDataField {
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {
-    return jsonValue;
+    if (jsonValue is int) return jsonValue.toDouble();
+    return jsonValue as double;
   }
 
   @override
