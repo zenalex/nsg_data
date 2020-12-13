@@ -3,7 +3,8 @@ import 'nsgDataApiError.dart';
 import 'nsg_data_client.dart';
 
 class NsgDataPost<T extends NsgDataItem> {
-  List<T> items;
+  List<T> itemsToPost;
+  List<T> _items;
   Type dataItemType;
 
   NsgDataPost({this.dataItemType}) {
@@ -11,17 +12,17 @@ class NsgDataPost<T extends NsgDataItem> {
   }
 
   void _fromJsonList(List<dynamic> maps) {
-    items = <T>[];
+    _items = <T>[];
     maps.forEach((m) {
       var elem = NsgDataClient.client.getNewObject(dataItemType);
       elem.fromJson(m as Map<String, dynamic>);
-      items.add(elem as T);
+      _items.add(elem as T);
     });
   }
 
   List<Map<String, dynamic>> _toJson() {
     var list = <Map<String, dynamic>>[];
-    items.forEach((i) {
+    itemsToPost.forEach((i) {
       list.add(i.toJson());
     });
     return list;
@@ -43,6 +44,17 @@ class NsgDataPost<T extends NsgDataItem> {
     } else {
       function = dataItem.remoteProvider.serverUri + function;
     }
+
+    // final _dio = Dio(BaseOptions(
+    //   headers: header,
+    //   method: 'POST',
+    //   responseType: ResponseType.json,
+    //   contentType: 'application/json',
+    //   connectTimeout: 15000,
+    //   receiveTimeout: 15000,
+    // ));
+    //var test = await _dio.post(function, data: _toJson());
+
     var response = await dataItem.remoteProvider.baseRequestList(
         function: '$function ${dataItem.runtimeType}',
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
@@ -52,18 +64,20 @@ class NsgDataPost<T extends NsgDataItem> {
 
     NsgApiError error;
     response.fold((e) => error = e, (data) {
-      _fromJsonList(data);
-      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+      if (data is List<dynamic>) {
+        _fromJsonList(data);
+        NsgDataClient.client.addItemsToCache(items: _items, tag: tag);
+      }
     });
     if (response.isRight) {
       //Check referent field list
-      if (loadReference != null) {
+      if (loadReference != null && _items != null) {
         var req = NsgDataRequest<T>();
-        await req.loadAllReferents(items, loadReference, tag: tag);
+        await req.loadAllReferents(_items, loadReference, tag: tag);
       }
     }
     response.fold((e) => throw NsgApiException(error), (data) {});
-    return items;
+    return _items;
   }
 
   Future<T> postItem({

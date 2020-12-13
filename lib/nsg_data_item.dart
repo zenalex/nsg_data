@@ -144,7 +144,7 @@ class NsgDataItem {
 
   Future post() async {
     var p = NsgDataPost(dataItemType: runtimeType);
-    p.items = <NsgDataItem>[this];
+    p.itemsToPost = <NsgDataItem>[this];
     var newItem = await p.postItem();
     if (newItem != null) {
       copyFieldValues(newItem);

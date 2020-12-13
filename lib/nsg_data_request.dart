@@ -52,7 +52,7 @@ class NsgDataRequest<T extends NsgDataItem> {
 
     NsgApiError error;
     response.fold((e) => error = e, (data) {
-      _fromJsonList(data);
+      _fromJsonList(data as List<dynamic>);
       NsgDataClient.client.addItemsToCache(items: items, tag: tag);
     });
     if (response.isRight) {

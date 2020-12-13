@@ -43,7 +43,7 @@ class NsgDataProvider {
     _initialized = true;
   }
 
-  Future<Either<NsgApiError, List<dynamic>>> baseRequestList({
+  Future<Either<NsgApiError, dynamic>> baseRequestList({
     final String function,
     final Map<String, dynamic> params,
     final dynamic postData,
@@ -61,7 +61,8 @@ class NsgDataProvider {
       receiveTimeout: timeout,
     ));
 
-    Response<List<dynamic>> response;
+    //Response<List<dynamic>> response;
+    Response<dynamic> response;
 
     try {
       if (method == 'GET') {
