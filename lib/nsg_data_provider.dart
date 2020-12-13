@@ -67,7 +67,8 @@ class NsgDataProvider {
       if (method == 'GET') {
         response = await _dio.get(url, queryParameters: params);
       } else if (method == 'POST') {
-        response = await _dio.post(url, data: postData);
+        response =
+            await _dio.post(url, queryParameters: params, data: postData);
       }
       if (isDebug) {
         print('HTTP STATUS: ${response.statusCode}');

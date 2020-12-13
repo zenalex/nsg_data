@@ -28,7 +28,8 @@ class NsgDataRequest<T extends NsgDataItem> {
       String tag,
       List<String> loadReference,
       String function = '',
-      String method = 'GET'}) async {
+      String method = 'GET',
+      dynamic postData}) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, String>{};
     if (filter != null) filterMap = filter.toJson();
@@ -46,7 +47,8 @@ class NsgDataRequest<T extends NsgDataItem> {
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
         url: function,
         method: method,
-        params: filterMap);
+        params: filterMap,
+        postData: postData);
 
     NsgApiError error;
     response.fold((e) => error = e, (data) {
@@ -70,7 +72,8 @@ class NsgDataRequest<T extends NsgDataItem> {
       List<String> loadReference,
       String function = '',
       String method = 'GET',
-      bool addCount = true}) async {
+      bool addCount = true,
+      dynamic postData}) async {
     NsgDataRequestFilter newFilter;
     if (addCount) {
       if (filter == null) {
@@ -89,7 +92,8 @@ class NsgDataRequest<T extends NsgDataItem> {
         tag: tag,
         loadReference: loadReference,
         function: function,
-        method: method);
+        method: method,
+        postData: postData);
     if (data == null || data.isEmpty) {
       return null;
     }
