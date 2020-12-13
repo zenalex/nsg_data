@@ -5,9 +5,8 @@ import 'package:nsg_data/nsg_data_item.dart';
 
 class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   List<T> get items => dataItemList.cast<T>();
-  T get firstItem => (dataItemList == null || dataItemList.isEmpty)
-      ? NsgDataClient.client.getNewObject(T) as T
-      : items[0];
+  T get firstItem =>
+      (dataItemList == null || dataItemList.isEmpty) ? null : items[0];
 
   NsgDataController(
       {bool requestOnInit = true,

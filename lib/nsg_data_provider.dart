@@ -46,6 +46,7 @@ class NsgDataProvider {
   Future<Either<NsgApiError, List<dynamic>>> baseRequestList({
     final String function,
     final Map<String, dynamic> params,
+    final dynamic postData,
     final Map<String, String> headers,
     final String url,
     final int timeout = 15000,
@@ -66,7 +67,7 @@ class NsgDataProvider {
       if (method == 'GET') {
         response = await _dio.get(url, queryParameters: params);
       } else if (method == 'POST') {
-        response = await _dio.post(url, data: params);
+        response = await _dio.post(url, data: postData);
       }
       if (isDebug) {
         print('HTTP STATUS: ${response.statusCode}');
@@ -79,7 +80,6 @@ class NsgDataProvider {
       return Left(NsgApiError(
           code: 1, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
-      print(2);
       print('network error. function: $function, error: $e');
       return Left(NsgApiError(code: 0, message: '$e'));
     }

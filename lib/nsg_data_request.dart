@@ -13,17 +13,6 @@ class NsgDataRequest<T extends NsgDataItem> {
     dataItemType ??= T;
   }
 
-  void _fromJson(Map<String, dynamic> json) {
-    if (json['Items'] != null) {
-      items = <T>[];
-      json['Items'].forEach((v) {
-        var elem = NsgDataClient.client.getNewObject(dataItemType);
-        elem.fromJson(v as Map<String, dynamic>);
-        items.add(elem as T);
-      });
-    }
-  }
-
   void _fromJsonList(List<dynamic> maps) {
     items = <T>[];
     maps.forEach((m) {

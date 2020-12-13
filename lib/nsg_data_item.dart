@@ -1,5 +1,6 @@
 import 'package:nsg_data/dataFields/datafield.dart';
 import 'package:nsg_data/dataFields/referenceField.dart';
+import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/nsg_data_client.dart';
 import 'package:nsg_data/nsg_data_fieldlist.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
@@ -12,6 +13,8 @@ class NsgDataItem {
   String get apiRequestItems {
     throw Exception('api Request Items is not overrided');
   }
+
+  String get apiPostItems => apiRequestItems + '/Post';
 
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
@@ -137,5 +140,20 @@ class NsgDataItem {
   int get hashCode {
     if (primaryKeyField == '') return super.hashCode;
     return getFieldValue(primaryKeyField).hashCode;
+  }
+
+  Future post() async {
+    var p = NsgDataPost(dataItemType: runtimeType);
+    p.items = <NsgDataItem>[this];
+    var newItem = await p.postItem();
+    if (newItem != null) {
+      copyFieldValues(newItem);
+    }
+  }
+
+  void copyFieldValues(NsgDataItem newItem) {
+    fieldValues.fields.forEach((key, value) {
+      setFieldValue(key, newItem.getFieldValue(key));
+    });
   }
 }

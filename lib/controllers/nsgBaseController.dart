@@ -20,6 +20,7 @@ class NsgBaseController extends GetxController
   //Referenses to load
   List<String> referenceList;
   final selectedItemChanged = Event<GenericEventArgs1>();
+  final itemsRequested = Event<GenericEventArgs1>();
 
   ///Use update method on data update
   bool useUpdate;
@@ -59,7 +60,7 @@ class NsgBaseController extends GetxController
 
   NsgBaseController(
       {this.dataType,
-      this.requestOnInit = true,
+      this.requestOnInit = false,
       this.useUpdate = false,
       this.useChange = true,
       this.builderIDs,
@@ -75,7 +76,6 @@ class NsgBaseController extends GetxController
 
   @override
   void onInit() {
-    super.onInit();
     if (masterController != null) {
       masterController.selectedItemChanged.subscribe(masterValueChanged);
     }
@@ -86,6 +86,7 @@ class NsgBaseController extends GetxController
     }
 
     if (requestOnInit) requestItems();
+    super.onInit();
   }
 
   @override
@@ -109,17 +110,17 @@ class NsgBaseController extends GetxController
   // }
 
   ///Request Items
-  void requestItems() async {
+  Future requestItems() async {
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       await r.retry(() => _requestItems(),
           onRetry: (error) => _updateStatusError(error.toString()));
     } else {
-      _requestItems();
+      await _requestItems();
     }
   }
 
-  void _requestItems() async {
+  Future _requestItems() async {
     try {
       assert(dataType != null);
       if (masterController != null &&
