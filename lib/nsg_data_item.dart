@@ -85,7 +85,7 @@ class NsgDataItem {
       paramList.params[_PARAM_REMOTE_PROVIDER] = value;
 
   T getReferent<T extends NsgDataItem>(String name) {
-    assert(fieldValues.fields.containsKey(name));
+    assert(fieldList.fields.containsKey(name));
     var field = fieldList.fields[name];
     assert(field is NsgDataReferenceField);
     return (field as NsgDataReferenceField).getReferent(this) as T;
