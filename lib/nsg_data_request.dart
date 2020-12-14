@@ -56,6 +56,9 @@ class NsgDataRequest<T extends NsgDataItem> {
       NsgDataClient.client.addItemsToCache(items: items, tag: tag);
     });
     if (response.isRight) {
+      if (loadReference == null && dataItem.loadReferenceDefault != null) {
+        loadReference = dataItem.loadReferenceDefault;
+      }
       //Check referent field list
       if (loadReference != null) {
         await loadAllReferents(items, loadReference, tag: tag);

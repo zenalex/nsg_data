@@ -8,6 +8,7 @@ import 'nsg_data_paramList.dart';
 
 class NsgDataItem {
   static const String ZERO_GUID = '00000000-0000-0000-0000-000000000000';
+  List<String> loadReferenceDefault;
 
   ///Get API path for request Items
   String get apiRequestItems {
