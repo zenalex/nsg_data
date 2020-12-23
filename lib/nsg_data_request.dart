@@ -3,7 +3,7 @@ import 'package:nsg_data/nsgDataApiError.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'nsg_data_client.dart';
 import 'nsg_data_item.dart';
-import 'nsg_data_request_filter.dart';
+import 'nsg_data_requestParams.dart';
 
 class NsgDataRequest<T extends NsgDataItem> {
   List<T> items;
@@ -23,7 +23,7 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   Future<List<T>> requestItems(
-      {NsgDataRequestFilter filter,
+      {NsgDataRequestParams filter,
       bool autoAuthorize = true,
       String tag,
       List<String> loadReference,
@@ -69,7 +69,7 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   Future<T> requestItem(
-      {NsgDataRequestFilter filter,
+      {NsgDataRequestParams filter,
       bool autoAuthorize = true,
       String tag,
       List<String> loadReference,
@@ -77,12 +77,12 @@ class NsgDataRequest<T extends NsgDataItem> {
       String method = 'GET',
       bool addCount = true,
       dynamic postData}) async {
-    NsgDataRequestFilter newFilter;
+    NsgDataRequestParams newFilter;
     if (addCount) {
       if (filter == null) {
-        newFilter = NsgDataRequestFilter(count: 1);
+        newFilter = NsgDataRequestParams(count: 1);
       } else {
-        newFilter = NsgDataRequestFilter(
+        newFilter = NsgDataRequestParams(
             top: filter.top,
             count: 1,
             idList: filter.idList,
@@ -131,7 +131,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     });
     await Future.forEach<Type>(allRefs.keys, (type) async {
       var request = NsgDataRequest(dataItemType: type);
-      var filter = NsgDataRequestFilter(idList: allRefs[type]);
+      var filter = NsgDataRequestParams(idList: allRefs[type]);
       await request.requestItems(filter: filter);
     });
   }

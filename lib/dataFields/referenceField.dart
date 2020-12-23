@@ -2,7 +2,7 @@ import 'package:nsg_data/dataFields/datafield.dart';
 import 'package:nsg_data/nsg_data_client.dart';
 import 'package:nsg_data/nsg_data_item.dart';
 import 'package:nsg_data/nsg_data_request.dart';
-import 'package:nsg_data/nsg_data_request_filter.dart';
+import 'package:nsg_data/nsg_data_requestParams.dart';
 
 class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataField {
   NsgDataReferenceField(String name) : super(name);
@@ -30,7 +30,7 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataField {
     var item = getReferent(dataItem);
     if (item == null) {
       var id = dataItem.getFieldValue(name).toString();
-      var filter = NsgDataRequestFilter(idList: [id, id]);
+      var filter = NsgDataRequestParams(idList: [id, id]);
       var request = NsgDataRequest<T>();
       await request.requestItems(filter: filter);
       item = NsgDataClient.client.getItemsFromCache(T, id) as T;

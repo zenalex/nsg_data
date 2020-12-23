@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class NsgDataRequestFilter {
+class NsgDataRequestParams {
   final int top;
   final int count;
   final List<String> idList;
@@ -14,6 +14,6 @@ class NsgDataRequestFilter {
     return filter;
   }
 
-  NsgDataRequestFilter(
+  NsgDataRequestParams(
       {this.top = 0, this.count = 0, this.idList, this.params});
 }

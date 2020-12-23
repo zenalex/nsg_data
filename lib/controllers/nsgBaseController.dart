@@ -201,7 +201,7 @@ class NsgBaseController extends GetxController
     return filter(list).isNotEmpty;
   }
 
-  NsgDataRequestFilter get getRequestFilter => null;
+  NsgDataRequestParams get getRequestFilter => null;
 
   void _updateStatusError(String e) {
     currentStatus = RxStatus.error(e.toString());
