@@ -1,6 +1,7 @@
 import 'package:nsg_data/dataFields/referenceField.dart';
 import 'package:nsg_data/nsgDataApiError.dart';
 import 'package:nsg_data/nsg_data.dart';
+import 'package:retry/retry.dart';
 import 'nsg_data_client.dart';
 import 'nsg_data_item.dart';
 import 'nsg_data_requestParams.dart';
@@ -23,6 +24,39 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   Future<List<T>> requestItems(
+      {NsgDataRequestParams filter,
+      bool autoAuthorize = true,
+      String tag,
+      List<String> loadReference,
+      String function = '',
+      String method = 'GET',
+      dynamic postData,
+      bool autoRepeate = false,
+      int autoRepeateCount = 1000}) async {
+    if (autoRepeate) {
+      final r = RetryOptions(maxAttempts: autoRepeateCount);
+      return await r.retry(() => _requestItems(
+          filter: filter,
+          autoAuthorize: autoAuthorize,
+          tag: tag,
+          loadReference: loadReference,
+          function: function,
+          method: method,
+          postData: postData));
+      // onRetry: (error) => _updateStatusError(error.toString()));
+    } else {
+      return await _requestItems(
+          filter: filter,
+          autoAuthorize: autoAuthorize,
+          tag: tag,
+          loadReference: loadReference,
+          function: function,
+          method: method,
+          postData: postData);
+    }
+  }
+
+  Future<List<T>> _requestItems(
       {NsgDataRequestParams filter,
       bool autoAuthorize = true,
       String tag,

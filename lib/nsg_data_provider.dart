@@ -6,6 +6,7 @@ import 'package:either_option/either_option.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:nsg_data/nsgApiException.dart';
+import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/nsgLoginModel.dart';
 import 'nsgDataApiError.dart';
@@ -87,7 +88,37 @@ class NsgDataProvider {
     }
   }
 
-  Future<Either<NsgApiError, Map<String, dynamic>>> baseRequest({
+  Future<Either<NsgApiError, Map<String, dynamic>>> baseRequest(
+      {final String function,
+      final Map<String, dynamic> params,
+      final Map<String, String> headers,
+      final String url,
+      final int timeout = 15000,
+      final String method = 'GET',
+      bool autoRepeate = false,
+      int autoRepeateCount = 1000}) async {
+    if (autoRepeate) {
+      final r = RetryOptions(maxAttempts: autoRepeateCount);
+      return await r.retry(() => _baseRequest(
+          function: function,
+          params: params,
+          headers: headers,
+          url: url,
+          timeout: timeout,
+          method: method));
+      // onRetry: (error) => _updateStatusError(error.toString()));
+    } else {
+      return await _baseRequest(
+          function: function,
+          params: params,
+          headers: headers,
+          url: url,
+          timeout: timeout,
+          method: method);
+    }
+  }
+
+  Future<Either<NsgApiError, Map<String, dynamic>>> _baseRequest({
     final String function,
     final Map<String, dynamic> params,
     final Map<String, String> headers,
@@ -315,7 +346,9 @@ class NsgDataProvider {
         function: 'AnonymousLogin',
         url: '${serverUri}/${authorizationApi}/AnonymousLogin',
         method: 'GET',
-        params: {});
+        params: {},
+        autoRepeate: true,
+        autoRepeateCount: 1000);
 
     return response.fold((error) => Left(error), (data) {
       var loginResponse = NsgLoginResponse.fromJson(data);
@@ -331,7 +364,9 @@ class NsgDataProvider {
         headers: getAuthorizationHeader(),
         url: '${serverUri}/${authorizationApi}/CheckToken',
         method: 'GET',
-        params: {});
+        params: {},
+        autoRepeate: true,
+        autoRepeateCount: 1000);
 
     return response.fold((error) => Left(error), (data) {
       var loginResponse = NsgLoginResponse.fromJson(data);
