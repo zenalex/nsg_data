@@ -115,6 +115,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   TextEditingController _captchaController;
   Widget _getContext(BuildContext context) {
     if (isLoginSuccessfull) {
+      Future.delayed(Duration(seconds: 2))
+          .then((e) => Navigator.pop<bool>(context, true));
       return _getContextSuccessful(context);
     }
     _captchaController ??= TextEditingController();
@@ -281,53 +283,44 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     try {
       image = await widget.provider.getCaptcha();
     } catch (e) {
-      //TODO: Загрузить картинку-ошибку в случае невозможности получения капчи с сервера
-      //image = ...
+      image = Image.asset('lib/assets/no_image.jpg');
     }
     return image;
   }
 
-  void checkRequestSMSanswer(BuildContext context, bool response) {
-    var answerCode = 0;
-    //TODO: проверить коды ошибок логина
-    // response.fold((error) {
-    //   answerCode = error.code;
-    //   if (answerCode == null || answerCode == 0) {
-    //     answerCode = 5000;
-    //   }
-    // }, (v) => {answerCode = 0});
-    // if (answerCode == 0) {
-    setState(() {
-      //currentStage = _NsgPhoneLoginWidgetState.stageVerification;
-      isSMSRequested = false;
-    });
+  void checkRequestSMSanswer(BuildContext context, int answerCode) {
     if (updateTimer != null) {
       updateTimer.cancel();
     }
-    gotoNextPage(context);
-    return;
+    if (answerCode == 0) {
+      setState(() {
+        //currentStage = _NsgPhoneLoginWidgetState.stageVerification;
+        isSMSRequested = false;
+      });
+      gotoNextPage(context);
+    }
     var needRefreshCaptcha = false;
-    // var errorMessage = widget.widgetParams.errorMessageByStatusCode(answerCode);
-    // switch (answerCode) {
-    //   case 40102:
-    //     needRefreshCaptcha = true;
-    //     break;
-    //   case 40103:
-    //     needRefreshCaptcha = true;
-    //     break;
-    //   default:
-    //     needRefreshCaptcha = false;
-    // }
-    // isSMSRequested = false;
-    // widget.widgetParams.showError(context, errorMessage);
+    var errorMessage = widget.widgetParams.errorMessageByStatusCode(answerCode);
+    switch (answerCode) {
+      case 40102:
+        needRefreshCaptcha = true;
+        break;
+      case 40103:
+        needRefreshCaptcha = true;
+        break;
+      default:
+        needRefreshCaptcha = false;
+    }
+    isSMSRequested = false;
+    widget.widgetParams.showError(context, errorMessage);
 
-    // if (needRefreshCaptcha) {
-    //   refreshCaptcha();
-    // } else {
-    //   setState(() {
-    //     isSMSRequested = false;
-    //   });
-    // }
+    if (needRefreshCaptcha) {
+      refreshCaptcha();
+    } else {
+      setState(() {
+        isSMSRequested = false;
+      });
+    }
   }
 
   void doSmsRequest(BuildContext context) {

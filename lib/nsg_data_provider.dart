@@ -255,7 +255,7 @@ class NsgDataProvider {
     return response;
   }
 
-  Future<bool> phoneLoginRequestSMS(
+  Future<int> phoneLoginRequestSMS(
       String phoneNumber, String securityCode) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
@@ -273,14 +273,11 @@ class NsgDataProvider {
     var loginResponse = NsgLoginResponse.fromJson(response);
     if (loginResponse.errorCode == 0) {
       smsRequestedTime = DateTime.now();
-      return true;
-    } else {
-      throw NsgApiException(NsgApiError(
-          code: loginResponse.errorCode, message: 'Error sms request'));
     }
+    return loginResponse.errorCode;
   }
 
-  Future<bool> phoneLogin(String phoneNumber, String securityCode) async {
+  Future<int> phoneLogin(String phoneNumber, String securityCode) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
@@ -298,16 +295,13 @@ class NsgDataProvider {
     if (loginResponse.errorCode == 0) {
       token = loginResponse.token;
       isAnonymous = loginResponse.isAnonymous;
-    } else {
-      throw NsgApiException(NsgApiError(
-          code: loginResponse.errorCode, message: 'Error sms request'));
     }
     if (!isAnonymous) {
       if (name == '' || name == null) name = authorizationApi;
       var _prefs = await SharedPreferences.getInstance();
       await _prefs.setString(name, token);
     }
-    return true;
+    return loginResponse.errorCode;
   }
 
   Future<bool> logout() async {

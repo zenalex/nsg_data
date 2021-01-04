@@ -6,7 +6,6 @@ class NsgDataField {
     return jsonValue.toString();
   }
 
-  //TODO: override convertToJson where needed
   dynamic convertToJson(dynamic jsonValue) {
     return jsonValue;
   }

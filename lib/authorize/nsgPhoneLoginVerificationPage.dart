@@ -233,14 +233,15 @@ class _NsgPhoneLoginVerificationState
     });
   }
 
-  void checkLoginResult(BuildContext context, bool status) {
-    //TODO: прописать проверку результата логина
-    // status.fold((error) {
-    //   var needEnterCaptcha = (error.code != 40300);
-    //   var errorMessage =
-    //       widget.widgetParams.errorMessageByStatusCode(error.code);
-    //   showError(context, errorMessage, needEnterCaptcha);
-    // }, (b) => Navigator.pop(context, true));
+  void checkLoginResult(BuildContext context, int answerCode) {
+    if (answerCode != 0) {
+      var needEnterCaptcha = (answerCode != 40300);
+      var errorMessage =
+          widget.widgetParams.errorMessageByStatusCode(answerCode);
+      showError(context, errorMessage, needEnterCaptcha);
+    } else {
+      Navigator.pop(context, true);
+    }
   }
 
   Future showError(
