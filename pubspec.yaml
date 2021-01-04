@@ -1,6 +1,6 @@
 name: nsg_data
 description: Data object model and data exchange with C# server
-version: 0.0.3
+version: 0.0.4
 homepage: https://github.com/zenalex/nsg_data
 
 environment:
@@ -15,7 +15,6 @@ dependencies:
   flutter_multi_formatter: ^1.1.6
   dio: ^3.0.10
   get: ^3.17.1
-  either_option: ^1.0.6
   connectivity: ^0.4.9+5
   retry: ^3.0.1
   event: ^1.1.4

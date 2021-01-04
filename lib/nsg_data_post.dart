@@ -62,21 +62,15 @@ class NsgDataPost<T extends NsgDataItem> {
         postData: _toJson(),
         method: 'POST');
 
-    NsgApiError error;
-    response.fold((e) => error = e, (data) {
-      if (data is List<dynamic>) {
-        _fromJsonList(data);
-        NsgDataClient.client.addItemsToCache(items: _items, tag: tag);
-      }
-    });
-    if (response.isRight) {
-      //Check referent field list
-      if (loadReference != null && _items != null) {
-        var req = NsgDataRequest<T>();
-        await req.loadAllReferents(_items, loadReference, tag: tag);
-      }
+    if (response is List<dynamic>) {
+      _fromJsonList(response);
+      NsgDataClient.client.addItemsToCache(items: _items, tag: tag);
     }
-    response.fold((e) => throw NsgApiException(error), (data) {});
+    //Check referent field list
+    if (loadReference != null && _items != null) {
+      var req = NsgDataRequest<T>();
+      await req.loadAllReferents(_items, loadReference, tag: tag);
+    }
     return _items;
   }
 

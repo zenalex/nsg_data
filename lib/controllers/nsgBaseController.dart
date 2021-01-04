@@ -169,7 +169,10 @@ class NsgBaseController extends GetxController
   Future<List<NsgDataItem>> doRequestItems() async {
     var request = NsgDataRequest(dataItemType: dataType);
     return await request.requestItems(
-        filter: getRequestFilter, loadReference: referenceList);
+        filter: getRequestFilter,
+        loadReference: referenceList,
+        autoRepeate: autoRepeate,
+        autoRepeateCount: autoRepeateCount);
   }
 
   ///is calling after new Items are putted in itemList

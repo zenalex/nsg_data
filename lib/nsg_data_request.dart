@@ -84,21 +84,15 @@ class NsgDataRequest<T extends NsgDataItem> {
         params: filterMap,
         postData: postData);
 
-    NsgApiError error;
-    response.fold((e) => error = e, (data) {
-      _fromJsonList(data as List<dynamic>);
-      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
-    });
-    if (response.isRight) {
-      if (loadReference == null && dataItem.loadReferenceDefault != null) {
-        loadReference = dataItem.loadReferenceDefault;
-      }
-      //Check referent field list
-      if (loadReference != null) {
-        await loadAllReferents(items, loadReference, tag: tag);
-      }
+    _fromJsonList(response as List<dynamic>);
+    NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+    if (loadReference == null && dataItem.loadReferenceDefault != null) {
+      loadReference = dataItem.loadReferenceDefault;
     }
-    response.fold((e) => throw NsgApiException(error), (data) {});
+    //Check referent field list
+    if (loadReference != null) {
+      await loadAllReferents(items, loadReference, tag: tag);
+    }
     return items;
   }
 

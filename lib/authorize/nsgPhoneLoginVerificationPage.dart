@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:either_option/either_option.dart';
 import 'package:flutter/material.dart';
 import 'package:nsg_data/nsgDataApiError.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
@@ -235,14 +234,14 @@ class _NsgPhoneLoginVerificationState
     });
   }
 
-  void checkLoginResult(
-      BuildContext context, Either<NsgApiError, bool> status) {
-    status.fold((error) {
-      var needEnterCaptcha = (error.code != 40300);
-      var errorMessage =
-          widget.widgetParams.errorMessageByStatusCode(error.code);
-      showError(context, errorMessage, needEnterCaptcha);
-    }, (b) => Navigator.pop(context, true));
+  void checkLoginResult(BuildContext context, bool status) {
+    //TODO: прописать проверку результата логина
+    // status.fold((error) {
+    //   var needEnterCaptcha = (error.code != 40300);
+    //   var errorMessage =
+    //       widget.widgetParams.errorMessageByStatusCode(error.code);
+    //   showError(context, errorMessage, needEnterCaptcha);
+    // }, (b) => Navigator.pop(context, true));
   }
 
   Future showError(

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:either_option/either_option.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
@@ -279,58 +278,57 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
 
   ///Get captcha from server
   Future<Image> _loadCaptureImage() async {
-    var response = await widget.provider.getCaptcha();
     Image image;
-    response.fold((error) => {}, (data) => image = data);
-    if (response.isLeft) {
-      //Загрузить картинку-ошибку в случае невозможности получения капчи с сервера
+    try {
+      image = await widget.provider.getCaptcha();
+    } catch (e) {
+      //TODO: Загрузить картинку-ошибку в случае невозможности получения капчи с сервера
       //image = ...
     }
     return image;
   }
 
-  void checkRequestSMSanswer(
-      BuildContext context, Either<NsgApiError, bool> response) {
+  void checkRequestSMSanswer(BuildContext context, bool response) {
     var answerCode = 0;
-    response.fold((error) {
-      answerCode = error.code;
-      if (answerCode == null || answerCode == 0) {
-        answerCode = 5000;
-      }
-    }, (v) => {answerCode = 0});
-    if (answerCode == 0) {
-      setState(() {
-        //currentStage = _NsgPhoneLoginWidgetState.stageVerification;
-        isSMSRequested = false;
-      });
-      if (updateTimer != null) {
-        updateTimer.cancel();
-      }
-      gotoNextPage(context);
-      return;
+    //TODO: проверить коды ошибок логина
+    // response.fold((error) {
+    //   answerCode = error.code;
+    //   if (answerCode == null || answerCode == 0) {
+    //     answerCode = 5000;
+    //   }
+    // }, (v) => {answerCode = 0});
+    // if (answerCode == 0) {
+    setState(() {
+      //currentStage = _NsgPhoneLoginWidgetState.stageVerification;
+      isSMSRequested = false;
+    });
+    if (updateTimer != null) {
+      updateTimer.cancel();
     }
+    gotoNextPage(context);
+    return;
     var needRefreshCaptcha = false;
-    var errorMessage = widget.widgetParams.errorMessageByStatusCode(answerCode);
-    switch (answerCode) {
-      case 40102:
-        needRefreshCaptcha = true;
-        break;
-      case 40103:
-        needRefreshCaptcha = true;
-        break;
-      default:
-        needRefreshCaptcha = false;
-    }
-    isSMSRequested = false;
-    widget.widgetParams.showError(context, errorMessage);
+    // var errorMessage = widget.widgetParams.errorMessageByStatusCode(answerCode);
+    // switch (answerCode) {
+    //   case 40102:
+    //     needRefreshCaptcha = true;
+    //     break;
+    //   case 40103:
+    //     needRefreshCaptcha = true;
+    //     break;
+    //   default:
+    //     needRefreshCaptcha = false;
+    // }
+    // isSMSRequested = false;
+    // widget.widgetParams.showError(context, errorMessage);
 
-    if (needRefreshCaptcha) {
-      refreshCaptcha();
-    } else {
-      setState(() {
-        isSMSRequested = false;
-      });
-    }
+    // if (needRefreshCaptcha) {
+    //   refreshCaptcha();
+    // } else {
+    //   setState(() {
+    //     isSMSRequested = false;
+    //   });
+    // }
   }
 
   void doSmsRequest(BuildContext context) {
