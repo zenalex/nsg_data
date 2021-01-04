@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginVerificationPage.dart';
-import 'package:nsg_data/nsgDataApiError.dart';
 
 import '../nsg_data_provider.dart';
 

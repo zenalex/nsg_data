@@ -106,7 +106,7 @@ class _MainScreenState extends State<MainScreen> {
     NsgDataClient.client.registerDataItem(CardItem(), remoteProvider: provider);
     NsgDataClient.client.registerDataItem(CityItem(), remoteProvider: provider);
 
-    await provider.connect();
+    await provider.connect(null);
 
     if (provider.isAnonymous) {
       NsgPhoneLoginParams.defaultParams.loginSuccessful = loginSuccessful;

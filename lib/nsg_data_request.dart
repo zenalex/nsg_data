@@ -1,5 +1,6 @@
+import 'dart:async';
+
 import 'package:nsg_data/dataFields/referenceField.dart';
-import 'package:nsg_data/nsgDataApiError.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
 import 'nsg_data_client.dart';
@@ -32,17 +33,22 @@ class NsgDataRequest<T extends NsgDataItem> {
       String method = 'GET',
       dynamic postData,
       bool autoRepeate = false,
-      int autoRepeateCount = 1000}) async {
+      int autoRepeateCount = 1000,
+      FutureOr<bool> Function(Exception) retryIf,
+      FutureOr<void> Function(Exception) onRetry}) async {
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
-      return await r.retry(() => _requestItems(
-          filter: filter,
-          autoAuthorize: autoAuthorize,
-          tag: tag,
-          loadReference: loadReference,
-          function: function,
-          method: method,
-          postData: postData));
+      return await r.retry(
+          () => _requestItems(
+              filter: filter,
+              autoAuthorize: autoAuthorize,
+              tag: tag,
+              loadReference: loadReference,
+              function: function,
+              method: method,
+              postData: postData),
+          retryIf: retryIf,
+          onRetry: onRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
       return await _requestItems(
@@ -56,14 +62,15 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
   }
 
-  Future<List<T>> _requestItems(
-      {NsgDataRequestParams filter,
-      bool autoAuthorize = true,
-      String tag,
-      List<String> loadReference,
-      String function = '',
-      String method = 'GET',
-      dynamic postData}) async {
+  Future<List<T>> _requestItems({
+    NsgDataRequestParams filter,
+    bool autoAuthorize = true,
+    String tag,
+    List<String> loadReference,
+    String function = '',
+    String method = 'GET',
+    dynamic postData,
+  }) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, String>{};
     if (filter != null) filterMap = filter.toJson();

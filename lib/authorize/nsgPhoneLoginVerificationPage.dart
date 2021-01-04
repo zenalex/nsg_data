@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nsg_data/nsgDataApiError.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
 
 import 'nsgPhoneLoginParams.dart';

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:event/event.dart';
 import 'package:nsg_data/controllers/nsgBaseControllerData.dart';
 import 'package:nsg_data/controllers/nsgDataBinding.dart';
@@ -5,7 +7,6 @@ import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'package:retry/retry.dart';
 
-//TODO: запрос данных с фильтром
 class NsgBaseController extends GetxController
     with StateMixin<NsgBaseControllerData> {
   Type dataType;
@@ -47,6 +48,15 @@ class NsgBaseController extends GetxController
   ///Set count of attempts of requesting data
   int autoRepeateCount;
 
+  /// If no [retryIf] function is given this will retry any for any [Exception]
+  /// thrown. To retry on an [Error], the error must be caught and _rethrown_
+  /// as an [Exception].
+  FutureOr<bool> Function(Exception) retryIf;
+
+  /// At every retry the [onRetry] function will be called (if given). The
+  /// function [fn] will be invoked at-most [this.attempts] times.
+  FutureOr<void> Function(Exception) onRetry;
+
   NsgDataItem _selectedItem;
   NsgDataItem get selectedItem => _selectedItem;
   set selectedItem(NsgDataItem newItem) {
@@ -71,8 +81,12 @@ class NsgBaseController extends GetxController
       this.autoRepeateCount = 10,
       this.useDataCache = false,
       this.autoSelectFirstItem = false,
-      dependsOnControllers})
-      : super();
+      this.dependsOnControllers,
+      this.onRetry,
+      this.retryIf})
+      : super() {
+    onRetry ??= _updateStatusError;
+  }
 
   @override
   void onInit() {
@@ -114,7 +128,7 @@ class NsgBaseController extends GetxController
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       await r.retry(() => _requestItems(),
-          onRetry: (error) => _updateStatusError(error.toString()));
+          onRetry: _updateStatusError, retryIf: retryIf);
     } else {
       await _requestItems();
     }
@@ -154,8 +168,8 @@ class NsgBaseController extends GetxController
       }
       //service method for descendants
       afterUpdate();
-    } catch (e) {
-      _updateStatusError(e.toString());
+    } on Exception catch (e) {
+      _updateStatusError(e);
     }
   }
 
@@ -206,7 +220,7 @@ class NsgBaseController extends GetxController
 
   NsgDataRequestParams get getRequestFilter => null;
 
-  void _updateStatusError(String e) {
+  FutureOr<void> _updateStatusError(Exception e) {
     currentStatus = RxStatus.error(e.toString());
     if (useUpdate) update(builderIDs);
     if (useChange) {

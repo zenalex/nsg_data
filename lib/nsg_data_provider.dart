@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:nsg_data/controllers/nsgBaseController.dart';
 import 'package:nsg_data/nsgApiException.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,15 +45,15 @@ class NsgDataProvider {
     _initialized = true;
   }
 
-  Future<dynamic> baseRequestList({
-    final String function,
-    final Map<String, dynamic> params,
-    final dynamic postData,
-    final Map<String, String> headers,
-    final String url,
-    final int timeout = 15000,
-    final String method = 'GET',
-  }) async {
+  Future<dynamic> baseRequestList(
+      {final String function,
+      final Map<String, dynamic> params,
+      final dynamic postData,
+      final Map<String, String> headers,
+      final String url,
+      final int timeout = 15000,
+      final String method = 'GET',
+      FutureOr<void> Function(Exception) onRetry}) async {
     final _dio = Dio(BaseOptions(
       headers: headers,
       method: method,
@@ -95,16 +97,21 @@ class NsgDataProvider {
       final int timeout = 15000,
       final String method = 'GET',
       bool autoRepeate = false,
-      int autoRepeateCount = 1000}) async {
+      int autoRepeateCount = 1000,
+      FutureOr<bool> Function(Exception) retryIf,
+      FutureOr<void> Function(Exception) onRetry}) async {
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
-      return await r.retry(() => _baseRequest(
-          function: function,
-          params: params,
-          headers: headers,
-          url: url,
-          timeout: timeout,
-          method: method));
+      return await r.retry(
+          () => _baseRequest(
+              function: function,
+              params: params,
+              headers: headers,
+              url: url,
+              timeout: timeout,
+              method: method),
+          retryIf: retryIf,
+          onRetry: onRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
       return await _baseRequest(
@@ -209,15 +216,17 @@ class NsgDataProvider {
 
   ///Connect to server
   ///If error will be occured, NsgApiException will be generated
-  Future connect() async {
+  Future connect(NsgBaseController controller) async {
     if (!_initialized) await initialize();
+    var onRetry = controller != null ? controller.onRetry : null;
+
     if (useNsgAuthorization) {
       if (token == '') {
-        await _anonymousLogin();
+        await _anonymousLogin(onRetry);
         return;
       } else {
         try {
-          await _checkToken();
+          await _checkToken(onRetry);
           return;
         } on NsgApiException catch (e) {
           if (e.error.errorType == null) {
@@ -227,7 +236,7 @@ class NsgDataProvider {
           } else {
             rethrow;
           }
-          await _anonymousLogin();
+          await _anonymousLogin(onRetry);
           return;
         }
       }
@@ -325,14 +334,16 @@ class NsgDataProvider {
     token = '';
   }
 
-  Future<bool> _anonymousLogin() async {
+  Future<bool> _anonymousLogin(
+      FutureOr<void> Function(Exception) onRetry) async {
     var response = await baseRequest(
         function: 'AnonymousLogin',
         url: '${serverUri}/${authorizationApi}/AnonymousLogin',
         method: 'GET',
         params: {},
         autoRepeate: true,
-        autoRepeateCount: 1000);
+        autoRepeateCount: 1000,
+        onRetry: onRetry);
 
     var loginResponse = NsgLoginResponse.fromJson(response);
     token = loginResponse.token;
@@ -340,7 +351,7 @@ class NsgDataProvider {
     return true;
   }
 
-  Future<bool> _checkToken() async {
+  Future<bool> _checkToken(FutureOr<void> Function(Exception) onRetry) async {
     var response = await baseRequest(
         function: 'CheckToken',
         headers: getAuthorizationHeader(),
@@ -348,7 +359,8 @@ class NsgDataProvider {
         method: 'GET',
         params: {},
         autoRepeate: true,
-        autoRepeateCount: 1000);
+        autoRepeateCount: 1000,
+        onRetry: onRetry);
 
     var loginResponse = NsgLoginResponse.fromJson(response);
     if (loginResponse.errorCode == 0 || loginResponse.errorCode == 402) {
