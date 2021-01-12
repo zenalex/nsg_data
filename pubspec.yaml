@@ -14,7 +14,6 @@ dependencies:
   flutter_multi_formatter: ^1.1.6
   dio: ^3.0.10
   get: ^3.17.1
-  connectivity: ^0.4.9+5
   retry: ^3.0.1
   event: ^1.1.4
   pedantic: ^1.9.2
