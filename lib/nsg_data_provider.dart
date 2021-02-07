@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:nsg_data/controllers/nsgBaseController.dart';
@@ -216,7 +215,8 @@ class NsgDataProvider {
   }
 
   Future<bool> internetConnected() async {
-    return await Connectivity().checkConnectivity() != ConnectivityResult.none;
+    return true;
+    //return await Connectivity().checkConnectivity() != ConnectivityResult.none;
   }
 
   ///Connect to server
