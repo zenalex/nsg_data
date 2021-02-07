@@ -180,13 +180,31 @@ class NsgBaseController extends GetxController
     }
   }
 
+  FutureOr<bool> retryRequestIf(Exception exception) async {
+    if (exception is NsgApiException) {
+      if (exception.error.code == 401) {
+        var provider =
+            NsgDataClient.client.getNewObject(dataType).remoteProvider;
+        await provider.connect(this);
+        if (provider.isAnonymous) {
+          //Ошибка авторизации - переход на логин
+          await Get.to(NsgPhoneLoginPage(provider,
+                  widgetParams: NsgPhoneLoginParams.defaultParams))
+              .then((value) => Get.back());
+        }
+      }
+    }
+    return true;
+  }
+
   Future<List<NsgDataItem>> doRequestItems() async {
     var request = NsgDataRequest(dataItemType: dataType);
     return await request.requestItems(
         filter: getRequestFilter,
         loadReference: referenceList,
         autoRepeate: autoRepeate,
-        autoRepeateCount: autoRepeateCount);
+        autoRepeateCount: autoRepeateCount,
+        retryIf: (e) => retryRequestIf(e));
   }
 
   ///is calling after new Items are putted in itemList
