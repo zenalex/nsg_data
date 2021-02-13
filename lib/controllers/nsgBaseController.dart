@@ -188,9 +188,8 @@ class NsgBaseController extends GetxController
         await provider.connect(this);
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
-          await Get.to(NsgPhoneLoginPage(provider,
-                  widgetParams: NsgPhoneLoginParams.defaultParams))
-              .then((value) => Get.back());
+
+          await Get.to(provider.loginPage).then((value) => Get.back());
         }
       }
     }

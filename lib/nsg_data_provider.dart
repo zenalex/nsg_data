@@ -8,6 +8,8 @@ import 'package:nsg_data/controllers/nsgBaseController.dart';
 import 'package:nsg_data/nsgApiException.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'authorize/nsgPhoneLoginPage.dart';
+import 'authorize/nsgPhoneLoginParams.dart';
 import 'models/nsgLoginModel.dart';
 import 'nsgDataApiError.dart';
 
@@ -26,6 +28,16 @@ class NsgDataProvider {
 
   ///milliseconds
   int requestDuration = 15000;
+
+  NsgPhoneLoginPage Function(NsgDataProvider provider) getLoginWidget;
+  NsgPhoneLoginPage get loginPage {
+    if (getLoginWidget == null) {
+      return NsgPhoneLoginPage(this,
+          widgetParams: NsgPhoneLoginParams.defaultParams);
+    } else {
+      return getLoginWidget(this);
+    }
+  }
 
   NsgDataProvider(
       {this.name,
