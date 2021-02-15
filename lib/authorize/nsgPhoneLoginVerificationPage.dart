@@ -17,24 +17,51 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
       return Scaffold(
         appBar: getAppBar(context),
         backgroundColor: Colors.blue,
-        body: NsgPhoneLoginVerificationWidget(provider,
+        body: NsgPhoneLoginVerificationWidget(this, provider,
             widgetParams: widgetParams),
       );
     }
-    return NsgPhoneLoginVerificationWidget(provider,
+    return NsgPhoneLoginVerificationWidget(this, provider,
         widgetParams: widgetParams);
   }
 
   AppBar getAppBar(BuildContext context) {
     return AppBar(title: Text(''), centerTitle: true);
   }
+
+  Widget getLogo() {
+    var logo = Image(
+      image: AssetImage('lib/assets/logo-wfrs.png', package: 'nsg_data'),
+      width: 140.0,
+      height: 140.0,
+      alignment: Alignment.center,
+    );
+    return logo;
+  }
+
+  Widget background() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints.tightFor(),
+      child: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            fit: BoxFit.cover,
+            image: AssetImage('lib/assets/titan-back.png'),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class NsgPhoneLoginVerificationWidget extends StatefulWidget {
   final NsgPhoneLoginParams widgetParams;
   final NsgDataProvider provider;
+  final NsgPhoneLoginVerificationPage verificationPage;
 
-  NsgPhoneLoginVerificationWidget(this.provider, {this.widgetParams}) : super();
+  NsgPhoneLoginVerificationWidget(this.verificationPage, this.provider,
+      {this.widgetParams})
+      : super();
   @override
   State<StatefulWidget> createState() => _NsgPhoneLoginVerificationState();
 }
@@ -73,20 +100,12 @@ class _NsgPhoneLoginVerificationState
     }
   }
 
-  Widget getLogo() {
-    var logo = Image(
-      image: AssetImage('lib/assets/logo-wfrs.png', package: 'nsg_data'),
-      width: 140.0,
-      height: 140.0,
-      alignment: Alignment.center,
-    );
-    return logo;
-  }
-
   Widget _getBody(BuildContext context) {
     return Center(
-      child: SingleChildScrollView(
-        child: Column(
+        child: SingleChildScrollView(
+      child: Stack(fit: StackFit.loose, children: [
+        widget.verificationPage.background(),
+        Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -94,17 +113,16 @@ class _NsgPhoneLoginVerificationState
               children: [
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20.0),
-                    child: getLogo(),
-                  ),
+                      padding: EdgeInsets.symmetric(vertical: 20.0),
+                      child: widget.verificationPage.getLogo()),
                 ),
               ],
             ),
             _getContext(context),
           ],
         ),
-      ),
-    );
+      ]),
+    ));
   }
 
   final _formKey = GlobalKey<FormState>();

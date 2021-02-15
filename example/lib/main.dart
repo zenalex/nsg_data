@@ -1,7 +1,6 @@
 import 'package:example/model/cardItem.dart';
 import 'package:example/model/cityItem.dart';
 import 'package:flutter/material.dart';
-import 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 import 'package:nsg_data/nsg_data_client.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
@@ -110,11 +109,8 @@ class _MainScreenState extends State<MainScreen> {
 
     if (provider.isAnonymous) {
       NsgPhoneLoginParams.defaultParams.loginSuccessful = loginSuccessful;
-      await Navigator.push<bool>(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => NsgPhoneLoginPage(provider,
-                      widgetParams: NsgPhoneLoginParams.defaultParams)))
+      await Navigator.push<bool>(context,
+              MaterialPageRoute(builder: (context) => provider.loginPage))
           .then((value) => loginResult(value));
     } else {
       await loadData();

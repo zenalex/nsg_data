@@ -16,15 +16,41 @@ class NsgPhoneLoginPage extends StatelessWidget {
     if (Scaffold.of(context, nullOk: true) == null) {
       return Scaffold(
         appBar: getAppBar(context),
-        backgroundColor: Colors.blue,
-        body: NsgPhoneLoginWidget(provider, widgetParams: widgetParams),
+        backgroundColor: Colors.white,
+        body: NsgPhoneLoginWidget(this, null, provider,
+            widgetParams: widgetParams),
       );
     }
-    return NsgPhoneLoginWidget(provider, widgetParams: widgetParams);
+    return NsgPhoneLoginWidget(this, null, provider,
+        widgetParams: widgetParams);
   }
 
   AppBar getAppBar(BuildContext context) {
     return AppBar(title: Text(''), centerTitle: true);
+  }
+
+  Widget getLogo() {
+    var logo = Image(
+      image: AssetImage('lib/assets/logo-wfrs.png', package: 'nsg_data'),
+      width: 140.0,
+      height: 140.0,
+      alignment: Alignment.center,
+    );
+    return logo;
+  }
+
+  Widget background() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints.tightFor(),
+      child: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            fit: BoxFit.cover,
+            image: AssetImage('lib/assets/titan-back.png'),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -32,10 +58,14 @@ class NsgPhoneLoginWidget extends StatefulWidget {
   @override
   _NsgPhoneLoginWidgetState createState() => _NsgPhoneLoginWidgetState();
 
+  final NsgPhoneLoginPage loginPage;
+  final NsgPhoneLoginVerificationPage verificationPage;
   final NsgPhoneLoginParams widgetParams;
   final NsgDataProvider provider;
 
-  NsgPhoneLoginWidget(this.provider, {this.widgetParams}) : super();
+  NsgPhoneLoginWidget(this.loginPage, this.verificationPage, this.provider,
+      {this.widgetParams})
+      : super();
 }
 
 class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
@@ -77,38 +107,33 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     return _getBody(context);
   }
 
-  Widget getLogo() {
-    var logo = Image(
-      image: AssetImage('lib/assets/logo-wfrs.png', package: 'nsg_data'),
-      width: 140.0,
-      height: 140.0,
-      alignment: Alignment.center,
-    );
-    return logo;
-  }
-
   Widget _getBody(BuildContext context) {
     return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20.0),
-                    child: getLogo(),
+        child: SingleChildScrollView(
+      child: Stack(
+        fit: StackFit.loose,
+        children: [
+          widget.loginPage.background(),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 20.0),
+                      child: widget.loginPage.getLogo(),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            _getContext(context),
-          ],
-        ),
+                ],
+              ),
+              _getContext(context),
+            ],
+          ),
+        ],
       ),
-    );
+    ));
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -365,11 +390,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void gotoNextPage(BuildContext context) async {
-    var result = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-            builder: (context) => NsgPhoneLoginVerificationPage(widget.provider,
-                widgetParams: widget.widgetParams)));
+    var result = await Navigator.push<bool>(context,
+        MaterialPageRoute(builder: (context) => widget.verificationPage));
     if (result ??= false) {
       setState(() {
         isLoginSuccessfull = true;

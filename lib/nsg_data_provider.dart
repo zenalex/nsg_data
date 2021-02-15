@@ -10,6 +10,7 @@ import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsgPhoneLoginPage.dart';
 import 'authorize/nsgPhoneLoginParams.dart';
+import 'authorize/nsgPhoneLoginVerificationPage.dart';
 import 'models/nsgLoginModel.dart';
 import 'nsgDataApiError.dart';
 
@@ -36,6 +37,17 @@ class NsgDataProvider {
           widgetParams: NsgPhoneLoginParams.defaultParams);
     } else {
       return getLoginWidget(this);
+    }
+  }
+
+  NsgPhoneLoginVerificationPage Function(NsgDataProvider provider)
+      getVerificationWidget;
+  NsgPhoneLoginVerificationPage get verificationPage {
+    if (getVerificationWidget == null) {
+      return NsgPhoneLoginVerificationPage(this,
+          widgetParams: NsgPhoneLoginParams.defaultParams);
+    } else {
+      return getVerificationWidget(this);
     }
   }
 
