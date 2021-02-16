@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+import 'package:get/get.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginVerificationPage.dart';
 
@@ -17,12 +18,10 @@ class NsgPhoneLoginPage extends StatelessWidget {
       return Scaffold(
         appBar: widgetParams.appbar ? getAppBar(context) : null,
         //backgroundColor: Colors.white,
-        body: NsgPhoneLoginWidget(this, null, provider,
-            widgetParams: widgetParams),
+        body: NsgPhoneLoginWidget(this, provider, widgetParams: widgetParams),
       );
     }
-    return NsgPhoneLoginWidget(this, null, provider,
-        widgetParams: widgetParams);
+    return NsgPhoneLoginWidget(this, provider, widgetParams: widgetParams);
   }
 
   AppBar getAppBar(BuildContext context) {
@@ -65,6 +64,20 @@ class NsgPhoneLoginPage extends StatelessWidget {
       onPressed: null,
     );
   }
+
+  final callback = CallbackFunctionClass();
+  void sendData() {
+    callback.sendData();
+  }
+}
+
+class CallbackFunctionClass {
+  void Function() sendDataPressed;
+  void sendData() {
+    if (sendDataPressed != null) {
+      sendDataPressed();
+    }
+  }
 }
 
 class NsgPhoneLoginWidget extends StatefulWidget {
@@ -72,12 +85,10 @@ class NsgPhoneLoginWidget extends StatefulWidget {
   _NsgPhoneLoginWidgetState createState() => _NsgPhoneLoginWidgetState();
 
   final NsgPhoneLoginPage loginPage;
-  final NsgPhoneLoginVerificationPage verificationPage;
   final NsgPhoneLoginParams widgetParams;
   final NsgDataProvider provider;
 
-  NsgPhoneLoginWidget(this.loginPage, this.verificationPage, this.provider,
-      {this.widgetParams})
+  NsgPhoneLoginWidget(this.loginPage, this.provider, {this.widgetParams})
       : super();
 }
 
@@ -105,6 +116,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   void initState() {
     super.initState();
     refreshCaptcha();
+    widget.loginPage.callback.sendDataPressed = doSmsRequest;
   }
 
   @override
@@ -249,7 +261,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal:15.0, vertical: 10.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 15.0, vertical: 10.0),
                       child: TextFormField(
                         keyboardType: TextInputType.phone,
                         inputFormatters: [phoneFormatter],
@@ -314,7 +327,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal:15.0, vertical: 10.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 15.0, vertical: 10.0),
                       child: Container(
                         height: widget.widgetParams.buttonSize,
                         width: double.infinity,
@@ -425,7 +439,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     }
   }
 
-  void doSmsRequest(BuildContext context) {
+  void doSmsRequest() {
+    var context = Get.context;
     if (!_formKey.currentState.validate()) return;
     setState(() {
       isSMSRequested = true;
@@ -467,8 +482,11 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void gotoNextPage(BuildContext context) async {
-    var result = await Navigator.push<bool>(context,
-        MaterialPageRoute(builder: (context) => widget.verificationPage));
+    var result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                widget.provider.getVerificationWidget(widget.provider)));
     if (result ??= false) {
       setState(() {
         isLoginSuccessfull = true;
