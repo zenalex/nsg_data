@@ -28,31 +28,36 @@ class NsgPhoneLoginParams {
   void Function() loginFailed;
 
   static NsgPhoneLoginParams defaultParams = NsgPhoneLoginParams();
+  bool appbar;
+  bool headerMessageVisible;
 
-  NsgPhoneLoginParams(
-      {this.cardSize = 345.0,
-      this.iconSize = 28.0,
-      this.buttonSize = 48.0,
-      this.headerMessage = 'Welcome',
-      this.headerMessageVerification = 'Enter security code',
-      this.descriptionMessegeVerification =
-          'We sent code in SMS\nto phone number\n{{phone}}',
-      this.headerMessageStyle,
-      this.textEnterPhone = 'Enter your phone',
-      this.textResendSms = 'Send SMS again',
-      this.descriptionStyle,
-      this.textSendSms = 'Send SMS',
-      this.textEnterCaptcha = 'Enter captcha text',
-      this.textPhoneField,
-      this.cardColor,
-      this.textColor = Colors.black,
-      this.fillColor = Colors.black,
-      this.disableButtonColor = Colors.blueGrey,
-      this.sendSmsButtonColor,
-      this.sendSmsBorderColor,
-      this.phoneIconColor,
-      this.phoneFieldColor,
-      this.errorMessageByStatusCode}) {
+  NsgPhoneLoginParams({
+    this.cardSize = 345.0,
+    this.iconSize = 28.0,
+    this.buttonSize = 42.0,
+    this.headerMessage = 'Welcome',
+    this.headerMessageVerification = 'Enter security code',
+    this.descriptionMessegeVerification =
+        'We sent code in SMS\nto phone number\n{{phone}}',
+    this.headerMessageStyle,
+    this.textEnterPhone = 'Enter your phone',
+    this.textResendSms = 'Send SMS again',
+    this.descriptionStyle,
+    this.textSendSms = 'Send SMS',
+    this.textEnterCaptcha = 'Enter captcha text',
+    this.textPhoneField,
+    this.cardColor,
+    this.textColor = Colors.black,
+    this.fillColor = Colors.black,
+    this.disableButtonColor = Colors.blueGrey,
+    this.sendSmsButtonColor,
+    this.sendSmsBorderColor,
+    this.phoneIconColor,
+    this.phoneFieldColor,
+    this.errorMessageByStatusCode,
+    this.appbar,
+    this.headerMessageVisible,
+  }) {
     headerMessageStyle ??= TextStyle(
       fontFamily: 'Roboto',
       fontSize: 18.0,
