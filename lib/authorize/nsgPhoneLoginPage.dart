@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
-import 'package:nsg_data/authorize/nsgPhoneLoginVerificationPage.dart';
 
 import '../nsg_data_provider.dart';
 
@@ -134,7 +133,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
 
   Widget _getBody(BuildContext context) {
     return Stack(
-      fit: StackFit.loose,
+      fit: StackFit.expand,
       children: <Widget>[
         ConstrainedBox(
           constraints: const BoxConstraints.tightFor(),

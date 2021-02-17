@@ -15,8 +15,8 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (Scaffold.of(context, nullOk: true) == null) {
       return Scaffold(
-        appBar: getAppBar(context),
-        backgroundColor: Colors.blue,
+        appBar: widgetParams.appbar ? getAppBar(context) : null,
+        //backgroundColor: Colors.white,
         body: NsgPhoneLoginVerificationWidget(this, provider,
             widgetParams: widgetParams),
       );
@@ -50,6 +50,19 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget getBackground() {
+    var background = Image(
+      image: AssetImage('lib/assets/titan-back.png'),
+    );
+    return background;
+  }
+
+  Widget getButtons() {
+    return RaisedButton(
+      onPressed: null,
     );
   }
 }
@@ -101,6 +114,51 @@ class _NsgPhoneLoginVerificationState
   }
 
   Widget _getBody(BuildContext context) {
+    return Stack(
+      fit: StackFit.loose,
+      children: <Widget>[
+        ConstrainedBox(
+          constraints: const BoxConstraints.tightFor(),
+          child: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: AssetImage('lib/assets/titan-back.png'),
+              ),
+            ),
+          ),
+        ),
+        Column(
+          children: [
+            Expanded(flex: 1, child: SizedBox()),
+            Expanded(
+              flex: 3,
+              child: Container(
+                child: widget.verificationPage.getLogo(),
+              ),
+            ),
+            Container(
+              child: _getContext(context),
+            ),
+          ],
+        ),
+        /*Column(
+          children: [
+            Expanded(
+              child: Container(
+                child: widget.loginPage.getLogo(),
+              ),
+            ),
+            Container(
+                child: _getContext(context),
+              ),
+          ],
+        ),*/
+      ],
+    );
+  }
+
+  /*Widget _getBody(BuildContext context) {
     return Center(
         child: SingleChildScrollView(
       child: Stack(fit: StackFit.loose, children: [
@@ -123,12 +181,119 @@ class _NsgPhoneLoginVerificationState
         ),
       ]),
     ));
-  }
+  }*/
 
   final _formKey = GlobalKey<FormState>();
   String securityCode = '';
   Widget _getContext(BuildContext context) {
     return Form(
+      key: _formKey,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(20.0)),
+          boxShadow: [
+            BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, 0.15),
+                offset: Offset(0.0, 4.0),
+                blurRadius: 4.0,
+                spreadRadius: 2.0)
+          ],
+        ),
+        margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 45.0),
+        padding: EdgeInsets.all(15.0),
+        width: widget.widgetParams.cardSize,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  widget.widgetParams.headerMessageVisible == true
+                      ? Padding(
+                          padding: EdgeInsets.symmetric(vertical: 5.0),
+                          child: Text(
+                            widget.widgetParams.headerMessage,
+                            style: widget.widgetParams.headerMessageStyle,
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : SizedBox(),
+                  SizedBox(
+                      height: widget.widgetParams.headerMessageVisible == true
+                          ? 5.0
+                          : 0.0),
+                  Text(
+                    widget.widgetParams.headerMessageVerification,
+                    style: widget.widgetParams.headerMessageStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 15.0),
+                  Text(
+                    widget.widgetParams.interpolate(
+                        widget.widgetParams.descriptionMessegeVerification,
+                        params: {'phone': widget.provider.phoneNumber}),
+                    style: widget.widgetParams.descriptionStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 15.0),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: widget.widgetParams.phoneFieldColor,
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
+                      child: TextFormField(
+                        keyboardType: TextInputType.number,
+                        style: widget.widgetParams.textPhoneField,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                        ),
+                        onChanged: (text) {
+                          securityCode = text;
+                          if (securityCode.length == 6) {
+                            checkSecurityCode(context, securityCode);
+                          }
+                        },
+                      ),
+                      /*TextFormField(
+                        keyboardType: TextInputType.phone,
+                        //inputFormatters: [phoneFormatter],
+                        style: widget.widgetParams.textPhoneField,
+                        textAlign: TextAlign.left,
+                        decoration: InputDecoration(
+                          hintText: widget.widgetParams.textEnterPhone,
+                          //contentPadding: EdgeInsets.symmetric(
+                          //    horizontal: 5.0, vertical: 13.0),
+                          /*prefixIcon: Icon(
+                                Icons.smartphone,
+                                size: widget.widgetParams.iconSize,
+                                color: widget.widgetParams.phoneIconColor,
+                              ),*/
+                          border: InputBorder.none,
+                        ),
+                        onChanged: null,
+                        validator: null,
+                      ),*/
+                    ),
+                  ),
+                  SizedBox(height: 15.0),
+                  widget.verificationPage.getButtons(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    /*Form(
         key: _formKey,
         child: SizedBox(
           width: widget.widgetParams.cardSize,
@@ -236,7 +401,7 @@ class _NsgPhoneLoginVerificationState
               ),
             ),
           ),
-        ));
+        ));*/
   }
 
   void checkSecurityCode(BuildContext context, String securityCode) {

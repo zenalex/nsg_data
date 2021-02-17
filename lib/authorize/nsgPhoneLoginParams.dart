@@ -60,7 +60,7 @@ class NsgPhoneLoginParams {
   }) {
     headerMessageStyle ??= TextStyle(
       fontFamily: 'Roboto',
-      fontSize: 18.0,
+      fontSize: 20.0,
       fontWeight: FontWeight.bold,
       color: Colors.black,
     );
