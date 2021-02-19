@@ -111,7 +111,9 @@ class NsgDataRequest<T extends NsgDataItem> {
       String function = '',
       String method = 'GET',
       bool addCount = true,
-      dynamic postData}) async {
+      dynamic postData,
+      bool autoRepeate = false,
+      int autoRepeateCount = 1000}) async {
     NsgDataRequestParams newFilter;
     if (addCount) {
       if (filter == null) {
@@ -131,7 +133,9 @@ class NsgDataRequest<T extends NsgDataItem> {
         loadReference: loadReference,
         function: function,
         method: method,
-        postData: postData);
+        postData: postData,
+        autoRepeate: autoRepeate,
+        autoRepeateCount: autoRepeateCount);
     if (data == null || data.isEmpty) {
       return null;
     }

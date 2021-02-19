@@ -64,7 +64,10 @@ class NsgDataItem {
   }
 
   void setFieldValue(String name, dynamic value) {
-    assert(fieldList.fields.containsKey(name));
+    if (!fieldList.fields.containsKey(name)) {
+      print('object $runtimeType does not contains field $name');
+      assert(fieldList.fields.containsKey(name));
+    }
     if (value is NsgDataItem) {
       value = (value as NsgDataItem)
           .getFieldValue((value as NsgDataItem).primaryKeyField);
