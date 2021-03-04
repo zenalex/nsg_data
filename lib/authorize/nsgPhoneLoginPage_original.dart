@@ -62,8 +62,8 @@ class NsgPhoneLoginPage extends StatelessWidget {
 
   Widget getButtons() {
     return ElevatedButton(
-      child: Text('you need to override getButtons'),
       onPressed: null,
+      child: Text('you need to override getButtons'),
     );
   }
 }
@@ -266,14 +266,14 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                             Column(
                               children: [
                                 TextButton(
+                                    onPressed: () {
+                                      refreshCaptcha();
+                                    },
                                     child: Icon(
                                       Icons.refresh,
                                       color: widget.widgetParams.phoneIconColor,
                                       size: widget.widgetParams.buttonSize,
-                                    ),
-                                    onPressed: () {
-                                      refreshCaptcha();
-                                    }),
+                                    )),
                                 Text(secondsLeft.toString())
                               ],
                             ),

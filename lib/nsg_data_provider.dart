@@ -278,7 +278,7 @@ class NsgDataProvider {
     var response = await imageRequest(
         debug: isDebug,
         function: 'GetCaptcha',
-        url: '${serverUri}/${authorizationApi}/GetCaptcha',
+        url: '$serverUri/$authorizationApi/GetCaptcha',
         method: 'GET',
         headers: getAuthorizationHeader());
 
@@ -296,7 +296,7 @@ class NsgDataProvider {
     var response = await baseRequest(
         function: 'PhoneLoginRequestSMS',
         headers: getAuthorizationHeader(),
-        url: '${serverUri}/${authorizationApi}/PhoneLoginRequestSMS',
+        url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
         method: 'POST',
         params: s);
 
@@ -318,7 +318,7 @@ class NsgDataProvider {
       var response = await baseRequest(
           function: 'PhoneLogin',
           headers: getAuthorizationHeader(),
-          url: '${serverUri}/${authorizationApi}/PhoneLogin',
+          url: '$serverUri/$authorizationApi/PhoneLogin',
           method: 'POST',
           params: s);
 
@@ -349,7 +349,7 @@ class NsgDataProvider {
     await baseRequest(
         function: 'Logout',
         headers: getAuthorizationHeader(),
-        url: '${serverUri}/${authorizationApi}/Logout',
+        url: '$serverUri/$authorizationApi/Logout',
         method: 'GET');
     if (!isAnonymous) {
       if (name == '' || name == null) name = authorizationApi;
@@ -373,7 +373,7 @@ class NsgDataProvider {
       FutureOr<void> Function(Exception) onRetry) async {
     var response = await baseRequest(
         function: 'AnonymousLogin',
-        url: '${serverUri}/${authorizationApi}/AnonymousLogin',
+        url: '$serverUri/$authorizationApi/AnonymousLogin',
         method: 'GET',
         params: {},
         autoRepeate: true,
@@ -390,7 +390,7 @@ class NsgDataProvider {
     var response = await baseRequest(
         function: 'CheckToken',
         headers: getAuthorizationHeader(),
-        url: '${serverUri}/${authorizationApi}/CheckToken',
+        url: '$serverUri/$authorizationApi/CheckToken',
         method: 'GET',
         params: {},
         autoRepeate: true,

@@ -62,8 +62,8 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
 
   Widget getButtons() {
     return ElevatedButton(
-      child: Text('you need to override getButtons'),
       onPressed: null,
+      child: Text('you need to override getButtons'),
     );
   }
 }
