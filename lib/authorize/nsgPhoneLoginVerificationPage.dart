@@ -13,16 +13,12 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (Scaffold.of(context) == null) {
-      return Scaffold(
-        appBar: widgetParams.appbar ? getAppBar(context) : null,
-        //backgroundColor: Colors.white,
-        body: NsgPhoneLoginVerificationWidget(this, provider,
-            widgetParams: widgetParams),
-      );
-    }
-    return NsgPhoneLoginVerificationWidget(this, provider,
-        widgetParams: widgetParams);
+    return Scaffold(
+      appBar: widgetParams.appbar ? getAppBar(context) : null,
+      //backgroundColor: Colors.white,
+      body: NsgPhoneLoginVerificationWidget(this, provider,
+          widgetParams: widgetParams),
+    );
   }
 
   AppBar getAppBar(BuildContext context) {
