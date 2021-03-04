@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:get/get.dart' as getx;
 import 'package:nsg_data/controllers/nsgBaseController.dart';
 import 'package:nsg_data/nsgApiException.dart';
 import 'package:retry/retry.dart';
@@ -313,24 +314,35 @@ class NsgDataProvider {
     login.securityCode = securityCode;
     var s = login.toJson();
 
-    var response = await baseRequest(
-        function: 'PhoneLogin',
-        headers: getAuthorizationHeader(),
-        url: '${serverUri}/${authorizationApi}/PhoneLogin',
-        method: 'POST',
-        params: s);
+    try {
+      var response = await baseRequest(
+          function: 'PhoneLogin',
+          headers: getAuthorizationHeader(),
+          url: '${serverUri}/${authorizationApi}/PhoneLogin',
+          method: 'POST',
+          params: s);
 
-    var loginResponse = NsgLoginResponse.fromJson(response);
-    if (loginResponse.errorCode == 0) {
-      token = loginResponse.token;
-      isAnonymous = loginResponse.isAnonymous;
+      var loginResponse = NsgLoginResponse.fromJson(response);
+      if (loginResponse.errorCode == 0) {
+        token = loginResponse.token;
+        isAnonymous = loginResponse.isAnonymous;
+      }
+      if (!isAnonymous) {
+        if (name == '' || name == null) name = authorizationApi;
+        var _prefs = await SharedPreferences.getInstance();
+        await _prefs.setString(name, token);
+      }
+
+      return loginResponse.errorCode;
+    } catch (e) {
+      getx.Get.snackbar('ОШИБКА', 'Произошла ошибка. Попробуйте еще раз.',
+          isDismissible: true,
+          duration: Duration(seconds: 5),
+          backgroundColor: Colors.red[200],
+          colorText: Colors.black,
+          snackPosition: getx.SnackPosition.BOTTOM);
     }
-    if (!isAnonymous) {
-      if (name == '' || name == null) name = authorizationApi;
-      var _prefs = await SharedPreferences.getInstance();
-      await _prefs.setString(name, token);
-    }
-    return loginResponse.errorCode;
+    return 500;
   }
 
   Future<bool> logout() async {
