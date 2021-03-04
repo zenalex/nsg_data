@@ -13,7 +13,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (Scaffold.of(context, nullOk: true) == null) {
+    if (Scaffold.of(context) == null) {
       return Scaffold(
         appBar: widgetParams.appbar ? getAppBar(context) : null,
         //backgroundColor: Colors.white,
@@ -59,7 +59,8 @@ class NsgPhoneLoginPage extends StatelessWidget {
   }
 
   Widget getButtons() {
-    return RaisedButton(
+    return ElevatedButton(
+      child: Text('you need to override getButtons'),
       onPressed: null,
     );
   }
@@ -301,8 +302,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           flex: 2,
                           child: Column(
                             children: [
-                              FlatButton(
-                                  padding: EdgeInsets.all(0.0),
+                              TextButton(
+                                  //padding: EdgeInsets.all(0.0),
                                   child: Icon(
                                     Icons.cached,
                                     color: widget.widgetParams.phoneIconColor,

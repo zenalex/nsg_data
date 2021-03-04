@@ -136,6 +136,6 @@ class NsgPhoneLoginParams {
       content: Text(message),
       backgroundColor: Colors.red,
     );
-    Scaffold.of(context).showSnackBar(snackBar);
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }
