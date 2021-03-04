@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class NsgPhoneLoginParams {
   double cardSize;
@@ -132,10 +133,12 @@ class NsgPhoneLoginParams {
   }
 
   void showError(BuildContext context, String message) {
-    final snackBar = SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.red,
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    if (message == '') return;
+    Get.snackbar('ОШИБКА', message,
+        isDismissible: true,
+        duration: Duration(seconds: 5),
+        backgroundColor: Colors.red[200],
+        colorText: Colors.black,
+        snackPosition: SnackPosition.BOTTOM);
   }
 }

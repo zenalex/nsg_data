@@ -97,7 +97,6 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   int currentStage = _NsgPhoneLoginWidgetState.stagePreLogin;
   bool isLoginSuccessfull = false;
   bool isSMSRequested = false;
-  BuildContext contextForSnackBar;
   PhoneInputFormatter phoneFormatter = PhoneInputFormatter();
   //Осталось секунд до автообновления капчи. Если -1, то капча еще не получена
   //и таймер запускать нет смысла

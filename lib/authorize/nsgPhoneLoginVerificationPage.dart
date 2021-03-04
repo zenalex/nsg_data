@@ -418,14 +418,13 @@ class _NsgPhoneLoginVerificationState
       var needEnterCaptcha = (answerCode != 40300);
       var errorMessage =
           widget.widgetParams.errorMessageByStatusCode(answerCode);
-      showError(context, errorMessage, needEnterCaptcha);
+      showError(errorMessage, needEnterCaptcha);
     } else {
       Navigator.pop(context, true);
     }
   }
 
-  Future showError(
-      BuildContext context, String errorMessage, bool needEnterCaptcha) async {
+  Future showError(String errorMessage, bool needEnterCaptcha) async {
     widget.widgetParams.showError(context, errorMessage);
     if (needEnterCaptcha) {
       stopTimer();
