@@ -105,7 +105,7 @@ class NsgDataProvider {
       return response.data;
     } on DioError catch (e) {
       print('dio error. function: $function, error: ${e.error ??= ''}');
-      if (e.response.statusCode == 401) {
+      if (e.response?.statusCode == 401) {
         throw NsgApiException(NsgApiError(
             code: 401, message: 'Authorization error', errorType: e.type));
       } else {
