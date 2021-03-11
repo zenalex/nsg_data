@@ -70,6 +70,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
 
 class CallbackFunctionClass {
   void Function() sendDataPressed;
+
   void sendData() {
     if (sendDataPressed != null) {
       sendDataPressed();
@@ -111,8 +112,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   @override
   void initState() {
     super.initState();
-    refreshCaptcha();
     widget.loginPage.callback.sendDataPressed = doSmsRequest;
+    refreshCaptcha();
   }
 
   @override
@@ -478,11 +479,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void gotoNextPage(BuildContext context) async {
-    var result = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-                widget.provider.getVerificationWidget(widget.provider)));
+    var result = await Get.to<bool>(
+        widget.provider.getVerificationWidget(widget.provider));
     if (result ??= false) {
       setState(() {
         isLoginSuccessfull = true;

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
 
 import 'nsgPhoneLoginParams.dart';
@@ -420,7 +421,7 @@ class _NsgPhoneLoginVerificationState
           widget.widgetParams.errorMessageByStatusCode(answerCode);
       showError(errorMessage, needEnterCaptcha);
     } else {
-      Navigator.pop(context, true);
+      Get.back<bool>(result: true);
     }
   }
 
@@ -432,7 +433,7 @@ class _NsgPhoneLoginVerificationState
         isBusy = true;
       });
       await Future.delayed(Duration(seconds: 3));
-      Navigator.pop(context, false);
+      Get.back<bool>(result: false);
     }
   }
 
