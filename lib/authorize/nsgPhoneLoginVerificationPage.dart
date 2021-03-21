@@ -140,46 +140,9 @@ class _NsgPhoneLoginVerificationState
             ),
           ],
         ),
-        /*Column(
-          children: [
-            Expanded(
-              child: Container(
-                child: widget.loginPage.getLogo(),
-              ),
-            ),
-            Container(
-                child: _getContext(context),
-              ),
-          ],
-        ),*/
       ],
     );
   }
-
-  /*Widget _getBody(BuildContext context) {
-    return Center(
-        child: SingleChildScrollView(
-      child: Stack(fit: StackFit.loose, children: [
-        widget.verificationPage.background(),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20.0),
-                      child: widget.verificationPage.getLogo()),
-                ),
-              ],
-            ),
-            _getContext(context),
-          ],
-        ),
-      ]),
-    ));
-  }*/
 
   final _formKey = GlobalKey<FormState>();
   String securityCode = '';
@@ -260,25 +223,6 @@ class _NsgPhoneLoginVerificationState
                           }
                         },
                       ),
-                      /*TextFormField(
-                        keyboardType: TextInputType.phone,
-                        //inputFormatters: [phoneFormatter],
-                        style: widget.widgetParams.textPhoneField,
-                        textAlign: TextAlign.left,
-                        decoration: InputDecoration(
-                          hintText: widget.widgetParams.textEnterPhone,
-                          //contentPadding: EdgeInsets.symmetric(
-                          //    horizontal: 5.0, vertical: 13.0),
-                          /*prefixIcon: Icon(
-                                Icons.smartphone,
-                                size: widget.widgetParams.iconSize,
-                                color: widget.widgetParams.phoneIconColor,
-                              ),*/
-                          border: InputBorder.none,
-                        ),
-                        onChanged: null,
-                        validator: null,
-                      ),*/
                     ),
                   ),
                   SizedBox(height: 15.0),
@@ -290,116 +234,6 @@ class _NsgPhoneLoginVerificationState
         ),
       ),
     );
-
-    /*Form(
-        key: _formKey,
-        child: SizedBox(
-          width: widget.widgetParams.cardSize,
-          child: Card(
-            margin: EdgeInsets.symmetric(horizontal: 15.0),
-            color: widget.widgetParams.cardColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 5.0),
-                          child: Text(
-                            widget.widgetParams.headerMessageVerification,
-                            style: widget.widgetParams.headerMessageStyle,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10.0),
-                          child: Text(
-                            widget.widgetParams.interpolate(
-                                widget.widgetParams
-                                    .descriptionMessegeVerification,
-                                params: {'phone': widget.provider.phoneNumber}),
-                            style: widget.widgetParams.descriptionStyle,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        SizedBox(height: 5.0),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 5.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: widget.widgetParams.phoneFieldColor,
-                              borderRadius: BorderRadius.circular(5.0),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.only(right: 15),
-                              child: TextFormField(
-                                keyboardType: TextInputType.number,
-                                style: widget.widgetParams.textPhoneField,
-                                textAlign: TextAlign.center,
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 15.0, vertical: 15.0),
-                                  prefixIcon: Icon(
-                                    Icons.vpn_key,
-                                    size: widget.widgetParams.iconSize,
-                                    color: widget.widgetParams.phoneIconColor,
-                                  ),
-                                  border: InputBorder.none,
-                                ),
-                                onChanged: (text) {
-                                  securityCode = text;
-                                  if (securityCode.length == 6) {
-                                    checkSecurityCode(context, securityCode);
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 5.0),
-                          child: Container(
-                            height: widget.widgetParams.buttonSize,
-                            width: double.infinity,
-                            child: RaisedButton(
-                              elevation: 0.0,
-                              color: widget.widgetParams.sendSmsButtonColor,
-                              disabledColor:
-                                  widget.widgetParams.disableButtonColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5.0),
-                                side: BorderSide(
-                                  color: widget.widgetParams.sendSmsBorderColor,
-                                ),
-                              ),
-                              onPressed: (isBusy || secondsRepeateLeft > 0)
-                                  ? null
-                                  : () {},
-                              child: Text(
-                                widget.widgetParams.textResendSms +
-                                    ' ($secondsRepeateLeft)',
-                                style: widget.widgetParams.headerMessageStyle,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ));*/
   }
 
   void checkSecurityCode(BuildContext context, String securityCode) {
@@ -416,7 +250,7 @@ class _NsgPhoneLoginVerificationState
 
   void checkLoginResult(BuildContext context, int answerCode) {
     if (answerCode != 0) {
-      var needEnterCaptcha = (answerCode != 40300);
+      var needEnterCaptcha = (answerCode != 40300 && answerCode != 40303);
       var errorMessage =
           widget.widgetParams.errorMessageByStatusCode(answerCode);
       showError(errorMessage, needEnterCaptcha);
