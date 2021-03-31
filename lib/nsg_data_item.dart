@@ -156,7 +156,7 @@ class NsgDataItem {
   }
 
   void copyFieldValues(NsgDataItem newItem) {
-    fieldValues.fields.forEach((key, value) {
+    fieldList.fields.forEach((key, value) {
       setFieldValue(key, newItem.getFieldValue(key));
     });
   }
