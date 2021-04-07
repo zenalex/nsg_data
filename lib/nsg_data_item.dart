@@ -94,12 +94,13 @@ class NsgDataItem {
     return (field as NsgDataReferenceField).getReferent(this) as T;
   }
 
-  Future<T> getReferentAsync<T extends NsgDataItem>(String name) async {
+  Future<T> getReferentAsync<T extends NsgDataItem>(String name,
+      {bool useCache = true}) async {
     assert(fieldValues.fields.containsKey(name));
     var field = fieldList.fields[name];
     assert(field is NsgDataReferenceField);
-    var dataItem =
-        await ((field as NsgDataReferenceField).getReferentAsync(this));
+    var dataItem = await ((field as NsgDataReferenceField)
+        .getReferentAsync(this, useCache: useCache));
     return dataItem as T;
   }
 

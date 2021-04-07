@@ -17,17 +17,22 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataField {
 
   Type get referentType => T;
 
-  T getReferent(NsgDataItem dataItem) {
+  T getReferent(NsgDataItem dataItem, {bool useCache = true}) {
     var id = dataItem.getFieldValue(name).toString();
     if (id == '' || id == NsgDataItem.ZERO_GUID) {
       return NsgDataClient.client.getNewObject(T) as T;
     }
-    var item = NsgDataClient.client.getItemsFromCache(T, id) as T;
-    return item;
+    if (useCache) {
+      var item = NsgDataClient.client.getItemsFromCache(T, id) as T;
+      return item;
+    } else {
+      return null;
+    }
   }
 
-  Future<T> getReferentAsync(NsgDataItem dataItem) async {
-    var item = getReferent(dataItem);
+  Future<T> getReferentAsync(NsgDataItem dataItem,
+      {bool useCache = true}) async {
+    var item = getReferent(dataItem, useCache: useCache);
     if (item == null) {
       var id = dataItem.getFieldValue(name).toString();
       var filter = NsgDataRequestParams(idList: [id, id]);
