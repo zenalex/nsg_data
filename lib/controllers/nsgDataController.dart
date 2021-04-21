@@ -4,7 +4,7 @@ import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/nsg_data_item.dart';
 
 class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
-  List<T> get items => dataItemList.cast<T>();
+  List<T> get items => dataItemList != null ? dataItemList.cast<T>() : null;
   T get firstItem =>
       (dataItemList == null || dataItemList.isEmpty) ? null : items[0];
 
