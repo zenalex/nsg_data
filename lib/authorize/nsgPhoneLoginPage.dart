@@ -144,20 +144,21 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
             ),
           ),
         ),
-        Column(
+        SingleChildScrollView(
+            child: Column(
           children: [
-            Expanded(flex: 1, child: SizedBox()),
-            Expanded(
-              flex: 3,
-              child: Container(
-                child: widget.loginPage.getLogo(),
-              ),
+            SizedBox(
+              height: Get.height / 20,
+            ),
+            Container(
+              height: Get.height / 3,
+              child: widget.loginPage.getLogo(),
             ),
             Container(
               child: _getContext(context),
             ),
           ],
-        ),
+        )),
         /*Column(
           children: [
             Expanded(
@@ -226,7 +227,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                 spreadRadius: 2.0)
           ],
         ),
-        margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 45.0),
+        margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
         padding: EdgeInsets.all(15.0),
         width: widget.widgetParams.cardSize,
         child: Row(
