@@ -74,10 +74,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, String>{};
     if (filter != null) filterMap = filter.toJson();
-    var header = <String, String>{};
-    if (dataItem.remoteProvider.token != '') {
-      header['Authorization'] = dataItem.remoteProvider.token;
-    }
+
     if (function == '') {
       function = dataItem.remoteProvider.serverUri + dataItem.apiRequestItems;
     } else {
