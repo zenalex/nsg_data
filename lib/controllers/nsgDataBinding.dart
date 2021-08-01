@@ -1,4 +1,4 @@
 class NsgDataBinding {
-  String masterFieldName;
-  String slaveFieldName;
+  String? masterFieldName;
+  String? slaveFieldName;
 }

@@ -8,11 +8,11 @@ import 'nsg_data_item.dart';
 import 'nsg_data_requestParams.dart';
 
 class NsgDataRequest<T extends NsgDataItem> {
-  List<T> items;
+  List<T> items = <T>[];
   Type dataItemType;
 
-  NsgDataRequest({this.dataItemType}) {
-    dataItemType ??= T;
+  NsgDataRequest({this.dataItemType = NsgDataItem}) {
+    if (dataItemType == NsgDataItem) dataItemType = T;
   }
 
   void _fromJsonList(List<dynamic> maps) {
@@ -25,17 +25,17 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   Future<List<T>> requestItems(
-      {NsgDataRequestParams filter,
+      {NsgDataRequestParams? filter,
       bool autoAuthorize = true,
-      String tag,
-      List<String> loadReference,
+      String tag = '',
+      List<String>? loadReference,
       String function = '',
       String method = 'GET',
       dynamic postData,
       bool autoRepeate = false,
       int autoRepeateCount = 1000,
-      FutureOr<bool> Function(Exception) retryIf,
-      FutureOr<void> Function(Exception) onRetry}) async {
+      FutureOr<bool> Function(Exception)? retryIf,
+      FutureOr<void> Function(Exception)? onRetry}) async {
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       return await r.retry(
@@ -63,10 +63,10 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   Future<List<T>> _requestItems({
-    NsgDataRequestParams filter,
+    NsgDataRequestParams? filter,
     bool autoAuthorize = true,
-    String tag,
-    List<String> loadReference,
+    String tag = '',
+    List<String>? loadReference,
     String function = '',
     String method = 'GET',
     dynamic postData,
@@ -87,9 +87,8 @@ class NsgDataRequest<T extends NsgDataItem> {
         method: method,
         params: filterMap,
         postData: postData);
-
+    items = <T>[];
     if (response == '') {
-      items = <T>[];
     } else {
       _fromJsonList(response as List<dynamic>);
       NsgDataClient.client.addItemsToCache(items: items, tag: tag);
@@ -105,17 +104,17 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   Future<T> requestItem(
-      {NsgDataRequestParams filter,
+      {NsgDataRequestParams? filter,
       bool autoAuthorize = true,
-      String tag,
-      List<String> loadReference,
+      String tag = '',
+      List<String>? loadReference,
       String function = '',
       String method = 'GET',
       bool addCount = true,
       dynamic postData,
       bool autoRepeate = false,
       int autoRepeateCount = 1000}) async {
-    NsgDataRequestParams newFilter;
+    NsgDataRequestParams? newFilter;
     if (addCount) {
       if (filter == null) {
         newFilter = NsgDataRequestParams(count: 1);
@@ -137,15 +136,15 @@ class NsgDataRequest<T extends NsgDataItem> {
         postData: postData,
         autoRepeate: autoRepeate,
         autoRepeateCount: autoRepeateCount);
-    if (data == null || data.isEmpty) {
-      return null;
+    if (data.isEmpty) {
+      return NsgDataClient.client.getNewObject(dataItemType) as T;
     }
     return data[0];
   }
 
   Future loadAllReferents(List<T> items, List<String> loadReference,
-      {String tag}) async {
-    if (items == null || items.isEmpty) {
+      {String tag = ''}) async {
+    if (items.isEmpty) {
       return;
     }
     var allRefs = <Type, List<String>>{};
@@ -161,7 +160,7 @@ class NsgDataRequest<T extends NsgDataItem> {
             if (!allRefs.containsKey(fieldType)) {
               allRefs[fieldType] = <String>[];
             }
-            var refList = allRefs[fieldType];
+            var refList = allRefs[fieldType]!;
             if (!refList.contains(fieldValue)) {
               refList.add(fieldValue);
             }

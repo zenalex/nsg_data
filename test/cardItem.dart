@@ -23,12 +23,12 @@ class CardItem extends NsgDataItem {
   set cardNumber(String value) => setFieldValue('CardNumber', value);
   String get title => getFieldValue('Title').toString();
   set title(String value) => setFieldValue('Title', value);
-  DateTime get issueDate => getFieldValue('IssueDate') as DateTime;
-  set issueDate(DateTime value) => setFieldValue('IssueDate', value);
-  DateTime get validUntil => getFieldValue('ValidUntil') as DateTime;
-  set validUntil(DateTime value) => setFieldValue('ValidUntil', value);
-  bool get activated => getFieldValue('Activated') as bool;
-  set activated(bool value) => setFieldValue('Activated', value);
+  DateTime? get issueDate => getFieldValue('IssueDate') as DateTime?;
+  set issueDate(DateTime? value) => setFieldValue('IssueDate', value);
+  DateTime? get validUntil => getFieldValue('ValidUntil') as DateTime?;
+  set validUntil(DateTime? value) => setFieldValue('ValidUntil', value);
+  bool? get activated => getFieldValue('Activated') as bool?;
+  set activated(bool? value) => setFieldValue('Activated', value);
 
   @override
   String get apiRequestItems {

@@ -18,8 +18,8 @@ class NewsItem extends NsgDataItem {
 
   String get id => getFieldValue('Id').toString();
   set id(String value) => setFieldValue('Id', value);
-  DateTime get date => getFieldValue('Date') as DateTime;
-  set date(DateTime value) => setFieldValue('Date', value);
+  DateTime? get date => getFieldValue('Date') as DateTime?;
+  set date(DateTime? value) => setFieldValue('Date', value);
   String get title => getFieldValue('Title').toString();
   set title(String value) => setFieldValue('Title', value);
   String get text => getFieldValue('Text').toString();

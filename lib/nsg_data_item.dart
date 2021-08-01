@@ -8,7 +8,7 @@ import 'nsg_data_paramList.dart';
 
 class NsgDataItem {
   static const String ZERO_GUID = '00000000-0000-0000-0000-000000000000';
-  List<String> loadReferenceDefault;
+  List<String>? loadReferenceDefault;
 
   ///Get API path for request Items
   String get apiRequestItems {
@@ -20,7 +20,8 @@ class NsgDataItem {
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
       if (fieldList.fields.containsKey(name)) {
-        setFieldValue(name, fieldList.fields[name].convertJsonValue(jsonValue));
+        setFieldValue(
+            name, fieldList.fields[name]!.convertJsonValue(jsonValue));
       }
     });
   }
@@ -50,7 +51,7 @@ class NsgDataItem {
     assert(!fieldList.fields.containsKey(name));
     fieldList.fields[name] = field;
     if (primaryKey) {
-      assert(primaryKeyField == null || primaryKeyField == '');
+      assert(primaryKeyField == '');
       primaryKeyField = name;
     }
   }
@@ -59,7 +60,7 @@ class NsgDataItem {
     if (fieldValues.fields.containsKey(name)) {
       return fieldValues.fields[name];
     } else {
-      return fieldList.fields[name].defaultValue;
+      return fieldList.fields[name]!.defaultValue;
     }
   }
 
@@ -69,8 +70,7 @@ class NsgDataItem {
       assert(fieldList.fields.containsKey(name));
     }
     if (value is NsgDataItem) {
-      value = (value as NsgDataItem)
-          .getFieldValue((value as NsgDataItem).primaryKeyField);
+      value = value.getFieldValue(value.primaryKeyField);
     }
     fieldValues.fields[name] = value;
   }
@@ -80,16 +80,16 @@ class NsgDataItem {
     if (paramList.params.containsKey(_PARAM_REMOTE_PROVIDER)) {
       return paramList.params[_PARAM_REMOTE_PROVIDER] as NsgDataProvider;
     } else {
-      return null;
+      throw Exception('RemoteProvider not set');
     }
   }
 
-  set remoteProvider(NsgDataProvider value) =>
+  set remoteProvider(NsgDataProvider? value) =>
       paramList.params[_PARAM_REMOTE_PROVIDER] = value;
 
-  T getReferent<T extends NsgDataItem>(String name) {
+  T getReferent<T extends NsgDataItem?>(String name) {
     assert(fieldList.fields.containsKey(name));
-    var field = fieldList.fields[name];
+    var field = fieldList.fields[name]!;
     assert(field is NsgDataReferenceField);
     return (field as NsgDataReferenceField).getReferent(this) as T;
   }
@@ -97,7 +97,7 @@ class NsgDataItem {
   Future<T> getReferentAsync<T extends NsgDataItem>(String name,
       {bool useCache = true}) async {
     assert(fieldValues.fields.containsKey(name));
-    var field = fieldList.fields[name];
+    var field = fieldList.fields[name]!;
     assert(field is NsgDataReferenceField);
     var dataItem = await ((field as NsgDataReferenceField)
         .getReferentAsync(this, useCache: useCache));
@@ -133,7 +133,7 @@ class NsgDataItem {
   @override
   bool operator ==(Object other) => other is NsgDataItem && equal(other);
   bool equal(NsgDataItem other) {
-    if (other.runtimeType == runtimeType) {
+    if (other.runtimeType.toString() == runtimeType.toString()) {
       if (primaryKeyField == '') return hashCode == other.hashCode;
       return (getFieldValue(primaryKeyField) ==
           other.getFieldValue(primaryKeyField));

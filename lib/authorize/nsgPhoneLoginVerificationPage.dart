@@ -8,14 +8,14 @@ import 'nsgPhoneLoginParams.dart';
 
 class NsgPhoneLoginVerificationPage extends StatelessWidget {
   final NsgDataProvider provider;
-  final NsgPhoneLoginParams widgetParams;
+  final NsgPhoneLoginParams? widgetParams;
 
   NsgPhoneLoginVerificationPage(this.provider, {this.widgetParams}) : super();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: widgetParams.appbar ? getAppBar(context) : null,
+      appBar: widgetParams!.appbar! ? getAppBar(context) : null,
       //backgroundColor: Colors.white,
       body: NsgPhoneLoginVerificationWidget(this, provider,
           widgetParams: widgetParams),
@@ -66,7 +66,7 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
 }
 
 class NsgPhoneLoginVerificationWidget extends StatefulWidget {
-  final NsgPhoneLoginParams widgetParams;
+  final NsgPhoneLoginParams? widgetParams;
   final NsgDataProvider provider;
   final NsgPhoneLoginVerificationPage verificationPage;
 
@@ -79,7 +79,7 @@ class NsgPhoneLoginVerificationWidget extends StatefulWidget {
 
 class _NsgPhoneLoginVerificationState
     extends State<NsgPhoneLoginVerificationWidget> {
-  Timer updateTimer;
+  Timer? updateTimer;
   bool isBusy = false;
   int secondsRepeateLeft = 120;
   @override
@@ -106,7 +106,7 @@ class _NsgPhoneLoginVerificationState
 
   void stopTimer() {
     if (updateTimer != null) {
-      updateTimer.cancel();
+      updateTimer!.cancel();
       updateTimer = null;
     }
   }
@@ -163,7 +163,7 @@ class _NsgPhoneLoginVerificationState
         ),
         margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 45.0),
         padding: EdgeInsets.all(15.0),
-        width: widget.widgetParams.cardSize,
+        width: widget.widgetParams!.cardSize,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -173,37 +173,37 @@ class _NsgPhoneLoginVerificationState
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  widget.widgetParams.headerMessageVisible == true
+                  widget.widgetParams!.headerMessageVisible == true
                       ? Padding(
                           padding: EdgeInsets.symmetric(vertical: 5.0),
                           child: Text(
-                            widget.widgetParams.headerMessage,
-                            style: widget.widgetParams.headerMessageStyle,
+                            widget.widgetParams!.headerMessage,
+                            style: widget.widgetParams!.headerMessageStyle,
                             textAlign: TextAlign.center,
                           ),
                         )
                       : SizedBox(),
                   SizedBox(
-                      height: widget.widgetParams.headerMessageVisible == true
+                      height: widget.widgetParams!.headerMessageVisible == true
                           ? 5.0
                           : 0.0),
                   Text(
-                    widget.widgetParams.headerMessageVerification,
-                    style: widget.widgetParams.headerMessageStyle,
+                    widget.widgetParams!.headerMessageVerification,
+                    style: widget.widgetParams!.headerMessageStyle,
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 15.0),
                   Text(
-                    widget.widgetParams.interpolate(
-                        widget.widgetParams.descriptionMessegeVerification,
+                    widget.widgetParams!.interpolate(
+                        widget.widgetParams!.descriptionMessegeVerification,
                         params: {'phone': widget.provider.phoneNumber}),
-                    style: widget.widgetParams.descriptionStyle,
+                    style: widget.widgetParams!.descriptionStyle,
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 15.0),
                   Container(
                     decoration: BoxDecoration(
-                      color: widget.widgetParams.phoneFieldColor,
+                      color: widget.widgetParams!.phoneFieldColor,
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                     child: Padding(
@@ -211,7 +211,7 @@ class _NsgPhoneLoginVerificationState
                           EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
                       child: TextFormField(
                         keyboardType: TextInputType.number,
-                        style: widget.widgetParams.textPhoneField,
+                        style: widget.widgetParams!.textPhoneField,
                         textAlign: TextAlign.center,
                         decoration: InputDecoration(
                           border: InputBorder.none,
@@ -252,7 +252,7 @@ class _NsgPhoneLoginVerificationState
     if (answerCode != 0) {
       var needEnterCaptcha = (answerCode != 40300 && answerCode != 40303);
       var errorMessage =
-          widget.widgetParams.errorMessageByStatusCode(answerCode);
+          widget.widgetParams!.errorMessageByStatusCode!(answerCode);
       showError(errorMessage, needEnterCaptcha);
     } else {
       Get.back<bool>(result: true);
@@ -260,7 +260,7 @@ class _NsgPhoneLoginVerificationState
   }
 
   Future showError(String errorMessage, bool needEnterCaptcha) async {
-    widget.widgetParams.showError(context, errorMessage);
+    widget.widgetParams!.showError(context, errorMessage);
     if (needEnterCaptcha) {
       stopTimer();
       setState(() {
@@ -277,7 +277,9 @@ class _NsgPhoneLoginVerificationState
     }
     setState(() {
       secondsRepeateLeft = 120 -
-          DateTime.now().difference(widget.provider.smsRequestedTime).inSeconds;
+          DateTime.now()
+              .difference(widget.provider.smsRequestedTime!)
+              .inSeconds;
       secondsRepeateLeft = secondsRepeateLeft < 0 ? 0 : secondsRepeateLeft;
     });
   }

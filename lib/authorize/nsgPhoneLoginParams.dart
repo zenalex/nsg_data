@@ -8,29 +8,29 @@ class NsgPhoneLoginParams {
   String headerMessage;
   String headerMessageVerification;
   String descriptionMessegeVerification;
-  TextStyle headerMessageStyle;
+  TextStyle? headerMessageStyle;
   String textEnterPhone;
   String textSendSms;
   String textResendSms;
   String textEnterCaptcha;
-  TextStyle descriptionStyle;
-  TextStyle textPhoneField;
-  Color cardColor;
+  TextStyle? descriptionStyle;
+  TextStyle? textPhoneField;
+  Color? cardColor;
   Color textColor;
   Color fillColor;
   Color disableButtonColor;
-  Color sendSmsButtonColor;
-  Color sendSmsBorderColor;
-  Color phoneIconColor;
-  Color phoneFieldColor;
+  Color? sendSmsButtonColor;
+  Color? sendSmsBorderColor;
+  Color? phoneIconColor;
+  Color? phoneFieldColor;
   dynamic parameter;
-  String Function(int) errorMessageByStatusCode;
-  void Function(BuildContext context, dynamic parameter) loginSuccessful;
-  void Function() loginFailed;
+  String Function(int)? errorMessageByStatusCode;
+  void Function(BuildContext? context, dynamic parameter)? loginSuccessful;
+  void Function()? loginFailed;
 
   static NsgPhoneLoginParams defaultParams = NsgPhoneLoginParams();
-  bool appbar;
-  bool headerMessageVisible;
+  bool? appbar;
+  bool? headerMessageVisible;
 
   NsgPhoneLoginParams({
     this.cardSize = 345.0,
@@ -132,7 +132,7 @@ class NsgPhoneLoginParams {
     return message;
   }
 
-  void showError(BuildContext context, String message) {
+  void showError(BuildContext? context, String message) {
     if (message == '') return;
     Get.snackbar('ОШИБКА', message,
         isDismissible: true,

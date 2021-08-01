@@ -25,7 +25,7 @@ class UserSettingsItem extends NsgDataItem {
   set userName(String value) => setFieldValue('UserName', value);
   String get role => getFieldValue('Role').toString();
   set role(String value) => setFieldValue('Role', value);
-  CountryItem get country => getFieldValue('CountryId') as CountryItem;
+  CountryItem? get country => getFieldValue('CountryId') as CountryItem?;
   set countryId(CountryItem value) => setFieldValue('CountryId', value);
   String get cityId => getFieldValue('CityId').toString();
   set cityId(String value) => setFieldValue('CityId', value);

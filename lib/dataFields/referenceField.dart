@@ -17,13 +17,13 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataField {
 
   Type get referentType => T;
 
-  T getReferent(NsgDataItem dataItem, {bool useCache = true}) {
+  T? getReferent(NsgDataItem dataItem, {bool useCache = true}) {
     var id = dataItem.getFieldValue(name).toString();
     if (id == '' || id == NsgDataItem.ZERO_GUID) {
       return NsgDataClient.client.getNewObject(T) as T;
     }
     if (useCache) {
-      var item = NsgDataClient.client.getItemsFromCache(T, id) as T;
+      var item = NsgDataClient.client.getItemsFromCache(T, id) as T?;
       return item;
     } else {
       return null;
@@ -38,8 +38,8 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataField {
       var filter = NsgDataRequestParams(idList: [id, id]);
       var request = NsgDataRequest<T>();
       await request.requestItems(filter: filter);
-      item = NsgDataClient.client.getItemsFromCache(T, id) as T;
+      item = NsgDataClient.client.getItemsFromCache(T, id) as T?;
     }
-    return item;
+    return item!;
   }
 }

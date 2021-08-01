@@ -15,13 +15,13 @@ class NsgBaseController extends GetxController
   bool useDataCache;
   bool autoSelectFirstItem;
 
-  List<NsgDataItem> dataItemList;
-  List<NsgDataItem> dataCache;
+  List<NsgDataItem> dataItemList = <NsgDataItem>[];
+  List<NsgDataItem> dataCache = <NsgDataItem>[];
 
   //Referenses to load
-  List<String> referenceList;
-  final selectedItemChanged = Event<GenericEventArgs1>();
-  final itemsRequested = Event<GenericEventArgs1>();
+  List<String>? referenceList;
+  final selectedItemChanged = Event<EventArgs>();
+  final itemsRequested = Event<EventArgs>();
 
   ///Use update method on data update
   bool useUpdate;
@@ -30,14 +30,14 @@ class NsgBaseController extends GetxController
   bool useChange;
 
   ///GetBuilder IDs to update
-  List<String> builderIDs;
+  List<String>? builderIDs;
 
   ///Master controller. Using for binding.
-  NsgBaseController masterController;
-  List<NsgBaseController> dependsOnControllers;
+  NsgBaseController? masterController;
+  List<NsgBaseController>? dependsOnControllers;
 
   ///Binding rule
-  NsgDataBinding dataBinding;
+  NsgDataBinding? dataBinding;
 
   ///Status of last data request operation
   RxStatus currentStatus = RxStatus.loading();
@@ -51,25 +51,26 @@ class NsgBaseController extends GetxController
   /// If no [retryIf] function is given this will retry any for any [Exception]
   /// thrown. To retry on an [Error], the error must be caught and _rethrown_
   /// as an [Exception].
-  FutureOr<bool> Function(Exception) retryIf;
+  FutureOr<bool> Function(Exception)? retryIf;
 
   /// At every retry the [onRetry] function will be called (if given). The
   /// function [fn] will be invoked at-most [this.attempts] times.
-  FutureOr<void> Function(Exception) onRetry;
+  FutureOr<void> Function(Exception)? onRetry;
 
-  NsgDataItem _selectedItem;
-  NsgDataItem get selectedItem => _selectedItem;
-  set selectedItem(NsgDataItem newItem) {
-    var oldItem = _selectedItem;
+  NsgDataItem? _selectedItem;
+  NsgDataItem? get selectedItem => _selectedItem;
+  set selectedItem(NsgDataItem? newItem) {
+    //var oldItem = _selectedItem;
     if (_selectedItem != newItem) {
       _selectedItem = newItem;
-      selectedItemChanged.broadcast(GenericEventArgs1(oldItem));
+      //TODO: передавать в событие значение
+      selectedItemChanged.broadcast(null);
       sendNotify();
     }
   }
 
   NsgBaseController(
-      {this.dataType,
+      {this.dataType = NsgDataItem,
       this.requestOnInit = false,
       this.useUpdate = false,
       this.useChange = true,
@@ -91,10 +92,10 @@ class NsgBaseController extends GetxController
   @override
   void onInit() {
     if (masterController != null) {
-      masterController.selectedItemChanged.subscribe(masterValueChanged);
+      masterController!.selectedItemChanged.subscribe(masterValueChanged);
     }
     if (dependsOnControllers != null) {
-      dependsOnControllers.forEach((element) {
+      dependsOnControllers!.forEach((element) {
         element.selectedItemChanged.subscribe(masterValueChanged);
       });
     }
@@ -106,10 +107,10 @@ class NsgBaseController extends GetxController
   @override
   void onClose() {
     if (masterController != null) {
-      masterController.selectedItemChanged.unsubscribe(masterValueChanged);
+      masterController!.selectedItemChanged.unsubscribe(masterValueChanged);
     }
     if (dependsOnControllers != null) {
-      dependsOnControllers.forEach((element) {
+      dependsOnControllers!.forEach((element) {
         element.selectedItemChanged.unsubscribe(masterValueChanged);
       });
     }
@@ -136,17 +137,16 @@ class NsgBaseController extends GetxController
 
   Future _requestItems() async {
     try {
-      assert(dataType != null);
       if (masterController != null &&
           selectedMasterRequired &&
-          masterController.selectedItem == null) {
-        if (dataItemList != null && dataItemList.isNotEmpty) {
+          masterController!.selectedItem == null) {
+        if (dataItemList.isNotEmpty) {
           dataItemList.clear();
         }
         return;
       }
       List<NsgDataItem> newItemsList;
-      if (useDataCache && dataCache != null) {
+      if (useDataCache && dataCache.isNotEmpty) {
         newItemsList = dataCache;
       } else {
         newItemsList = await doRequestItems();
@@ -162,7 +162,6 @@ class NsgBaseController extends GetxController
       sendNotify();
       if (selectedItem == null &&
           autoSelectFirstItem &&
-          dataItemList != null &&
           dataItemList.isNotEmpty) {
         selectedItem = dataItemList[0];
       }
@@ -189,7 +188,7 @@ class NsgBaseController extends GetxController
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
 
-          await Get.to(provider.loginPage).then((value) => Get.back());
+          await Get.to(provider.loginPage)!.then((value) => Get.back());
         }
       }
     }
@@ -214,15 +213,15 @@ class NsgBaseController extends GetxController
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return newItemsList;
-    if (masterController.selectedItem == null ||
-        !masterController.selectedItem.fieldList.fields
-            .containsKey(dataBinding.masterFieldName)) return newItemsList;
-    var masterValue = masterController
-        .selectedItem.fieldValues.fields[dataBinding.masterFieldName];
+    if (masterController!.selectedItem == null ||
+        !masterController!.selectedItem!.fieldList.fields
+            .containsKey(dataBinding!.masterFieldName)) return newItemsList;
+    var masterValue = masterController!
+        .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName!];
 
     var list = <NsgDataItem>[];
     newItemsList.forEach((element) {
-      if (element.fieldValues.fields[dataBinding.slaveFieldName] ==
+      if (element.fieldValues.fields[dataBinding!.slaveFieldName!] ==
           masterValue) {
         list.add(element);
       }
@@ -235,7 +234,7 @@ class NsgBaseController extends GetxController
     return filter(list).isNotEmpty;
   }
 
-  NsgDataRequestParams get getRequestFilter => null;
+  NsgDataRequestParams? get getRequestFilter => null;
 
   FutureOr<void> _updateStatusError(Exception e) {
     currentStatus = RxStatus.error(e.toString());
@@ -245,7 +244,7 @@ class NsgBaseController extends GetxController
     }
   }
 
-  void masterValueChanged(GenericEventArgs1 args) async {
+  void masterValueChanged(EventArgs? args) async {
     //if (!matchFilter(selectedItem)) selectedItem = null;
     await requestItems();
   }

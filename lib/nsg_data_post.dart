@@ -2,13 +2,11 @@ import 'package:nsg_data/nsg_data.dart';
 import 'nsg_data_client.dart';
 
 class NsgDataPost<T extends NsgDataItem> {
-  List<T> itemsToPost;
-  List<T> _items;
-  Type dataItemType;
+  late List<T> itemsToPost;
+  List<T> _items = <T>[];
+  Type dataItemType = NsgDataItem;
 
-  NsgDataPost({this.dataItemType}) {
-    dataItemType ??= T;
-  }
+  NsgDataPost({this.dataItemType = NsgDataItem});
 
   void _fromJsonList(List<dynamic> maps) {
     _items = <T>[];
@@ -27,14 +25,14 @@ class NsgDataPost<T extends NsgDataItem> {
     return list;
   }
 
-  Future<List<T>> postItems(
+  Future<List<T>?> postItems(
       {bool autoAuthorize = true,
-      String tag,
-      List<String> loadReference,
+      String tag = '',
+      List<String>? loadReference,
       String function = ''}) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
 
-    var header = <String, String>{};
+    var header = <String, String?>{};
     if (dataItem.remoteProvider.token != '') {
       header['Authorization'] = dataItem.remoteProvider.token;
     }
@@ -66,17 +64,17 @@ class NsgDataPost<T extends NsgDataItem> {
       NsgDataClient.client.addItemsToCache(items: _items, tag: tag);
     }
     //Check referent field list
-    if (loadReference != null && _items != null) {
+    if (loadReference != null) {
       var req = NsgDataRequest<T>();
       await req.loadAllReferents(_items, loadReference, tag: tag);
     }
     return _items;
   }
 
-  Future<T> postItem({
+  Future<T?> postItem({
     bool autoAuthorize = true,
-    String tag,
-    List<String> loadReference,
+    String tag = '',
+    List<String>? loadReference,
     String function = '',
   }) async {
     var data = await postItems(

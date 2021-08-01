@@ -26,7 +26,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   bool initialized = false;
-  NsgDataProvider provider;
+  late NsgDataProvider provider;
 
   @override
   void initState() {
@@ -36,7 +36,6 @@ class _MainScreenState extends State<MainScreen> {
             initialized = true;
           }));
     }
-    ;
   }
 
   // Формирование виджета

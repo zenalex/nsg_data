@@ -3,13 +3,13 @@ import 'package:nsg_data/nsg_data_requestParams.dart';
 
 class NsgDataFreeRequest {
   static Future<dynamic> requestData({
-    NsgDataRequestParams filter,
+    NsgDataRequestParams? filter,
     bool autoAuthorize = true,
-    String tag,
+    String? tag,
     String function = '',
     String method = 'GET',
     dynamic postData,
-    NsgDataProvider dataProvider,
+    required NsgDataProvider dataProvider,
   }) async {
     var filterMap = <String, String>{};
     if (filter != null) filterMap = filter.toJson();

@@ -9,59 +9,58 @@ class NsgDataClient {
 
   static NsgDataClient client = NsgDataClient._();
 
-  final Map<Type, NsgDataItem> _registeredItems = <Type, NsgDataItem>{};
-  final Map<Type, NsgFieldList> _fieldList = <Type, NsgFieldList>{};
-  final Map<Type, NsgParamList> _paramList = <Type, NsgParamList>{};
-  final Map<Type, NsgItemList> _itemList = <Type, NsgItemList>{};
+  final _registeredItems = <String, NsgDataItem>{};
+  final _fieldList = <String, NsgFieldList>{};
+  final _paramList = <String, NsgParamList>{};
+  final _itemList = <String, NsgItemList>{};
 
-  void registerDataItem(NsgDataItem item, {NsgDataProvider remoteProvider}) {
+  void registerDataItem(NsgDataItem item, {NsgDataProvider? remoteProvider}) {
     if (remoteProvider != null) item.remoteProvider = remoteProvider;
-    assert(item.remoteProvider != null);
-    _registeredItems[item.runtimeType] = item;
-    _fieldList[item.runtimeType] = NsgFieldList();
+    _registeredItems[item.runtimeType.toString()] = item;
+    _fieldList[item.runtimeType.toString()] = NsgFieldList();
     item.initialize();
-    assert(item.primaryKeyField != null);
   }
 
   NsgFieldList getFieldList(NsgDataItem item) {
-    assert(_registeredItems.containsKey(item.runtimeType));
-    return _fieldList[item.runtimeType];
+    if (_registeredItems.containsKey(item.runtimeType.toString()))
+      return _fieldList[item.runtimeType.toString()]!;
+    throw ArgumentError('getFieldList: ${item.runtimeType} not found');
   }
 
   bool isRegistered(Type type) {
-    return (_registeredItems.containsKey(type));
+    return (_registeredItems.containsKey(type.toString()));
   }
 
   NsgDataItem getNewObject(Type type) {
-    assert(_registeredItems.containsKey(type));
-    return _registeredItems[type].getNewObject();
+    assert(_registeredItems.containsKey(type.toString()));
+    return _registeredItems[type.toString()]!.getNewObject();
   }
 
   NsgParamList getParamList(NsgDataItem item) {
-    if (!_paramList.containsKey(item.runtimeType)) {
-      _paramList[item.runtimeType] = NsgParamList();
+    if (!_paramList.containsKey(item.runtimeType.toString())) {
+      _paramList[item.runtimeType.toString()] = NsgParamList();
     }
-    return _paramList[item.runtimeType];
+    return _paramList[item.runtimeType.toString()]!;
   }
 
-  void addItemsToCache({List<NsgDataItem> items, String tag = ''}) {
+  void addItemsToCache({List<NsgDataItem?>? items, String? tag = ''}) {
     if (items == null || items.isEmpty) return;
     var time = DateTime.now();
     var cache = _getItemsCacheByType(items[0].runtimeType);
     items.forEach((item) {
-      cache.add(item: item, time: time, tag: tag);
+      cache!.add(item: item!, time: time, tag: tag);
     });
   }
 
-  NsgItemList _getItemsCacheByType(Type type) {
-    if (!_itemList.containsKey(type)) {
-      _itemList[type] = NsgItemList();
+  NsgItemList? _getItemsCacheByType(Type type) {
+    if (!_itemList.containsKey(type.toString())) {
+      _itemList[type.toString()] = NsgItemList();
     }
-    return _itemList[type];
+    return _itemList[type.toString()];
   }
 
-  NsgDataItem getItemsFromCache(Type type, String id) {
-    var cache = _getItemsCacheByType(type);
+  NsgDataItem? getItemsFromCache(Type type, String id) {
+    var cache = _getItemsCacheByType(type)!;
     var item = cache.getItem(id);
     return item == null ? null : item.dataItem;
   }
