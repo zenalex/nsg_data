@@ -13,6 +13,9 @@ class NsgPhoneLoginParams {
   String textSendSms;
   String textResendSms;
   String textEnterCaptcha;
+  String textLoginSuccessful;
+  String textEnterCorrectPhone;
+  String textCheckInternet;
   TextStyle? descriptionStyle;
   TextStyle? textPhoneField;
   Color? cardColor;
@@ -46,6 +49,10 @@ class NsgPhoneLoginParams {
     this.descriptionStyle,
     this.textSendSms = 'Send SMS',
     this.textEnterCaptcha = 'Enter captcha text',
+    this.textLoginSuccessful = 'Login successful',
+    this.textEnterCorrectPhone = 'Enter correct phone',
+    this.textCheckInternet =
+        'Cannot compleate request. Check internet connection and repeate.',
     this.textPhoneField,
     this.cardColor,
     this.textColor = Colors.black,

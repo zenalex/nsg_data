@@ -2,6 +2,7 @@ name: nsg_data
 description: Data object model and data exchange with C# server
 version: 0.0.5
 homepage: https://github.com/zenalex/nsg_data
+publish_to: 'none'
 
 environment:
   sdk: '>=2.12.0 <3.0.0'

@@ -159,57 +159,17 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
             ),
           ],
         )),
-        /*Column(
-          children: [
-            Expanded(
-              child: Container(
-                child: widget.loginPage.getLogo(),
-              ),
-            ),
-            Container(
-                child: _getContext(context),
-              ),
-          ],
-        ),*/
       ],
     );
   }
-
-  /*Widget _getBody(BuildContext context) {
-    return Center(
-        child: SingleChildScrollView(
-      child: Stack(
-        fit: StackFit.loose,
-        children: [
-          widget.loginPage.background(),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(bottom: 20.0),
-                      child: widget.loginPage.getLogo(),
-                    ),
-                  ),
-                ],
-              ),
-              _getContext(context),
-            ],
-          ),
-        ],
-      ),
-    ));
-  }*/
 
   final _formKey = GlobalKey<FormState>();
   TextEditingController? _captchaController;
   Widget _getContext(BuildContext context) {
     if (isLoginSuccessfull) {
-      Future.delayed(Duration(seconds: 2))
-          .then((e) => Navigator.pop<bool>(context, true));
+      //TODO: ВЕРНУТЬ ПЕРЕХОД
+      // Future.delayed(Duration(seconds: 2))
+      //     .then((e) => Navigator.pop<bool>(context, true));
       return _getContextSuccessful(context);
     }
     _captchaController ??= TextEditingController();
@@ -268,20 +228,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         textAlign: TextAlign.left,
                         decoration: InputDecoration(
                           hintText: widget.widgetParams!.textEnterPhone,
-                          //contentPadding: EdgeInsets.symmetric(
-                          //    horizontal: 5.0, vertical: 13.0),
-                          /*prefixIcon: Icon(
-                                Icons.smartphone,
-                                size: widget.widgetParams.iconSize,
-                                color: widget.widgetParams.phoneIconColor,
-                              ),*/
                           border: InputBorder.none,
                         ),
                         onChanged: (value) => phoneNumber = value,
                         validator: (value) =>
                             isPhoneValid(value!) && value.length >= 16
                                 ? null
-                                : 'Enter correct phone',
+                                : widget.widgetParams!.textEnterCorrectPhone,
                       ),
                     ),
                   ),
@@ -335,43 +288,17 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           decoration: InputDecoration(
                               fillColor: widget.widgetParams!.fillColor,
                               hintText: widget.widgetParams!.textEnterCaptcha,
-                              //contentPadding: EdgeInsets.symmetric(
-                              //    horizontal: 5.0, vertical: 10.0),
                               border: InputBorder.none),
                           style: widget.widgetParams!.textPhoneField,
                           textCapitalization: TextCapitalization.characters,
                           onChanged: (value) => captchaCode = value,
                           validator: (value) => captchaCode.length == 6
                               ? null
-                              : 'Enter captcha code',
+                              : widget.widgetParams!.textEnterCaptcha,
                         ),
                       ),
                     ),
                   ),
-                  /*Padding(
-                    padding: EdgeInsets.symmetric(vertical: 5.0),
-                    child: Container(
-                      height: widget.widgetParams.buttonSize,
-                      width: double.infinity,
-                      child: RaisedButton(
-                        elevation: 0.0,
-                        color: widget.widgetParams.sendSmsButtonColor,
-                        disabledColor: widget.widgetParams.fillColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5.0),
-                          side: BorderSide(
-                            color: widget.widgetParams.sendSmsBorderColor,
-                          ),
-                        ),
-                        onPressed:
-                            isSMSRequested ? null : () => doSmsRequest(context),
-                        child: Text(
-                          widget.widgetParams.textSendSms,
-                          style: widget.widgetParams.headerMessageStyle,
-                        ),
-                      ),
-                    ),
-                  ),*/
                   SizedBox(height: 15.0),
                   widget.loginPage.getButtons(),
                 ],
@@ -408,7 +335,6 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     }
     if (answerCode == 0) {
       setState(() {
-        //currentStage = _NsgPhoneLoginWidgetState.stageVerification;
         isSMSRequested = false;
       });
       gotoNextPage(context);
@@ -448,8 +374,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
         .phoneLoginRequestSMS(phoneNumber, captchaCode)
         .then((value) => checkRequestSMSanswer(context, value))
         .catchError((e) {
-      widget.widgetParams!.showError(context,
-          'Cannot compleate request. Check internet connection and repeate.');
+      widget.widgetParams!
+          .showError(context, widget.widgetParams!.textCheckInternet);
     });
   }
 
@@ -497,30 +423,30 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   Widget _getContextSuccessful(BuildContext context) {
-    return SizedBox(
-        width: widget.widgetParams!.cardSize,
-        child: Card(
-            margin: EdgeInsets.symmetric(horizontal: 15.0),
-            color: widget.widgetParams!.cardColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                          child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                            Text(
-                              'Login successful',
-                              style: widget.widgetParams!.headerMessageStyle,
-                            )
-                          ]))
-                    ]))));
+    return Center(
+      child: Card(
+          margin: EdgeInsets.symmetric(horizontal: 15.0),
+          color: widget.widgetParams!.cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                        child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                          Text(
+                            widget.widgetParams!.textLoginSuccessful,
+                            style: widget.widgetParams!.headerMessageStyle,
+                          )
+                        ]))
+                  ]))),
+    );
   }
 }
