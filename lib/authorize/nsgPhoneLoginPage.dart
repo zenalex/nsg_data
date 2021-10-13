@@ -256,28 +256,37 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          flex: 8,
-                          child: Container(
-                            child: getcaptchaImage(),
-                          ),
+                        Container(
+                          width: 160,
+                          child: getcaptchaImage(),
                         ),
-                        Expanded(
-                          flex: 2,
-                          child: Column(
+                        Container(
+                          height: 50,
+                          width: 40,
+                          child: Stack(
                             children: [
-                              TextButton(
-                                  onPressed: () {
-                                    refreshCaptcha();
-                                  },
-                                  //padding: EdgeInsets.all(0.0),
-                                  child: Icon(
-                                    Icons.cached,
-                                    color: widget.widgetParams!.phoneIconColor,
-                                    size: widget.widgetParams!.buttonSize,
+                              Align(
+                                  alignment: Alignment.topCenter,
+                                  child: IconButton(
+                                    padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
+                                    icon: Icon(
+                                      Icons.cached,
+                                      color:
+                                          widget.widgetParams!.phoneIconColor,
+                                      size: widget.widgetParams!.buttonSize,
+                                    ),
+                                    onPressed: () {
+                                      refreshCaptcha();
+                                    },
+                                    //padding: EdgeInsets.all(0.0),
                                   )),
-                              Text(
-                                secondsLeft.toString(),
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Text(
+                                  secondsLeft.toString(),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 14),
+                                ),
                               ),
                             ],
                           ),
