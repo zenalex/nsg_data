@@ -86,7 +86,7 @@ class NsgPhoneLoginParams {
     cardColor ??= Colors.white;
     sendSmsButtonColor ??= Color.fromRGBO(0, 101, 175, 1.0);
     sendSmsBorderColor ??= Color.fromRGBO(0, 301, 175, 1.0);
-    phoneIconColor ??= Color.fromRGBO(135, 188, 250, 1.0);
+    phoneIconColor ??= Color.fromRGBO(50, 50, 50, 1.0);
     phoneFieldColor ??= Color.fromRGBO(2, 54, 92, 0.1);
 
     errorMessageByStatusCode ??= errorMessage;
