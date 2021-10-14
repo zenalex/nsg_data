@@ -169,7 +169,6 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   TextEditingController? _captchaController;
   Widget _getContext(BuildContext context) {
     if (isLoginSuccessfull) {
-      //TODO: ВЕРНУТЬ ПЕРЕХОД
       Future.delayed(Duration(seconds: 2))
           .then((e) => Navigator.pop<bool>(context, true));
       return _getContextSuccessful(context);
