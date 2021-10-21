@@ -113,7 +113,6 @@ class _NsgPhoneLoginVerificationState
 
   Widget _getBody(BuildContext context) {
     return Stack(
-      fit: StackFit.loose,
       children: <Widget>[
         ConstrainedBox(
           constraints: const BoxConstraints.tightFor(),
@@ -126,19 +125,21 @@ class _NsgPhoneLoginVerificationState
             ),
           ),
         ),
-        Column(
-          children: [
-            Expanded(flex: 1, child: SizedBox()),
-            Expanded(
-              flex: 3,
-              child: Container(
-                child: widget.verificationPage.getLogo(),
-              ),
+        Align(
+          alignment: Alignment.center,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  height: Get.height / 3,
+                  child: widget.verificationPage.getLogo(),
+                ),
+                Container(
+                  child: _getContext(context),
+                ),
+              ],
             ),
-            Container(
-              child: _getContext(context),
-            ),
-          ],
+          ),
         ),
       ],
     );
