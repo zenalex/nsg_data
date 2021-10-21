@@ -251,7 +251,7 @@ class _NsgPhoneLoginVerificationState
 
   void checkLoginResult(BuildContext context, int answerCode) {
     if (answerCode != 0) {
-      var needEnterCaptcha = (answerCode != 40300 && answerCode != 40303);
+      var needEnterCaptcha = (answerCode > 40100 && answerCode < 40400);
       var errorMessage =
           widget.widgetParams!.errorMessageByStatusCode!(answerCode);
       showError(errorMessage, needEnterCaptcha);
