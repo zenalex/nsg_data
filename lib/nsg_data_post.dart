@@ -1,5 +1,4 @@
 import 'package:nsg_data/nsg_data.dart';
-import 'nsg_data_client.dart';
 
 class NsgDataPost<T extends NsgDataItem> {
   late List<T> itemsToPost;

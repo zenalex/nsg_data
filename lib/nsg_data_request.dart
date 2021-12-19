@@ -1,11 +1,7 @@
 import 'dart:async';
 
-import 'package:nsg_data/dataFields/referenceField.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
-import 'nsg_data_client.dart';
-import 'nsg_data_item.dart';
-import 'nsg_data_requestParams.dart';
 
 class NsgDataRequest<T extends NsgDataItem> {
   List<T> items = <T>[];

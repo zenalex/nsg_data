@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:event/event.dart';
-import 'package:nsg_data/controllers/nsgBaseControllerData.dart';
-import 'package:nsg_data/controllers/nsgDataBinding.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'package:retry/retry.dart';

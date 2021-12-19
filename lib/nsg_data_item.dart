@@ -1,9 +1,4 @@
-import 'package:nsg_data/dataFields/datafield.dart';
-import 'package:nsg_data/dataFields/referenceField.dart';
 import 'package:nsg_data/nsg_data.dart';
-import 'package:nsg_data/nsg_data_client.dart';
-import 'package:nsg_data/nsg_data_fieldlist.dart';
-import 'package:nsg_data/nsg_data_provider.dart';
 import 'nsg_data_paramList.dart';
 
 class NsgDataItem {
