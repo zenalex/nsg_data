@@ -26,6 +26,7 @@ class NsgPhoneLoginParams {
   Color? sendSmsBorderColor;
   Color? phoneIconColor;
   Color? phoneFieldColor;
+  final bool useCaptcha;
   dynamic parameter;
   String Function(int)? errorMessageByStatusCode;
   void Function(BuildContext? context, dynamic parameter)? loginSuccessful;
@@ -35,37 +36,37 @@ class NsgPhoneLoginParams {
   bool? appbar;
   bool? headerMessageVisible;
 
-  NsgPhoneLoginParams({
-    this.cardSize = 345.0,
-    this.iconSize = 28.0,
-    this.buttonSize = 42.0,
-    this.headerMessage = 'Welcome',
-    this.headerMessageVerification = 'Enter security code',
-    this.descriptionMessegeVerification =
-        'We sent code in SMS\nto phone number\n{{phone}}',
-    this.headerMessageStyle,
-    this.textEnterPhone = 'Enter your phone',
-    this.textResendSms = 'Send SMS again',
-    this.descriptionStyle,
-    this.textSendSms = 'Send SMS',
-    this.textEnterCaptcha = 'Enter captcha text',
-    this.textLoginSuccessful = 'Login successful',
-    this.textEnterCorrectPhone = 'Enter correct phone',
-    this.textCheckInternet =
-        'Cannot compleate request. Check internet connection and repeate.',
-    this.textPhoneField,
-    this.cardColor,
-    this.textColor = Colors.black,
-    this.fillColor = Colors.black,
-    this.disableButtonColor = Colors.blueGrey,
-    this.sendSmsButtonColor,
-    this.sendSmsBorderColor,
-    this.phoneIconColor,
-    this.phoneFieldColor,
-    this.errorMessageByStatusCode,
-    this.appbar,
-    this.headerMessageVisible,
-  }) {
+  NsgPhoneLoginParams(
+      {this.cardSize = 345.0,
+      this.iconSize = 28.0,
+      this.buttonSize = 42.0,
+      this.headerMessage = 'Welcome',
+      this.headerMessageVerification = 'Enter security code',
+      this.descriptionMessegeVerification =
+          'We sent code in SMS\nto phone number\n{{phone}}',
+      this.headerMessageStyle,
+      this.textEnterPhone = 'Enter your phone',
+      this.textResendSms = 'Send SMS again',
+      this.descriptionStyle,
+      this.textSendSms = 'Send SMS',
+      this.textEnterCaptcha = 'Enter captcha text',
+      this.textLoginSuccessful = 'Login successful',
+      this.textEnterCorrectPhone = 'Enter correct phone',
+      this.textCheckInternet =
+          'Cannot compleate request. Check internet connection and repeate.',
+      this.textPhoneField,
+      this.cardColor,
+      this.textColor = Colors.black,
+      this.fillColor = Colors.black,
+      this.disableButtonColor = Colors.blueGrey,
+      this.sendSmsButtonColor,
+      this.sendSmsBorderColor,
+      this.phoneIconColor,
+      this.phoneFieldColor,
+      this.errorMessageByStatusCode,
+      this.appbar,
+      this.headerMessageVisible,
+      this.useCaptcha = true}) {
     headerMessageStyle ??= TextStyle(
       fontFamily: 'Roboto',
       fontSize: 20.0,
