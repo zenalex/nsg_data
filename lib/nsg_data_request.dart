@@ -109,7 +109,9 @@ class NsgDataRequest<T extends NsgDataItem> {
       bool addCount = true,
       dynamic postData,
       bool autoRepeate = false,
-      int autoRepeateCount = 1000}) async {
+      int autoRepeateCount = 1000,
+      FutureOr<bool> Function(Exception)? retryIf,
+      FutureOr<void> Function(Exception)? onRetry}) async {
     NsgDataRequestParams? newFilter;
     if (addCount) {
       if (filter == null) {
@@ -131,7 +133,9 @@ class NsgDataRequest<T extends NsgDataItem> {
         method: method,
         postData: postData,
         autoRepeate: autoRepeate,
-        autoRepeateCount: autoRepeateCount);
+        autoRepeateCount: autoRepeateCount,
+        retryIf: retryIf,
+        onRetry: onRetry);
     if (data.isEmpty) {
       return NsgDataClient.client.getNewObject(dataItemType) as T;
     }
