@@ -26,8 +26,8 @@ class NsgDataProvider {
   DateTime? smsRequestedTime;
   bool isDebug = true;
 
-  ///Firebase identificator of device
-  String deviceId;
+  ///Firebase token for this device
+  String firebaseToken;
 
   ///milliseconds
   int requestDuration = 15000;
@@ -58,7 +58,7 @@ class NsgDataProvider {
       this.serverUri = 'http://192.168.1.20:5073',
       this.authorizationApi = 'Api/Auth',
       this.useNsgAuthorization = true,
-      required this.deviceId});
+      required this.firebaseToken});
 
   ///Initialization. Load saved token if useNsgAuthorization == true
   Future initialize() async {
@@ -389,12 +389,14 @@ class NsgDataProvider {
   }
 
   Future<bool> _checkToken(FutureOr<void> Function(Exception)? onRetry) async {
+    var params = <String, dynamic>{};
+    params['firebaseToken'] = firebaseToken;
     var response = await (baseRequest(
         function: 'CheckToken',
         headers: getAuthorizationHeader(),
         url: '$serverUri/$authorizationApi/CheckToken',
         method: 'GET',
-        params: {},
+        params: params,
         autoRepeate: true,
         autoRepeateCount: 1000,
         onRetry: onRetry));
