@@ -26,6 +26,9 @@ class NsgDataProvider {
   DateTime? smsRequestedTime;
   bool isDebug = true;
 
+  ///Firebase identificator of device
+  String deviceId;
+
   ///milliseconds
   int requestDuration = 15000;
 
@@ -54,7 +57,8 @@ class NsgDataProvider {
       {this.name,
       this.serverUri = 'http://192.168.1.20:5073',
       this.authorizationApi = 'Api/Auth',
-      this.useNsgAuthorization = true});
+      this.useNsgAuthorization = true,
+      required this.deviceId});
 
   ///Initialization. Load saved token if useNsgAuthorization == true
   Future initialize() async {
