@@ -11,7 +11,7 @@ class NsgDataFreeRequest {
     dynamic postData,
     required NsgDataProvider dataProvider,
   }) async {
-    var filterMap = <String, String>{};
+    var filterMap = <String, dynamic>{};
     if (filter != null) filterMap = filter.toJson();
 
     function = dataProvider.serverUri + function;

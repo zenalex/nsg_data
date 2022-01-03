@@ -68,7 +68,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     dynamic postData,
   }) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
-    var filterMap = <String, String>{};
+    var filterMap = <String, dynamic>{};
     if (filter != null) filterMap = filter.toJson();
 
     if (function == '') {

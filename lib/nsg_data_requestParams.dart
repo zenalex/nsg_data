@@ -4,9 +4,9 @@ class NsgDataRequestParams {
   final int top;
   final int count;
   final List<String>? idList;
-  final Map<String, String>? params;
-  Map<String, String> toJson() {
-    var filter = <String, String>{};
+  final Map<String, dynamic>? params;
+  Map<String, dynamic> toJson() {
+    var filter = <String, dynamic>{};
     if (top != 0) filter['Top'] = top.toString();
     if (count != 0) filter['Count'] = count.toString();
     if (idList != null) filter['IdList'] = jsonEncode(idList);
