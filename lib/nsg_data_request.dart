@@ -84,7 +84,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         params: filterMap,
         postData: postData);
     items = <T>[];
-    if (response == '') {
+    if (response == '' || response == null) {
     } else {
       _fromJsonList(response as List<dynamic>);
       NsgDataClient.client.addItemsToCache(items: items, tag: tag);
