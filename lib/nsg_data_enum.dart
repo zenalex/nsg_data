@@ -1,6 +1,6 @@
 class NsgEnum {
   final String name;
-  final dynamic value;
+  final int value;
 
-  NsgEnum({this.value, required this.name});
+  NsgEnum({this.value = 0, required this.name});
 }

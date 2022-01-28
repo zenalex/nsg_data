@@ -8,13 +8,13 @@ import '../nsg_data_provider.dart';
 
 class NsgPhoneLoginPage extends StatelessWidget {
   final NsgDataProvider provider;
-  final NsgPhoneLoginParams? widgetParams;
-  NsgPhoneLoginPage(this.provider, {this.widgetParams}) : super();
+  final NsgPhoneLoginParams widgetParams;
+  NsgPhoneLoginPage(this.provider, {required this.widgetParams}) : super();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: widgetParams!.appbar! ? getAppBar(context) : null,
+      appBar: widgetParams.appbar! ? getAppBar(context) : null,
       //backgroundColor: Colors.white,
       body: NsgPhoneLoginWidget(this, provider, widgetParams: widgetParams),
     );
