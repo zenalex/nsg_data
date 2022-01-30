@@ -7,6 +7,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       : items[0];
   T get currentItem =>
       ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
+  set currentItem(T item) => selectedItem = item;
 
   NsgDataController(
       {bool requestOnInit = true,

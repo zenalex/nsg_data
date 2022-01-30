@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:event/event.dart';
+import 'package:flutter/material.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'package:retry/retry.dart';
@@ -245,5 +246,15 @@ class NsgBaseController extends GetxController
   void masterValueChanged(EventArgs? args) async {
     //if (!matchFilter(selectedItem)) selectedItem = null;
     await requestItems();
+  }
+
+  Widget obxBase(
+    Widget Function(NsgBaseControllerData?) widget, {
+    Widget Function(String? error)? onError,
+    Widget? onLoading,
+    Widget? onEmpty,
+  }) {
+    return obx(widget,
+        onError: onError, onLoading: onLoading, onEmpty: onEmpty);
   }
 }
