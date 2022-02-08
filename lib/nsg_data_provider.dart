@@ -292,7 +292,7 @@ class NsgDataProvider {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
-    login.securityCode = securityCode;
+    login.securityCode = securityCode == '' ? 'security' : securityCode;
     var s = login.toJson();
 
     var response = await (baseRequest(

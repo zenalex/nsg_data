@@ -67,7 +67,7 @@ class NsgDataItem {
     if (value is NsgDataItem) {
       value = value.getFieldValue(value.primaryKeyField);
     }
-    fieldValues.fields[name] = value;
+    fieldValues.setValue(this, name, value);
   }
 
   static const String _PARAM_REMOTE_PROVIDER = 'RemoteProvider';

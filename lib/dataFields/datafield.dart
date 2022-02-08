@@ -1,3 +1,5 @@
+import '../nsg_data.dart';
+
 class NsgDataField {
   final String name;
 
@@ -11,4 +13,8 @@ class NsgDataField {
   }
 
   dynamic get defaultValue => null;
+
+  void setValue(NsgFieldValues fieldValues, dynamic value) {
+    fieldValues.fields[name] = value;
+  }
 }
