@@ -109,8 +109,8 @@ class NsgCompareParam extends NsgCompareBase {
   dynamic parameterValue;
 
   String get type {
-    RegExp guidRegExp =
-        RegExp(r"[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?$");
+    RegExp guidRegExp = RegExp(
+        r"[{(]?[0-9A-Fa-f]{8}[-]?(?:[0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$");
     if (guidRegExp.hasMatch(parameterValue)) {
       return 'System.Guid';
     }
