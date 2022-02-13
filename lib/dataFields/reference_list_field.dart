@@ -40,6 +40,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
     return item;
   }
 
+  @override
   void setValue(NsgFieldValues fieldValues, dynamic value) {
     if (value is List) {
       fieldValues.fields[name] = value;

@@ -15,6 +15,7 @@ export 'package:nsg_data/dataFields/intfield.dart';
 export 'package:nsg_data/dataFields/referenceField.dart';
 export 'package:nsg_data/dataFields/reference_list_field.dart';
 export 'package:nsg_data/dataFields/stringField.dart';
+export 'package:nsg_data/dataFields/base_reference_field.dart';
 export 'package:nsg_data/models/nsgLoginModel.dart';
 export 'package:nsg_data/nsg_data_client.dart';
 export 'package:nsg_data/nsg_data_enum.dart';

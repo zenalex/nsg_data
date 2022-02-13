@@ -41,6 +41,7 @@ class NsgDataItem {
   NsgParamList get paramList => NsgDataClient.client.getParamList(this);
   final NsgFieldValues fieldValues = NsgFieldValues();
 
+  //TODO: refactor to addField
   void addfield(NsgDataField field, {bool primaryKey = false}) {
     var name = field.name;
     assert(!fieldList.fields.containsKey(name));
@@ -49,6 +50,15 @@ class NsgDataItem {
       assert(primaryKeyField == '');
       primaryKeyField = name;
     }
+  }
+
+  NsgDataField getField(String name) {
+    assert(fieldList.fields.containsKey(name));
+    return fieldList.fields[name]!;
+  }
+
+  bool isReferenceField(String name) {
+    return getField(name) is NsgDataBaseReferenceField;
   }
 
   dynamic getFieldValue(String name) {

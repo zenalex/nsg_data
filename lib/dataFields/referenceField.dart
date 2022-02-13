@@ -1,10 +1,7 @@
-import 'package:nsg_data/dataFields/datafield.dart';
-import 'package:nsg_data/nsg_data_client.dart';
-import 'package:nsg_data/nsg_data_item.dart';
-import 'package:nsg_data/nsg_data_request.dart';
-import 'package:nsg_data/nsg_data_requestParams.dart';
+import 'package:nsg_data/nsg_data.dart';
 
-class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataField {
+class NsgDataReferenceField<T extends NsgDataItem>
+    extends NsgDataBaseReferenceField {
   NsgDataReferenceField(String name) : super(name);
 
   @override
