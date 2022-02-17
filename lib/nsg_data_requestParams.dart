@@ -1,23 +1,26 @@
 import 'dart:convert';
 
+import 'package:nsg_data/nsg_data.dart';
+
 class NsgDataRequestParams {
   final int top;
   final int count;
   final List<String>? idList;
   final Map<String, dynamic>? params;
-  String? sortByField;
+  String? sorting;
   String? readNestedField;
-
-  //TODO: SearchCriteriaXml
+  NsgCompare? searchCriteria;
 
   Map<String, dynamic> toJson() {
     var filter = <String, dynamic>{};
     if (top != 0) filter['Top'] = top.toString();
     if (count != 0) filter['Count'] = count.toString();
     if (idList != null) filter['IdList'] = jsonEncode(idList);
-    if (sortByField != null) filter['SortByField'] = jsonEncode(sortByField);
+    if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
     if (readNestedField != null)
       filter['ReadNestedField'] = jsonEncode(readNestedField);
+    if (searchCriteria != null)
+      filter['SearchCriteriaXml'] = searchCriteria?.toXml();
     if (params != null) filter.addAll(params!);
     return filter;
   }
@@ -27,6 +30,6 @@ class NsgDataRequestParams {
       this.count = 0,
       this.idList,
       this.params,
-      this.sortByField,
+      this.sorting,
       this.readNestedField});
 }
