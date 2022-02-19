@@ -257,4 +257,15 @@ class NsgBaseController extends GetxController
     return obx(widget,
         onError: onError, onLoading: onLoading, onEmpty: onEmpty);
   }
+
+  Future postSelectedItem() async {
+    if (selectedItem == null) {
+      throw new Exception("No selected item to post");
+    }
+    await selectedItem!.post();
+    if (!dataItemList.contains(selectedItem)) {
+      dataItemList.add(selectedItem!);
+    }
+    sendNotify();
+  }
 }
