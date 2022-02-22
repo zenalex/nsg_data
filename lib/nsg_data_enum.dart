@@ -3,4 +3,7 @@ class NsgEnum {
   final int value;
 
   NsgEnum({this.value = 0, required this.name});
+
+  @override
+  String toString() => name;
 }
