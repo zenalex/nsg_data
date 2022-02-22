@@ -133,7 +133,11 @@ class NsgDataItem {
     return list;
   }
 
-  bool get isEmpty => getFieldValue(primaryKeyField).toString() == ZERO_GUID;
+  bool get isEmpty {
+    var guidString = getFieldValue(primaryKeyField).toString();
+    return guidString == ZERO_GUID || guidString.isEmpty;
+  }
+
   bool get isNotEmpty => !isEmpty;
   @override
   bool operator ==(Object other) => other is NsgDataItem && equal(other);
