@@ -14,6 +14,7 @@ export 'package:nsg_data/dataFields/doubleField.dart';
 export 'package:nsg_data/dataFields/intfield.dart';
 export 'package:nsg_data/dataFields/list_field.dart';
 export 'package:nsg_data/dataFields/referenceField.dart';
+export 'package:nsg_data/dataFields/enumReferenceField.dart';
 export 'package:nsg_data/dataFields/reference_list_field.dart';
 export 'package:nsg_data/dataFields/stringField.dart';
 export 'package:nsg_data/dataFields/base_reference_field.dart';
