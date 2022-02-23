@@ -95,8 +95,12 @@ class NsgDataItem {
   T getReferent<T extends NsgDataItem?>(String name) {
     assert(fieldList.fields.containsKey(name));
     var field = fieldList.fields[name]!;
-    assert(field is NsgDataReferenceField);
-    return (field as NsgDataReferenceField).getReferent(this) as T;
+    if (field is NsgDataReferenceField) {
+      return field.getReferent(this) as T;
+    } else if (field is NsgDataEnumReferenceField) {
+      return field.getReferent(this) as T;
+    }
+    throw Exception('field $name is not ReferencedField');
   }
 
   Future<T> getReferentAsync<T extends NsgDataItem>(String name,
