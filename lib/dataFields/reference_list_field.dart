@@ -12,6 +12,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
   dynamic get defaultValue => <T>[];
 
   Type get referentType => List<T>;
+  Type get referentElementType => T;
 
   List<T>? getReferent(NsgDataItem dataItem, {bool useCache = true}) {
     return null;
@@ -51,11 +52,12 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
 
   List<T> fromJsonList(List<dynamic> maps) {
     var items = <T>[];
-    maps.forEach((m) {
-      var elem = NsgDataClient.client.getNewObject(referentType);
-      elem.fromJson(m as Map<String, dynamic>);
-      items.add(elem as T);
-    });
+    //TODO:24022022
+    // maps.forEach((m) {
+    //   var elem = NsgDataClient.client.getNewObject(referentElementType);
+    //   elem.fromJson(m as Map<String, dynamic>);
+    //   items.add(elem as T);
+    // });
     return items;
   }
 }
