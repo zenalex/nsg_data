@@ -15,8 +15,7 @@ class NsgDataItem {
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
       if (fieldList.fields.containsKey(name)) {
-        setFieldValue(
-            name, fieldList.fields[name]!.convertJsonValue(jsonValue));
+        setFieldValue(name, jsonValue);
       }
     });
   }

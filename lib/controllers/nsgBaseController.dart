@@ -134,6 +134,13 @@ class NsgBaseController extends GetxController
     }
   }
 
+  ///Обновление данных
+  Future refreshData() async {
+    change(null, status: RxStatus.loading());
+    await requestItems();
+    change(null, status: RxStatus.success());
+  }
+
   Future _requestItems() async {
     try {
       if (masterController != null &&

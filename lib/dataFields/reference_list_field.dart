@@ -43,9 +43,19 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
   @override
   void setValue(NsgFieldValues fieldValues, dynamic value) {
     if (value is List) {
-      fieldValues.fields[name] = value;
+      fieldValues.fields[name] = fromJsonList(value);
     } else {
       fieldValues.fields[name] = defaultValue;
     }
+  }
+
+  List<T> fromJsonList(List<dynamic> maps) {
+    var items = <T>[];
+    maps.forEach((m) {
+      var elem = NsgDataClient.client.getNewObject(referentType);
+      elem.fromJson(m as Map<String, dynamic>);
+      items.add(elem as T);
+    });
+    return items;
   }
 }
