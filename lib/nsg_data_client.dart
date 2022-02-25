@@ -21,10 +21,10 @@ class NsgDataClient {
     item.initialize();
   }
 
-  NsgFieldList getFieldList(NsgDataItem item) {
-    if (_registeredItems.containsKey(item.runtimeType.toString()))
-      return _fieldList[item.runtimeType.toString()]!;
-    throw ArgumentError('getFieldList: ${item.runtimeType} not found');
+  NsgFieldList getFieldList(Type itemType) {
+    if (_registeredItems.containsKey(itemType.toString()))
+      return _fieldList[itemType.toString()]!;
+    throw ArgumentError('getFieldList: $itemType not found');
   }
 
   bool isRegistered(Type type) {
@@ -36,11 +36,11 @@ class NsgDataClient {
     return _registeredItems[type.toString()]!.getNewObject();
   }
 
-  NsgParamList getParamList(NsgDataItem item) {
-    if (!_paramList.containsKey(item.runtimeType.toString())) {
-      _paramList[item.runtimeType.toString()] = NsgParamList();
+  NsgParamList getParamList(Type itemType) {
+    if (!_paramList.containsKey(itemType.toString())) {
+      _paramList[itemType.toString()] = NsgParamList();
     }
-    return _paramList[item.runtimeType.toString()]!;
+    return _paramList[itemType.toString()]!;
   }
 
   void addItemsToCache({List<NsgDataItem?>? items, String? tag = ''}) {

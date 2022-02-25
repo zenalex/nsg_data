@@ -52,12 +52,11 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
 
   List<T> fromJsonList(List<dynamic> maps) {
     var items = <T>[];
-    //TODO:24022022
-    // maps.forEach((m) {
-    //   var elem = NsgDataClient.client.getNewObject(referentElementType);
-    //   elem.fromJson(m as Map<String, dynamic>);
-    //   items.add(elem as T);
-    // });
+    maps.forEach((m) {
+      var elem = NsgDataClient.client.getNewObject(referentElementType);
+      elem.fromJson(m as Map<String, dynamic>);
+      items.add(elem as T);
+    });
     return items;
   }
 }

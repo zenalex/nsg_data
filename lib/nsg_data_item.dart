@@ -36,8 +36,10 @@ class NsgDataItem {
     throw Exception('initialize for type {runtimeType} is not defined');
   }
 
-  NsgFieldList get fieldList => NsgDataClient.client.getFieldList(this);
-  NsgParamList get paramList => NsgDataClient.client.getParamList(this);
+  NsgFieldList get fieldList =>
+      NsgDataClient.client.getFieldList(this.runtimeType);
+  NsgParamList get paramList =>
+      NsgDataClient.client.getParamList(this.runtimeType);
   final NsgFieldValues fieldValues = NsgFieldValues();
 
   //TODO: refactor to addField

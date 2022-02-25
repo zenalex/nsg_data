@@ -92,9 +92,8 @@ class NsgDataRequest<T extends NsgDataItem> {
         loadReference = dataItem.loadReferenceDefault;
       }
       //Check referent field list
-      if (loadReference != null) {
-        await loadAllReferents(items, loadReference, tag: tag);
-      }
+      await loadAllReferents(items, loadReference,
+          tag: tag, readAllReferences: loadReference == null);
     }
     return items;
   }
@@ -142,9 +141,23 @@ class NsgDataRequest<T extends NsgDataItem> {
     return data[0];
   }
 
-  Future loadAllReferents(List<T> items, List<String> loadReference,
-      {String tag = ''}) async {
+  Future loadAllReferents(
+      List<NsgDataItem> items, List<String>? loadReferenceExt,
+      {String tag = '', bool readAllReferences = false}) async {
     if (items.isEmpty) {
+      return;
+    }
+    List<String> loadReference = loadReferenceExt ?? [];
+    //if loadReference == null - try to load all references
+    if (readAllReferences) {
+      loadReference = [];
+      var allFields = NsgDataClient.client.getFieldList(items[0].runtimeType);
+      for (var fieldName in allFields.fields.keys) {
+        loadReference.add(fieldName);
+      }
+    }
+    //if there are no items or loadReference list is empty do nothing
+    if (loadReference.isEmpty) {
       return;
     }
     var allRefs = <Type, List<String>>{};
@@ -165,13 +178,26 @@ class NsgDataRequest<T extends NsgDataItem> {
               refList.add(fieldValue);
             }
           }
+        } else if (field is NsgDataReferenceListField) {
+          var table = field.getReferent(item);
+
+          if (table == null) {
+            //TODO: сделать загрузку самого списка, если он еще не загружен
+          } else if (readAllReferences) {
+            loadAllReferents(table, loadReference,
+                tag: tag, readAllReferences: readAllReferences);
+          }
         }
       });
     });
     await Future.forEach<Type>(allRefs.keys, (type) async {
       var request = NsgDataRequest(dataItemType: type);
       var filter = NsgDataRequestParams(idList: allRefs[type]);
-      await request.requestItems(filter: filter);
+      var refItems = await request.requestItems(filter: filter);
+      if (readAllReferences) {
+        loadAllReferents(refItems, loadReference,
+            tag: tag, readAllReferences: readAllReferences);
+      }
     });
   }
 }
