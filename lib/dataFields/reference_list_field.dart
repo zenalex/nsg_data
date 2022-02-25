@@ -15,7 +15,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
   Type get referentElementType => T;
 
   List<T>? getReferent(NsgDataItem dataItem, {bool useCache = true}) {
-    return null;
+    return dataItem.getFieldValue(name);
 
     // var id = dataItem.getFieldValue(name).toString();
     // if (id == '' || id == NsgDataItem.ZERO_GUID) {
