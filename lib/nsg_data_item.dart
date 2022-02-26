@@ -76,6 +76,9 @@ class NsgDataItem {
       print('object $runtimeType does not contains field $name');
       assert(fieldList.fields.containsKey(name));
     }
+    if (value is NsgEnum) {
+      value = value.value;
+    }
     if (value is NsgDataItem) {
       value = value.getFieldValue(value.primaryKeyField);
     }
