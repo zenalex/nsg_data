@@ -15,12 +15,15 @@ class NsgDataEnumReferenceField<T extends NsgEnum>
   Type get referentType => T;
 
   T? getReferent(NsgDataItem dataItem, {bool useCache = true}) {
-    return (NsgEnum.fromValue(
-        referentType, int.parse(dataItem.fieldValues.fields[name])) as T);
+    int? v = dataItem.fieldValues.fields[name];
+    if (v == null) {
+      v = defaultValue;
+    }
+    return (NsgEnum.fromValue(referentType, v!) as T);
   }
 
-  Future<T> getReferentAsync(NsgDataItem dataItem,
+  Future<NsgDataItem> getReferentAsync(NsgDataItem dataItem,
       {bool useCache = true}) async {
-    return getReferent(dataItem) as T;
+    return getReferent(dataItem) as NsgDataItem;
   }
 }
