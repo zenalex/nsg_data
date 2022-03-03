@@ -85,7 +85,7 @@ class NsgDataItem {
     if (name != primaryKeyField) {
       if (value is String) {
         var field = this.getField(name);
-        if (field is NsgDataStringField) {
+        if (field is NsgDataStringField && value.length > field.maxLength) {
           value = value.toString().substring(0, field.maxLength);
         }
       } else if (value is double) {
