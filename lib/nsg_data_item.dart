@@ -82,6 +82,19 @@ class NsgDataItem {
     if (value is NsgDataItem) {
       value = value.getFieldValue(value.primaryKeyField);
     }
+    if (name != primaryKeyField) {
+      if (value is String) {
+        var field = this.getField(name);
+        if (field is NsgDataStringField) {
+          value = value.toString().substring(0, field.maxLength);
+        }
+      } else if (value is double) {
+        var field = this.getField(name);
+        if (field is NsgDataDoubleField) {
+          value = num.parse(value.toStringAsFixed(field.maxDecimalPlaces));
+        }
+      }
+    }
     fieldValues.setValue(this, name, value);
   }
 

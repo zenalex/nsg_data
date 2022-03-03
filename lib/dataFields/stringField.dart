@@ -1,7 +1,9 @@
 import 'package:nsg_data/dataFields/datafield.dart';
 
 class NsgDataStringField extends NsgDataField {
-  NsgDataStringField(String name) : super(name);
+  final int maxLength;
+
+  NsgDataStringField(String name, {this.maxLength = 50}) : super(name);
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {

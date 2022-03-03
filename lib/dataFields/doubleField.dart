@@ -1,7 +1,9 @@
 import 'package:nsg_data/dataFields/datafield.dart';
 
 class NsgDataDoubleField extends NsgDataField {
-  NsgDataDoubleField(String name) : super(name);
+  final int maxDecimalPlaces;
+
+  NsgDataDoubleField(String name, {this.maxDecimalPlaces = 2}) : super(name);
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {
