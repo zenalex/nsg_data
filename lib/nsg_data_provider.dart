@@ -55,7 +55,7 @@ class NsgDataProvider {
 
   NsgDataProvider(
       {this.name,
-      this.serverUri = 'http://192.168.1.20:5073',
+      this.serverUri = 'http://192.168.1.20:5075',
       this.authorizationApi = 'Api/Auth',
       this.useNsgAuthorization = true,
       required this.firebaseToken});
