@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:event/event.dart';
 import 'package:flutter/material.dart';
+import 'package:nsg_data/controllers/nsg_controller_filter.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'package:retry/retry.dart';
+import 'nsg_controller_filter.dart';
 
 class NsgBaseController extends GetxController
     with StateMixin<NsgBaseControllerData> {
@@ -46,6 +48,9 @@ class NsgBaseController extends GetxController
 
   ///Set count of attempts of requesting data
   int autoRepeateCount;
+
+  ///Фильтр. После изменения необходимо вызвать refreshData()
+  final controllerFilter = NsgControllerFilter();
 
   /// If no [retryIf] function is given this will retry any for any [Exception]
   /// thrown. To retry on an [Error], the error must be caught and _rethrown_
@@ -218,7 +223,7 @@ class NsgBaseController extends GetxController
   void afterRequestItems(List<NsgDataItem> newItemsList) {}
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
-    if (dataBinding == null) return newItemsList;
+    if (dataBinding == null) return _applyControllerFilter(newItemsList);
     if (masterController!.selectedItem == null ||
         !masterController!.selectedItem!.fieldList.fields
             .containsKey(dataBinding!.masterFieldName)) return newItemsList;
@@ -232,7 +237,17 @@ class NsgBaseController extends GetxController
         list.add(element);
       }
     });
-    return list;
+    return _applyControllerFilter(list);
+  }
+
+  List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
+    if (!controllerFilter.isAllowed ||
+        !controllerFilter.isOpen ||
+        controllerFilter.searchString == '') return newItemsList;
+    return newItemsList
+        .where((element) =>
+            element.toString().contains(controllerFilter.searchString))
+        .toList();
   }
 
   bool matchFilter(NsgDataItem item) {
