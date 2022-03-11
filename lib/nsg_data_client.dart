@@ -62,6 +62,8 @@ class NsgDataClient {
   NsgDataItem? getItemsFromCache(Type type, String id) {
     var cache = _getItemsCacheByType(type)!;
     var item = cache.getItem(id);
-    return item == null ? null : item.dataItem;
+    return item == null
+        ? NsgDataClient.client.getNewObject(type)
+        : item.dataItem;
   }
 }

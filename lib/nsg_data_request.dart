@@ -184,7 +184,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           if (table == null) {
             //TODO: сделать загрузку самого списка, если он еще не загружен
           } else if (readAllReferences) {
-            loadAllReferents(table, loadReference,
+            loadAllReferents(table, [],
                 tag: tag, readAllReferences: readAllReferences);
           }
         }
