@@ -228,11 +228,11 @@ class NsgBaseController extends GetxController
         !masterController!.selectedItem!.fieldList.fields
             .containsKey(dataBinding!.masterFieldName)) return newItemsList;
     var masterValue = masterController!
-        .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName!];
+        .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
 
     var list = <NsgDataItem>[];
     newItemsList.forEach((element) {
-      if (element.fieldValues.fields[dataBinding!.slaveFieldName!] ==
+      if (element.fieldValues.fields[dataBinding!.slaveFieldName] ==
           masterValue) {
         list.add(element);
       }

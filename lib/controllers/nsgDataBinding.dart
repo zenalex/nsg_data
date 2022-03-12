@@ -1,4 +1,6 @@
 class NsgDataBinding {
-  String? masterFieldName;
-  String? slaveFieldName;
+  final String masterFieldName;
+  final String slaveFieldName;
+
+  NsgDataBinding({required this.masterFieldName, required this.slaveFieldName});
 }
