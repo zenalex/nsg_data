@@ -31,5 +31,6 @@ class NsgDataRequestParams {
       this.idList,
       this.params,
       this.sorting,
-      this.readNestedField});
+      this.readNestedField,
+      this.searchCriteria});
 }
