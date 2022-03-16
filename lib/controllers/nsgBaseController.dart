@@ -255,7 +255,22 @@ class NsgBaseController extends GetxController
     return filter(list).isNotEmpty;
   }
 
-  NsgDataRequestParams? get getRequestFilter => null;
+  NsgDataRequestParams? get getRequestFilter {
+    if (masterController == null ||
+        masterController!.selectedItem == null ||
+        !masterController!.selectedItem!.fieldList.fields
+            .containsKey(dataBinding!.masterFieldName)) return null;
+
+    var masterValue = masterController!
+        .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+
+    var param = NsgDataRequestParams();
+    var cmp = NsgCompare();
+    cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
+    param.searchCriteria = cmp;
+
+    return param;
+  }
 
   FutureOr<void> _updateStatusError(Exception e) {
     currentStatus = RxStatus.error(e.toString());
