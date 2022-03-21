@@ -207,7 +207,6 @@ class NsgDataRequest<T extends NsgDataItem> {
           value: allRefs[type],
           comparisonOperator: NsgComparisonOperator.inList);
       var filter = NsgDataRequestParams(compare: cmp);
-      //TODO: 20032002 ПРОВЕРИТЬ
       var refItems = await request.requestItems(filter: filter);
       if (readAllReferences) {
         loadAllReferents(refItems, loadReference,

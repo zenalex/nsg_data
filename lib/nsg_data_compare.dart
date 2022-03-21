@@ -57,7 +57,6 @@ class NsgCompare {
 
   Map<String, dynamic> toJson() {
     var map = <String, dynamic>{};
-    map["LogicalOperator"] = 1;
     var list = <Map<String, dynamic>>[];
     paramList.forEach((param) {
       list.add(param.toJson());
