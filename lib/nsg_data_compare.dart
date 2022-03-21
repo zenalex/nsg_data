@@ -1,49 +1,36 @@
-import 'nsg_data_item.dart';
+import 'dart:convert';
+
+import 'package:nsg_data/nsg_comparison_operator.dart';
 
 enum NsgLogicalOperator { And, Or }
 
-class NsgCompareBase {
-  /// Имя (имеет смысл при включении во внешний NsgCompare)
-  String name = '';
-
-  /// <summary>
-  /// Признак включения(выключения) условия
-  bool enabled = true;
-}
-
-class NsgCompare extends NsgCompareBase {
+class NsgCompare {
   /// логический оператор
-  NsgLogicalOperator logicalOperator = NsgLogicalOperator.And;
-
-  /// Признак условий по правам.
-  bool isRights = false;
-
-  // параметры сортировки
+  var logicalOperator = NsgLogicalOperator.And;
+  // параметры условий
   List<NsgCompareParam> paramList = [];
 
   /// Проверка наличия в фильтре хотя бы одного условия
   bool get isEmpty {
     var res = true;
     this.paramList.forEach((param) {
-      if (!param.enabled) return;
-      //continue;
-      if (param.parameterValue is NsgCompare)
+      if (param.parameterValue is NsgCompare) {
         res = res && (param.parameterValue as NsgCompare).isEmpty;
-      else
+      } else {
         res = false;
+      }
     });
     return res;
   }
 
-  int get count => paramList.length;
   int get length => paramList.length;
 
   /// Возвращаем количество параметров с учетов всех вложенных параметров
-  int get countAll {
+  int get lengthAll {
     int i = 0;
     paramList.forEach((param) => {
           if (param.parameterValue is NsgCompare)
-            {i += (param.parameterValue as NsgCompare).countAll}
+            {i += (param.parameterValue as NsgCompare).lengthAll}
           else
             {i++}
         });
@@ -53,75 +40,120 @@ class NsgCompare extends NsgCompareBase {
   void add(
       {required String name,
       required dynamic value,
-      String comparisonOperator = 'Equal'}) {
+      NsgComparisonOperator comparisonOperator = NsgComparisonOperator.equal}) {
     paramList.add(new NsgCompareParam(
         parameterName: name,
         parameterValue: value,
         comparisonOperator: comparisonOperator));
   }
 
-  String toXml() {
-    StringBuffer sb =
-        StringBuffer('<?xml version=\"1.0\" encoding=\"utf-16\"?>');
-    sb.write(
-        '<NsgCompare XMLSerializerVersion=\"1\" LogicalOperator=\"$logicalOperator\" type=\"NsgSoft.DataObjects.NsgCompare\">'
-        '<Parameters>');
-    _writeParamsToXml(sb, paramList);
-    sb.write('</Parameters></NsgCompare>');
-    return sb.toString();
+  // void fromJson(Map<String, dynamic> json) {
+  //   json.forEach((name, jsonValue) {
+  //     if (fieldList.fields.containsKey(name)) {
+  //       setFieldValue(name, jsonValue);
+  //     }
+  //   });
+  // }
+
+  Map<String, dynamic> toJson() {
+    var map = <String, dynamic>{};
+    map["LogicalOperator"] = 1;
+    var list = <Map<String, dynamic>>[];
+    paramList.forEach((param) {
+      list.add(param.toJson());
+    });
+    map["ParamList"] = list;
+    return map;
   }
 
-  void _writeParamsToXml(StringBuffer sb, List<NsgCompareParam> params) {
-    params.forEach((param) {
-      if (param.parameterValue is NsgCompare) {
-        var iCmp = param.parameterValue as NsgCompare;
-        sb.write(
-            '<NsgCompareParam type=\"NsgSoft.DataObjects.NsgCompareParam\" Enabled=\"${param.enabled}\" Key=\"\" ValueMode=\"Manual\" '
-            'ComparisonOperator=\"${param.comparisonOperator}\" ParameterName=\"${param.parameterName}\" Name="${param.name}">'
-            '<ParameterValue LogicalOperator="${iCmp.logicalOperator}" type="NsgSoft.DataObjects.NsgCompare"><Parameters>');
-        _writeParamsToXml(sb, iCmp.paramList);
-        sb.write('</Parameters></ParameterValue></NsgCompareParam>');
-      } else {
-        sb.write(
-            '<NsgCompareParam type=\"NsgSoft.DataObjects.NsgCompareParam\" Enabled=\"${param.enabled}\" Key=\"\" ValueMode=\"Manual\" '
-            'ParameterValue=\"${param.type}|${param.parameterValue}\" ComparisonOperator=\"${param.comparisonOperator}\" '
-            'ParameterName=\"${param.parameterName}\" Name="${param.name}" />');
-      }
-    });
-  }
+  // String toXml() {
+  //   StringBuffer sb =
+  //       StringBuffer('<?xml version=\"1.0\" encoding=\"utf-16\"?>');
+  //   sb.write(
+  //       '<NsgCompare XMLSerializerVersion=\"1\" LogicalOperator=\"$logicalOperator\" type=\"NsgSoft.DataObjects.NsgCompare\">'
+  //       '<Parameters>');
+  //   _writeParamsToXml(sb, paramList);
+  //   sb.write('</Parameters></NsgCompare>');
+  //   return sb.toString();
+  // }
+
+  // void _writeParamsToXml(StringBuffer sb, List<NsgCompareParam> params) {
+  //   params.forEach((param) {
+  //     if (param.parameterValue is NsgCompare) {
+  //       var iCmp = param.parameterValue as NsgCompare;
+  //       sb.write(
+  //           '<NsgCompareParam type=\"NsgSoft.DataObjects.NsgCompareParam\" Enabled=\"${param.enabled}\" Key=\"\" ValueMode=\"Manual\" '
+  //           'ComparisonOperator=\"${param.comparisonOperator}\" ParameterName=\"${param.parameterName}\" Name="${param.name}">'
+  //           '<ParameterValue LogicalOperator="${iCmp.logicalOperator}" type="NsgSoft.DataObjects.NsgCompare"><Parameters>');
+  //       _writeParamsToXml(sb, iCmp.paramList);
+  //       sb.write('</Parameters></ParameterValue></NsgCompareParam>');
+  //     } else {
+  //       sb.write(
+  //           '<NsgCompareParam type=\"NsgSoft.DataObjects.NsgCompareParam\" Enabled=\"${param.enabled}\" Key=\"\" ValueMode=\"Manual\" '
+  //           'ParameterValue=\"${param.type}|${param.parameterValue}\" ComparisonOperator=\"${param.comparisonOperator}\" '
+  //           'ParameterName=\"${param.parameterName}\" Name="${param.name}" />');
+  //     }
+  //   });
+  // }
 }
 
-class NsgCompareParam extends NsgCompareBase {
+class NsgCompareParam {
+  /// Значение
+  final String parameterName;
+
+  ///Оператор сравнения
+  final NsgComparisonOperator comparisonOperator;
+
+  /// Значение
+  final dynamic parameterValue;
+
   NsgCompareParam(
       {required this.parameterName,
       required this.parameterValue,
-      comparisonOperator = 'Equal'}) {
-    if (parameterValue is NsgDataItem) {
-      parameterValue =
-          parameterValue[(parameterValue as NsgDataItem).primaryKeyField];
-    }
+      this.comparisonOperator = NsgComparisonOperator.equal})
+      : super();
+  //   {
+  // if (parameterValue is NsgDataItem) {
+  //   parameterValue =
+  //       parameterValue[parameterValue.primaryKeyField];
+  // }
+
+  Map<String, dynamic> toJson() {
+    var map = <String, dynamic>{};
+    map["Name"] = parameterName;
+    map["ComparisonOperator"] = comparisonOperator.value;
+    map["Value"] = parameterValue;
+    return map;
   }
 
-  /// Значение
-  String parameterName;
-
-  /// Значение
-  dynamic parameterValue;
-
-  String get type {
-    RegExp guidRegExp = RegExp(
-        r"[{(]?[0-9A-Fa-f]{8}[-]?(?:[0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$");
-    if (guidRegExp.hasMatch(parameterValue)) {
-      return 'System.Guid';
+  dynamic convertToJson(parameterValue) {
+    if (parameterValue is NsgCompare) {
+      return parameterValue.toJson();
     }
-    if (parameterValue is double) {
-      return 'System.Double';
-    }
-    if (parameterValue is int) {
-      return 'System.Int64';
-    }
-    return 'System.String';
+    //TODO: проверить коныертацию массивов в json
+    // if (comparisonOperator == NsgComparisonOperator.inList ||
+    //     comparisonOperator == NsgComparisonOperator.notInList) {
+    //   return jsonEncode(parameterValue);
+    // }
+    return jsonEncode(parameterValue);
   }
-
-  String comparisonOperator = 'Equal';
 }
+
+
+  // String get type {
+  //   RegExp guidRegExp = RegExp(
+  //       r"[{(]?[0-9A-Fa-f]{8}[-]?(?:[0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$");
+  //   if (guidRegExp.hasMatch(parameterValue)) {
+  //     return 'System.Guid';
+  //   }
+  //   if (parameterValue is double) {
+  //     return 'System.Double';
+  //   }
+  //   if (parameterValue is int) {
+  //     return 'System.Int64';
+  //   }
+  //   return 'System.String';
+  // }
+
+  
+

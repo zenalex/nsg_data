@@ -178,6 +178,9 @@ class NsgDataItem {
     return getFieldValue(primaryKeyField).hashCode;
   }
 
+  operator [](String name) => getFieldValue(name);
+  operator []=(String name, dynamic value) => setFieldValue(name, value);
+
   Future post() async {
     var p = NsgDataPost(dataItemType: runtimeType);
     p.itemsToPost = <NsgDataItem>[this];

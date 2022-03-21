@@ -34,7 +34,10 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
     var item = getReferent(dataItem, useCache: useCache);
     if (item == null) {
       var id = dataItem.getFieldValue(name).toString();
-      var filter = NsgDataRequestParams(idList: [id, id]);
+      var cmp = NsgCompare();
+      cmp.add(name: name, value: id);
+      //TODO: 20032002 ПРОВЕРИТЬ
+      var filter = NsgDataRequestParams(compare: cmp);
       var request = NsgDataRequest<T>();
       item = await request.requestItems(filter: filter);
     }

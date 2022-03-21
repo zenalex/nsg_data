@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
+import 'nsg_comparison_operator.dart';
 
 class NsgDataRequest<T extends NsgDataItem> {
   List<T> items = <T>[];
@@ -65,12 +66,18 @@ class NsgDataRequest<T extends NsgDataItem> {
     List<String>? loadReference,
     String function = '',
     String method = 'GET',
-    dynamic postData,
+    Map<String, dynamic>? postData,
   }) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, dynamic>{};
-    if (filter != null) filterMap = filter.toJson();
-
+    if (filter != null) {
+      if (method == 'GET') {
+        filterMap = filter.toJson();
+      } else {
+        if (postData == null) postData = {};
+        postData.addAll(filter.toJson());
+      }
+    }
     if (function == '') {
       function = dataItem.remoteProvider.serverUri + dataItem.apiRequestItems;
     } else {
@@ -119,8 +126,10 @@ class NsgDataRequest<T extends NsgDataItem> {
         newFilter = NsgDataRequestParams(
             top: filter.top,
             count: 1,
-            idList: filter.idList,
-            params: filter.params);
+            params: filter.params,
+            sorting: filter.sorting,
+            readNestedField: filter.readNestedField,
+            compare: filter.compare);
       }
     }
     var data = await requestItems(
@@ -192,7 +201,13 @@ class NsgDataRequest<T extends NsgDataItem> {
     });
     await Future.forEach<Type>(allRefs.keys, (type) async {
       var request = NsgDataRequest(dataItemType: type);
-      var filter = NsgDataRequestParams(idList: allRefs[type]);
+      var cmp = NsgCompare();
+      cmp.add(
+          name: NsgDataClient.client.getNewObject(type).primaryKeyField,
+          value: allRefs[type],
+          comparisonOperator: NsgComparisonOperator.inList);
+      var filter = NsgDataRequestParams(compare: cmp);
+      //TODO: 20032002 ПРОВЕРИТЬ
       var refItems = await request.requestItems(filter: filter);
       if (readAllReferences) {
         loadAllReferents(refItems, loadReference,

@@ -267,7 +267,7 @@ class NsgBaseController extends GetxController
     var param = NsgDataRequestParams();
     var cmp = NsgCompare();
     cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
-    param.searchCriteria = cmp;
+    param.compare = cmp;
 
     return param;
   }
