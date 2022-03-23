@@ -82,6 +82,9 @@ class NsgDataItem {
     if (value is NsgDataItem) {
       value = value.getFieldValue(value.primaryKeyField);
     }
+    if (value is DateTime) {
+      value = value.toIso8601String();
+    }
     if (name != primaryKeyField) {
       if (value is String) {
         var field = this.getField(name);

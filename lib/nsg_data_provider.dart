@@ -93,9 +93,11 @@ class NsgDataProvider {
     late Response<dynamic> response;
 
     try {
-      if (method == 'GET') {
+      //TODO: сделать генерацию метода запроса GET/POST
+      var method2 = 'POST';
+      if (method2 == 'GET') {
         response = await _dio.get(url!, queryParameters: params);
-      } else if (method == 'POST') {
+      } else if (method2 == 'POST') {
         response =
             await _dio.post(url!, queryParameters: params, data: postData);
       }

@@ -91,16 +91,23 @@ class NsgDataRequest<T extends NsgDataItem> {
         params: filterMap,
         postData: postData);
     items = <T>[];
-    if (response == '' || response == null) {
-    } else {
-      _fromJsonList(response as List<dynamic>);
-      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
-      if (loadReference == null && dataItem.loadReferenceDefault != null) {
-        loadReference = dataItem.loadReferenceDefault;
+    try {
+      if (response == '' || response == null) {
+      } else {
+        if (!(response is List)) {
+          response = <dynamic>[response];
+        }
+        _fromJsonList(response as List<dynamic>);
+        NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+        if (loadReference == null && dataItem.loadReferenceDefault != null) {
+          loadReference = dataItem.loadReferenceDefault;
+        }
+        //Check referent field list
+        await loadAllReferents(items, loadReference,
+            tag: tag, readAllReferences: loadReference == null);
       }
-      //Check referent field list
-      await loadAllReferents(items, loadReference,
-          tag: tag, readAllReferences: loadReference == null);
+    } catch (e) {
+      print(e);
     }
     return items;
   }
