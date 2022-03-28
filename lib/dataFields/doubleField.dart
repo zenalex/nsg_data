@@ -12,5 +12,5 @@ class NsgDataDoubleField extends NsgDataField {
   }
 
   @override
-  dynamic get defaultValue => 0;
+  dynamic get defaultValue => 0.0;
 }
