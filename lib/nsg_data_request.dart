@@ -70,6 +70,7 @@ class NsgDataRequest<T extends NsgDataItem> {
   }) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, dynamic>{};
+    method = 'POST';
     if (filter != null) {
       if (method == 'GET') {
         filterMap = filter.toJson();
