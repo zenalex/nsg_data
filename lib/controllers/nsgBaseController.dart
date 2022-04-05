@@ -329,7 +329,7 @@ class NsgBaseController extends GetxController
     Get.back();
   }
 
-  ///Close item page and restore current (selectedItem) item from backup
+  ///Close item page and post current (selectedItem) item to databese (server)
   void itemPagePost() async {
     await _postSelectedItem();
     if (_backupItem != null && dataItemList.contains(_backupItem)) {
