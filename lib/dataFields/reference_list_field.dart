@@ -56,7 +56,13 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
     var items = <T>[];
     maps.forEach((m) {
       var elem = NsgDataClient.client.getNewObject(referentElementType);
-      elem.fromJson(m as Map<String, dynamic>);
+      if (m is Map<String, dynamic>) {
+        elem.fromJson(m as Map<String, dynamic>);
+      } else if (m.runtimeType == referentElementType) {
+        elem.copyFieldValues(m);
+      } else {
+        throw Exception("Exception ReferenceListField 65. Unknown value type");
+      }
       items.add(elem as T);
     });
     return items;
