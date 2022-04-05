@@ -193,9 +193,17 @@ class NsgDataItem {
     }
   }
 
+  ///Copy all fields values from newItem to this
   void copyFieldValues(NsgDataItem newItem) {
     fieldList.fields.forEach((key, value) {
       setFieldValue(key, newItem.getFieldValue(key));
     });
+  }
+
+  ///Create new object with same filelds values
+  NsgDataItem clone() {
+    var newItem = getNewObject();
+    newItem.copyFieldValues(this);
+    return newItem;
   }
 }

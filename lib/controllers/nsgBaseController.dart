@@ -63,6 +63,11 @@ class NsgBaseController extends GetxController
 
   NsgDataItem? _selectedItem;
   NsgDataItem? get selectedItem => _selectedItem;
+
+  ///Сохраненный эелемент для возможности возврата предыдущего значения
+  ///например, в случае отмены редактирования
+  NsgDataItem? _backupItem;
+
   set selectedItem(NsgDataItem? newItem) {
     //var oldItem = _selectedItem;
     if (_selectedItem != newItem) {
@@ -295,14 +300,47 @@ class NsgBaseController extends GetxController
         onError: onError, onLoading: onLoading, onEmpty: onEmpty);
   }
 
-  Future postSelectedItem() async {
+  ///Post selected item to the server
+  Future _postSelectedItem() async {
     if (selectedItem == null) {
       throw new Exception("No selected item to post");
     }
     await selectedItem!.post();
+
+    sendNotify();
+  }
+
+  ///Open item page to view and edit data
+  ///element saved in backupItem to have possibility revert changes
+  void ItemPageOpen(NsgDataItem element, String pageName) {
+    selectedItem = null;
+    selectedItem = element.clone();
+    _backupItem = element;
+    Get.toNamed(pageName);
+  }
+
+  ///Close item page and restore current (selectedItem) item from backup
+  void itemPageCancel() {
+    if (_backupItem != null) {
+      selectedItem = null;
+      selectedItem = _backupItem;
+      _backupItem = null;
+    }
+    Get.back();
+  }
+
+  ///Close item page and restore current (selectedItem) item from backup
+  void itemPagePost() async {
+    await _postSelectedItem();
+    if (_backupItem != null && dataItemList.contains(_backupItem)) {
+      dataItemList.remove(_backupItem!);
+    }
+    if (_backupItem != null) {
+      _backupItem = null;
+    }
     if (!dataItemList.contains(selectedItem)) {
       dataItemList.add(selectedItem!);
     }
-    sendNotify();
+    Get.back();
   }
 }

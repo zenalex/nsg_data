@@ -36,8 +36,4 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
             useDataCache: useDataCache,
             autoSelectFirstItem: autoSelectFirstItem,
             dependsOnControllers: dependsOnControllers);
-
-  Future postCurrentItem() async {
-    await postSelectedItem();
-  }
 }
