@@ -191,7 +191,9 @@ class NsgDataProvider {
     } on DioError catch (e) {
       print('dio error. function: $function, error: ${e.error ??= ''}');
       throw NsgApiException(NsgApiError(
-          code: 1, message: 'Internet connection error', errorType: e.type));
+          code: e.response?.statusCode,
+          message: 'Internet connection error',
+          errorType: e.type));
     } catch (e) {
       print('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -264,7 +266,7 @@ class NsgDataProvider {
           return;
         } on NsgApiException catch (e) {
           if (e.error.errorType == null) {
-            if (e.error.code != 401) {
+            if (e.error.code != 401 && e.error.code != 500) {
               rethrow;
             }
           } else {

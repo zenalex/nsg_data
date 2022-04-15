@@ -1,4 +1,4 @@
-import 'package:nsg_data/dataFields/datafield.dart';
+import '../nsg_data.dart';
 
 class NsgDataIntField extends NsgDataField {
   NsgDataIntField(String name) : super(name);
@@ -10,4 +10,13 @@ class NsgDataIntField extends NsgDataField {
 
   @override
   dynamic get defaultValue => 0;
+
+  @override
+  void setValue(NsgFieldValues fieldValues, dynamic value) {
+    if (value is String) {
+      fieldValues.fields[name] = int.tryParse(value);
+    } else {
+      fieldValues.fields[name] = value;
+    }
+  }
 }

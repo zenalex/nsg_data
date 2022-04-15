@@ -1,6 +1,3 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
 library nsg_data;
 
 export 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
