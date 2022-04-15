@@ -13,6 +13,10 @@ class NsgDataIntField extends NsgDataField {
 
   @override
   void setValue(NsgFieldValues fieldValues, dynamic value) {
+    if (value == null) {
+      fieldValues.fields[name] = 0;
+      return;
+    }
     if (value is String) {
       fieldValues.fields[name] = int.tryParse(value);
     } else {

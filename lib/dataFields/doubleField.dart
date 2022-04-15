@@ -24,6 +24,10 @@ class NsgDataDoubleField extends NsgDataField {
 
   @override
   void setValue(NsgFieldValues fieldValues, dynamic value) {
+    if (value == null) {
+      fieldValues.fields[name] = 0;
+      return;
+    }
     if (value is String) {
       fieldValues.fields[name] = double.tryParse(value);
     } else {
