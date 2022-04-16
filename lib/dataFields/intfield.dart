@@ -18,7 +18,7 @@ class NsgDataIntField extends NsgDataField {
       return;
     }
     if (value is String) {
-      fieldValues.fields[name] = int.tryParse(value);
+      fieldValues.fields[name] = int.tryParse(value) ?? 0;
     } else {
       fieldValues.fields[name] = value;
     }

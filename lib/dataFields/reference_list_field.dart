@@ -57,7 +57,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
     maps.forEach((m) {
       var elem = NsgDataClient.client.getNewObject(referentElementType);
       if (m is Map<String, dynamic>) {
-        elem.fromJson(m as Map<String, dynamic>);
+        elem.fromJson(m);
       } else if (m.runtimeType == referentElementType) {
         elem.copyFieldValues(m);
       } else {

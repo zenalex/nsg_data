@@ -29,7 +29,7 @@ class NsgDataDoubleField extends NsgDataField {
       return;
     }
     if (value is String) {
-      fieldValues.fields[name] = double.tryParse(value);
+      fieldValues.fields[name] = double.tryParse(value) ?? 0.0;
     } else {
       fieldValues.fields[name] = value;
     }

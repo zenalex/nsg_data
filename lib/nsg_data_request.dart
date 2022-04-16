@@ -98,7 +98,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         if (!(response is List)) {
           response = <dynamic>[response];
         }
-        _fromJsonList(response as List<dynamic>);
+        _fromJsonList(response);
         NsgDataClient.client.addItemsToCache(items: items, tag: tag);
         if (loadReference == null && dataItem.loadReferenceDefault != null) {
           loadReference = dataItem.loadReferenceDefault;

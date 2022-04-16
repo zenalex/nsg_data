@@ -42,8 +42,7 @@ class NsgDataItem {
       NsgDataClient.client.getParamList(this.runtimeType);
   final NsgFieldValues fieldValues = NsgFieldValues();
 
-  //TODO: refactor to addField
-  void addfield(NsgDataField field, {bool primaryKey = false}) {
+  void addField(NsgDataField field, {bool primaryKey = false}) {
     var name = field.name;
     assert(!fieldList.fields.containsKey(name));
     fieldList.fields[name] = field;

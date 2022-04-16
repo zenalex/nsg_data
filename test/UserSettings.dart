@@ -7,13 +7,13 @@ import 'countryItem.dart';
 class UserSettingsItem extends NsgDataItem {
   @override
   void initialize() {
-    addfield(NsgDataStringField('UserId'), primaryKey: true);
-    addfield(NsgDataStringField('UserName'));
-    addfield(NsgDataStringField('Role'));
-    addfield(NsgDataReferenceField<CountryItem>('CountryId'));
-    addfield(NsgDataStringField('CityId'));
-    addfield(NsgDataStringField('LeagueId'));
-    addfield(NsgDataStringField('TeamId'));
+    addField(NsgDataStringField('UserId'), primaryKey: true);
+    addField(NsgDataStringField('UserName'));
+    addField(NsgDataStringField('Role'));
+    addField(NsgDataReferenceField<CountryItem>('CountryId'));
+    addField(NsgDataStringField('CityId'));
+    addField(NsgDataStringField('LeagueId'));
+    addField(NsgDataStringField('TeamId'));
   }
 
   @override

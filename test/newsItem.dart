@@ -6,11 +6,11 @@ import 'package:nsg_data/nsg_data_item.dart';
 class NewsItem extends NsgDataItem {
   @override
   void initialize() {
-    addfield(NsgDataStringField('Id'), primaryKey: true);
-    addfield(NsgDataDateField('Date'));
-    addfield(NsgDataStringField('Title'));
-    addfield(NsgDataStringField('Text'));
-    addfield(NsgDataImageField('ImageUri'));
+    addField(NsgDataStringField('Id'), primaryKey: true);
+    addField(NsgDataDateField('Date'));
+    addField(NsgDataStringField('Title'));
+    addField(NsgDataStringField('Text'));
+    addField(NsgDataImageField('ImageUri'));
   }
 
   @override

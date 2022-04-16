@@ -312,7 +312,7 @@ class NsgBaseController extends GetxController
 
   ///Open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
-  void ItemPageOpen(NsgDataItem element, String pageName) {
+  void itemPageOpen(NsgDataItem element, String pageName) {
     selectedItem = null;
     selectedItem = element.clone();
     _backupItem = element;

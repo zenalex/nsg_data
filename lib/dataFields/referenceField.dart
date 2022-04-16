@@ -34,7 +34,6 @@ class NsgDataReferenceField<T extends NsgDataItem>
       var id = dataItem.getFieldValue(name).toString();
       var cmp = NsgCompare();
       cmp.add(name: name, value: id);
-      //TODO: 20032002 ПРОВЕРИТЬ
       var filter = NsgDataRequestParams(compare: cmp);
       var request = NsgDataRequest<T>();
       await request.requestItems(filter: filter);

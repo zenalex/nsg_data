@@ -4,8 +4,8 @@ import 'package:nsg_data/nsg_data_item.dart';
 class CountryItem extends NsgDataItem {
   @override
   void initialize() {
-    addfield(NsgDataStringField('Id'));
-    addfield(NsgDataStringField('Title'));
+    addField(NsgDataStringField('Id'));
+    addField(NsgDataStringField('Title'));
   }
 
   @override
@@ -25,9 +25,9 @@ class CountryItem extends NsgDataItem {
 class CityItem extends NsgDataItem {
   @override
   void initialize() {
-    addfield(NsgDataStringField('Id'), primaryKey: true);
-    addfield(NsgDataStringField('Title'));
-    addfield(NsgDataStringField('CountryId'));
+    addField(NsgDataStringField('Id'), primaryKey: true);
+    addField(NsgDataStringField('Title'));
+    addField(NsgDataStringField('CountryId'));
   }
 
   @override

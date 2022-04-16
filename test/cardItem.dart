@@ -6,12 +6,12 @@ import 'package:nsg_data/nsg_data_item.dart';
 class CardItem extends NsgDataItem {
   @override
   void initialize() {
-    addfield(NsgDataStringField('Id'), primaryKey: true); //GUID
-    addfield(NsgDataStringField('CardNumber')); //EAN128
-    addfield(NsgDataStringField('Title')); //Name of card
-    addfield(NsgDataDateField('IssueDate')); //Date of issue
-    addfield(NsgDataDateField('ValidUntil')); //Valid until date
-    addfield(NsgDataBoolField('Activated')); //Is card activated
+    addField(NsgDataStringField('Id'), primaryKey: true); //GUID
+    addField(NsgDataStringField('CardNumber')); //EAN128
+    addField(NsgDataStringField('Title')); //Name of card
+    addField(NsgDataDateField('IssueDate')); //Date of issue
+    addField(NsgDataDateField('ValidUntil')); //Valid until date
+    addField(NsgDataBoolField('Activated')); //Is card activated
   }
 
   @override
