@@ -1,6 +1,7 @@
 import '../nsg_data.dart';
 
-class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataField {
+class NsgDataReferenceListField<T extends NsgDataItem>
+    extends NsgDataBaseReferenceField {
   NsgDataReferenceListField(String name) : super(name);
 
   @override

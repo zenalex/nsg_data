@@ -169,8 +169,10 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (readAllReferences) {
       loadReference = [];
       var allFields = NsgDataClient.client.getFieldList(items[0].runtimeType);
-      for (var fieldName in allFields.fields.keys) {
-        loadReference.add(fieldName);
+      for (var field in allFields.fields.values) {
+        if (field is NsgDataBaseReferenceField) {
+          loadReference.add(field.name);
+        }
       }
     }
     //if there are no items or loadReference list is empty do nothing
@@ -182,7 +184,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       loadReference.forEach((fieldName) {
         var field = item.fieldList.fields[fieldName];
         if (field is NsgDataReferenceField) {
-          if (field.getReferent(item) == null) {
+          if (field.getReferent(item, allowNull: true) == null) {
             var fieldType =
                 (item.fieldList.fields[fieldName] as NsgDataReferenceField)
                     .referentType;

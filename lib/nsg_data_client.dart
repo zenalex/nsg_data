@@ -59,11 +59,12 @@ class NsgDataClient {
     return _itemList[type.toString()];
   }
 
-  NsgDataItem? getItemsFromCache(Type type, String id) {
+  NsgDataItem? getItemsFromCache(Type type, String id,
+      {bool allowNull = false}) {
     var cache = _getItemsCacheByType(type)!;
     var item = cache.getItem(id);
     return item == null
-        ? NsgDataClient.client.getNewObject(type)
+        ? (allowNull ? null : NsgDataClient.client.getNewObject(type))
         : item.dataItem;
   }
 }

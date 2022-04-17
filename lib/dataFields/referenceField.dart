@@ -14,13 +14,15 @@ class NsgDataReferenceField<T extends NsgDataItem>
 
   Type get referentType => T;
 
-  T? getReferent(NsgDataItem dataItem, {bool useCache = true}) {
+  T? getReferent(NsgDataItem dataItem,
+      {bool useCache = true, bool allowNull = false}) {
     var id = dataItem.getFieldValue(name).toString();
     if (id == '' || id == NsgDataItem.ZERO_GUID) {
       return NsgDataClient.client.getNewObject(T) as T;
     }
     if (useCache) {
-      var item = NsgDataClient.client.getItemsFromCache(T, id) as T?;
+      var item = NsgDataClient.client
+          .getItemsFromCache(T, id, allowNull: allowNull) as T?;
       return item;
     } else {
       return null;

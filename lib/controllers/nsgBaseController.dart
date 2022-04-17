@@ -68,6 +68,11 @@ class NsgBaseController extends GetxController
   ///например, в случае отмены редактирования
   NsgDataItem? _backupItem;
 
+  ///Флаг отложенной инициализации. Выставляется в true при создании контроллера,
+  ///если свойство requestOnInit стоит false. Сбросится при первом вызове метода
+  ///requestItems
+  bool lateInit = false;
+
   set selectedItem(NsgDataItem? newItem) {
     //var oldItem = _selectedItem;
     if (_selectedItem != newItem) {
@@ -109,7 +114,10 @@ class NsgBaseController extends GetxController
       });
     }
 
-    if (requestOnInit) requestItems();
+    if (requestOnInit)
+      requestItems();
+    else
+      lateInit = true;
     super.onInit();
   }
 
@@ -135,6 +143,7 @@ class NsgBaseController extends GetxController
 
   ///Request Items
   Future requestItems() async {
+    lateInit = false;
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       await r.retry(() => _requestItems(),
