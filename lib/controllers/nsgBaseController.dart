@@ -258,10 +258,24 @@ class NsgBaseController extends GetxController
     if (!controllerFilter.isAllowed ||
         !controllerFilter.isOpen ||
         controllerFilter.searchString == '') return newItemsList;
-    return newItemsList
-        .where((element) =>
-            element.toString().contains(controllerFilter.searchString))
-        .toList();
+    return newItemsList.where((element) {
+      for (var fieldName in element.fieldList.fields.keys) {
+        var field = element.getField(fieldName);
+        var s = '';
+        if (field is NsgDataReferenceField) {
+          s = field.getReferent(element).toString();
+        } else {
+          s = element.getFieldValue(fieldName).toString();
+        }
+        if (s
+            .toString()
+            .toUpperCase()
+            .contains(controllerFilter.searchString.toUpperCase())) {
+          return true;
+        }
+      }
+      return false;
+    }).toList();
   }
 
   bool matchFilter(NsgDataItem item) {

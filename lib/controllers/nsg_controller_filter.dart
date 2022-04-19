@@ -6,6 +6,7 @@
 //После изменения параметров фильтирации необходимо вызват обновление данных у контроллера - refreshData()
 class NsgControllerFilter {
   bool isAllowed = true;
+  bool isPeriodAllowed = false;
   bool isOpen = false;
   String searchString = '';
 }
