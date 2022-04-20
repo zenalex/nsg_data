@@ -4,11 +4,14 @@
 ///searchString - строка поиска
 ///
 //После изменения параметров фильтирации необходимо вызват обновление данных у контроллера - refreshData()
+
 class NsgControllerFilter {
   bool isAllowed = true;
   bool isPeriodAllowed = false;
   bool isOpen = false;
   String searchString = '';
-  DateTime beginDate = DateTime(0);
-  DateTime endDate = DateTime(0);
+  DateTime beginDate = DateTime.now();
+  DateTime endDate = DateTime.now();
+  int periodSelected = 5;
+  bool periodTimeEnabled = false;
 }
