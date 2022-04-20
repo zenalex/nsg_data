@@ -104,8 +104,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       this.dependsOnControllers,
       this.onRetry,
       this.retryIf,
-      this.editModeAllowed,
-      this.readOnly})
+      this.editModeAllowed = true,
+      this.readOnly = false})
       : super() {
     onRetry ??= _updateStatusError;
   }
@@ -239,7 +239,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
-    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName))
+    if (masterController!.selectedItem == null ||
+        !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName))
       return newItemsList;
     var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
 
@@ -253,7 +254,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') return newItemsList;
+    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '')
+      return newItemsList;
     return newItemsList.where((element) {
       for (var fieldName in element.fieldList.fields.keys) {
         var field = element.getField(fieldName);

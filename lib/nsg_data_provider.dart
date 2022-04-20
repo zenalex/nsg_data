@@ -35,19 +35,16 @@ class NsgDataProvider {
   NsgPhoneLoginPage Function(NsgDataProvider provider)? getLoginWidget;
   NsgPhoneLoginPage get loginPage {
     if (getLoginWidget == null) {
-      return NsgPhoneLoginPage(this,
-          widgetParams: NsgPhoneLoginParams.defaultParams);
+      return NsgPhoneLoginPage(this, widgetParams: NsgPhoneLoginParams.defaultParams);
     } else {
       return getLoginWidget!(this);
     }
   }
 
-  NsgPhoneLoginVerificationPage Function(NsgDataProvider provider)?
-      getVerificationWidget;
+  NsgPhoneLoginVerificationPage Function(NsgDataProvider provider)? getVerificationWidget;
   NsgPhoneLoginVerificationPage get verificationPage {
     if (getVerificationWidget == null) {
-      return NsgPhoneLoginVerificationPage(this,
-          widgetParams: NsgPhoneLoginParams.defaultParams);
+      return NsgPhoneLoginVerificationPage(this, widgetParams: NsgPhoneLoginParams.defaultParams);
     } else {
       return getVerificationWidget!(this);
     }
@@ -55,7 +52,7 @@ class NsgDataProvider {
 
   NsgDataProvider(
       {this.name,
-      this.serverUri = 'http://192.168.1.20:5075',
+      this.serverUri = 'http://alex.nsgsoft.ru:5073',
       this.authorizationApi = 'Api/Auth',
       this.useNsgAuthorization = true,
       required this.firebaseToken});
@@ -98,8 +95,7 @@ class NsgDataProvider {
       if (method2 == 'GET') {
         response = await _dio.get(url!, queryParameters: params);
       } else if (method2 == 'POST') {
-        response =
-            await _dio.post(url!, queryParameters: params, data: postData);
+        response = await _dio.post(url!, queryParameters: params, data: postData);
       }
       if (isDebug) {
         print('HTTP STATUS: ${response.statusCode}');
@@ -110,11 +106,9 @@ class NsgDataProvider {
     } on DioError catch (e) {
       print('dio error. function: $function, error: ${e.error ??= ''}');
       if (e.response?.statusCode == 401) {
-        throw NsgApiException(NsgApiError(
-            code: 401, message: 'Authorization error', errorType: e.type));
+        throw NsgApiException(NsgApiError(code: 401, message: 'Authorization error', errorType: e.type));
       } else {
-        throw NsgApiException(NsgApiError(
-            code: 1, message: 'Internet connection error', errorType: e.type));
+        throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
       }
     } catch (e) {
       print('network error. function: $function, error: $e');
@@ -135,25 +129,11 @@ class NsgDataProvider {
       FutureOr<void> Function(Exception)? onRetry}) async {
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
-      return await r.retry(
-          () => _baseRequest(
-              function: function,
-              params: params,
-              headers: headers,
-              url: url,
-              timeout: timeout,
-              method: method),
-          retryIf: retryIf,
-          onRetry: onRetry);
+      return await r.retry(() => _baseRequest(function: function, params: params, headers: headers, url: url, timeout: timeout, method: method),
+          retryIf: retryIf, onRetry: onRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
-      return await _baseRequest(
-          function: function,
-          params: params,
-          headers: headers,
-          url: url,
-          timeout: timeout,
-          method: method);
+      return await _baseRequest(function: function, params: params, headers: headers, url: url, timeout: timeout, method: method);
     }
   }
 
@@ -190,10 +170,7 @@ class NsgDataProvider {
       return curData;
     } on DioError catch (e) {
       print('dio error. function: $function, error: ${e.error ??= ''}');
-      throw NsgApiException(NsgApiError(
-          code: e.response?.statusCode,
-          message: 'Internet connection error',
-          errorType: e.type));
+      throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
       print('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -222,12 +199,9 @@ class NsgDataProvider {
 
     try {
       if (method == 'GET') {
-        response = await _dio.get<Uint8List>(url!,
-            queryParameters: params,
-            options: Options(responseType: ResponseType.bytes));
+        response = await _dio.get<Uint8List>(url!, queryParameters: params, options: Options(responseType: ResponseType.bytes));
       } else if (method == 'POST') {
-        response = await _dio.post<Uint8List>(url!,
-            data: params, options: Options(responseType: ResponseType.bytes));
+        response = await _dio.post<Uint8List>(url!, data: params, options: Options(responseType: ResponseType.bytes));
       }
       if (debug) {
         print('HTTP STATUS: ${response.statusCode}');
@@ -237,8 +211,7 @@ class NsgDataProvider {
       return Image.memory(response.data!);
     } on DioError catch (e) {
       print('dio error. function: $function, error: ${e.error ??= ''}');
-      throw NsgApiException(NsgApiError(
-          code: 1, message: 'Internet connection error', errorType: e.type));
+      throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
       print('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -282,17 +255,12 @@ class NsgDataProvider {
 
   Future<Image> getCaptcha() async {
     var response = await imageRequest(
-        debug: isDebug,
-        function: 'GetCaptcha',
-        url: '$serverUri/$authorizationApi/GetCaptcha',
-        method: 'GET',
-        headers: getAuthorizationHeader());
+        debug: isDebug, function: 'GetCaptcha', url: '$serverUri/$authorizationApi/GetCaptcha', method: 'GET', headers: getAuthorizationHeader());
 
     return response;
   }
 
-  Future<int> phoneLoginRequestSMS(
-      String phoneNumber, String securityCode) async {
+  Future<int> phoneLoginRequestSMS(String phoneNumber, String securityCode) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
@@ -322,11 +290,7 @@ class NsgDataProvider {
 
     try {
       var response = await (baseRequest(
-          function: 'PhoneLogin',
-          headers: getAuthorizationHeader(),
-          url: '$serverUri/$authorizationApi/PhoneLogin',
-          method: 'POST',
-          params: s));
+          function: 'PhoneLogin', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/PhoneLogin', method: 'POST', params: s));
 
       var loginResponse = NsgLoginResponse.fromJson(response);
       if (loginResponse.errorCode == 0) {
@@ -352,11 +316,7 @@ class NsgDataProvider {
   }
 
   Future<bool> logout() async {
-    await baseRequest(
-        function: 'Logout',
-        headers: getAuthorizationHeader(),
-        url: '$serverUri/$authorizationApi/Logout',
-        method: 'GET');
+    await baseRequest(function: 'Logout', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/Logout', method: 'GET');
     if (!isAnonymous) {
       if (name == '' || name == null) name = authorizationApi;
       var _prefs = await SharedPreferences.getInstance();
@@ -375,8 +335,7 @@ class NsgDataProvider {
     token = '';
   }
 
-  Future<bool> _anonymousLogin(
-      FutureOr<void> Function(Exception)? onRetry) async {
+  Future<bool> _anonymousLogin(FutureOr<void> Function(Exception)? onRetry) async {
     var response = await (baseRequest(
         function: 'AnonymousLogin',
         url: '$serverUri/$authorizationApi/AnonymousLogin',
