@@ -9,4 +9,6 @@ class NsgControllerFilter {
   bool isPeriodAllowed = false;
   bool isOpen = false;
   String searchString = '';
+  DateTime beginDate = DateTime(0);
+  DateTime endDate = DateTime(0);
 }

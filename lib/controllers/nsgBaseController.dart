@@ -8,7 +8,8 @@ import 'package:get/get.dart';
 import 'package:retry/retry.dart';
 import 'nsg_controller_filter.dart';
 
-class NsgBaseController extends GetxController with StateMixin<NsgBaseControllerData> {
+class NsgBaseController extends GetxController
+    with StateMixin<NsgBaseControllerData> {
   Type dataType;
   bool requestOnInit;
   bool selectedMasterRequired;
@@ -104,8 +105,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       this.dependsOnControllers,
       this.onRetry,
       this.retryIf,
-      this.editModeAllowed,
-      this.readOnly})
+      this.editModeAllowed = true,
+      this.readOnly = true})
       : super() {
     onRetry ??= _updateStatusError;
   }
@@ -153,7 +154,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     lateInit = false;
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
-      await r.retry(() => _requestItems(), onRetry: _updateStatusError, retryIf: retryIf);
+      await r.retry(() => _requestItems(),
+          onRetry: _updateStatusError, retryIf: retryIf);
     } else {
       await _requestItems();
     }
@@ -168,7 +170,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   Future _requestItems() async {
     try {
-      if (masterController != null && selectedMasterRequired && masterController!.selectedItem == null) {
+      if (masterController != null &&
+          selectedMasterRequired &&
+          masterController!.selectedItem == null) {
         if (dataItemList.isNotEmpty) {
           dataItemList.clear();
         }
@@ -189,7 +193,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (!dataItemList.contains(selectedItem)) selectedItem = null;
       //notify builders
       sendNotify();
-      if (selectedItem == null && autoSelectFirstItem && dataItemList.isNotEmpty) {
+      if (selectedItem == null &&
+          autoSelectFirstItem &&
+          dataItemList.isNotEmpty) {
         selectedItem = dataItemList[0];
       }
       //service method for descendants
@@ -209,7 +215,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   FutureOr<bool> retryRequestIf(Exception exception) async {
     if (exception is NsgApiException) {
       if (exception.error.code == 401) {
-        var provider = NsgDataClient.client.getNewObject(dataType).remoteProvider;
+        var provider =
+            NsgDataClient.client.getNewObject(dataType).remoteProvider;
         await provider.connect(this);
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
@@ -239,13 +246,16 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
-    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName))
-      return newItemsList;
-    var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+    if (masterController!.selectedItem == null ||
+        !masterController!.selectedItem!.fieldList.fields
+            .containsKey(dataBinding!.masterFieldName)) return newItemsList;
+    var masterValue = masterController!
+        .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
 
     var list = <NsgDataItem>[];
     newItemsList.forEach((element) {
-      if (element.fieldValues.fields[dataBinding!.slaveFieldName] == masterValue) {
+      if (element.fieldValues.fields[dataBinding!.slaveFieldName] ==
+          masterValue) {
         list.add(element);
       }
     });
@@ -253,7 +263,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') return newItemsList;
+    if (!controllerFilter.isAllowed ||
+        !controllerFilter.isOpen ||
+        controllerFilter.searchString == '') return newItemsList;
     return newItemsList.where((element) {
       for (var fieldName in element.fieldList.fields.keys) {
         var field = element.getField(fieldName);
@@ -263,7 +275,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         } else {
           s = element.getFieldValue(fieldName).toString();
         }
-        if (s.toString().toUpperCase().contains(controllerFilter.searchString.toUpperCase())) {
+        if (s
+            .toString()
+            .toUpperCase()
+            .contains(controllerFilter.searchString.toUpperCase())) {
           return true;
         }
       }
@@ -279,9 +294,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   NsgDataRequestParams? get getRequestFilter {
     if (masterController == null ||
         masterController!.selectedItem == null ||
-        !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) return null;
+        !masterController!.selectedItem!.fieldList.fields
+            .containsKey(dataBinding!.masterFieldName)) return null;
 
-    var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+    var masterValue = masterController!
+        .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
 
     var param = NsgDataRequestParams();
     var cmp = NsgCompare();
@@ -310,7 +327,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     Widget? onLoading,
     Widget? onEmpty,
   }) {
-    return obx(widget, onError: onError, onLoading: onLoading, onEmpty: onEmpty);
+    return obx(widget,
+        onError: onError, onLoading: onLoading, onEmpty: onEmpty);
   }
 
   ///Post selected item to the server
