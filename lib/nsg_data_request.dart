@@ -37,25 +37,13 @@ class NsgDataRequest<T extends NsgDataItem> {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       return await r.retry(
           () => _requestItems(
-              filter: filter,
-              autoAuthorize: autoAuthorize,
-              tag: tag,
-              loadReference: loadReference,
-              function: function,
-              method: method,
-              postData: postData),
+              filter: filter, autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function, method: method, postData: postData),
           retryIf: retryIf,
           onRetry: onRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
       return await _requestItems(
-          filter: filter,
-          autoAuthorize: autoAuthorize,
-          tag: tag,
-          loadReference: loadReference,
-          function: function,
-          method: method,
-          postData: postData);
+          filter: filter, autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function, method: method, postData: postData);
     }
   }
 
@@ -79,28 +67,30 @@ class NsgDataRequest<T extends NsgDataItem> {
       loadReference = [];
       loadReference = _addAllReferences(dataItem.runtimeType);
     }
+    if (filter == null) {
+      filter = NsgDataRequestParams();
+    }
+    filter.readNestedField = loadReference.join(',');
 
     method = 'POST';
-    if (filter != null) {
-      if (method == 'GET') {
-        filterMap = filter.toJson();
-      } else {
-        if (postData == null) postData = {};
-        postData.addAll(filter.toJson());
-      }
+    if (method == 'GET') {
+      filterMap = filter.toJson();
+    } else {
+      if (postData == null) postData = {};
+      postData.addAll(filter.toJson());
     }
     if (function == '') {
       function = dataItem.remoteProvider.serverUri + dataItem.apiRequestItems;
     } else {
       function = dataItem.remoteProvider.serverUri + function;
     }
+    var url = '$function';
+    if (loadReference != null && loadReference.isNotEmpty) {
+      url += '/References';
+    }
+
     var response = await dataItem.remoteProvider.baseRequestList(
-        function: '$function ${dataItem.runtimeType}',
-        headers: dataItem.remoteProvider.getAuthorizationHeader(),
-        url: function,
-        method: method,
-        params: filterMap,
-        postData: postData);
+        function: url, headers: dataItem.remoteProvider.getAuthorizationHeader(), url: url, method: method, params: filterMap, postData: postData);
     items = <T>[];
     try {
       if (response == '' || response == null) {
@@ -159,12 +149,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         newFilter = NsgDataRequestParams(count: 1);
       } else {
         newFilter = NsgDataRequestParams(
-            top: filter.top,
-            count: 1,
-            params: filter.params,
-            sorting: filter.sorting,
-            readNestedField: filter.readNestedField,
-            compare: filter.compare);
+            top: filter.top, count: 1, params: filter.params, sorting: filter.sorting, readNestedField: filter.readNestedField, compare: filter.compare);
       }
     }
     var data = await requestItems(
@@ -185,9 +170,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     return data[0];
   }
 
-  Future loadAllReferents(
-      List<NsgDataItem> items, List<String>? loadReferenceExt,
-      {String tag = ''}) async {
+  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReferenceExt, {String tag = ''}) async {
     if (items.isEmpty) {
       return;
     }
@@ -203,9 +186,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         var field = item.fieldList.fields[fieldName];
         if (field is NsgDataReferenceField) {
           if (field.getReferent(item, allowNull: true) == null) {
-            var fieldType =
-                (item.fieldList.fields[fieldName] as NsgDataReferenceField)
-                    .referentType;
+            var fieldType = (item.fieldList.fields[fieldName] as NsgDataReferenceField).referentType;
             var fieldValue = item.getFieldValue(fieldName).toString();
             if (!allRefs.containsKey(fieldType)) {
               allRefs[fieldType] = <String>[];
@@ -221,10 +202,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     await Future.forEach<Type>(allRefs.keys, (type) async {
       var request = NsgDataRequest(dataItemType: type);
       var cmp = NsgCompare();
-      cmp.add(
-          name: NsgDataClient.client.getNewObject(type).primaryKeyField,
-          value: allRefs[type],
-          comparisonOperator: NsgComparisonOperator.inList);
+      cmp.add(name: NsgDataClient.client.getNewObject(type).primaryKeyField, value: allRefs[type], comparisonOperator: NsgComparisonOperator.inList);
       var filter = NsgDataRequestParams(compare: cmp);
       var refItems = await request.requestItems(filter: filter);
       loadAllReferents(refItems, loadReference, tag: tag);
