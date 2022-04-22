@@ -70,6 +70,16 @@ class NsgDataRequest<T extends NsgDataItem> {
   }) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, dynamic>{};
+
+    //Добавление в запрос имен полей, требующих дочитывания
+    if (loadReference == null && dataItem.loadReferenceDefault != null) {
+      loadReference = dataItem.loadReferenceDefault;
+    }
+    if (loadReference == null) {
+      loadReference = [];
+      loadReference = _addAllReferences(dataItem.runtimeType);
+    }
+
     method = 'POST';
     if (filter != null) {
       if (method == 'GET') {
@@ -100,17 +110,34 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
         _fromJsonList(response);
         NsgDataClient.client.addItemsToCache(items: items, tag: tag);
-        if (loadReference == null && dataItem.loadReferenceDefault != null) {
-          loadReference = dataItem.loadReferenceDefault;
-        }
+
         //Check referent field list
-        await loadAllReferents(items, loadReference,
-            tag: tag, readAllReferences: loadReference == null);
+        await loadAllReferents(items, loadReference, tag: tag);
       }
     } catch (e) {
       print(e);
     }
     return items;
+  }
+
+  ///Добавить в вписок все ссылочные типа объекта типа type
+  ///Если среди полей будет табличная часть, ее ссылочные поля также будут
+  ///добавлены в список через имяТаблицы.имяПоля
+  List<String> _addAllReferences(Type type) {
+    List<String> loadReference = [];
+    var allFields = NsgDataClient.client.getFieldList(type);
+    for (var field in allFields.fields.values) {
+      if (field is NsgDataBaseReferenceField) {
+        loadReference.add(field.name);
+      }
+      if (field is NsgDataReferenceListField) {
+        var tableRefereces = _addAllReferences(field.referentElementType);
+        for (var item in tableRefereces) {
+          loadReference.add(field.name + '.' + item);
+        }
+      }
+    }
+    return loadReference;
   }
 
   Future<T> requestItem(
@@ -160,21 +187,12 @@ class NsgDataRequest<T extends NsgDataItem> {
 
   Future loadAllReferents(
       List<NsgDataItem> items, List<String>? loadReferenceExt,
-      {String tag = '', bool readAllReferences = false}) async {
+      {String tag = ''}) async {
     if (items.isEmpty) {
       return;
     }
     List<String> loadReference = loadReferenceExt ?? [];
-    //if loadReference == null - try to load all references
-    if (readAllReferences) {
-      loadReference = [];
-      var allFields = NsgDataClient.client.getFieldList(items[0].runtimeType);
-      for (var field in allFields.fields.values) {
-        if (field is NsgDataBaseReferenceField) {
-          loadReference.add(field.name);
-        }
-      }
-    }
+
     //if there are no items or loadReference list is empty do nothing
     if (loadReference.isEmpty) {
       return;
@@ -197,15 +215,6 @@ class NsgDataRequest<T extends NsgDataItem> {
               refList.add(fieldValue);
             }
           }
-        } else if (field is NsgDataReferenceListField) {
-          var table = field.getReferent(item);
-
-          if (table == null) {
-            //TODO: сделать загрузку самого списка, если он еще не загружен
-          } else if (readAllReferences) {
-            loadAllReferents(table, [],
-                tag: tag, readAllReferences: readAllReferences);
-          }
         }
       });
     });
@@ -218,10 +227,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           comparisonOperator: NsgComparisonOperator.inList);
       var filter = NsgDataRequestParams(compare: cmp);
       var refItems = await request.requestItems(filter: filter);
-      if (readAllReferences) {
-        loadAllReferents(refItems, loadReference,
-            tag: tag, readAllReferences: readAllReferences);
-      }
+      loadAllReferents(refItems, loadReference, tag: tag);
     });
   }
 }
