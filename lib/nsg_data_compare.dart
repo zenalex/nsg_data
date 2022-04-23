@@ -129,11 +129,6 @@ class NsgCompareParam {
     if (parameterValue is NsgCompare) {
       return parameterValue.toJson();
     }
-    //TODO: проверить коныертацию массивов в json
-    // if (comparisonOperator == NsgComparisonOperator.inList ||
-    //     comparisonOperator == NsgComparisonOperator.notInList) {
-    //   return jsonEncode(parameterValue);
-    // }
     return jsonEncode(parameterValue);
   }
 }
