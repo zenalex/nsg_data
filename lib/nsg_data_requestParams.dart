@@ -15,18 +15,11 @@ class NsgDataRequestParams {
     if (top != 0) filter['Top'] = jsonEncode(top); //.toString();
     if (count != 0) filter['Count'] = jsonEncode(count); //.toString();
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
-    if (readNestedField != null)
-      filter['ReadNestedField'] = jsonEncode(readNestedField);
+    if (readNestedField != null) filter['ReadNestedField'] = readNestedField.toString();
     if (compare != null) filter['Compare'] = compare?.toJson();
     if (params != null) filter.addAll(params!);
     return filter;
   }
 
-  NsgDataRequestParams(
-      {this.top = 0,
-      this.count = 0,
-      this.params,
-      this.sorting,
-      this.readNestedField,
-      this.compare});
+  NsgDataRequestParams({this.top = 0, this.count = 0, this.params, this.sorting, this.readNestedField, this.compare});
 }
