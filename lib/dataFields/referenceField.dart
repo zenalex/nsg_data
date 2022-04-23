@@ -12,6 +12,9 @@ class NsgDataReferenceField<T extends NsgDataItem>
   @override
   dynamic get defaultValue => '';
 
+  @override
+  Type get referentElementType => T;
+
   Type get referentType => T;
 
   T? getReferent(NsgDataItem dataItem,

@@ -1,7 +1,5 @@
-import 'package:nsg_data/nsg_data_fieldlist.dart';
 import 'package:nsg_data/nsg_data_itemList.dart';
-import 'package:nsg_data/nsg_data_provider.dart';
-import 'nsg_data_item.dart';
+import 'nsg_data.dart';
 import 'nsg_data_paramList.dart';
 
 class NsgDataClient {
@@ -66,5 +64,34 @@ class NsgDataClient {
     return item == null
         ? (allowNull ? null : NsgDataClient.client.getNewObject(type))
         : item.dataItem;
+  }
+
+  NsgDataBaseReferenceField? getReferentFieldByFullPath(
+      Type dataType, String fullPath) {
+    var splitedPath = fullPath.split('.');
+    var type = dataType;
+    var fieldFound = false;
+    NsgDataBaseReferenceField? foundField;
+    for (var i = 0; i < splitedPath.length; i++) {
+      fieldFound = false;
+      var fieldList = NsgDataClient.client.getFieldList(type);
+      if (fieldList.fields.containsKey(splitedPath[i])) {
+        var field = fieldList.fields[splitedPath[i]];
+        if (field is NsgDataReferenceField) {
+          type = field.referentType;
+          foundField = field;
+          fieldFound = true;
+        } else if (field is NsgDataReferenceListField) {
+          type = field.referentElementType;
+          fieldFound = true;
+          foundField = field;
+        }
+      }
+    }
+    if (fieldFound) {
+      return foundField;
+    } else {
+      return null;
+    }
   }
 }

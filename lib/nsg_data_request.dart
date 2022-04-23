@@ -37,25 +37,13 @@ class NsgDataRequest<T extends NsgDataItem> {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       return await r.retry(
           () => _requestItems(
-              filter: filter,
-              autoAuthorize: autoAuthorize,
-              tag: tag,
-              loadReference: loadReference,
-              function: function,
-              method: method,
-              postData: postData),
+              filter: filter, autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function, method: method, postData: postData),
           retryIf: retryIf,
           onRetry: onRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
       return await _requestItems(
-          filter: filter,
-          autoAuthorize: autoAuthorize,
-          tag: tag,
-          loadReference: loadReference,
-          function: function,
-          method: method,
-          postData: postData);
+          filter: filter, autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function, method: method, postData: postData);
     }
   }
 
@@ -98,18 +86,14 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
     var url = '$function';
     var isLoadReferenceMode = false;
-    if (loadReference.isNotEmpty) {
-      url += '/References';
-      isLoadReferenceMode = true;
-    }
+    //TODO: Заменить после исправления сервера
+    // if (loadReference.isNotEmpty) {
+    //   url += '/References';
+    //   isLoadReferenceMode = true;
+    // }
 
     var response = await dataItem.remoteProvider.baseRequestList(
-        function: url,
-        headers: dataItem.remoteProvider.getAuthorizationHeader(),
-        url: url,
-        method: method,
-        params: filterMap,
-        postData: postData);
+        function: url, headers: dataItem.remoteProvider.getAuthorizationHeader(), url: url, method: method, params: filterMap, postData: postData);
     items = <T>[];
     try {
       if (response == '' || response == null) {
@@ -121,33 +105,17 @@ class NsgDataRequest<T extends NsgDataItem> {
               _fromJsonList(data);
               NsgDataClient.client.addItemsToCache(items: items, tag: tag);
             } else {
-              var fullPath = name.split('.');
-              var type = dataItemType;
-              var fieldFound = false;
-              for (var i = 0; i < fullPath.length; i++) {
-                fieldFound = false;
-                var fieldList = NsgDataClient.client.getFieldList(type);
-                if (fieldList.fields.containsKey(fullPath[i])) {
-                  var field = fieldList.fields[fullPath[i]];
-                  if (field is NsgDataReferenceField) {
-                    type = field.referentType;
-                    fieldFound = true;
-                  } else if (field is NsgDataReferenceListField) {
-                    type = field.referentElementType;
-                    fieldFound = true;
-                  }
-                }
-              }
-              if (fieldFound) {
+              var foundFiled = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
+              if (foundFiled != null) {
                 var refItems = <NsgDataItem>[];
                 data.forEach((m) {
-                  var elem = NsgDataClient.client.getNewObject(type);
+                  var elem = NsgDataClient.client.getNewObject(foundFiled.referentElementType);
                   elem.fromJson(m as Map<String, dynamic>);
                   refItems.add(elem as T);
                 });
                 NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
               } else {
-                print('ERROR: $dataItemType.$fullPath not found');
+                print('ERROR: $dataItemType.$name not found');
               }
             }
           });
@@ -207,12 +175,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         newFilter = NsgDataRequestParams(count: 1);
       } else {
         newFilter = NsgDataRequestParams(
-            top: filter.top,
-            count: 1,
-            params: filter.params,
-            sorting: filter.sorting,
-            readNestedField: filter.readNestedField,
-            compare: filter.compare);
+            top: filter.top, count: 1, params: filter.params, sorting: filter.sorting, readNestedField: filter.readNestedField, compare: filter.compare);
       }
     }
     var data = await requestItems(
@@ -233,49 +196,47 @@ class NsgDataRequest<T extends NsgDataItem> {
     return data[0];
   }
 
-  Future loadAllReferents(
-      List<NsgDataItem> items, List<String>? loadReferenceExt,
-      {String tag = ''}) async {
-    if (items.isEmpty) {
+  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference, {String tag = ''}) async {
+    if (items.isEmpty || loadReference == null || loadReference.isEmpty) {
       return;
     }
-    List<String> loadReference = loadReferenceExt ?? [];
 
-    //if there are no items or loadReference list is empty do nothing
-    if (loadReference.isEmpty) {
-      return;
-    }
-    var allRefs = <Type, List<String>>{};
-    items.forEach((item) {
-      loadReference.forEach((fieldName) {
-        var field = item.fieldList.fields[fieldName];
-        if (field is NsgDataReferenceField) {
+    for (var fieldName in loadReference) {
+      var splitedName = fieldName.split('.');
+      var field = NsgDataClient.client.getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
+      if (!(field is NsgDataBaseReferenceField)) continue;
+      var refList = <String>[];
+      var refItems = <NsgDataItem>[];
+
+      if (field is NsgDataReferenceField) {
+        for (var item in items) {
           if (field.getReferent(item, allowNull: true) == null) {
-            var fieldType =
-                (item.fieldList.fields[fieldName] as NsgDataReferenceField)
-                    .referentType;
             var fieldValue = item.getFieldValue(fieldName).toString();
-            if (!allRefs.containsKey(fieldType)) {
-              allRefs[fieldType] = <String>[];
-            }
-            var refList = allRefs[fieldType]!;
             if (!refList.contains(fieldValue)) {
               refList.add(fieldValue);
             }
           }
         }
-      });
-    });
-    await Future.forEach<Type>(allRefs.keys, (type) async {
-      var request = NsgDataRequest(dataItemType: type);
-      var cmp = NsgCompare();
-      cmp.add(
-          name: NsgDataClient.client.getNewObject(type).primaryKeyField,
-          value: allRefs[type],
-          comparisonOperator: NsgComparisonOperator.inList);
-      var filter = NsgDataRequestParams(compare: cmp);
-      var refItems = await request.requestItems(filter: filter);
-      loadAllReferents(refItems, loadReference, tag: tag);
-    });
+
+        var request = NsgDataRequest(dataItemType: field.referentElementType);
+        var cmp = NsgCompare();
+        cmp.add(
+            name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
+            value: refList,
+            comparisonOperator: NsgComparisonOperator.inList);
+        var filter = NsgDataRequestParams(compare: cmp);
+        refItems = await request.requestItems(filter: filter, loadReference: []);
+      } else if (field is NsgDataReferenceListField) {
+        for (var item in items) {
+          var fieldValue = item.getFieldValue(splitedName[0]);
+          refItems.addAll(fieldValue as List<NsgDataItem>);
+        }
+      }
+
+      if (splitedName.length > 1) {
+        splitedName.removeAt(0);
+        loadAllReferents(refItems, [splitedName.join('.')], tag: tag);
+      }
+    }
   }
 }

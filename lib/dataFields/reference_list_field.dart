@@ -13,6 +13,8 @@ class NsgDataReferenceListField<T extends NsgDataItem>
   dynamic get defaultValue => <T>[];
 
   Type get referentType => List<T>;
+
+  @override
   Type get referentElementType => T;
 
   List<T>? getReferent(NsgDataItem dataItem, {bool useCache = true}) {
