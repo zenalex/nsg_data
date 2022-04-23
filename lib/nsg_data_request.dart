@@ -37,13 +37,25 @@ class NsgDataRequest<T extends NsgDataItem> {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       return await r.retry(
           () => _requestItems(
-              filter: filter, autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function, method: method, postData: postData),
+              filter: filter,
+              autoAuthorize: autoAuthorize,
+              tag: tag,
+              loadReference: loadReference,
+              function: function,
+              method: method,
+              postData: postData),
           retryIf: retryIf,
           onRetry: onRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
       return await _requestItems(
-          filter: filter, autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function, method: method, postData: postData);
+          filter: filter,
+          autoAuthorize: autoAuthorize,
+          tag: tag,
+          loadReference: loadReference,
+          function: function,
+          method: method,
+          postData: postData);
     }
   }
 
@@ -86,14 +98,19 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
     var url = '$function';
     var isLoadReferenceMode = false;
-    //TODO: Заменить после исправления сервера
-    // if (loadReference.isNotEmpty) {
-    //   url += '/References';
-    //   isLoadReferenceMode = true;
-    // }
+
+    if (loadReference.isNotEmpty) {
+      url += '/References';
+      isLoadReferenceMode = true;
+    }
 
     var response = await dataItem.remoteProvider.baseRequestList(
-        function: url, headers: dataItem.remoteProvider.getAuthorizationHeader(), url: url, method: method, params: filterMap, postData: postData);
+        function: url,
+        headers: dataItem.remoteProvider.getAuthorizationHeader(),
+        url: url,
+        method: method,
+        params: filterMap,
+        postData: postData);
     items = <T>[];
     try {
       if (response == '' || response == null) {
@@ -105,11 +122,13 @@ class NsgDataRequest<T extends NsgDataItem> {
               _fromJsonList(data);
               NsgDataClient.client.addItemsToCache(items: items, tag: tag);
             } else {
-              var foundFiled = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
+              var foundFiled = NsgDataClient.client
+                  .getReferentFieldByFullPath(dataItemType, name);
               if (foundFiled != null) {
                 var refItems = <NsgDataItem>[];
                 data.forEach((m) {
-                  var elem = NsgDataClient.client.getNewObject(foundFiled.referentElementType);
+                  var elem = NsgDataClient.client
+                      .getNewObject(foundFiled.referentElementType);
                   elem.fromJson(m as Map<String, dynamic>);
                   refItems.add(elem as T);
                 });
@@ -119,6 +138,7 @@ class NsgDataRequest<T extends NsgDataItem> {
               }
             }
           });
+          await loadAllReferents(items, loadReference, tag: tag);
         } else {
           if (!(response is List)) {
             response = <dynamic>[response];
@@ -175,7 +195,12 @@ class NsgDataRequest<T extends NsgDataItem> {
         newFilter = NsgDataRequestParams(count: 1);
       } else {
         newFilter = NsgDataRequestParams(
-            top: filter.top, count: 1, params: filter.params, sorting: filter.sorting, readNestedField: filter.readNestedField, compare: filter.compare);
+            top: filter.top,
+            count: 1,
+            params: filter.params,
+            sorting: filter.sorting,
+            readNestedField: filter.readNestedField,
+            compare: filter.compare);
       }
     }
     var data = await requestItems(
@@ -196,14 +221,16 @@ class NsgDataRequest<T extends NsgDataItem> {
     return data[0];
   }
 
-  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference, {String tag = ''}) async {
+  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference,
+      {String tag = ''}) async {
     if (items.isEmpty || loadReference == null || loadReference.isEmpty) {
       return;
     }
 
     for (var fieldName in loadReference) {
       var splitedName = fieldName.split('.');
-      var field = NsgDataClient.client.getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
+      var field = NsgDataClient.client
+          .getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
       if (!(field is NsgDataBaseReferenceField)) continue;
       var refList = <String>[];
       var refItems = <NsgDataItem>[];
@@ -218,14 +245,19 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
         }
 
-        var request = NsgDataRequest(dataItemType: field.referentElementType);
-        var cmp = NsgCompare();
-        cmp.add(
-            name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
-            value: refList,
-            comparisonOperator: NsgComparisonOperator.inList);
-        var filter = NsgDataRequestParams(compare: cmp);
-        refItems = await request.requestItems(filter: filter, loadReference: []);
+        if (refList.isNotEmpty) {
+          var request = NsgDataRequest(dataItemType: field.referentElementType);
+          var cmp = NsgCompare();
+          cmp.add(
+              name: NsgDataClient.client
+                  .getNewObject(field.referentElementType)
+                  .primaryKeyField,
+              value: refList,
+              comparisonOperator: NsgComparisonOperator.inList);
+          var filter = NsgDataRequestParams(compare: cmp);
+          refItems =
+              await request.requestItems(filter: filter, loadReference: []);
+        }
       } else if (field is NsgDataReferenceListField) {
         for (var item in items) {
           var fieldValue = item.getFieldValue(splitedName[0]);
@@ -233,7 +265,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
       }
 
-      if (splitedName.length > 1) {
+      if (splitedName.length > 1 && refItems.isNotEmpty) {
         splitedName.removeAt(0);
         loadAllReferents(refItems, [splitedName.join('.')], tag: tag);
       }

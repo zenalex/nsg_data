@@ -12,10 +12,10 @@ class NsgLoginResponse {
   NsgLoginResponse.fromJson(Map<String, dynamic>? json) : super() {
     if (json != null) {
       token = json['token'].toString();
-      isError = json['isError'] as bool;
-      errorMessage = json['errorMessage'].toString();
-      errorCode = json['errorCode'] as int;
-      isAnonymous = json['isAnonymous'] as bool;
+      isError = (json['isError'] ?? false) as bool;
+      errorMessage = (json['errorMessage'] ?? '').toString();
+      errorCode = (json['errorCode'] ?? 0) as int;
+      isAnonymous = (json['isAnonymous'] ?? false) as bool;
     }
   }
 }
