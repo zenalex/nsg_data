@@ -1,3 +1,5 @@
+import 'package:nsg_data/nsg_data.dart';
+
 ///Класс, задающий параметры фильтрации для контроллера данных
 ///isAllowed - разрешена ли фильтрация в принципе (показывать ли значек фильтра)
 ///isOpen - открыт ли фильтр на экране и, соотвтественно, применяется ли фильтр к данным
@@ -8,10 +10,10 @@
 class NsgControllerFilter {
   bool isAllowed = true;
   bool isPeriodAllowed = false;
+  String periodFieldName = '';
   bool isOpen = false;
   String searchString = '';
-  DateTime beginDate = DateTime.now();
-  DateTime endDate = DateTime.now();
+  NsgPeriod nsgPeriod = NsgPeriod();
   int periodSelected = 5;
   bool periodTimeEnabled = false;
 }

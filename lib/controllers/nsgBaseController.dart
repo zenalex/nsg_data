@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:nsg_data/controllers/nsg_controller_filter.dart';
+import 'package:nsg_data/nsg_comparison_operator.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'package:retry/retry.dart';
 import 'nsg_controller_filter.dart';
 
-class NsgBaseController extends GetxController with StateMixin<NsgBaseControllerData> {
+class NsgBaseController extends GetxController
+    with StateMixin<NsgBaseControllerData> {
   Type dataType;
   bool requestOnInit;
   bool selectedMasterRequired;
@@ -82,7 +84,6 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //var oldItem = _selectedItem;
     if (_selectedItem != newItem) {
       _selectedItem = newItem;
-      //TODO: передавать в событие значение
       selectedItemChanged.broadcast(null);
       sendNotify();
     }
@@ -112,6 +113,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   @override
   void onInit() {
+    //В случае задания связки мастер-деталь, формируем подписки
+    //для автоматического обновлегния данных в slave контроллере,
+    //при изменении selectedItem в master контроллере
     if (masterController != null) {
       masterController!.selectedItemChanged.subscribe(masterValueChanged);
     }
@@ -119,6 +123,19 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       dependsOnControllers!.forEach((element) {
         element.selectedItemChanged.subscribe(masterValueChanged);
       });
+    }
+    //Проверяем, есть ли у типа данных, зарегистрированных в контроллере
+    //заданное имя поля для задания фильтра по периоду (periodFieldName)
+    if (!NsgDataClient.client.isRegistered(dataType)) {
+      controllerFilter.isPeriodAllowed = false;
+    } else {
+      var dataItem = NsgDataClient.client.getNewObject(dataType);
+      if (dataItem.periodFieldName.isEmpty) {
+        controllerFilter.isPeriodAllowed = false;
+      } else {
+        controllerFilter.isPeriodAllowed = true;
+        controllerFilter.periodFieldName = dataItem.periodFieldName;
+      }
     }
 
     if (requestOnInit)
@@ -153,7 +170,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     lateInit = false;
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
-      await r.retry(() => _requestItems(), onRetry: _updateStatusError, retryIf: retryIf);
+      await r.retry(() => _requestItems(),
+          onRetry: _updateStatusError, retryIf: retryIf);
     } else {
       await _requestItems();
     }
@@ -168,7 +186,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   Future _requestItems() async {
     try {
-      if (masterController != null && selectedMasterRequired && masterController!.selectedItem == null) {
+      if (masterController != null &&
+          selectedMasterRequired &&
+          masterController!.selectedItem == null) {
         if (dataItemList.isNotEmpty) {
           dataItemList.clear();
         }
@@ -189,7 +209,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (!dataItemList.contains(selectedItem)) selectedItem = null;
       //notify builders
       sendNotify();
-      if (selectedItem == null && autoSelectFirstItem && dataItemList.isNotEmpty) {
+      if (selectedItem == null &&
+          autoSelectFirstItem &&
+          dataItemList.isNotEmpty) {
         selectedItem = dataItemList[0];
       }
       //service method for descendants
@@ -209,7 +231,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   FutureOr<bool> retryRequestIf(Exception exception) async {
     if (exception is NsgApiException) {
       if (exception.error.code == 401) {
-        var provider = NsgDataClient.client.getNewObject(dataType).remoteProvider;
+        var provider =
+            NsgDataClient.client.getNewObject(dataType).remoteProvider;
         await provider.connect(this);
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
@@ -240,13 +263,15 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
     if (masterController!.selectedItem == null ||
-        !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName))
-      return newItemsList;
-    var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+        !masterController!.selectedItem!.fieldList.fields
+            .containsKey(dataBinding!.masterFieldName)) return newItemsList;
+    var masterValue = masterController!
+        .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
 
     var list = <NsgDataItem>[];
     newItemsList.forEach((element) {
-      if (element.fieldValues.fields[dataBinding!.slaveFieldName] == masterValue) {
+      if (element.fieldValues.fields[dataBinding!.slaveFieldName] ==
+          masterValue) {
         list.add(element);
       }
     });
@@ -254,8 +279,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '')
-      return newItemsList;
+    if (!controllerFilter.isAllowed ||
+        !controllerFilter.isOpen ||
+        controllerFilter.searchString == '') return newItemsList;
     return newItemsList.where((element) {
       for (var fieldName in element.fieldList.fields.keys) {
         var field = element.getField(fieldName);
@@ -265,7 +291,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         } else {
           s = element.getFieldValue(fieldName).toString();
         }
-        if (s.toString().toUpperCase().contains(controllerFilter.searchString.toUpperCase())) {
+        if (s
+            .toString()
+            .toUpperCase()
+            .contains(controllerFilter.searchString.toUpperCase())) {
           return true;
         }
       }
@@ -279,17 +308,31 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   NsgDataRequestParams? get getRequestFilter {
-    if (masterController == null ||
-        masterController!.selectedItem == null ||
-        !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) return null;
-
-    var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+    var cmp = NsgCompare();
+    //Добавление условия на мастер-деталь
+    if (masterController != null &&
+        masterController!.selectedItem != null &&
+        masterController!.selectedItem!.fieldList.fields
+            .containsKey(dataBinding!.masterFieldName)) {
+      var masterValue = masterController!
+          .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+      cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
+    }
+    //Учитываем пользовательский фильтр на дату
+    if (controllerFilter.isPeriodAllowed &&
+        controllerFilter.periodFieldName.isNotEmpty) {
+      cmp.add(
+          name: controllerFilter.periodFieldName,
+          value: controllerFilter.nsgPeriod.beginDate.toIso8601String(),
+          comparisonOperator: NsgComparisonOperator.greaterOrEqual);
+      cmp.add(
+          name: controllerFilter.periodFieldName,
+          value: controllerFilter.nsgPeriod.endDate.toIso8601String(),
+          comparisonOperator: NsgComparisonOperator.less);
+    }
 
     var param = NsgDataRequestParams();
-    var cmp = NsgCompare();
-    cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
     param.compare = cmp;
-
     return param;
   }
 
@@ -312,7 +355,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     Widget? onLoading,
     Widget? onEmpty,
   }) {
-    return obx(widget, onError: onError, onLoading: onLoading, onEmpty: onEmpty);
+    return obx(widget,
+        onError: onError, onLoading: onLoading, onEmpty: onEmpty);
   }
 
   ///Post selected item to the server

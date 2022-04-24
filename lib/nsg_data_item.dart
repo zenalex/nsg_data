@@ -10,7 +10,13 @@ class NsgDataItem {
     throw Exception('api Request Items is not overrided');
   }
 
+  ///Get API path for posting Items
   String get apiPostItems => apiRequestItems + '/Post';
+
+  ///Имя поля для фильтрации в контроллере по периоду
+  ///Используется, например, в NsgListPage
+  ///Если не задано, то считается, что фильтрация по периоду запрещена
+  String get periodFieldName => '';
 
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {

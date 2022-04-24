@@ -24,6 +24,7 @@ dependencies:
   event: ^2.0.5
   pedantic: ^1.11.1
   intl: ^0.17.0
+  jiffy: ^5.0.0 
 
 dev_dependencies:
   
