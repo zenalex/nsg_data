@@ -91,19 +91,17 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (postData == null) postData = {};
       postData.addAll(filter.toJson());
     }
+
+    var isLoadReferenceMode = !loadReference.isNotEmpty;
+    var sufficsRef = loadReference.isNotEmpty ? '' : '/References';
     if (function == '') {
-      function = dataItem.remoteProvider.serverUri + dataItem.apiRequestItems;
+      function = dataItem.remoteProvider.serverUri +
+          dataItem.apiRequestItems +
+          sufficsRef;
     } else {
       function = dataItem.remoteProvider.serverUri + function;
     }
     var url = '$function';
-    var isLoadReferenceMode = false;
-
-    if (loadReference.isNotEmpty) {
-      url += '/References';
-      isLoadReferenceMode = true;
-    }
-
     var response = await dataItem.remoteProvider.baseRequestList(
         function: url,
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
