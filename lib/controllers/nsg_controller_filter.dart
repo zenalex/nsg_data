@@ -14,6 +14,6 @@ class NsgControllerFilter {
   bool isOpen = false;
   String searchString = '';
   NsgPeriod nsgPeriod = NsgPeriod();
-  int periodSelected = 5;
+  int periodSelected = 3;
   bool periodTimeEnabled = false;
 }
