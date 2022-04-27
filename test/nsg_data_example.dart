@@ -15,10 +15,9 @@ void main() {
 }
 
 Future init() async {
-  var provider = NsgDataProvider(firebaseToken: '');
+  var provider = NsgDataProvider(applicationName: 'test', firebaseToken: '');
   provider.serverUri = 'http://192.168.1.20:5073';
-  NsgDataClient.client
-      .registerDataItem(UserSettingsItem(), remoteProvider: provider);
+  NsgDataClient.client.registerDataItem(UserSettingsItem(), remoteProvider: provider);
   NsgDataClient.client.registerDataItem(NewsItem(), remoteProvider: provider);
   NsgDataClient.client.registerDataItem(CardItem(), remoteProvider: provider);
 
