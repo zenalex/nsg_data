@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataRequestParams {
-  final int top;
-  final int count;
-  final Map<String, dynamic>? params;
+  int top;
+  int count;
+  Map<String, dynamic>? params;
   String? sorting;
   String? readNestedField;
   NsgCompare? compare;
