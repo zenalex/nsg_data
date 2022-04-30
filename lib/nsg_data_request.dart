@@ -94,7 +94,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     try {
       if (response == '' || response == null) {
       } else {
-        if (isLoadReferenceMode) {
+        if (isLoadReferenceMode && response is Map) {
           var maps = response as Map<String, dynamic>;
           maps.forEach((name, data) {
             if (name == "results") {
