@@ -12,13 +12,14 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (dataItemType == NsgDataItem) dataItemType = T;
   }
 
-  void _fromJsonList(List<dynamic> maps) {
-    items = <T>[];
+  List<dynamic> _fromJsonList(List<dynamic> maps) {
+    var items = <T>[];
     maps.forEach((m) {
       var elem = NsgDataClient.client.getNewObject(dataItemType);
       elem.fromJson(m as Map<String, dynamic>);
       items.add(elem as T);
     });
+    return items;
   }
 
   Future<List<T>> requestItems(
@@ -95,32 +96,12 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (response == '' || response == null) {
       } else {
         if (isLoadReferenceMode && response is Map) {
-          var maps = response as Map<String, dynamic>;
-          maps.forEach((name, data) {
-            if (name == "results") {
-              _fromJsonList(data);
-              NsgDataClient.client.addItemsToCache(items: items, tag: tag);
-            } else {
-              var foundFiled = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
-              if (foundFiled != null) {
-                var refItems = <NsgDataItem>[];
-                data.forEach((m) {
-                  var elem = NsgDataClient.client.getNewObject(foundFiled.referentElementType);
-                  elem.fromJson(m as Map<String, dynamic>);
-                  refItems.add(elem as T);
-                });
-                NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
-              } else {
-                print('ERROR: $dataItemType.$name not found');
-              }
-            }
-          });
-          await loadAllReferents(items, loadReference, tag: tag);
+          items = (await loadDataAndReferences(response, loadReference, tag)).cast();
         } else {
           if (!(response is List)) {
             response = <dynamic>[response];
           }
-          _fromJsonList(response);
+          items = _fromJsonList(response).cast();
           NsgDataClient.client.addItemsToCache(items: items, tag: tag);
 
           //Check referent field list
@@ -131,6 +112,34 @@ class NsgDataRequest<T extends NsgDataItem> {
       print(e);
     }
     return items;
+  }
+
+  ///Загружает данные из response, представляющего из себя Map.
+  ///основные объекты лежат в results, кэшируемые по названию полей основного объекта
+  Future<List> loadDataAndReferences(Map response, List<String> loadReference, String tag) async {
+    var maps = response as Map<String, dynamic>;
+    var newItems = [];
+    maps.forEach((name, data) {
+      if (name == "results") {
+        newItems = _fromJsonList(data);
+        NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+      } else {
+        var foundFiled = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
+        if (foundFiled != null) {
+          var refItems = <NsgDataItem>[];
+          data.forEach((m) {
+            var elem = NsgDataClient.client.getNewObject(foundFiled.referentElementType);
+            elem.fromJson(m as Map<String, dynamic>);
+            refItems.add(elem as T);
+          });
+          NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
+        } else {
+          print('ERROR: $dataItemType.$name not found');
+        }
+      }
+    });
+    await loadAllReferents(items, loadReference, tag: tag);
+    return newItems;
   }
 
   ///Добавить в вписок все ссылочные типа объекта типа type

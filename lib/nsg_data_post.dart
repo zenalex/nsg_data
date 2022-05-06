@@ -7,14 +7,14 @@ class NsgDataPost<T extends NsgDataItem> {
 
   NsgDataPost({this.dataItemType = NsgDataItem});
 
-  void _fromJsonList(List<dynamic> maps) {
-    _items = <T>[];
-    maps.forEach((m) {
-      var elem = NsgDataClient.client.getNewObject(dataItemType);
-      elem.fromJson(m as Map<String, dynamic>);
-      _items.add(elem as T);
-    });
-  }
+  // void _fromJsonList(List<dynamic> maps) {
+  //   _items = <T>[];
+  //   maps.forEach((m) {
+  //     var elem = NsgDataClient.client.getNewObject(dataItemType);
+  //     elem.fromJson(m as Map<String, dynamic>);
+  //     _items.add(elem as T);
+  //   });
+  // }
 
   List<Map<String, dynamic>> _toJson() {
     var list = <Map<String, dynamic>>[];
@@ -24,11 +24,7 @@ class NsgDataPost<T extends NsgDataItem> {
     return list;
   }
 
-  Future<List<T>?> postItems(
-      {bool autoAuthorize = true,
-      String tag = '',
-      List<String>? loadReference,
-      String function = ''}) async {
+  Future<List<T>?> postItems({bool autoAuthorize = true, String tag = '', List<String>? loadReference, String function = ''}) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
 
     var header = <String, String?>{};
@@ -41,16 +37,6 @@ class NsgDataPost<T extends NsgDataItem> {
       function = dataItem.remoteProvider.serverUri + function;
     }
 
-    // final _dio = Dio(BaseOptions(
-    //   headers: header,
-    //   method: 'POST',
-    //   responseType: ResponseType.json,
-    //   contentType: 'application/json',
-    //   connectTimeout: 15000,
-    //   receiveTimeout: 15000,
-    // ));
-    //var test = await _dio.post(function, data: _toJson());
-
     var response = await dataItem.remoteProvider.baseRequestList(
         function: '$function ${dataItem.runtimeType}',
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
@@ -58,15 +44,8 @@ class NsgDataPost<T extends NsgDataItem> {
         postData: _toJson(),
         method: 'POST');
 
-    if (response is List<dynamic>) {
-      _fromJsonList(response);
-      NsgDataClient.client.addItemsToCache(items: _items, tag: tag);
-    }
-    //Check referent field list
-    if (loadReference != null) {
-      var req = NsgDataRequest<T>();
-      await req.loadAllReferents(_items, loadReference, tag: tag);
-    }
+    var req = NsgDataRequest<T>(dataItemType: dataItemType);
+    _items = (await req.loadDataAndReferences(response, loadReference ?? [], tag)).cast();
     return _items;
   }
 
@@ -76,11 +55,7 @@ class NsgDataPost<T extends NsgDataItem> {
     List<String>? loadReference,
     String function = '',
   }) async {
-    var data = await postItems(
-        autoAuthorize: autoAuthorize,
-        tag: tag,
-        loadReference: loadReference,
-        function: function);
+    var data = await postItems(autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function);
     if (data == null || data.isEmpty) {
       return null;
     }
