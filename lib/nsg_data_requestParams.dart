@@ -17,7 +17,11 @@ class NsgDataRequestParams {
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
     if (readNestedField != null) filter['ReadNestedField'] = readNestedField.toString();
     if (compare != null) filter['Compare'] = compare?.toJson();
-    if (params != null) filter.addAll(params!);
+    if (params != null) {
+      var paramDict = <String, dynamic>{};
+      paramDict.addAll(params!);
+      filter['Parameters'] = paramDict;
+    }
     return filter;
   }
 
