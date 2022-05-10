@@ -1,7 +1,6 @@
 import '../nsg_data.dart';
 
-class NsgDataReferenceListField<T extends NsgDataItem>
-    extends NsgDataBaseReferenceField {
+class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseReferenceField {
   NsgDataReferenceListField(String name) : super(name);
 
   @override
@@ -19,21 +18,9 @@ class NsgDataReferenceListField<T extends NsgDataItem>
 
   List<T>? getReferent(NsgDataItem dataItem, {bool useCache = true}) {
     return dataItem.getFieldValue(name);
-
-    // var id = dataItem.getFieldValue(name).toString();
-    // if (id == '' || id == NsgDataItem.ZERO_GUID) {
-    //   return NsgDataClient.client.getNewObject(T) as T;
-    // }
-    // if (useCache) {
-    //   var item = NsgDataClient.client.getItemsFromCache(T, id) as T?;
-    //   return item;
-    // } else {
-    //   return null;
-    // }
   }
 
-  Future<List<T>> getReferentAsync(NsgDataItem dataItem,
-      {bool useCache = true}) async {
+  Future<List<T>> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
     var item = getReferent(dataItem, useCache: useCache);
     if (item == null) {
       var id = dataItem.getFieldValue(name).toString();
@@ -48,7 +35,9 @@ class NsgDataReferenceListField<T extends NsgDataItem>
 
   @override
   void setValue(NsgFieldValues fieldValues, dynamic value) {
-    if (value is List) {
+    if (value is List<NsgDataItem>) {
+      fieldValues.fields[name] = value;
+    } else if (value is List) {
       fieldValues.fields[name] = fromJsonList(value);
     } else {
       fieldValues.fields[name] = defaultValue;
@@ -69,5 +58,14 @@ class NsgDataReferenceListField<T extends NsgDataItem>
       items.add(elem as T);
     });
     return items;
+  }
+
+  ///Добавить новую строку в табличную часть
+  ///dataItem - объект, в поле которого добавляем значение
+  ///row - добавляемое значение
+  void addRow(NsgDataItem dataItem, T row) {
+    var allRows = (dataItem.getFieldValue(name, allowNullValue: true) as List<T>?) ?? <T>[];
+    allRows.add(row);
+    setValue(dataItem.fieldValues, allRows);
   }
 }

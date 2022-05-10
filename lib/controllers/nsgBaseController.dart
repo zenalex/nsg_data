@@ -154,6 +154,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         element.selectedItemChanged.unsubscribe(masterValueChanged);
       });
     }
+    change(null, status: RxStatus.empty());
+    super.onClose();
   }
   // List<NsgDataItem> _itemList;
   // List<NsgDataItem> get itemList {
@@ -229,12 +231,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         await provider.connect(this);
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
-
           await Get.to(provider.loginPage)!.then((value) => Get.back());
         }
       }
     }
-    return true;
+    if (retryIf != null) {
+      return await retryIf!(exception);
+    }
+    return !status.isEmpty;
   }
 
   Future<List<NsgDataItem>> doRequestItems() async {

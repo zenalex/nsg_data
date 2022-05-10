@@ -12,7 +12,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (dataItemType == NsgDataItem) dataItemType = T;
   }
 
-  List<dynamic> _fromJsonList(List<dynamic> maps) {
+  List<NsgDataItem> _fromJsonList(List<dynamic> maps) {
     var items = <T>[];
     maps.forEach((m) {
       var elem = NsgDataClient.client.getNewObject(dataItemType);
@@ -22,29 +22,60 @@ class NsgDataRequest<T extends NsgDataItem> {
     return items;
   }
 
-  Future<List<T>> requestItems(
-      {NsgDataRequestParams? filter,
-      bool autoAuthorize = true,
-      String tag = '',
-      List<String>? loadReference,
-      String function = '',
-      String method = 'GET',
-      dynamic postData,
-      bool autoRepeate = false,
-      int autoRepeateCount = 1000,
-      FutureOr<bool> Function(Exception)? retryIf,
-      FutureOr<void> Function(Exception)? onRetry}) async {
+  ///Запрос одного объекта. Для запроса списка объектов используйте requestItems
+  ///Выполняет запрос по стандартному методу, заданному в бъекте
+  ///Можно перекрыть для изменения логики запроса
+  ///filter = доп. фильтр, особенное внимание следует обратить на его сво-во compare
+  ///autoAuthorize - переход на авторизацию, если будет получен отказ в доступе
+  ///tag - доп признак для кэширования
+  ///loadReference - список полей для дочитывания, можно передавать через точку, null - будут дочитаны все поля
+  ///                ссылочного типа первого уровн, пустой массив - не будет дочитано ничего
+  ///                Обратите внимание, по умолчанию дочитываются все поля, что может негативно сказаться на производительности
+  ///function - url вызываемого метода, если не задан, будет взят url данного объекта по умолчанию
+  ///method - метод запроса. Рекомендуем всегда использовать POST из-за отсутствия ограничений на передаваемые параметры
+  ///postData - передаваемые данные. Не рекомендуется использовать напрямую
+  ///autoRepeate - повторять ли запрос в случае ошибки связи
+  ///autoRepeateCount - максимальное количество повторов
+  ///retryIf - функция, вызываемая перед каждым повторным вызовом. Если вернет false, повторы будут остановлены
+  ///onRetry - функция, вызываемая при каждом повторе запроса
+  Future<List<T>> requestItems({
+    NsgDataRequestParams? filter,
+    bool autoAuthorize = true,
+    String tag = '',
+    List<String>? loadReference,
+    String function = '',
+    String method = 'GET',
+    dynamic postData,
+    bool autoRepeate = false,
+    int autoRepeateCount = 1000,
+    FutureOr<bool> Function(Exception)? retryIf,
+    FutureOr<void> Function(Exception)? onRetry,
+  }) async {
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       return await r.retry(
           () => _requestItems(
-              filter: filter, autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function, method: method, postData: postData),
+                filter: filter,
+                autoAuthorize: autoAuthorize,
+                tag: tag,
+                loadReference: loadReference,
+                function: function,
+                method: method,
+                postData: postData,
+              ),
           retryIf: retryIf,
           onRetry: onRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
       return await _requestItems(
-          filter: filter, autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function, method: method, postData: postData);
+        filter: filter,
+        autoAuthorize: autoAuthorize,
+        tag: tag,
+        loadReference: loadReference,
+        function: function,
+        method: method,
+        postData: postData,
+      );
     }
   }
 
@@ -118,27 +149,34 @@ class NsgDataRequest<T extends NsgDataItem> {
   ///основные объекты лежат в results, кэшируемые по названию полей основного объекта
   Future<List> loadDataAndReferences(Map response, List<String> loadReference, String tag) async {
     var maps = response as Map<String, dynamic>;
-    var newItems = [];
+    var newItems = <NsgDataItem>[];
     maps.forEach((name, data) {
       if (name == "results") {
         newItems = _fromJsonList(data);
         NsgDataClient.client.addItemsToCache(items: items, tag: tag);
       } else {
-        var foundFiled = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
-        if (foundFiled != null) {
+        var foundField = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
+        if (foundField != null) {
           var refItems = <NsgDataItem>[];
           data.forEach((m) {
-            var elem = NsgDataClient.client.getNewObject(foundFiled.referentElementType);
+            var elem = NsgDataClient.client.getNewObject(foundField.referentElementType);
             elem.fromJson(m as Map<String, dynamic>);
             refItems.add(elem as T);
           });
-          NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
+          if (foundField is NsgDataReferenceListField) {
+            for (var tabItem in refItems) {
+              var ownerItem = newItems.firstWhere((e) => tabItem.ownerId == e.id);
+              foundField.addRow(ownerItem, tabItem);
+            }
+          } else {
+            NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
+          }
         } else {
           print('ERROR: $dataItemType.$name not found');
         }
       }
     });
-    await loadAllReferents(items, loadReference, tag: tag);
+    await loadAllReferents(newItems, loadReference, tag: tag);
     return newItems;
   }
 
@@ -162,6 +200,24 @@ class NsgDataRequest<T extends NsgDataItem> {
     return loadReference;
   }
 
+  ///Оснорвной метод запроса данных
+  ///Выполняет запрос по стандартному методу, заданному в бъекте
+  ///Можно перекрыть для изменения логики запроса
+  ///filter = доп. фильтр, особенное внимание следует обратить на его сво-во compare
+  ///autoAuthorize - переход на авторизацию, если будет получен отказ в доступе
+  ///tag - доп признак для кэширования
+  ///loadReference - список полей для дочитывания, можно передавать через точку, null - будут дочитаны все поля
+  ///                ссылочного типа первого уровн, пустой массив - не будет дочитано ничего
+  ///                Обратите внимание, по умолчанию дочитываются все поля, что может негативно сказаться на производительности
+  ///function - url вызываемого метода, если не задан, будет взят url данного объекта по умолчанию
+  ///method - метод запроса. Рекомендуем всегда использовать POST из-за отсутствия ограничений на передаваемые параметры
+  ///addCount - в фильтр будет добавлено ограничение считываемых объектов до одного
+  ///postData - передаваемые данные. Не рекомендуется использовать напрямую
+  ///autoRepeate - повторять ли запрос в случае ошибки связи
+  ///autoRepeateCount - максимальное количество повторов
+  ///retryIf - функция, вызываемая перед каждым повторным вызовом. Если вернет false, повторы будут остановлены
+  ///onRetry - функция, вызываемая при каждом повторе запроса
+  ///requestRegime - режим запроса. Позволяет определить для чего загружаются данные при перекрытии логики данного метода
   Future<T> requestItem(
       {NsgDataRequestParams? filter,
       bool autoAuthorize = true,
@@ -185,17 +241,18 @@ class NsgDataRequest<T extends NsgDataItem> {
       }
     }
     var data = await requestItems(
-        filter: newFilter,
-        autoAuthorize: autoAuthorize,
-        tag: tag,
-        loadReference: loadReference,
-        function: function,
-        method: method,
-        postData: postData,
-        autoRepeate: autoRepeate,
-        autoRepeateCount: autoRepeateCount,
-        retryIf: retryIf,
-        onRetry: onRetry);
+      filter: newFilter,
+      autoAuthorize: autoAuthorize,
+      tag: tag,
+      loadReference: loadReference,
+      function: function,
+      method: method,
+      postData: postData,
+      autoRepeate: autoRepeate,
+      autoRepeateCount: autoRepeateCount,
+      retryIf: retryIf,
+      onRetry: onRetry,
+    );
     if (data.isEmpty) {
       return NsgDataClient.client.getNewObject(dataItemType) as T;
     }

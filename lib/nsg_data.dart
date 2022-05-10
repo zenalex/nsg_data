@@ -35,3 +35,4 @@ export 'package:nsg_data/nsgDataFreeRequest.dart';
 export 'helpers/nsg_period.dart';
 export 'helpers/nsg_data_options.dart';
 export 'helpers/nsg_data_format.dart';
+export 'nsg_request_item_regime.dart';

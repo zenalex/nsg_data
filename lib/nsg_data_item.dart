@@ -18,6 +18,13 @@ class NsgDataItem {
   ///Если не задано, то считается, что фильтрация по периоду запрещена
   String get periodFieldName => '';
 
+  ///Возвращает уникальный идентификатор владельца
+  String get id => '';
+
+  ///Возвращает идентификатор владельца
+  ///Используется для привязки строк к табличной части
+  String get ownerId => '';
+
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
       if (fieldList.fields.containsKey(name)) {
@@ -42,10 +49,8 @@ class NsgDataItem {
     throw Exception('initialize for type {runtimeType} is not defined');
   }
 
-  NsgFieldList get fieldList =>
-      NsgDataClient.client.getFieldList(this.runtimeType);
-  NsgParamList get paramList =>
-      NsgDataClient.client.getParamList(this.runtimeType);
+  NsgFieldList get fieldList => NsgDataClient.client.getFieldList(this.runtimeType);
+  NsgParamList get paramList => NsgDataClient.client.getParamList(this.runtimeType);
   final NsgFieldValues fieldValues = NsgFieldValues();
 
   void addField(NsgDataField field, {bool primaryKey = false}) {
@@ -67,11 +72,15 @@ class NsgDataItem {
     return getField(name) is NsgDataBaseReferenceField;
   }
 
-  dynamic getFieldValue(String name) {
+  ///Получить значение поля объекта по имени поля
+  ///Если значение не присваивалось, то будет возвращено значение по умолчению, если
+  ///allowNullValue == false или null, если allowNullValue == true
+  dynamic getFieldValue(String name, {bool allowNullValue = false}) {
     if (fieldValues.fields.containsKey(name)) {
       return fieldValues.fields[name];
     } else {
       assert(fieldList.fields.containsKey(name));
+      if (allowNullValue) return null;
       return fieldList.fields[name]!.defaultValue;
     }
   }
@@ -93,9 +102,7 @@ class NsgDataItem {
     if (name != primaryKeyField) {
       if (value is String) {
         var field = this.getField(name);
-        if (field is NsgDataStringField &&
-            value.length > field.maxLength &&
-            field.maxLength != 0) {
+        if (field is NsgDataStringField && value.length > field.maxLength && field.maxLength != 0) {
           value = value.toString().substring(0, field.maxLength);
         }
       } else if (value is double) {
@@ -117,8 +124,7 @@ class NsgDataItem {
     }
   }
 
-  set remoteProvider(NsgDataProvider? value) =>
-      paramList.params[_PARAM_REMOTE_PROVIDER] = value;
+  set remoteProvider(NsgDataProvider? value) => paramList.params[_PARAM_REMOTE_PROVIDER] = value;
 
   T getReferent<T extends NsgDataItem?>(String name) {
     assert(fieldList.fields.containsKey(name));
@@ -131,13 +137,11 @@ class NsgDataItem {
     throw Exception('field $name is not ReferencedField');
   }
 
-  Future<T> getReferentAsync<T extends NsgDataItem>(String name,
-      {bool useCache = true}) async {
+  Future<T> getReferentAsync<T extends NsgDataItem>(String name, {bool useCache = true}) async {
     assert(fieldValues.fields.containsKey(name));
     var field = fieldList.fields[name]!;
     assert(field is NsgDataReferenceField);
-    var dataItem = await ((field as NsgDataReferenceField)
-        .getReferentAsync(this, useCache: useCache));
+    var dataItem = await ((field as NsgDataReferenceField).getReferentAsync(this, useCache: useCache));
     return dataItem as T;
   }
 
@@ -150,8 +154,7 @@ class NsgDataItem {
     }
   }
 
-  set primaryKeyField(String value) =>
-      paramList.params[_PRIMARY_KEY_FIELD] = value;
+  set primaryKeyField(String value) => paramList.params[_PRIMARY_KEY_FIELD] = value;
 
   List<String> getAllReferenceFields() {
     var list = <String>[];
@@ -176,8 +179,7 @@ class NsgDataItem {
   bool equal(NsgDataItem other) {
     if (other.runtimeType.toString() == runtimeType.toString()) {
       if (primaryKeyField == '') return hashCode == other.hashCode;
-      return (getFieldValue(primaryKeyField) ==
-          other.getFieldValue(primaryKeyField));
+      return (getFieldValue(primaryKeyField) == other.getFieldValue(primaryKeyField));
     }
     return false;
   }
