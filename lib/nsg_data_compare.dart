@@ -29,22 +29,13 @@ class NsgCompare {
   int get lengthAll {
     int i = 0;
     paramList.forEach((param) => {
-          if (param.parameterValue is NsgCompare)
-            {i += (param.parameterValue as NsgCompare).lengthAll}
-          else
-            {i++}
+          if (param.parameterValue is NsgCompare) {i += (param.parameterValue as NsgCompare).lengthAll} else {i++}
         });
     return i;
   }
 
-  void add(
-      {required String name,
-      required dynamic value,
-      NsgComparisonOperator comparisonOperator = NsgComparisonOperator.equal}) {
-    paramList.add(new NsgCompareParam(
-        parameterName: name,
-        parameterValue: value,
-        comparisonOperator: comparisonOperator));
+  void add({required String name, required dynamic value, NsgComparisonOperator comparisonOperator = NsgComparisonOperator.equal}) {
+    paramList.add(new NsgCompareParam(parameterName: name, parameterValue: value, comparisonOperator: comparisonOperator));
   }
 
   // void fromJson(Map<String, dynamic> json) {
@@ -106,11 +97,7 @@ class NsgCompareParam {
   /// Значение
   final dynamic parameterValue;
 
-  NsgCompareParam(
-      {required this.parameterName,
-      required this.parameterValue,
-      this.comparisonOperator = NsgComparisonOperator.equal})
-      : super();
+  NsgCompareParam({required this.parameterName, required this.parameterValue, this.comparisonOperator = NsgComparisonOperator.equal}) : super();
   //   {
   // if (parameterValue is NsgDataItem) {
   //   parameterValue =
@@ -121,7 +108,10 @@ class NsgCompareParam {
     var map = <String, dynamic>{};
     map["Name"] = parameterName;
     map["ComparisonOperator"] = comparisonOperator.value;
-    map["Value"] = parameterValue;
+    if (parameterValue is DateTime)
+      map["Value"] = (parameterValue as DateTime).toIso8601String();
+    else
+      map["Value"] = parameterValue;
     return map;
   }
 

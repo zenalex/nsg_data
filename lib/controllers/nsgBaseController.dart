@@ -307,12 +307,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
     //Учитываем пользовательский фильтр на дату
     if (controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
-      cmp.add(
-          name: controllerFilter.periodFieldName,
-          value: controllerFilter.nsgPeriod.beginDate.toIso8601String(),
-          comparisonOperator: NsgComparisonOperator.greaterOrEqual);
-      cmp.add(
-          name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate.toIso8601String(), comparisonOperator: NsgComparisonOperator.less);
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.beginDate, comparisonOperator: NsgComparisonOperator.greaterOrEqual);
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
     }
 
     var param = NsgDataRequestParams();
