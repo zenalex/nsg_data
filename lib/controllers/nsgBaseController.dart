@@ -80,12 +80,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   bool lateInit = false;
 
   set selectedItem(NsgDataItem? newItem) {
-    //var oldItem = _selectedItem;
-    if (_selectedItem != newItem) {
-      _selectedItem = newItem;
-      selectedItemChanged.broadcast(null);
-      sendNotify();
-    }
+    //Убрал проверку на совпадение значений: т.к. это неправильно при обновлении (перечитывании) значения из БД
+    //if (_selectedItem != newItem) {
+    _selectedItem = newItem;
+    selectedItemChanged.broadcast(null);
+    sendNotify();
+    //}
   }
 
   NsgBaseController(
@@ -359,10 +359,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (needRefreshSelectedItem) {
       refreshSelectedItem(referenceList);
     }
-    selectedItem = null;
 
-    selectedItem = element.clone();
-    _backupItem = element;
     Get.toNamed(pageName);
   }
 
@@ -396,14 +393,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList) async {
-    change(null, status: RxStatus.loading());
     var cmp = NsgCompare();
     cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
     var filterParam = NsgDataRequestParams(compare: cmp);
     var request = NsgDataRequest(dataItemType: dataType);
     var answer = await request.requestItem(
         filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
-    change(null, status: RxStatus.success());
     return answer;
   }
 
@@ -418,7 +413,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     var newItem = await refreshItem(selectedItem!, referenceList);
     var index = dataItemList.indexOf(selectedItem!);
     dataItemList.replaceRange(index, index, [newItem]);
-    selectedItem = newItem;
+    //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
+    //вернуть результат обратно
+    //selectedItem = null;
+    selectedItem = newItem.clone();
+    _backupItem = newItem;
     change(null, status: RxStatus.success());
   }
 }
