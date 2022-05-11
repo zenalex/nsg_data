@@ -352,6 +352,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
   void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+    selectedItem = element;
     if (needRefreshSelectedItem) {
       refreshSelectedItem(referenceList);
     }
