@@ -31,7 +31,7 @@ class NsgDataProvider {
   String firebaseToken;
 
   ///milliseconds
-  int requestDuration = 15000;
+  int requestDuration = 120000;
   int connectDuration = 15000;
 
   NsgPhoneLoginPage Function(NsgDataProvider provider)? getLoginWidget;
@@ -110,6 +110,16 @@ class NsgDataProvider {
       print('dio error. function: $function, error: ${e.error ??= ''}');
       if (e.response?.statusCode == 401) {
         throw NsgApiException(NsgApiError(code: 401, message: 'Authorization error', errorType: e.type));
+      }
+      if (e.response?.statusCode == 500) {
+        var msg = 'Ошибка 500';
+        if (e.response!.data is Map && (e.response!.data as Map).containsKey('message')) {
+          var msgParts = e.response!.data['message'].split('---> ');
+          msg = msgParts.last;
+        }
+        throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));
+      } else if (e.type == DioErrorType.receiveTimeout || e.type == DioErrorType.sendTimeout) {
+        throw NsgApiException(NsgApiError(code: 2, message: 'Истекло время ожидания получения или отправки данных', errorType: e.type));
       } else {
         throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
       }

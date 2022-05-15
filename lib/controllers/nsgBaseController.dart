@@ -79,6 +79,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///requestItems
   bool lateInit = false;
 
+  ///Функция для отображения ошибок пользователю
+  ///Если не задана для конкретного контроллера, используется заданная по умолчанию NsgApiException.showExceptionDefault
+  ///Последняя, задается в пакете nsg_controls
+  void Function(NsgApiException)? showException;
+
   set selectedItem(NsgDataItem? newItem) {
     //Убрал проверку на совпадение значений: т.к. это неправильно при обновлении (перечитывании) значения из БД
     //if (_selectedItem != newItem) {
@@ -343,6 +348,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (selectedItem == null) {
       throw new Exception("No selected item to post");
     }
+    if (selectedItem == null) return;
     await selectedItem!.post();
 
     sendNotify();
@@ -372,17 +378,29 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Close item page and post current (selectedItem) item to databese (server)
   void itemPagePost() async {
-    await _postSelectedItem();
-    if (_backupItem != null && dataItemList.contains(_backupItem)) {
-      dataItemList.remove(_backupItem!);
+    change(null, status: RxStatus.loading());
+    try {
+      await _postSelectedItem();
+      if (_backupItem != null && dataItemList.contains(_backupItem)) {
+        dataItemList.remove(_backupItem!);
+      }
+      if (_backupItem != null) {
+        _backupItem = null;
+      }
+      if (!dataItemList.contains(selectedItem)) {
+        dataItemList.add(selectedItem!);
+      }
+      Get.back();
+    } catch (ex) {
+      //если это NsgApiExceptuion, то отображаем ошибку пользователю
+      if (ex is NsgApiException) {
+        var func = showException ?? NsgApiException.showExceptionDefault;
+        if (func != null) func(ex);
+      }
+      rethrow;
+    } finally {
+      change(null, status: RxStatus.success());
     }
-    if (_backupItem != null) {
-      _backupItem = null;
-    }
-    if (!dataItemList.contains(selectedItem)) {
-      dataItemList.add(selectedItem!);
-    }
-    Get.back();
   }
 
   ///Перечитать указанный объект из базы данных
