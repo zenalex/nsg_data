@@ -161,7 +161,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           data.forEach((m) {
             var elem = NsgDataClient.client.getNewObject(foundField.referentElementType);
             elem.fromJson(m as Map<String, dynamic>);
-            refItems.add(elem as T);
+            refItems.add(elem);
           });
           if (foundField is NsgDataReferenceListField) {
             for (var tabItem in refItems) {
