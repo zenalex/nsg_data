@@ -61,4 +61,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     var index = items.indexOf(currentItem);
     return index >= 0 && index < items.length - 1;
   }
+
+  T createNewItem() {
+    return NsgDataClient.client.getNewObject(dataType) as T;
+  }
 }
