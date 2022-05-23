@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
@@ -62,7 +63,37 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     return index >= 0 && index < items.length - 1;
   }
 
-  T createNewItem() {
+  ///Создает новый элемент. Используется, например, при нажатии добавить в форме списка
+  ///На время создания (так как оно может быть связано с запросом на сервер) устанавливает статус контроллера в loading
+  ///Для непосредственного создания нового элемента вызывает асинхронный метод doCreateNewItem, который может быть перекрыт
+  ///для организации бизнес-логики запросов
+  Future<T> createNewItem() async {
+    change(null, status: RxStatus.loading());
+    try {
+      var elem = await doCreateNewItem();
+      currentItem = elem;
+      change(null, status: RxStatus.success());
+      return elem;
+    } catch (e) {
+      var msg = '';
+      if (e is NsgApiException && e.error.message != null) {
+        msg = e.error.message!;
+      }
+      change(null, status: RxStatus.error(msg));
+    }
     return NsgDataClient.client.getNewObject(dataType) as T;
+  }
+
+  ///Создает новый элемент. Вызывается из createNewItem
+  ///Может быть перекрыт для организации бизнес-логики запросов, например, заполнения нового элемента на сервере
+  ///или проверки возможности создания нового элемента
+  Future<T> doCreateNewItem() async {
+    var elem = NsgDataClient.client.getNewObject(dataType) as T;
+    //Если выставлен признак создавать на сервере, создаем запрос на сервер
+    if (elem.createOnServer) {
+      var request = NsgDataRequest<T>();
+      return await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
+    }
+    return elem;
   }
 }

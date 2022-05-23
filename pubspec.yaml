@@ -16,15 +16,13 @@ dependencies:
   shared_preferences: ^2.0.6
   flutter_multi_formatter: ^2.2.0
   dio: ^4.0.0
-  #get: ^4.6.1
-  get: 
-    git:
-      url: https://github.com/zenalex/getx.git
+  get: ^4.6.5
   retry: ^3.1.0
   event: ^2.0.5
   pedantic: ^1.11.1
   intl: ^0.17.0
   jiffy: ^5.0.0 
+  uuid: ^3.0.6
 
 dev_dependencies:
   

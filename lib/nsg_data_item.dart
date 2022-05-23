@@ -25,6 +25,10 @@ class NsgDataItem {
   ///Используется для привязки строк к табличной части
   String get ownerId => '';
 
+  ///Признак того: что для создания элемента должно производится на серверной стороне
+  ///У объекта на сервере будет вызван метод Create
+  bool get createOnServer => false;
+
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
       if (fieldList.fields.containsKey(name)) {
