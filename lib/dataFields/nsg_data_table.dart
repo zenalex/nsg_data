@@ -1,3 +1,5 @@
+import 'package:nsg_data/helpers/nsg_data_guid.dart';
+
 import '../nsg_data.dart';
 
 class NsgDataTable<T extends NsgDataItem> {
@@ -18,6 +20,9 @@ class NsgDataTable<T extends NsgDataItem> {
   ///row - добавляемое значение
   void addRow(T row) {
     var allRows = (owner.getFieldValue(fieldName, allowNullValue: true) as List<T>?) ?? <T>[];
+    if (row.isEmpty) {
+      row.setFieldValue(row.id, Guid.newGuid());
+    }
     if (row.ownerId.isNotEmpty) {
       row.setFieldValue(row.ownerId, owner.id);
     }
