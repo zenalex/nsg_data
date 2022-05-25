@@ -21,7 +21,7 @@ class NsgDataTable<T extends NsgDataItem> {
   void addRow(T row) {
     var allRows = (owner.getFieldValue(fieldName, allowNullValue: true) as List<T>?) ?? <T>[];
     if (row.isEmpty) {
-      row.setFieldValue(row.id, Guid.newGuid());
+      row.setFieldValue(row.primaryKeyField, Guid.newGuid());
     }
     if (row.ownerId.isNotEmpty) {
       row.setFieldValue(row.ownerId, owner.id);
