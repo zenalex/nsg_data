@@ -83,7 +83,7 @@ class NsgDataItem {
     if (fieldValues.fields.containsKey(name)) {
       return fieldValues.fields[name];
     } else {
-      assert(fieldList.fields.containsKey(name));
+      assert(fieldList.fields.containsKey(name), '${name}');
       if (allowNullValue) return null;
       return fieldList.fields[name]!.defaultValue;
     }
