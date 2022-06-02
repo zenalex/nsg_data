@@ -1,3 +1,7 @@
+0.1.0
+Big update. You can use package in production
+02.06.2022
+
 0.0.3
 NsgPhoneLoginPage improvements.
 06.10.2020
