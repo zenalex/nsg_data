@@ -13,3 +13,6 @@ build/
 doc/api/
 .flutter-plugins-dependencies
 .flutter-plugins
+.flutter-plugins
+.flutter-plugins-dependencies
+.gitignore
