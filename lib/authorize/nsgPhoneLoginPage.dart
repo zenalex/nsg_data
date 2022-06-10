@@ -148,9 +148,9 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  height: Get.height / 3,
                   child: widget.loginPage.getLogo(),
                 ),
                 Container(

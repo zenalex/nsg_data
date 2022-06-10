@@ -17,8 +17,7 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
     return Scaffold(
       appBar: widgetParams!.appbar! ? getAppBar(context) : null,
       //backgroundColor: Colors.white,
-      body: NsgPhoneLoginVerificationWidget(this, provider,
-          widgetParams: widgetParams),
+      body: NsgPhoneLoginVerificationWidget(this, provider, widgetParams: widgetParams),
     );
   }
 
@@ -70,15 +69,12 @@ class NsgPhoneLoginVerificationWidget extends StatefulWidget {
   final NsgDataProvider provider;
   final NsgPhoneLoginVerificationPage verificationPage;
 
-  NsgPhoneLoginVerificationWidget(this.verificationPage, this.provider,
-      {this.widgetParams})
-      : super();
+  NsgPhoneLoginVerificationWidget(this.verificationPage, this.provider, {this.widgetParams}) : super();
   @override
   State<StatefulWidget> createState() => _NsgPhoneLoginVerificationState();
 }
 
-class _NsgPhoneLoginVerificationState
-    extends State<NsgPhoneLoginVerificationWidget> {
+class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWidget> {
   Timer? updateTimer;
   bool isBusy = false;
   int secondsRepeateLeft = 120;
@@ -100,8 +96,7 @@ class _NsgPhoneLoginVerificationState
   }
 
   void startTimer() {
-    updateTimer ??= updateTimer =
-        Timer.periodic(Duration(seconds: 1), (Timer t) => updateTimerEvent(t));
+    updateTimer ??= updateTimer = Timer.periodic(Duration(seconds: 1), (Timer t) => updateTimerEvent(t));
   }
 
   void stopTimer() {
@@ -129,9 +124,11 @@ class _NsgPhoneLoginVerificationState
           alignment: Alignment.center,
           child: SingleChildScrollView(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  height: Get.height / 3,
                   child: widget.verificationPage.getLogo(),
                 ),
                 Container(
@@ -154,15 +151,9 @@ class _NsgPhoneLoginVerificationState
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(20.0)),
-          boxShadow: [
-            BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.15),
-                offset: Offset(0.0, 4.0),
-                blurRadius: 4.0,
-                spreadRadius: 2.0)
-          ],
+          boxShadow: [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.15), offset: Offset(0.0, 4.0), blurRadius: 4.0, spreadRadius: 2.0)],
         ),
-        margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 45.0),
+        margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
         padding: EdgeInsets.all(15.0),
         width: widget.widgetParams!.cardSize,
         child: Row(
@@ -184,10 +175,7 @@ class _NsgPhoneLoginVerificationState
                           ),
                         )
                       : SizedBox(),
-                  SizedBox(
-                      height: widget.widgetParams!.headerMessageVisible == true
-                          ? 5.0
-                          : 0.0),
+                  SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
                   Text(
                     widget.widgetParams!.headerMessageVerification,
                     style: widget.widgetParams!.headerMessageStyle,
@@ -195,9 +183,7 @@ class _NsgPhoneLoginVerificationState
                   ),
                   SizedBox(height: 15.0),
                   Text(
-                    widget.widgetParams!.interpolate(
-                        widget.widgetParams!.descriptionMessegeVerification,
-                        params: {'phone': widget.provider.phoneNumber}),
+                    widget.widgetParams!.interpolate(widget.widgetParams!.descriptionMessegeVerification, params: {'phone': widget.provider.phoneNumber}),
                     style: widget.widgetParams!.descriptionStyle,
                     textAlign: TextAlign.center,
                   ),
@@ -208,8 +194,7 @@ class _NsgPhoneLoginVerificationState
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                     child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
+                      padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
                       child: TextFormField(
                         keyboardType: TextInputType.number,
                         style: widget.widgetParams!.textPhoneField,
@@ -241,9 +226,7 @@ class _NsgPhoneLoginVerificationState
     setState(() {
       isBusy = true;
     });
-    widget.provider
-        .phoneLogin(widget.provider.phoneNumber, securityCode)
-        .then((result) => checkLoginResult(context, result));
+    widget.provider.phoneLogin(widget.provider.phoneNumber, securityCode).then((result) => checkLoginResult(context, result));
     setState(() {
       isBusy = false;
     });
@@ -252,8 +235,7 @@ class _NsgPhoneLoginVerificationState
   void checkLoginResult(BuildContext context, int answerCode) {
     if (answerCode != 0) {
       var needEnterCaptcha = (answerCode > 40100 && answerCode < 40400);
-      var errorMessage =
-          widget.widgetParams!.errorMessageByStatusCode!(answerCode);
+      var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode);
       showError(errorMessage, needEnterCaptcha);
     } else {
       Get.back<bool>(result: true);
@@ -277,10 +259,7 @@ class _NsgPhoneLoginVerificationState
       stopTimer();
     }
     setState(() {
-      secondsRepeateLeft = 120 -
-          DateTime.now()
-              .difference(widget.provider.smsRequestedTime!)
-              .inSeconds;
+      secondsRepeateLeft = 120 - DateTime.now().difference(widget.provider.smsRequestedTime!).inSeconds;
       secondsRepeateLeft = secondsRepeateLeft < 0 ? 0 : secondsRepeateLeft;
     });
   }
