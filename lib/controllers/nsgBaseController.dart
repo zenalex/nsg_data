@@ -427,7 +427,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
     var newItem = await refreshItem(selectedItem!, referenceList);
     var index = dataItemList.indexOf(selectedItem!);
-    dataItemList.replaceRange(index, index + 1, [newItem]);
+    if (index >= 0) {
+      dataItemList.replaceRange(index, index + 1, [newItem]);
+    }
     //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
     //вернуть результат обратно
     //selectedItem = null;
