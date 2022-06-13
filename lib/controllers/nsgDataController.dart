@@ -1,11 +1,31 @@
 import 'package:get/get.dart';
+import 'package:nsg_data/controllers/nsg_controller_regime.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
+  ///Массив данный. После того как контроллер переходит в статус  successful, данные могут использоваться
+  ///Представляет собой типизированный вариант массива dataItemList
   List<T> get items => dataItemList.cast<T>();
-  T get firstItem => (dataItemList.isEmpty) ? NsgDataClient.client.getNewObject(dataType) as T : items[0];
-  T get currentItem => ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
+
+  ///Первый элемент из items. Если items  пустой: вернет новый пустой элемент данных  типа T
+  T get firstItem => (dataItemList.isEmpty)
+      ? NsgDataClient.client.getNewObject(dataType) as T
+      : items[0];
+
+  ///Текущий элемент (например, элемент для отображения на форме элемента)
+  ///Представляет из себя типизированный аналой selectedItem.
+  ///Если selectedItem null, то вернет пустое значение типа T
+  T get currentItem =>
+      ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
+
+  ///Установка текущего элемента для контроллера
   set currentItem(T item) => selectedItem = item;
+
+  ///Определяет текущий режим работы контроллера
+  var regime = NsgControllerRegime.view;
+
+  ///Событие о выборе значения пользователем. Срабатывает в режиме selection при выборе пользователем элемента в форме списка
+  void Function(NsgDataItem)? onSelected;
 
   NsgDataController(
       {bool requestOnInit = true,
@@ -92,7 +112,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     //Если выставлен признак создавать на сервере, создаем запрос на сервер
     if (elem.createOnServer) {
       var request = NsgDataRequest<T>();
-      return await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
+      return await request.requestItem(
+          method: 'POST', function: elem.apiRequestItems + '/Create');
     }
     return elem;
   }
