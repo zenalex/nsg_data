@@ -115,27 +115,19 @@ class NsgDataRequest<T extends NsgDataItem> {
     var isLoadReferenceMode = loadReference.isNotEmpty;
     var sufficsRef = loadReference.isEmpty ? '' : '/References';
     if (function == '') {
-      function = dataItem.remoteProvider.serverUri +
-          dataItem.apiRequestItems +
-          sufficsRef;
+      function = dataItem.remoteProvider.serverUri + dataItem.apiRequestItems + sufficsRef;
     } else {
       function = dataItem.remoteProvider.serverUri + function;
     }
     var url = '$function';
     var response = await dataItem.remoteProvider.baseRequestList(
-        function: url,
-        headers: dataItem.remoteProvider.getAuthorizationHeader(),
-        url: url,
-        method: method,
-        params: filterMap,
-        postData: postData);
+        function: url, headers: dataItem.remoteProvider.getAuthorizationHeader(), url: url, method: method, params: filterMap, postData: postData);
     items = <T>[];
     try {
       if (response == '' || response == null) {
       } else {
-        if (isLoadReferenceMode && response is Map) {
-          items = (await loadDataAndReferences(response, loadReference, tag))
-              .cast();
+        if (response is Map) {
+          items = (await loadDataAndReferences(response, loadReference, tag)).cast();
         } else {
           if (!(response is List)) {
             response = <dynamic>[response];
@@ -155,8 +147,7 @@ class NsgDataRequest<T extends NsgDataItem> {
 
   ///Загружает данные из response, представляющего из себя Map.
   ///основные объекты лежат в results, кэшируемые по названию полей основного объекта
-  Future<List> loadDataAndReferences(
-      Map response, List<String> loadReference, String tag) async {
+  Future<List> loadDataAndReferences(Map response, List<String> loadReference, String tag) async {
     var maps = response as Map<String, dynamic>;
     //Новые основные элементы
     var newItems = <NsgDataItem>[];
@@ -168,21 +159,18 @@ class NsgDataRequest<T extends NsgDataItem> {
         allItems.addAll(newItems);
         NsgDataClient.client.addItemsToCache(items: newItems, tag: tag);
       } else {
-        var foundField =
-            NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
+        var foundField = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
         if (foundField != null) {
           var refItems = <NsgDataItem>[];
           data.forEach((m) {
-            var elem = NsgDataClient.client
-                .getNewObject(foundField.referentElementType);
+            var elem = NsgDataClient.client.getNewObject(foundField.referentElementType);
             elem.fromJson(m as Map<String, dynamic>);
             refItems.add(elem);
           });
           allItems.addAll(refItems);
           if (foundField is NsgDataReferenceListField) {
             for (var tabItem in refItems) {
-              var ownerItem =
-                  allItems.firstWhere((e) => tabItem.ownerId == e.id);
+              var ownerItem = allItems.firstWhere((e) => tabItem.ownerId == e.id);
               foundField.addRow(ownerItem, tabItem);
             }
           } else {
@@ -254,12 +242,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         newFilter = NsgDataRequestParams(count: 1);
       } else {
         newFilter = NsgDataRequestParams(
-            top: filter.top,
-            count: 1,
-            params: filter.params,
-            sorting: filter.sorting,
-            readNestedField: filter.readNestedField,
-            compare: filter.compare);
+            top: filter.top, count: 1, params: filter.params, sorting: filter.sorting, readNestedField: filter.readNestedField, compare: filter.compare);
       }
     }
     var data = await requestItems(
@@ -281,16 +264,14 @@ class NsgDataRequest<T extends NsgDataItem> {
     return data[0];
   }
 
-  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference,
-      {String tag = ''}) async {
+  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference, {String tag = ''}) async {
     if (items.isEmpty || loadReference == null || loadReference.isEmpty) {
       return;
     }
 
     for (var fieldName in loadReference) {
       var splitedName = fieldName.split('.');
-      var field = NsgDataClient.client
-          .getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
+      var field = NsgDataClient.client.getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
       if (!(field is NsgDataBaseReferenceField)) continue;
       var refList = <String>[];
       var refItems = <NsgDataItem>[];
@@ -309,14 +290,11 @@ class NsgDataRequest<T extends NsgDataItem> {
           var request = NsgDataRequest(dataItemType: field.referentElementType);
           var cmp = NsgCompare();
           cmp.add(
-              name: NsgDataClient.client
-                  .getNewObject(field.referentElementType)
-                  .primaryKeyField,
+              name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
               value: refList,
               comparisonOperator: NsgComparisonOperator.inList);
           var filter = NsgDataRequestParams(compare: cmp);
-          refItems =
-              await request.requestItems(filter: filter, loadReference: []);
+          refItems = await request.requestItems(filter: filter, loadReference: []);
         }
       } else if (field is NsgDataReferenceListField) {
         for (var item in items) {
