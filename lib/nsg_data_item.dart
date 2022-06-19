@@ -1,8 +1,8 @@
 import 'package:nsg_data/nsg_data.dart';
+import 'helpers/nsg_data_guid.dart';
 import 'nsg_data_paramList.dart';
 
 class NsgDataItem {
-  static const String ZERO_GUID = '00000000-0000-0000-0000-000000000000';
   List<String>? loadReferenceDefault;
 
   ///Get API path for request Items
@@ -174,7 +174,7 @@ class NsgDataItem {
 
   bool get isEmpty {
     var guidString = getFieldValue(primaryKeyField).toString();
-    return guidString == ZERO_GUID || guidString.isEmpty;
+    return guidString == Guid.Empty || guidString.isEmpty;
   }
 
   bool get isNotEmpty => !isEmpty;
@@ -218,5 +218,13 @@ class NsgDataItem {
     var newItem = getNewObject();
     newItem.copyFieldValues(this);
     return newItem;
+  }
+
+  ///Новая запись в БД
+  ///По факту: создает новый Guid ключевому полю
+  ///Если ключевое поле заполнено не нулевым Guid, будет сгенерирована ошибка
+  void newRecord() {
+    assert(id.isNotEmpty && id != Guid.Empty);
+    setFieldValue(primaryKeyField, Guid.newGuid());
   }
 }

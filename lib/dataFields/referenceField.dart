@@ -1,7 +1,8 @@
 import 'package:nsg_data/nsg_data.dart';
 
-class NsgDataReferenceField<T extends NsgDataItem>
-    extends NsgDataBaseReferenceField {
+import '../helpers/nsg_data_guid.dart';
+
+class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceField {
   NsgDataReferenceField(String name) : super(name);
 
   @override
@@ -17,23 +18,20 @@ class NsgDataReferenceField<T extends NsgDataItem>
 
   Type get referentType => T;
 
-  T? getReferent(NsgDataItem dataItem,
-      {bool useCache = true, bool allowNull = false}) {
+  T? getReferent(NsgDataItem dataItem, {bool useCache = true, bool allowNull = false}) {
     var id = dataItem.getFieldValue(name).toString();
-    if (id == '' || id == NsgDataItem.ZERO_GUID) {
+    if (id == '' || id == Guid.Empty) {
       return NsgDataClient.client.getNewObject(T) as T;
     }
     if (useCache) {
-      var item = NsgDataClient.client
-          .getItemsFromCache(T, id, allowNull: allowNull) as T?;
+      var item = NsgDataClient.client.getItemsFromCache(T, id, allowNull: allowNull) as T?;
       return item;
     } else {
       return null;
     }
   }
 
-  Future<T> getReferentAsync(NsgDataItem dataItem,
-      {bool useCache = true}) async {
+  Future<T> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
     var item = getReferent(dataItem, useCache: useCache);
     if (item == null) {
       var id = dataItem.getFieldValue(name).toString();
