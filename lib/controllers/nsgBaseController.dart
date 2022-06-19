@@ -6,7 +6,6 @@ import 'package:nsg_data/controllers/nsg_controller_filter.dart';
 import 'package:nsg_data/nsg_comparison_operator.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
-import 'package:retry/retry.dart';
 import 'nsg_controller_filter.dart';
 
 class NsgBaseController extends GetxController with StateMixin<NsgBaseControllerData> {
@@ -174,12 +173,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Request Items
   Future requestItems() async {
     lateInit = false;
-    if (autoRepeate) {
-      final r = RetryOptions(maxAttempts: autoRepeateCount);
-      await r.retry(() => _requestItems(), onRetry: _updateStatusError, retryIf: retryIf);
-    } else {
-      await _requestItems();
-    }
+    //Зенков 19.06.2022
+    //Думаю, здесь повтор излишен, т.к. он реализован в самом запросе далее
+    //if (autoRepeate) {
+    //final r = RetryOptions(maxAttempts: autoRepeateCount);
+    //await r.retry(() => _requestItems(), onRetry: _updateStatusError, retryIf: retryIf);
+    //} else {
+    await _requestItems();
+    //}
   }
 
   ///Обновление данных

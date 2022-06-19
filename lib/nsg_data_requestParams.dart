@@ -3,11 +3,29 @@ import 'dart:convert';
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataRequestParams {
+  //TODO: проверить используется ли где-то. Скорее всего, надо объеденить с Count
   int top;
+
+  ///Ограничение на максимальное количество запрашиваемых данных
+  ///На стороне сервера задается еще одно ограничение, которое не может быть превышено за счет установки данного параметра
   int count;
+
+  ///Словарь передаваемых параметров
   Map<String, dynamic>? params;
+
+  ///Сортировка. Формат: ИмяПоля+ или ИмяПоля- для указания направления сортировки
+  ///Если надо задать сортировку по нескольким полям, следует разделять их запятыми
   String? sorting;
+
+  ///Список ссылочных полей, при нахождении не нулевых ссылок на объекты в этих полях
+  ///Вместе со списком основных объектов будут получены все объекты, на которые есть ссылки
   String? readNestedField;
+
+  ///При задании этого списка другие поля не будут прочитаны вообще
+  ///Имеет смысл использовать только при тонкой оптимизации объема передаваемых данных
+  String? onlyFieldsRead;
+
+  ///Условие на запрашиваемые данные
   NsgCompare? compare;
 
   Map<String, dynamic> toJson() {
@@ -16,6 +34,7 @@ class NsgDataRequestParams {
     if (count != 0) filter['Count'] = jsonEncode(count); //.toString();
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
     if (readNestedField != null) filter['ReadNestedField'] = readNestedField.toString();
+    if (onlyFieldsRead != null) filter['OnlyFieldsRead'] = readNestedField.toString();
     if (compare != null) filter['Compare'] = compare?.toJson();
     if (params != null) {
       var paramDict = <String, dynamic>{};
