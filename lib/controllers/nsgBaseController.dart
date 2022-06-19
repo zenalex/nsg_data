@@ -332,7 +332,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   void masterValueChanged(EventArgs? args) async {
     //if (!matchFilter(selectedItem)) selectedItem = null;
-    await requestItems();
+    await refreshData();
   }
 
   Widget obxBase(
