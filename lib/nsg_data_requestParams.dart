@@ -23,7 +23,7 @@ class NsgDataRequestParams {
 
   ///При задании этого списка другие поля не будут прочитаны вообще
   ///Имеет смысл использовать только при тонкой оптимизации объема передаваемых данных
-  String? onlyFieldsRead;
+  String? fieldsToRead;
 
   ///Условие на запрашиваемые данные
   NsgCompare? compare;
@@ -34,7 +34,7 @@ class NsgDataRequestParams {
     if (count != 0) filter['Count'] = jsonEncode(count); //.toString();
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
     if (readNestedField != null) filter['ReadNestedField'] = readNestedField.toString();
-    if (onlyFieldsRead != null) filter['OnlyFieldsRead'] = readNestedField.toString();
+    if (fieldsToRead != null) filter['FieldsToRead'] = fieldsToRead.toString();
     if (compare != null) filter['Compare'] = compare?.toJson();
     if (params != null) {
       var paramDict = <String, dynamic>{};

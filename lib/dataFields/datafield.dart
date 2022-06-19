@@ -16,5 +16,11 @@ class NsgDataField {
 
   void setValue(NsgFieldValues fieldValues, dynamic value) {
     fieldValues.fields[name] = value;
+    //Если поле есть в списке пустых полей (не запрошенных из БД), удалить его оттуда
+    if (fieldValues.emptyFields.contains(name)) fieldValues.emptyFields.remove(name);
+  }
+
+  void setEmpty(NsgFieldValues fieldValues) {
+    if (!fieldValues.emptyFields.contains(name)) fieldValues.emptyFields.add(name);
   }
 }

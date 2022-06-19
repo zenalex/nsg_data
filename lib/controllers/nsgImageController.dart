@@ -7,7 +7,7 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
   List<String> imageFieldNames = [];
 
   ///Поля для чтения без полей типа картинка
-  List<String> readFiledsList = [];
+  List<String> fieldsToRead = [];
 
   NsgImageController(
       {super.requestOnInit = true,
@@ -24,8 +24,30 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
       if (elem.fieldList.fields[fieldName] is NsgDataImageField) {
         imageFieldNames.add(fieldName);
       } else {
-        readFiledsList.add(fieldName);
+        fieldsToRead.add(fieldName);
       }
     }
   }
+
+  @override
+  Future<List<NsgDataItem>> doRequestItems() async {
+    var request = NsgDataRequest(dataItemType: dataType);
+    var filter = getRequestFilter;
+    if (filter == null) {
+      filter = NsgDataRequestParams();
+    }
+    //TODO: отложенное дочитывание картинок
+    //filter.fieldsToRead = fieldsToRead.join(',');
+    return await request.requestItems(
+      filter: getRequestFilter,
+      loadReference: referenceList,
+      autoRepeate: autoRepeate,
+      autoRepeateCount: autoRepeateCount,
+      retryIf: (e) => retryRequestIf(e),
+    );
+  }
+
+  // Future loadImages(){
+
+  // }
 }

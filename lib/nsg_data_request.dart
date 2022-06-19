@@ -128,7 +128,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (response == '' || response == null) {
       } else {
         if (response is Map) {
-          items = (await loadDataAndReferences(response, loadReference, tag)).cast();
+          items = (await loadDataAndReferences(response, loadReference, tag, filter: filter)).cast();
         } else {
           if (!(response is List)) {
             response = <dynamic>[response];
@@ -148,17 +148,30 @@ class NsgDataRequest<T extends NsgDataItem> {
 
   ///Загружает данные из response, представляющего из себя Map.
   ///основные объекты лежат в results, кэшируемые по названию полей основного объекта
-  Future<List> loadDataAndReferences(Map response, List<String> loadReference, String tag) async {
+  Future<List> loadDataAndReferences(Map response, List<String> loadReference, String tag, {NsgDataRequestParams? filter}) async {
     var maps = response as Map<String, dynamic>;
     //Новые основные элементы
     var newItems = <NsgDataItem>[];
     //Все новые элементы, включая дочитанные объекты для поиска строк табличных частей
     var allItems = <NsgDataItem>[];
+    var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty);
     maps.forEach((name, data) {
       if (name == "results") {
         newItems = _fromJsonList(data);
         allItems.addAll(newItems);
-        NsgDataClient.client.addItemsToCache(items: newItems, tag: tag);
+        if (newItems.isNotEmpty && filter != null && filter.fieldsToRead != null && filter.fieldsToRead!.isNotEmpty) {
+          //Проставить полям из списка признак того, что она пустые - не прочитаны с БД
+          for (var fieldName in newItems.first.fieldList.fields.keys) {
+            if (filter.fieldsToRead!.contains(fieldName)) continue;
+            for (var item in newItems) {
+              item.setFieldEmpty(fieldName);
+            }
+          }
+        }
+        //TODO: При использовании списка полей для чтения, отключил использование кэш
+        if (useCache) {
+          NsgDataClient.client.addItemsToCache(items: newItems, tag: tag);
+        }
       } else {
         var foundField = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
         if (foundField != null) {
@@ -175,7 +188,9 @@ class NsgDataRequest<T extends NsgDataItem> {
               foundField.addRow(ownerItem, tabItem);
             }
           } else {
-            NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
+            if (useCache) {
+              NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
+            }
           }
         } else {
           print('ERROR: $dataItemType.$name not found');

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import '../nsg_data.dart';
 
@@ -6,7 +7,7 @@ import '../nsg_data.dart';
 class NsgDataImageField extends NsgDataField {
   NsgDataImageField(String name) : super(name);
   @override
-  dynamic get defaultValue => <int>[];
+  dynamic get defaultValue => Uint8List(0);
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {
@@ -22,8 +23,10 @@ class NsgDataImageField extends NsgDataField {
   void setValue(NsgFieldValues fieldValues, dynamic value) {
     if (value is String) {
       fieldValues.fields[name] = base64Decode(value.toString());
-    } else if (value is List<int>) {
+    } else if (value is Uint8List) {
       fieldValues.fields[name] = value;
+    } else if (value is List<int>) {
+      fieldValues.fields[name] = Uint8List.fromList(value);
     }
   }
 }
