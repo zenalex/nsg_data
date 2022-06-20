@@ -421,8 +421,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     var request = NsgDataRequest(dataItemType: dataType);
     var answer = await request.requestItem(
         filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
+
     return answer;
   }
+
+  ///Вызывается после метода refreshItem.
+  ///Можно использовать, например, для обновления связанных контроллеров
+  Future afterRefreshItem(NsgDataItem item, List<String>? referenceList) async {}
 
   ///Перечитать из базы данных текущий объект (selectedItem)
   ///На время чтерния статус контроллера будет loading
@@ -441,6 +446,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //selectedItem = null;
     selectedItem = newItem.clone();
     _backupItem = newItem;
+    await afterRefreshItem(newItem, referenceList);
     change(null, status: RxStatus.success());
   }
 }
