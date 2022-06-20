@@ -102,7 +102,7 @@ class NsgDataProvider {
       }
       if (isDebug) {
         print('HTTP STATUS: ${response.statusCode}');
-        print(response.data);
+        //print(response.data);
       }
 
       return response.data;
