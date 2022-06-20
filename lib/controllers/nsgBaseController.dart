@@ -84,12 +84,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   void Function(NsgApiException)? showException;
 
   set selectedItem(NsgDataItem? newItem) {
-    //Убрал проверку на совпадение значений: т.к. это неправильно при обновлении (перечитывании) значения из БД
-    //if (_selectedItem != newItem) {
-    _selectedItem = newItem;
-    selectedItemChanged.broadcast(null);
-    sendNotify();
-    //}
+    if (_selectedItem != newItem) {
+      _selectedItem = newItem;
+      selectedItemChanged.broadcast(null);
+    }
+    if (status.isSuccess) {
+      sendNotify();
+    }
   }
 
   NsgBaseController(
@@ -180,13 +181,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //await r.retry(() => _requestItems(), onRetry: _updateStatusError, retryIf: retryIf);
     //} else {
     await _requestItems();
+    sendNotify();
     //}
   }
 
   ///Обновление данных
   Future refreshData() async {
     change(null, status: RxStatus.loading());
-    await requestItems();
+    await _requestItems();
     change(null, status: RxStatus.success());
   }
 
@@ -210,14 +212,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         if (useDataCache) dataCache = newItemsList;
       }
       dataItemList = filter(newItemsList);
-      if (!dataItemList.contains(selectedItem)) selectedItem = null;
-      //notify builders
-      sendNotify();
+      if (selectedItem != null && !dataItemList.contains(selectedItem)) selectedItem = null;
       if (selectedItem == null && autoSelectFirstItem && dataItemList.isNotEmpty) {
         selectedItem = dataItemList[0];
       }
       //service method for descendants
       afterUpdate();
+      // 20.06.2022 Зачем посылать refresh, если он будет отправлен позже в requestItems
+      // sendNotify();
     } on Exception catch (e) {
       _updateStatusError(e);
     }
@@ -359,9 +361,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
   void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
-    selectedItem = element;
     if (needRefreshSelectedItem) {
-      refreshSelectedItem(referenceList);
+      setAndRefreshSelectedItem(element, referenceList);
+    } else {
+      selectedItem = element;
     }
 
     Get.toNamed(pageName);
@@ -370,8 +373,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Close item page and restore current (selectedItem) item from backup
   void itemPageCancel() {
     if (_backupItem != null) {
-      selectedItem = null;
       selectedItem = _backupItem;
+      selectedItemChanged.broadcast(null);
       _backupItem = null;
     }
     Get.back();
@@ -422,12 +425,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///На время чтерния статус контроллера будет loading
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future refreshSelectedItem(List<String>? referenceList) async {
-    if (selectedItem == null) return;
+  Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
     change(null, status: RxStatus.loading());
 
-    var newItem = await refreshItem(selectedItem!, referenceList);
-    var index = dataItemList.indexOf(selectedItem!);
+    var newItem = await refreshItem(item, referenceList);
+    var index = dataItemList.indexOf(item);
     if (index >= 0) {
       dataItemList.replaceRange(index, index + 1, [newItem]);
     }

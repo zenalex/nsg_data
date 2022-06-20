@@ -8,15 +8,12 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   List<T> get items => dataItemList.cast<T>();
 
   ///Первый элемент из items. Если items  пустой: вернет новый пустой элемент данных  типа T
-  T get firstItem => (dataItemList.isEmpty)
-      ? NsgDataClient.client.getNewObject(dataType) as T
-      : items[0];
+  T get firstItem => (dataItemList.isEmpty) ? NsgDataClient.client.getNewObject(dataType) as T : items[0];
 
   ///Текущий элемент (например, элемент для отображения на форме элемента)
   ///Представляет из себя типизированный аналой selectedItem.
   ///Если selectedItem null, то вернет пустое значение типа T
-  T get currentItem =>
-      ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
+  T get currentItem => ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
 
   ///Установка текущего элемента для контроллера
   set currentItem(T item) => selectedItem = item;
@@ -59,16 +56,14 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   void gotoPrevItem() {
     var index = items.indexOf(currentItem);
     if (index == 0) return;
-    currentItem = items[index - 1];
-    refreshSelectedItem(null);
+    setAndRefreshSelectedItem(items[index - 1], null);
   }
 
   ///Сделать текущим следующий элемент
   void gotoNextItem() {
     var index = items.indexOf(currentItem);
     if (index >= items.length - 1) return;
-    currentItem = items[index + 1];
-    refreshSelectedItem(null);
+    setAndRefreshSelectedItem(items[index + 1], null);
   }
 
   ///Есть ли в списке элементы до текущего
@@ -112,8 +107,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     //Если выставлен признак создавать на сервере, создаем запрос на сервер
     if (elem.createOnServer) {
       var request = NsgDataRequest<T>();
-      return await request.requestItem(
-          method: 'POST', function: elem.apiRequestItems + '/Create');
+      return await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
     }
     return elem;
   }
