@@ -334,7 +334,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   void masterValueChanged(EventArgs? args) async {
     //if (!matchFilter(selectedItem)) selectedItem = null;
-    await refreshData();
+    if (masterController != null && masterController!.selectedItem != null) {
+      await refreshData();
+    }
   }
 
   Widget obxBase(
@@ -374,7 +376,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   void itemPageCancel() {
     if (_backupItem != null) {
       selectedItem = _backupItem;
-      selectedItemChanged.broadcast(null);
+      //20.06.2022 Попытка убрать лишнее обновление
+      //selectedItemChanged.broadcast(null);
       _backupItem = null;
     }
     Get.back();
