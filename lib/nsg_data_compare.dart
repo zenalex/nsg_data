@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:nsg_data/nsg_comparison_operator.dart';
 
+import 'nsg_data.dart';
+
 enum NsgLogicalOperator { And, Or }
 
 class NsgCompare {
@@ -108,10 +110,13 @@ class NsgCompareParam {
     var map = <String, dynamic>{};
     map["Name"] = parameterName;
     map["ComparisonOperator"] = comparisonOperator.value;
-    if (parameterValue is DateTime)
+    if (parameterValue is DateTime) {
       map["Value"] = (parameterValue as DateTime).toIso8601String();
-    else
+    } else if (parameterValue is NsgDataItem) {
+      map["Value"] = (parameterValue as NsgDataItem).id;
+    } else {
       map["Value"] = parameterValue;
+    }
     return map;
   }
 
