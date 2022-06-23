@@ -114,6 +114,12 @@ class NsgCompareParam {
       map["Value"] = (parameterValue as DateTime).toIso8601String();
     } else if (parameterValue is NsgDataItem) {
       map["Value"] = (parameterValue as NsgDataItem).id;
+    } else if (parameterValue is List && (parameterValue as List).length > 0 && (parameterValue as List).first is NsgDataItem) {
+      var idList = <String>[];
+      for (NsgDataItem e in parameterValue as List) {
+        idList.add(e.id);
+      }
+      map["Value"] = idList;
     } else {
       map["Value"] = parameterValue;
     }

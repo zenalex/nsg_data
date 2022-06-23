@@ -208,7 +208,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
         //service method for descendants
         currentStatus = RxStatus.success();
-        afterRequestItems(newItemsList);
+        await afterRequestItems(newItemsList);
         if (useDataCache) dataCache = newItemsList;
       }
       dataItemList = filter(newItemsList);
@@ -217,7 +217,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         selectedItem = dataItemList[0];
       }
       //service method for descendants
-      afterUpdate();
+      await afterUpdate();
       // 20.06.2022 Зачем посылать refresh, если он будет отправлен позже в requestItems
       // sendNotify();
     } on Exception catch (e) {
@@ -260,10 +260,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///is calling after new Items are putted in itemList
-  void afterUpdate() {}
+  Future afterUpdate() async {}
 
   ///is calling after new items are got from API before they are placed to ItemList
-  void afterRequestItems(List<NsgDataItem> newItemsList) {}
+  Future afterRequestItems(List<NsgDataItem> newItemsList) async {}
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
