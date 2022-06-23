@@ -88,9 +88,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       _selectedItem = newItem;
       selectedItemChanged.broadcast(null);
     }
-    if (status.isSuccess) {
-      sendNotify();
-    }
+    //Убрал 23,06,2022 вроде как лишнее обновление
+    // if (status.isSuccess) {
+    //   sendNotify();
+    // }
   }
 
   NsgBaseController(

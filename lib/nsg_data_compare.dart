@@ -112,6 +112,8 @@ class NsgCompareParam {
     map["ComparisonOperator"] = comparisonOperator.value;
     if (parameterValue is DateTime) {
       map["Value"] = (parameterValue as DateTime).toIso8601String();
+    } else if (parameterValue is NsgEnum) {
+      map["Value"] = (parameterValue as NsgEnum).value;
     } else if (parameterValue is NsgDataItem) {
       map["Value"] = (parameterValue as NsgDataItem).id;
     } else if (parameterValue is List && (parameterValue as List).length > 0 && (parameterValue as List).first is NsgDataItem) {
