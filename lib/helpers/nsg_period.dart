@@ -2,58 +2,60 @@ import 'package:jiffy/jiffy.dart';
 import 'package:nsg_data/helpers/nsg_data_format.dart';
 import 'package:nsg_data/nsg_data.dart';
 
-class NsgPeriodType {
-  final int type;
-  const NsgPeriodType(this.type);
-  static const NsgPeriodType year = NsgPeriodType(1);
-  static const NsgPeriodType quarter = NsgPeriodType(2);
-  static const NsgPeriodType month = NsgPeriodType(3);
-  static const NsgPeriodType week = NsgPeriodType(4);
-  static const NsgPeriodType day = NsgPeriodType(5);
-  static const NsgPeriodType period = NsgPeriodType(6);
-  static const NsgPeriodType periodWidthTime = NsgPeriodType(7);
+enum NsgPeriodType {
+  year(1),
+  quarter(2),
+  month(3),
+  week(4),
+  day(5),
+  period(6),
+  periodWidthTime(7);
 
-  @override
-  bool operator ==(Object other) => other is NsgPeriodType && equal(other);
-  bool equal(NsgPeriodType other) {
-    return other.type == type;
-  }
-
-  @override
-  int get hashCode {
-    return type;
-  }
+  final int periodType;
+  const NsgPeriodType(this.periodType);
 }
 
+///Класс для задания фиолтра по периоду. Используется, например, в фильтре контроллера данных
 class NsgPeriod {
+  ///дата начала периода
   DateTime beginDate = Jiffy(DateTime.now()).startOf(Units.MONTH).dateTime;
+
+  ///Дата окончания периода
   DateTime endDate = Jiffy(DateTime.now()).endOf(Units.MONTH).dateTime;
+
+  ///Текстовое представление периода. В случае учета веремен, время в отображении не указыватеся
   String dateText = '';
+
+  ///Текстовое представление периода. В случае учета веремен, время будет отображено в периоде
   String dateWidgetText = '';
+
+  ///Тип периода (определяится автоматически по заданным началу и концу периода)
   NsgPeriodType get type => _detectPeriodType();
 
+  ///Выбрать следующий период
+  ///Например, если период месяц - будет выбран следующий месяц
   void plus() {
-    switch (type.type) {
-      case 1:
+    switch (type) {
+      case NsgPeriodType.year:
         setToYear(Jiffy(beginDate).add(years: 1).dateTime);
         break;
-      case 2:
+      case NsgPeriodType.quarter:
         setToQuarter(Jiffy(beginDate).add(months: 3).dateTime);
         break;
-      case 3:
+      case NsgPeriodType.month:
         setToMonth(Jiffy(beginDate).add(months: 1).dateTime);
         break;
-      case 4:
+      case NsgPeriodType.week:
         setToWeek(Jiffy(beginDate).add(days: 7).dateTime);
         break;
-      case 5:
+      case NsgPeriodType.day:
         setToDay(Jiffy(beginDate).add(days: 1).dateTime);
         break;
-      case 6:
+      case NsgPeriodType.period:
         beginDate = Jiffy(beginDate).add(days: 1).dateTime;
         endDate = Jiffy(beginDate).add(days: 1).dateTime;
         break;
-      case 7:
+      case NsgPeriodType.periodWidthTime:
         beginDate = Jiffy(beginDate).add(days: 1).dateTime;
         endDate = Jiffy(beginDate).add(days: 1).dateTime;
         break;
@@ -63,28 +65,30 @@ class NsgPeriod {
     }
   }
 
+  ///Выбрать предыдущий период
+  ///Например, если период месяц - будет выбран предыдущий месяц
   void minus() {
-    switch (type.type) {
-      case 1:
+    switch (type) {
+      case NsgPeriodType.year:
         setToYear(Jiffy(beginDate).subtract(years: 1).dateTime);
         break;
-      case 2:
+      case NsgPeriodType.quarter:
         setToQuarter(Jiffy(beginDate).subtract(months: 3).dateTime);
         break;
-      case 3:
+      case NsgPeriodType.month:
         setToMonth(Jiffy(beginDate).subtract(months: 1).dateTime);
         break;
-      case 4:
+      case NsgPeriodType.week:
         setToWeek(Jiffy(beginDate).subtract(days: 7).dateTime);
         break;
-      case 5:
+      case NsgPeriodType.day:
         setToDay(Jiffy(beginDate).subtract(days: 1).dateTime);
         break;
-      case 6:
+      case NsgPeriodType.period:
         beginDate = Jiffy(beginDate).subtract(days: 1).dateTime;
         endDate = Jiffy(beginDate).subtract(days: 1).dateTime;
         break;
-      case 7:
+      case NsgPeriodType.periodWidthTime:
         beginDate = Jiffy(beginDate).subtract(days: 1).dateTime;
         endDate = Jiffy(beginDate).subtract(days: 1).dateTime;
         break;
@@ -94,27 +98,29 @@ class NsgPeriod {
     }
   }
 
+  ///Залать текстовое представление периода
+  ///Возможно, надо заменить переменные на геттеры
   void setDateText() {
-    switch (type.type) {
-      case 1:
+    switch (type) {
+      case NsgPeriodType.year:
         dateText = dateWidgetText = NsgDateFormat.dateFormat(beginDate, format: 'yyyy г.');
         break;
-      case 2:
+      case NsgPeriodType.quarter:
         dateText = dateWidgetText = NsgDateFormat.dateFormat(beginDate, format: getQuarter(beginDate).toString() + ' квартал yyyy г.');
         break;
-      case 3:
+      case NsgPeriodType.month:
         dateText = dateWidgetText = NsgDateFormat.dateFormat(beginDate, format: 'MMM yyyy г.');
         break;
-      case 4:
+      case NsgPeriodType.week:
         dateText = dateWidgetText = NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
         break;
-      case 5:
+      case NsgPeriodType.day:
         dateText = dateWidgetText = NsgDateFormat.dateFormat(beginDate, format: 'dd MMMM yyyy г.');
         break;
-      case 6:
+      case NsgPeriodType.period:
         dateText = dateWidgetText = NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
         break;
-      case 7:
+      case NsgPeriodType.periodWidthTime:
         dateText = NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
         dateWidgetText = NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy (HH:mm) - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy (HH:mm)');
         break;
@@ -124,52 +130,62 @@ class NsgPeriod {
     }
   }
 
+  ///Установить тип периода год
+  ///Будет установлен интервал с первого до последнего дня года. Год будет взят из переденной даты
   void setToYear(DateTime date) {
     beginDate = Jiffy(date).startOf(Units.YEAR).dateTime;
     endDate = Jiffy(beginDate).endOf(Units.YEAR).dateTime;
     setDateText();
   }
 
+  ///Установить тип периода квартал
+  ///Будет установлен интервал с первого до последнего дня квартала. Квартал будет взят из переденной даты
   void setToQuarter(DateTime date) {
     beginDate = Jiffy(DateTime(date.year)).add(months: (getQuarter(date) - 1) * 3).dateTime;
     endDate = Jiffy(beginDate).add(months: 3).endOf(Units.MONTH).dateTime;
     setDateText();
   }
 
+  ///Установить тип периода месяц
+  ///Будет установлен интервал с первого до последнего дня месяца. Месяц будет взят из переденной даты
   void setToMonth(DateTime date) {
     beginDate = Jiffy(date).startOf(Units.MONTH).dateTime;
     endDate = Jiffy(beginDate).endOf(Units.MONTH).dateTime;
     setDateText();
   }
 
+  ///Установить тип периода неделя
+  ///Будет установлен интервал с первого до последнего дня недели. Неделя будет взят из переденной даты
   void setToWeek(DateTime date) {
     beginDate = Jiffy(date).startOf(Units.WEEK).dateTime;
     endDate = Jiffy(beginDate).endOf(Units.WEEK).dateTime;
     setDateText();
   }
 
+  ///Установить тип периода год
+  ///Будет установлен интервал с начала по конец суток, взятых из переденной даты
   void setToDay(DateTime date) {
     beginDate = Jiffy(date).startOf(Units.DAY).dateTime;
     endDate = Jiffy(beginDate).endOf(Units.DAY).dateTime;
     setDateText();
   }
 
+  ///Установить произвельный период
+  ///Период будет задан от начала дня первой даты до конца дня последней
   void setToPeriod(NsgPeriod p) {
     beginDate = Jiffy(p.beginDate).startOf(Units.DAY).dateTime;
     endDate = Jiffy(p.endDate).endOf(Units.DAY).dateTime;
     setDateText();
   }
 
+  ///Установить произвольный период с учетов времени
   void setToPeriodWithTime(NsgPeriod p) {
     beginDate = p.beginDate;
     endDate = p.endDate;
     setDateText();
   }
 
-  // DateTime dateZeroTime(DateTime date) {
-  //   return DateTime(date.year, date.month, date.day);
-  // }
-
+  ///Определить номер квартала по дате
   int getQuarter(DateTime date) {
     int kvartal = (date.month / 3).ceil();
     return kvartal;
