@@ -11,6 +11,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
   @override
   dynamic get defaultValue => <T>[];
 
+  @override
   Type get referentType => List<T>;
 
   @override

@@ -4,4 +4,6 @@ class NsgDataBaseReferenceField<T extends NsgDataItem> extends NsgDataField {
   NsgDataBaseReferenceField(String name) : super(name);
 
   Type get referentElementType => T;
+
+  Type get referentType => NsgDataItem;
 }

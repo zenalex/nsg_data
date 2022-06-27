@@ -16,6 +16,7 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
   @override
   Type get referentElementType => T;
 
+  @override
   Type get referentType => T;
 
   T? getReferent(NsgDataItem dataItem, {bool useCache = true, bool allowNull = false}) {

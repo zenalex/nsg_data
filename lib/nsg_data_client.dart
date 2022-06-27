@@ -20,8 +20,7 @@ class NsgDataClient {
   }
 
   NsgFieldList getFieldList(Type itemType) {
-    if (_registeredItems.containsKey(itemType.toString()))
-      return _fieldList[itemType.toString()]!;
+    if (_registeredItems.containsKey(itemType.toString())) return _fieldList[itemType.toString()]!;
     throw ArgumentError('getFieldList: $itemType not found');
   }
 
@@ -30,8 +29,17 @@ class NsgDataClient {
   }
 
   NsgDataItem getNewObject(Type type) {
-    assert(_registeredItems.containsKey(type.toString()));
-    return _registeredItems[type.toString()]!.getNewObject();
+    return getNewObjectByTypeName(type.toString());
+  }
+
+  NsgDataItem getNewObjectByTypeName(String typeName) {
+    assert(_registeredItems.containsKey(typeName));
+    return _registeredItems[typeName]!.getNewObject();
+  }
+
+  Type getTypeByName(String typeName) {
+    assert(_registeredItems.containsKey(typeName));
+    return _registeredItems[typeName]!.runtimeType;
   }
 
   NsgParamList getParamList(Type itemType) {
@@ -57,17 +65,13 @@ class NsgDataClient {
     return _itemList[type.toString()];
   }
 
-  NsgDataItem? getItemsFromCache(Type type, String id,
-      {bool allowNull = false}) {
+  NsgDataItem? getItemsFromCache(Type type, String id, {bool allowNull = false}) {
     var cache = _getItemsCacheByType(type)!;
     var item = cache.getItem(id);
-    return item == null
-        ? (allowNull ? null : NsgDataClient.client.getNewObject(type))
-        : item.dataItem;
+    return item == null ? (allowNull ? null : NsgDataClient.client.getNewObject(type)) : item.dataItem;
   }
 
-  NsgDataBaseReferenceField? getReferentFieldByFullPath(
-      Type dataType, String fullPath) {
+  NsgDataBaseReferenceField? getReferentFieldByFullPath(Type dataType, String fullPath) {
     var splitedPath = fullPath.split('.');
     var type = dataType;
     var fieldFound = false;

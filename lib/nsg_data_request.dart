@@ -177,9 +177,16 @@ class NsgDataRequest<T extends NsgDataItem> {
         if (foundField != null) {
           var refItems = <NsgDataItem>[];
           data.forEach((m) {
-            var elem = NsgDataClient.client.getNewObject(foundField.referentElementType);
-            elem.fromJson(m as Map<String, dynamic>);
-            refItems.add(elem);
+            if (foundField is NsgDataUntypedReferenceField) {
+              //TODO: 2777777777
+              // var elem = NsgDataClient.client.getNewObject(foundField.referentElementType!);
+              // elem.fromJson(m as Map<String, dynamic>);
+              // refItems.add(elem);
+            } else {
+              var elem = NsgDataClient.client.getNewObject(foundField.referentElementType);
+              elem.fromJson(m as Map<String, dynamic>);
+              refItems.add(elem);
+            }
           });
           allItems.addAll(refItems);
           if (foundField is NsgDataReferenceListField) {
@@ -303,6 +310,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
 
         if (refList.isNotEmpty) {
+          //TODO: 2888888888
           var request = NsgDataRequest(dataItemType: field.referentElementType);
           var cmp = NsgCompare();
           cmp.add(

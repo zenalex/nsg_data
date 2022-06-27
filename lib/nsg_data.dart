@@ -37,3 +37,4 @@ export 'helpers/nsg_data_options.dart';
 export 'helpers/nsg_data_format.dart';
 export 'nsg_request_item_regime.dart';
 export 'package:nsg_data/dataFields/nsg_data_table.dart';
+export 'package:nsg_data/dataFields/untyped_reference_field.dart';
