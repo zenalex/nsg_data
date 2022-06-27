@@ -73,6 +73,15 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///например, в случае отмены редактирования
   NsgDataItem? _backupItem;
 
+  NsgDataItem? _selectedRow;
+
+  ///Текущий строка табличной части объекта, выбранноя для отображения или редактирования
+  NsgDataItem? get selectedRow => _selectedRow;
+
+  ///Сохраненный эелемент для возможности возврата предыдущего значения
+  ///например, в случае отмены редактирования строки
+  NsgDataItem? _backupRow;
+
   ///Флаг отложенной инициализации. Выставляется в true при создании контроллера,
   ///если свойство requestOnInit стоит false. Сбросится при первом вызове метода
   ///requestItems
@@ -160,7 +169,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         element.selectedItemChanged.unsubscribe(masterValueChanged);
       });
     }
-    change(null, status: RxStatus.empty());
+    currentStatus = RxStatus.empty();
+    sendNotify();
     super.onClose();
   }
   // List<NsgDataItem> _itemList;
@@ -188,9 +198,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Обновление данных
   Future refreshData() async {
-    change(null, status: RxStatus.loading());
+    currentStatus = RxStatus.loading();
+    sendNotify();
     await _requestItems();
-    change(null, status: RxStatus.success());
+    currentStatus = RxStatus.success();
+    sendNotify();
   }
 
   Future _requestItems() async {
@@ -386,7 +398,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Close item page and post current (selectedItem) item to databese (server)
   void itemPagePost() async {
-    change(null, status: RxStatus.loading());
+    currentStatus = RxStatus.loading();
+    sendNotify();
     try {
       await _postSelectedItem();
       if (_backupItem != null && dataItemList.contains(_backupItem)) {
@@ -407,8 +420,38 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       }
       rethrow;
     } finally {
-      change(null, status: RxStatus.success());
+      currentStatus = RxStatus.success();
+      sendNotify();
     }
+  }
+
+  ///Open row page to view and edit data
+  ///element saved in backupRow to have possibility revert changes
+  void rowPageOpen(NsgDataItem row, String pageName) {
+    //запоминаем текущию строку в бэкапе на случай отмены редактирования пользователем для возможности вернуть
+    //вернуть результат обратно
+    _selectedRow = row.clone();
+    _backupRow = row;
+
+    Get.toNamed(pageName);
+  }
+
+  ///Close row page and restore current (selectedRow) item from backup
+  void rowPageCancel() {
+    if (_backupRow != null) {
+      _selectedRow = _backupRow;
+      _backupRow = null;
+    }
+    Get.back();
+  }
+
+  ///Close row page and accept current (selectedRow) item to databese (server)
+  void rowPagePost() async {
+    if (selectedRow != null && _backupRow != null) {
+      _backupRow!.copyFieldValues(selectedRow!);
+    }
+    Get.back();
+    sendNotify();
   }
 
   ///Перечитать указанный объект из базы данных
@@ -435,7 +478,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
-    change(null, status: RxStatus.loading());
+    currentStatus = RxStatus.loading();
+    sendNotify();
 
     var newItem = await refreshItem(item, referenceList);
     var index = dataItemList.indexOf(item);
@@ -448,6 +492,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     selectedItem = newItem.clone();
     _backupItem = newItem;
     await afterRefreshItem(newItem, referenceList);
-    change(null, status: RxStatus.success());
+    currentStatus = RxStatus.success();
+    sendNotify();
   }
 }
