@@ -93,14 +93,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   void Function(NsgApiException)? showException;
 
   set selectedItem(NsgDataItem? newItem) {
-    if (_selectedItem != newItem) {
-      _selectedItem = newItem;
+    var itemChanged = _selectedItem != newItem;
+    _selectedItem = newItem;
+    if (itemChanged) {
       selectedItemChanged.broadcast(null);
     }
-    //Убрал 23,06,2022 вроде как лишнее обновление
-    // if (status.isSuccess) {
-    //   sendNotify();
-    // }
   }
 
   NsgBaseController(
@@ -489,7 +486,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
     //вернуть результат обратно
     //selectedItem = null;
-    selectedItem = newItem.clone();
+    _selectedItem = newItem.clone();
     _backupItem = newItem;
     await afterRefreshItem(newItem, referenceList);
     currentStatus = RxStatus.success();
