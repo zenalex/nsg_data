@@ -73,7 +73,7 @@ class UntypedId {
       return;
     }
     var idSplitted = id.split('.');
-    assert(idSplitted.length > 2, 'Id untyped reference не может соодержать больше 2 частей (guid.type)');
+    assert(idSplitted.length <= 2, 'Id untyped reference не может соодержать больше 2 частей (guid.type)');
     guid = idSplitted[0];
     if (idSplitted.length == 2) {
       referentType = NsgDataClient.client.getTypeByName(idSplitted[1]);
