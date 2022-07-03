@@ -82,7 +82,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///На время создания (так как оно может быть связано с запросом на сервер) устанавливает статус контроллера в loading
   ///Для непосредственного создания нового элемента вызывает асинхронный метод doCreateNewItem, который может быть перекрыт
   ///для организации бизнес-логики запросов
-  Future<T> createNewItem() async {
+  Future<T> createNewItemAsync() async {
     change(null, status: RxStatus.loading());
     try {
       var elem = await doCreateNewItem();

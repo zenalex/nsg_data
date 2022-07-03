@@ -71,16 +71,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Сохраненный эелемент для возможности возврата предыдущего значения
   ///например, в случае отмены редактирования
-  NsgDataItem? _backupItem;
-
-  NsgDataItem? _selectedRow;
-
-  ///Текущий строка табличной части объекта, выбранноя для отображения или редактирования
-  NsgDataItem? get selectedRow => _selectedRow;
-
-  ///Сохраненный эелемент для возможности возврата предыдущего значения
-  ///например, в случае отмены редактирования строки
-  NsgDataItem? _backupRow;
+  NsgDataItem? backupItem;
 
   ///Флаг отложенной инициализации. Выставляется в true при создании контроллера,
   ///если свойство requestOnInit стоит false. Сбросится при первом вызове метода
@@ -170,36 +161,21 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     sendNotify();
     super.onClose();
   }
-  // List<NsgDataItem> _itemList;
-  // List<NsgDataItem> get itemList {
-  //   if (_itemList == null) {
-  //     _itemList = <NsgDataItem>[];
-  //     requestItems();
-  //   }
-  //   return _itemList;
-  // }
 
   ///Request Items
   Future requestItems() async {
     lateInit = false;
-    //Зенков 19.06.2022
-    //Думаю, здесь повтор излишен, т.к. он реализован в самом запросе далее
-    //if (autoRepeate) {
-    //final r = RetryOptions(maxAttempts: autoRepeateCount);
-    //await r.retry(() => _requestItems(), onRetry: _updateStatusError, retryIf: retryIf);
-    //} else {
     await _requestItems();
     sendNotify();
-    //}
   }
 
   ///Обновление данных
   Future refreshData() async {
     currentStatus = RxStatus.loading();
     sendNotify();
-    await _requestItems();
-    currentStatus = RxStatus.success();
-    sendNotify();
+    await requestItems();
+    // currentStatus = RxStatus.success();
+    // sendNotify();
   }
 
   Future _requestItems() async {
@@ -384,11 +360,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Close item page and restore current (selectedItem) item from backup
   void itemPageCancel() {
-    if (_backupItem != null) {
-      selectedItem = _backupItem;
+    if (backupItem != null) {
+      selectedItem = backupItem;
       //20.06.2022 Попытка убрать лишнее обновление
       //selectedItemChanged.broadcast(null);
-      _backupItem = null;
+      backupItem = null;
     }
     Get.back();
   }
@@ -399,11 +375,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     sendNotify();
     try {
       await _postSelectedItem();
-      if (_backupItem != null && dataItemList.contains(_backupItem)) {
-        dataItemList.remove(_backupItem!);
+      if (backupItem != null && dataItemList.contains(backupItem)) {
+        dataItemList.remove(backupItem!);
       }
-      if (_backupItem != null) {
-        _backupItem = null;
+      if (backupItem != null) {
+        backupItem = null;
       }
       if (!dataItemList.contains(selectedItem)) {
         dataItemList.add(selectedItem!);
@@ -420,35 +396,6 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       currentStatus = RxStatus.success();
       sendNotify();
     }
-  }
-
-  ///Open row page to view and edit data
-  ///element saved in backupRow to have possibility revert changes
-  void rowPageOpen(NsgDataItem row, String pageName) {
-    //запоминаем текущию строку в бэкапе на случай отмены редактирования пользователем для возможности вернуть
-    //вернуть результат обратно
-    _selectedRow = row.clone();
-    _backupRow = row;
-
-    Get.toNamed(pageName);
-  }
-
-  ///Close row page and restore current (selectedRow) item from backup
-  void rowPageCancel() {
-    if (_backupRow != null) {
-      _selectedRow = _backupRow;
-      _backupRow = null;
-    }
-    Get.back();
-  }
-
-  ///Close row page and accept current (selectedRow) item to databese (server)
-  void rowPagePost() async {
-    if (selectedRow != null && _backupRow != null) {
-      _backupRow!.copyFieldValues(selectedRow!);
-    }
-    Get.back();
-    sendNotify();
   }
 
   ///Перечитать указанный объект из базы данных
@@ -486,8 +433,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
     //вернуть результат обратно
     //selectedItem = null;
-    _selectedItem = newItem.clone();
-    _backupItem = newItem;
+    selectedItem = newItem.clone();
+    backupItem = newItem;
     await afterRefreshItem(newItem, referenceList);
     currentStatus = RxStatus.success();
     sendNotify();
