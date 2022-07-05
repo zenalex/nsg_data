@@ -208,4 +208,9 @@ class NsgPeriod {
     if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.DAY)) && Jiffy(endDate).isSame(Jiffy(endDate).endOf(Units.DAY))) return NsgPeriodType.period;
     return NsgPeriodType.periodWidthTime;
   }
+
+  /// Обнуление даты до начала дня
+  static DateTime beginOfDay(DateTime date) {
+    return Jiffy(date).startOf(Units.DAY).dateTime;
+  }
 }
