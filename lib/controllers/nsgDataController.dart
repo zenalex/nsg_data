@@ -78,6 +78,13 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     return index >= 0 && index < items.length - 1;
   }
 
+  ///Cоздает новый элемент и открывает страницу для его редактирования
+  ///В зависимости от свойства объекта createOnServer создание нового объекта может происходить на сервере
+  void itemNewPageOpen(String pageName) {
+    createNewItemAsync();
+    Get.toNamed(pageName);
+  }
+
   ///Создает новый элемент. Используется, например, при нажатии добавить в форме списка
   ///На время создания (так как оно может быть связано с запросом на сервер) устанавливает статус контроллера в loading
   ///Для непосредственного создания нового элемента вызывает асинхронный метод doCreateNewItem, который может быть перекрыт
