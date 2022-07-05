@@ -90,18 +90,21 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Для непосредственного создания нового элемента вызывает асинхронный метод doCreateNewItem, который может быть перекрыт
   ///для организации бизнес-логики запросов
   Future<T> createNewItemAsync() async {
-    change(null, status: RxStatus.loading());
+    currentStatus = RxStatus.loading();
+    sendNotify();
     try {
       var elem = await doCreateNewItem();
       currentItem = elem;
-      change(null, status: RxStatus.success());
+      currentStatus = RxStatus.success();
+      sendNotify();
       return elem;
     } catch (e) {
       var msg = '';
       if (e is NsgApiException && e.error.message != null) {
         msg = e.error.message!;
       }
-      change(null, status: RxStatus.error(msg));
+      currentStatus = RxStatus.error(msg);
+      sendNotify();
     }
     return NsgDataClient.client.getNewObject(dataType) as T;
   }
