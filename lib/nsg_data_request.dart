@@ -298,19 +298,22 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (!(field is NsgDataBaseReferenceField)) continue;
       var refList = <String>[];
       var refItems = <NsgDataItem>[];
+      var checkItems = <NsgDataItem>[];
 
       if (field is NsgDataReferenceField) {
         for (var item in items) {
-          if (field.getReferent(item, allowNull: true) == null) {
+          var checkedItem = field.getReferent(item, allowNull: true);
+          if (checkedItem == null) {
             var fieldValue = item.getFieldValue(fieldName).toString();
             if (!refList.contains(fieldValue)) {
               refList.add(fieldValue);
             }
+          } else {
+            checkItems.add(checkedItem);
           }
         }
 
         if (refList.isNotEmpty) {
-          //TODO: 2888888888
           var request = NsgDataRequest(dataItemType: field.referentElementType);
           var cmp = NsgCompare();
           cmp.add(
@@ -319,17 +322,19 @@ class NsgDataRequest<T extends NsgDataItem> {
               comparisonOperator: NsgComparisonOperator.inList);
           var filter = NsgDataRequestParams(compare: cmp);
           refItems = await request.requestItems(filter: filter, loadReference: []);
+          checkItems.addAll(refItems);
         }
       } else if (field is NsgDataReferenceListField) {
         for (var item in items) {
           var fieldValue = item.getFieldValue(splitedName[0]);
           refItems.addAll(fieldValue as List<NsgDataItem>);
+          checkItems.addAll(fieldValue);
         }
       }
 
-      if (splitedName.length > 1 && refItems.isNotEmpty) {
+      if (splitedName.length > 1 && checkItems.isNotEmpty) {
         splitedName.removeAt(0);
-        loadAllReferents(refItems, [splitedName.join('.')], tag: tag);
+        await loadAllReferents(checkItems, [splitedName.join('.')], tag: tag);
       }
     }
   }
