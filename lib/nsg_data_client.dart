@@ -28,6 +28,10 @@ class NsgDataClient {
     return (_registeredItems.containsKey(type.toString()));
   }
 
+  bool isRegisteredByName(String typeName) {
+    return (_registeredItems.containsKey(typeName));
+  }
+
   NsgDataItem getNewObject(Type type) {
     return getNewObjectByTypeName(type.toString());
   }

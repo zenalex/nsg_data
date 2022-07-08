@@ -200,7 +200,19 @@ class NsgDataRequest<T extends NsgDataItem> {
             }
           }
         } else {
-          print('ERROR: $dataItemType.$name not found');
+          if (name.length > 0) {
+            name = name.replaceRange(0, 1, name.substring(0, 1).toUpperCase());
+          }
+          if (NsgDataClient.client.isRegisteredByName(name)) {
+            var refItems = <NsgDataItem>[];
+            data.forEach((m) {
+              var elem = NsgDataClient.client.getNewObject(NsgDataClient.client.getTypeByName(name));
+              elem.fromJson(m as Map<String, dynamic>);
+              refItems.add(elem);
+            });
+          } else {
+            print('ERROR: $dataItemType.$name not found');
+          }
         }
       }
     });
