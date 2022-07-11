@@ -269,4 +269,12 @@ class NsgDataItem {
     assert(id.isNotEmpty && id != Guid.Empty);
     setFieldValue(primaryKeyField, Guid.newGuid());
   }
+
+  ///Контроллер ранных, который будет использоваться по-умолчанию для подбора значений в полях ввода
+  ///Может быть перекрыт. Рекомендуется использовать механизм Get.find
+  NsgBaseController? get defaultController => null;
+
+  ///Форма списка для подбора объектов по умолчанию
+  ///Используется в NsgInput, если не задана явно
+  String? get defaultListPage => null;
 }

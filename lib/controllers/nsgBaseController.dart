@@ -7,6 +7,7 @@ import 'package:nsg_data/nsg_comparison_operator.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'nsg_controller_filter.dart';
+import 'nsg_controller_regime.dart';
 
 class NsgBaseController extends GetxController with StateMixin<NsgBaseControllerData> {
   Type dataType;
@@ -86,6 +87,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Если не задана для конкретного контроллера, используется заданная по умолчанию NsgApiException.showExceptionDefault
   ///Последняя, задается в пакете nsg_controls
   void Function(NsgApiException)? showException;
+
+  ///Определяет текущий режим работы контроллера
+  var regime = NsgControllerRegime.view;
+
+  ///Событие о выборе значения пользователем. Срабатывает в режиме selection при выборе пользователем элемента в форме списка
+  void Function(NsgDataItem)? onSelected;
 
   set selectedItem(NsgDataItem? newItem) {
     var itemChanged = _selectedItem != newItem;
@@ -170,6 +177,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future requestItems() async {
     lateInit = false;
     await _requestItems();
+    itemsRequested.broadcast();
     sendNotify();
   }
 

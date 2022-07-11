@@ -106,8 +106,9 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   void createNewItem(String pageName) {
     assert(masterController != null && masterController!.selectedItem != null);
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
-    var currentItem = NsgDataClient.client.getNewObject(dataTable.dataItemType);
+    currentItem = NsgDataClient.client.getNewObject(dataTable.dataItemType) as T;
     dataTable.addRow(currentItem);
+    dataItemList = dataTable.rows;
     Get.toNamed(pageName);
   }
 }

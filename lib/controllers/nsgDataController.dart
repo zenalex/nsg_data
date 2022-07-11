@@ -18,12 +18,6 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Установка текущего элемента для контроллера
   set currentItem(T item) => selectedItem = item;
 
-  ///Определяет текущий режим работы контроллера
-  var regime = NsgControllerRegime.view;
-
-  ///Событие о выборе значения пользователем. Срабатывает в режиме selection при выборе пользователем элемента в форме списка
-  void Function(NsgDataItem)? onSelected;
-
   NsgDataController(
       {bool requestOnInit = true,
       bool useUpdate = false,
