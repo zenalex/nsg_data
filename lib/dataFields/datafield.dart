@@ -1,7 +1,10 @@
 import '../nsg_data.dart';
 
 class NsgDataField {
+  //Имя колонки
   final String name;
+  //Имя колонки для отображения пользователю
+  String presentation = '';
 
   NsgDataField(this.name);
   dynamic convertJsonValue(dynamic jsonValue) {
