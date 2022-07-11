@@ -26,4 +26,8 @@ class NsgDataField {
   void setEmpty(NsgFieldValues fieldValues) {
     if (!fieldValues.emptyFields.contains(name)) fieldValues.emptyFields.add(name);
   }
+
+  String formattedValue(NsgDataItem item) {
+    return item[name].toString();
+  }
 }

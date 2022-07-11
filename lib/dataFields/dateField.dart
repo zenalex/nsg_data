@@ -24,4 +24,9 @@ class NsgDataDateField extends NsgDataField {
       fieldValues.fields[name] = value;
     }
   }
+
+  @override
+  String formattedValue(NsgDataItem item) {
+    return NsgDateFormat.dateFormat(item[name]);
+  }
 }

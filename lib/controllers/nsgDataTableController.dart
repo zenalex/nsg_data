@@ -30,7 +30,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   Future<T> doCreateNewItem() async {
     assert(masterController != null && masterController!.selectedItem != null);
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
-    var row = NsgDataClient.client.getNewObject(dataTable.referentElementType) as T;
+    var row = NsgDataClient.client.getNewObject(dataTable.dataItemType) as T;
     dataTable.addRow(row);
     return row;
   }
@@ -106,7 +106,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   void createNewItem(String pageName) {
     assert(masterController != null && masterController!.selectedItem != null);
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
-    var currentItem = NsgDataClient.client.getNewObject(dataTable.referentElementType);
+    var currentItem = NsgDataClient.client.getNewObject(dataTable.dataItemType);
     dataTable.addRow(currentItem);
     Get.toNamed(pageName);
   }

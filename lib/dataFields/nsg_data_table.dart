@@ -3,12 +3,15 @@ import 'package:nsg_data/helpers/nsg_data_guid.dart';
 import '../nsg_data.dart';
 
 class NsgDataTable<T extends NsgDataItem> {
-  NsgDataTable({required this.owner, required this.fieldName}) : super();
+  NsgDataTable({required this.owner, required this.fieldName}) : super() {
+    assert(owner.getField(fieldName) is NsgDataReferenceListField);
+    dataItemType = (owner.getField(fieldName) as NsgDataReferenceListField).referentElementType;
+  }
 
   final NsgDataItem owner;
   final String fieldName;
 
-  Type get referentElementType => T;
+  Type dataItemType = NsgDataItem;
 
   bool get isEmpty => rows.isEmpty;
   bool get isNotEmpty => rows.isNotEmpty;
