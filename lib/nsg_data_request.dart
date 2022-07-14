@@ -210,6 +210,9 @@ class NsgDataRequest<T extends NsgDataItem> {
               elem.fromJson(m as Map<String, dynamic>);
               refItems.add(elem);
             });
+            if (useCache) {
+              NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
+            }
           } else {
             print('ERROR: $dataItemType.$name not found');
           }
