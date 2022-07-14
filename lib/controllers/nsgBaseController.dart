@@ -201,6 +201,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       List<NsgDataItem> newItemsList;
       if (useDataCache && dataCache.isNotEmpty) {
         newItemsList = dataCache;
+        currentStatus = RxStatus.success();
       } else {
         newItemsList = await doRequestItems();
 
