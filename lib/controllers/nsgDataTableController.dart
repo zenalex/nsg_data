@@ -64,6 +64,9 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       dataItemList.add(selectedItem!);
     }
     Get.back();
+    if (masterController != null) {
+      masterController!.sendNotify();
+    }
     sendNotify();
   }
 

@@ -401,6 +401,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         dataItemList.add(selectedItem!);
       }
       Get.back();
+      if (masterController != null) {
+        masterController!.sendNotify();
+      }
     } catch (ex) {
       //если это NsgApiExceptuion, то отображаем ошибку пользователю
       if (ex is NsgApiException) {
