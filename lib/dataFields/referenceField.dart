@@ -46,6 +46,7 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
     return item!;
   }
 
+  @override
   String formattedValue(NsgDataItem item) {
     var referent = (getReferent(item, allowNull: true));
     if (referent == null) {
