@@ -270,6 +270,9 @@ class NsgDataItem {
     setFieldValue(primaryKeyField, Guid.newGuid());
   }
 
+  ///Заполнение полей объекта при создании нового
+  void newRecordFill() {}
+
   ///Контроллер ранных, который будет использоваться по-умолчанию для подбора значений в полях ввода
   ///Может быть перекрыт. Рекомендуется использовать механизм Get.find
   NsgBaseController? get defaultController => null;

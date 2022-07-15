@@ -112,7 +112,10 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     if (elem.createOnServer) {
       var request = NsgDataRequest<T>();
       return await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
+    } else {
+      elem.newRecordFill();
     }
+
     return elem;
   }
 }
