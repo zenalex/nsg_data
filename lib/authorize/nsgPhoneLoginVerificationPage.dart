@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
 
+import '../models/nsgLoginModel.dart';
 import 'nsgPhoneLoginParams.dart';
 
 class NsgPhoneLoginVerificationPage extends StatelessWidget {
@@ -232,10 +233,14 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
     });
   }
 
-  void checkLoginResult(BuildContext context, int answerCode) {
+  void checkLoginResult(BuildContext context, NsgLoginResponse answer) {
+    var answerCode = answer.errorCode;
     if (answerCode != 0) {
       var needEnterCaptcha = (answerCode > 40100 && answerCode < 40400);
-      var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode);
+      var errorMessage = answer.errorMessage;
+      if (errorMessage == '') {
+        widget.widgetParams!.errorMessageByStatusCode!(answerCode);
+      }
       showError(errorMessage, needEnterCaptcha);
     } else {
       Get.back<bool>(result: true);

@@ -310,7 +310,7 @@ class NsgDataProvider {
     return loginResponse.errorCode;
   }
 
-  Future<int> phoneLogin(String? phoneNumber, String securityCode) async {
+  Future<NsgLoginResponse> phoneLogin(String? phoneNumber, String securityCode) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
@@ -331,7 +331,7 @@ class NsgDataProvider {
         await _prefs.setString(applicationName, token!);
       }
 
-      return loginResponse.errorCode;
+      return loginResponse;
     } catch (e) {
       getx.Get.snackbar('ОШИБКА', 'Произошла ошибка. Попробуйте еще раз.',
           isDismissible: true,
@@ -340,7 +340,7 @@ class NsgDataProvider {
           colorText: Colors.black,
           snackPosition: getx.SnackPosition.BOTTOM);
     }
-    return 500;
+    return NsgLoginResponse(isError: true, errorCode: 500);
   }
 
   Future<bool> logout() async {

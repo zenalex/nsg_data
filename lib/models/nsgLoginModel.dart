@@ -9,6 +9,8 @@ class NsgLoginResponse {
   bool isAnonymous = true;
   int errorCode = 0;
 
+  NsgLoginResponse({this.token = '', this.isError = false, this.errorMessage = '', this.errorCode = 0, this.isAnonymous = true});
+
   NsgLoginResponse.fromJson(Map<String, dynamic>? json) : super() {
     if (json != null) {
       token = json['token'].toString();
