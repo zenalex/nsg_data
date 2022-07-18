@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsgPhoneLoginPage.dart';
 import 'authorize/nsgPhoneLoginParams.dart';
 import 'authorize/nsgPhoneLoginVerificationPage.dart';
+import 'controllers/nsg_cancel_token.dart';
 import 'models/nsgLoginModel.dart';
 import 'nsgDataApiError.dart';
 
@@ -79,6 +80,7 @@ class NsgDataProvider {
       //TODO: сделать настраиваемым параметром
       //final int timeout = timeout,
       final String method = 'GET',
+      final NsgCancelToken? cancelToken,
       FutureOr<void> Function(Exception)? onRetry}) async {
     final _dio = Dio(BaseOptions(
       headers: headers,
@@ -95,10 +97,11 @@ class NsgDataProvider {
     try {
       //TODO: сделать генерацию метода запроса GET/POST
       var method2 = 'POST';
+      var dioCancelToken = cancelToken?.dioCancelToken;
       if (method2 == 'GET') {
-        response = await _dio.get(url!, queryParameters: params);
+        response = await _dio.get(url!, queryParameters: params, cancelToken: dioCancelToken);
       } else if (method2 == 'POST') {
-        response = await _dio.post(url!, queryParameters: params, data: postData);
+        response = await _dio.post(url!, queryParameters: params, data: postData, cancelToken: dioCancelToken);
       }
       if (isDebug) {
         print('HTTP STATUS: ${response.statusCode}');

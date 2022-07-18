@@ -79,6 +79,9 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
   }
 
+  ///Токен текущего запроса. При повторном вызове запроса, предыдущий запрос будет отменен автоматически
+  ///В будущем, планируется добавить механизм, уведомляющий сервер об отмене запраса с целью прекращения подготовки ненужных данных
+  NsgCancelToken? cancelToken;
   Future<List<T>> _requestItems({
     NsgDataRequestParams? filter,
     bool autoAuthorize = true,
@@ -88,6 +91,10 @@ class NsgDataRequest<T extends NsgDataItem> {
     String method = 'GET',
     Map<String, dynamic>? postData,
   }) async {
+    if (cancelToken != null && !cancelToken!.isCalceled) {
+      cancelToken!.calcel();
+    }
+    cancelToken = NsgCancelToken();
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, dynamic>{};
 
@@ -122,7 +129,13 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
     var url = '$function';
     var response = await dataItem.remoteProvider.baseRequestList(
-        function: url, headers: dataItem.remoteProvider.getAuthorizationHeader(), url: url, method: method, params: filterMap, postData: postData);
+        function: url,
+        headers: dataItem.remoteProvider.getAuthorizationHeader(),
+        url: url,
+        method: method,
+        params: filterMap,
+        postData: postData,
+        cancelToken: cancelToken);
     items = <T>[];
     try {
       if (response == '' || response == null) {

@@ -49,7 +49,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Set count of attempts of requesting data
   int autoRepeateCount;
 
-  ///Фильтр. После изменения необходимо вызвать refreshData()
+  ///Фильтр. После изменения необходимо вызвать controllerFilter.refreshControllerWithDelay()
   final controllerFilter = NsgControllerFilter();
 
   ///Запрет редактирования данных пользователей
@@ -150,6 +150,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         controllerFilter.periodFieldName = dataItem.periodFieldName;
       }
     }
+
+    controllerFilter.controller = this;
 
     if (requestOnInit)
       requestItems();
