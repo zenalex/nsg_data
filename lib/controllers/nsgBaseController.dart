@@ -91,6 +91,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Определяет текущий режим работы контроллера
   var regime = NsgControllerRegime.view;
 
+  ///Сколько всего элементов, удовлетворяющим условиям поиска, хранится на сервере
+  ///Если значение null, значит не было успешного запроса к серверу, либо, сервер не вернул общее количество элементов
+  int? totalCount;
+
   ///Событие о выборе значения пользователем. Срабатывает в режиме selection при выборе пользователем элемента в форме списка
   void Function(NsgDataItem)? onSelected;
 
@@ -252,12 +256,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   Future<List<NsgDataItem>> doRequestItems() async {
     var request = NsgDataRequest(dataItemType: dataType);
-    return await request.requestItems(
+    var newItems = await request.requestItems(
         filter: getRequestFilter,
         loadReference: referenceList,
         autoRepeate: autoRepeate,
         autoRepeateCount: autoRepeateCount,
         retryIf: (e) => retryRequestIf(e));
+    totalCount = request.totalCount;
+    return newItems;
   }
 
   ///is calling after new Items are putted in itemList

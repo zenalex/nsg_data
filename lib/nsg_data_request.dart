@@ -6,6 +6,9 @@ import 'nsg_comparison_operator.dart';
 
 class NsgDataRequest<T extends NsgDataItem> {
   List<T> items = <T>[];
+
+  ///Сколько всего элементов, удовлетворяющих условиям поиска, есть на сервере
+  int? totalCount;
   Type dataItemType;
 
   NsgDataRequest({this.dataItemType = NsgDataItem}) {
@@ -169,7 +172,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     var allItems = <NsgDataItem>[];
     var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty);
     maps.forEach((name, data) {
-      if (name == "results") {
+      if (name == 'results') {
         newItems = _fromJsonList(data);
         allItems.addAll(newItems);
         if (newItems.isNotEmpty && filter != null && filter.fieldsToRead != null && filter.fieldsToRead!.isNotEmpty) {
@@ -185,6 +188,8 @@ class NsgDataRequest<T extends NsgDataItem> {
         if (useCache) {
           NsgDataClient.client.addItemsToCache(items: newItems, tag: tag);
         }
+      } else if (name == 'resultsCount') {
+        totalCount = int.tryParse(data) ?? null;
       } else {
         var foundField = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
         if (foundField != null) {
