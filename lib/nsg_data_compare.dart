@@ -54,7 +54,8 @@ class NsgCompare {
     paramList.forEach((param) {
       list.add(param.toJson());
     });
-    map["ParamList"] = list;
+    map['LogicalOperator'] = logicalOperator == NsgLogicalOperator.And ? 1 : 2;
+    map['ParamList'] = list;
     return map;
   }
 
@@ -123,7 +124,7 @@ class NsgCompareParam {
       }
       map["Value"] = idList;
     } else if (parameterValue is NsgCompare) {
-      map["ComparisonOperator"] = NsgComparisonOperator.compare;
+      //map["ComparisonOperator"] = NsgComparisonOperator.compare;
       map["Value"] = (parameterValue as NsgCompare).toJson();
     } else {
       map["Value"] = parameterValue;
