@@ -122,6 +122,9 @@ class NsgCompareParam {
         idList.add(e.id);
       }
       map["Value"] = idList;
+    } else if (parameterValue is NsgCompare) {
+      map["ComparisonOperator"] = NsgComparisonOperator.compare;
+      map["Value"] = (parameterValue as NsgCompare).toJson();
     } else {
       map["Value"] = parameterValue;
     }
@@ -136,21 +139,17 @@ class NsgCompareParam {
   }
 }
 
-
-  // String get type {
-  //   RegExp guidRegExp = RegExp(
-  //       r"[{(]?[0-9A-Fa-f]{8}[-]?(?:[0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$");
-  //   if (guidRegExp.hasMatch(parameterValue)) {
-  //     return 'System.Guid';
-  //   }
-  //   if (parameterValue is double) {
-  //     return 'System.Double';
-  //   }
-  //   if (parameterValue is int) {
-  //     return 'System.Int64';
-  //   }
-  //   return 'System.String';
-  // }
-
-  
-
+// String get type {
+//   RegExp guidRegExp = RegExp(
+//       r"[{(]?[0-9A-Fa-f]{8}[-]?(?:[0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$");
+//   if (guidRegExp.hasMatch(parameterValue)) {
+//     return 'System.Guid';
+//   }
+//   if (parameterValue is double) {
+//     return 'System.Double';
+//   }
+//   if (parameterValue is int) {
+//     return 'System.Int64';
+//   }
+//   return 'System.String';
+// }

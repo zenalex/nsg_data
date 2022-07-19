@@ -216,7 +216,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         await afterRequestItems(newItemsList);
         if (useDataCache) dataCache = newItemsList;
       }
-      dataItemList = filter(newItemsList);
+      //Вызывать локальную фильтрацию имеет смысл не имеет смысла при запросе частичных данных с сервера
+      //Возможно, при загрузке всех данных, имеет смысл активировать локальный поиск вместо серврного, но врядли одновременно
+      dataItemList = newItemsList;
+      //dataItemList = filter(newItemsList);
       if (selectedItem != null && !dataItemList.contains(selectedItem)) selectedItem = null;
       if (selectedItem == null && autoSelectFirstItem && dataItemList.isNotEmpty) {
         selectedItem = dataItemList[0];
@@ -324,6 +327,20 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
       cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.beginDate, comparisonOperator: NsgComparisonOperator.greaterOrEqual);
       cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
+    }
+    //Добавляем условие по строке поиска если фильтр разрешен и открыт
+    if (controllerFilter.isAllowed && controllerFilter.isOpen && controllerFilter.searchString.isNotEmpty) {
+      var dataItem = NsgDataClient.client.getNewObject(dataType);
+      var fieldNames = dataItem.searchFieldList;
+
+      if (fieldNames.isNotEmpty) {
+        var searchCmp = NsgCompare();
+        searchCmp.logicalOperator = NsgLogicalOperator.Or;
+        for (var fieldName in fieldNames) {
+          searchCmp.add(name: fieldName, value: controllerFilter.searchString, comparisonOperator: NsgComparisonOperator.containWords);
+        }
+        cmp.add(name: "SearchStringComparison", value: searchCmp);
+      }
     }
 
     var param = NsgDataRequestParams();

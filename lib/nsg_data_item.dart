@@ -280,4 +280,19 @@ class NsgDataItem {
   ///Форма списка для подбора объектов по умолчанию
   ///Используется в NsgInput, если не задана явно
   String? get defaultListPage => null;
+
+  ///Список полей, по которым производится текстовый поиск при вводе строки поиска пользователем в фильтре
+  ///По умолчанию, поиск идет по всем полям, за исключением нетипизированных ссылок, дат и перечислений
+  ///Также из поиска исключено ключевое поле (там практически всегда Guid)
+  List<String> get searchFieldList {
+    var list = <String>[];
+    for (var fieldName in fieldList.fields.keys) {
+      var field = getField(fieldName);
+      if (field.name == primaryKeyField || field is NsgDataUntypedReferenceField || field is NsgDataEnumReferenceField || field is NsgDataDateField) {
+        continue;
+      }
+      list.add(fieldName);
+    }
+    return list;
+  }
 }
