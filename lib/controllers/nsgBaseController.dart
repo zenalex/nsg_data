@@ -81,7 +81,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Параметры сортировки данных
   ///Устанавляваются компонентами (например, таблицей), передаются в запрос через getRequestFilter
-  String sorting = '';
+  NsgSorting sorting = NsgSorting();
 
   ///Функция для отображения ошибок пользователю
   ///Если не задана для конкретного контроллера, используется заданная по умолчанию NsgApiException.showExceptionDefault
@@ -346,7 +346,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     var param = NsgDataRequestParams();
     param.compare = cmp;
     if (sorting.isNotEmpty) {
-      param.sorting = sorting;
+      param.sorting = sorting.toString();
     }
     return param;
   }
