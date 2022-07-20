@@ -122,11 +122,8 @@ class NsgDataRequest<T extends NsgDataItem> {
       postData.addAll(filter.toJson());
     }
 
-    //Режим работы без дочитывания удален как неиспользуемый
-    //var isLoadReferenceMode = loadReference.isNotEmpty;
-    var sufficsRef = loadReference.isEmpty ? '' : '/References';
     if (function == '') {
-      function = dataItem.remoteProvider.serverUri + dataItem.apiRequestItems + sufficsRef;
+      function = dataItem.remoteProvider.serverUri + dataItem.apiRequestItems;
     } else {
       function = dataItem.remoteProvider.serverUri + function;
     }
