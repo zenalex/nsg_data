@@ -15,7 +15,11 @@ class NsgDataTable<T extends NsgDataItem> {
 
   bool get isEmpty => rows.isEmpty;
   bool get isNotEmpty => rows.isNotEmpty;
-  List<T> get rows => owner.getFieldValue(fieldName) as List<T>;
+  List<T> get rows {
+    var allRows = owner.getFieldValue(fieldName);
+    return (allRows as List).cast();
+  }
+
   int get length => rows.length;
 
   ///Добавить новую строку в табличную часть
