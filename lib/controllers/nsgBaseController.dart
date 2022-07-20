@@ -411,7 +411,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Close item page and post current (selectedItem) item to databese (server)
-  void itemPagePost() async {
+  ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
+  Future itemPagePost({bool goBack = true}) async {
     currentStatus = RxStatus.loading();
     sendNotify();
     try {
@@ -425,7 +426,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (!dataItemList.contains(selectedItem)) {
         dataItemList.add(selectedItem!);
       }
-      Get.back();
+      if (goBack) {
+        Get.back();
+      }
       if (masterController != null) {
         masterController!.sendNotify();
       }
