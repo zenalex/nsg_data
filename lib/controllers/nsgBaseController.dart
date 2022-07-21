@@ -482,7 +482,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //selectedItem = null;
     selectedItem = newItem.clone();
     backupItem = newItem;
-    await afterRefreshItem(newItem, referenceList);
+    await afterRefreshItem(selectedItem!, referenceList);
     currentStatus = RxStatus.success();
     sendNotify();
   }
