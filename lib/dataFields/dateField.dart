@@ -1,3 +1,5 @@
+import 'package:jiffy/jiffy.dart';
+
 import '../nsg_data.dart';
 
 class NsgDataDateField extends NsgDataField {
@@ -28,5 +30,16 @@ class NsgDataDateField extends NsgDataField {
   @override
   String formattedValue(NsgDataItem item) {
     return NsgDateFormat.dateFormat(item[name]);
+  }
+
+  @override
+  int compareTo(NsgDataItem a, NsgDataItem b) {
+    var valueA = Jiffy(a.getFieldValue(name) as DateTime);
+    var valueB = Jiffy(b.getFieldValue(name) as DateTime);
+    return valueA.isAfter(valueB)
+        ? 1
+        : valueB.isAfter(valueA)
+            ? -1
+            : 0;
   }
 }

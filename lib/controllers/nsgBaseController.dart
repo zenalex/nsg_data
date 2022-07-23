@@ -425,6 +425,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       }
       if (!dataItemList.contains(selectedItem)) {
         dataItemList.add(selectedItem!);
+        sortDataItemList();
       }
       if (goBack) {
         Get.back();
@@ -485,5 +486,19 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     await afterRefreshItem(selectedItem!, referenceList);
     currentStatus = RxStatus.success();
     sendNotify();
+  }
+
+  void sortDataItemList() {
+    if (sorting.isEmpty) return;
+    dataItemList.sort(((a, b) {
+      for (var param in sorting.paramList) {
+        var field = a.getField(param.parameterName);
+        int result = field.compareTo(a, b);
+        if (result == 0) continue;
+        if (param.direction == NsgSortingDirection.ascending) return result;
+        return result == 1 ? -1 : 1;
+      }
+      return 0;
+    }));
   }
 }

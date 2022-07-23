@@ -29,4 +29,9 @@ class NsgDataBinaryField extends NsgDataField {
       fieldValues.fields[name] = Uint8List.fromList(value);
     }
   }
+
+  @override
+  int compareTo(NsgDataItem a, NsgDataItem b) {
+    throw Exception('compareTo is not realized for binary field');
+  }
 }
