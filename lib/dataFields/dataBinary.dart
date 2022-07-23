@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import '../nsg_data.dart';
 
 ///Поле - картика. С сервера
-class NsgDataImageField extends NsgDataField {
-  NsgDataImageField(String name) : super(name);
+class NsgDataBinaryField extends NsgDataField {
+  NsgDataBinaryField(String name) : super(name);
   @override
   dynamic get defaultValue => Uint8List(0);
 
