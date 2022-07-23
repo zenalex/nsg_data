@@ -383,7 +383,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (selectedItem == null) return;
     await selectedItem!.post();
 
-    sendNotify();
+    //sendNotify();
   }
 
   ///Open item page to view and edit data
