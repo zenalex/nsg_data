@@ -29,6 +29,8 @@ class NsgDataItem {
   ///У объекта на сервере будет вызван метод Create
   bool get createOnServer => false;
 
+  int loadTime = 0;
+
   ///Чтение полей объекта из JSON
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
@@ -36,6 +38,7 @@ class NsgDataItem {
         setFieldValue(name, jsonValue);
       }
     });
+    loadTime = DateTime.now().microsecondsSinceEpoch;
   }
 
   ///Запись полей объекта в JSON
@@ -223,7 +226,7 @@ class NsgDataItem {
   bool equal(NsgDataItem other) {
     if (other.runtimeType.toString() == runtimeType.toString()) {
       if (primaryKeyField == '') return hashCode == other.hashCode;
-      return (getFieldValue(primaryKeyField) == other.getFieldValue(primaryKeyField));
+      return (getFieldValue(primaryKeyField) == other.getFieldValue(primaryKeyField) && loadTime == other.loadTime);
     }
     return false;
   }
@@ -231,7 +234,7 @@ class NsgDataItem {
   @override
   int get hashCode {
     if (primaryKeyField == '') return super.hashCode;
-    return getFieldValue(primaryKeyField).hashCode;
+    return (getFieldValue(primaryKeyField).toString() + loadTime.toString()).hashCode;
   }
 
   operator [](String name) => getFieldValue(name);
