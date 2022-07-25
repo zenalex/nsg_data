@@ -6,6 +6,7 @@ export 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
 export 'package:nsg_data/dataFields/datafield.dart';
 export 'package:nsg_data/dataFields/boolfield.dart';
 export 'package:nsg_data/dataFields/dataImage.dart';
+export 'package:nsg_data/dataFields/dataBinary.dart';
 export 'package:nsg_data/dataFields/dateField.dart';
 export 'package:nsg_data/dataFields/doubleField.dart';
 export 'package:nsg_data/dataFields/intfield.dart';
