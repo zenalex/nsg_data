@@ -23,7 +23,8 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
     var id = dataItem.getFieldValue(name).toString();
     var uid = UntypedId(id);
 
-    assert(uid.referentType != null, 'Запрос getReferent у untypedReference с невыбранным типом');
+    //Если тип не указан, возвращаем null
+    if (uid.referentType == null) return null;
 
     if (uid.guid == Guid.Empty || uid.guid == '') {
       return NsgDataClient.client.getNewObject(uid.referentType!);
