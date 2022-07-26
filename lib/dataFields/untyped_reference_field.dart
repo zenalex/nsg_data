@@ -77,7 +77,7 @@ class UntypedId {
     assert(idSplitted.length <= 2, 'Id untyped reference не может соодержать больше 2 частей (guid.type)');
     guid = idSplitted[0];
     if (idSplitted.length == 2) {
-      referentType = NsgDataClient.client.getTypeByName(idSplitted[1]);
+      referentType = idSplitted[1].isEmpty ? null : NsgDataClient.client.getTypeByName(idSplitted[1]);
     }
   }
 }

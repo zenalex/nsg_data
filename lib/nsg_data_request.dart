@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
+import 'helpers/nsg_data_guid.dart';
 import 'nsg_comparison_operator.dart';
 
 class NsgDataRequest<T extends NsgDataItem> {
@@ -188,33 +189,34 @@ class NsgDataRequest<T extends NsgDataItem> {
       } else if (name == 'resultsCount') {
         totalCount = int.tryParse(data) ?? null;
       } else {
-        var foundField = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
-        if (foundField != null) {
-          var refItems = <NsgDataItem>[];
-          data.forEach((m) {
-            if (foundField is NsgDataUntypedReferenceField) {
-              //TODO: 2777777777
-              // var elem = NsgDataClient.client.getNewObject(foundField.referentElementType!);
-              // elem.fromJson(m as Map<String, dynamic>);
-              // refItems.add(elem);
-            } else {
-              var elem = NsgDataClient.client.getNewObject(foundField.referentElementType);
-              elem.fromJson(m as Map<String, dynamic>);
-              refItems.add(elem);
-            }
-          });
-          allItems.addAll(refItems);
-          if (foundField is NsgDataReferenceListField) {
-            for (var tabItem in refItems) {
-              var ownerItem = allItems.firstWhere((e) => tabItem.ownerId == e.id);
-              foundField.addRow(ownerItem, tabItem);
-            }
-          } else {
-            if (useCache) {
-              NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
-            }
-          }
-        } else {
+        // var foundField = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
+        // if (foundField != null) {
+        //   var refItems = <NsgDataItem>[];
+        //   data.forEach((m) {
+        //     if (foundField is NsgDataUntypedReferenceField) {
+        //       //TODO: 2777777777
+        //       // var elem = NsgDataClient.client.getNewObject(foundField.referentElementType!);
+        //       // elem.fromJson(m as Map<String, dynamic>);
+        //       // refItems.add(elem);
+        //     } else {
+        //       var elem = NsgDataClient.client.getNewObject(foundField.referentElementType);
+        //       elem.fromJson(m as Map<String, dynamic>);
+        //       refItems.add(elem);
+        //     }
+        //   });
+        //   allItems.addAll(refItems);
+        //   if (foundField is NsgDataReferenceListField) {
+        //     for (var tabItem in refItems) {
+        //       var ownerItem = allItems.firstWhere((e) => tabItem.ownerId == e.id);
+        //       foundField.addRow(ownerItem, tabItem);
+        //     }
+        //   } else {
+        //     if (useCache) {
+        //       NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
+        //     }
+        //   }
+        // } else
+        {
           if (name.length > 0) {
             name = name.replaceRange(0, 1, name.substring(0, 1).toUpperCase());
           }
@@ -335,7 +337,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           var checkedItem = field.getReferent(item, allowNull: true);
           if (checkedItem == null) {
             var fieldValue = item.getFieldValue(fieldName).toString();
-            if (!refList.contains(fieldValue)) {
+            if (!fieldValue.contains(Guid.Empty) && (!refList.contains(fieldValue))) {
               refList.add(fieldValue);
             }
           } else {

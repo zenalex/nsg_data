@@ -42,7 +42,7 @@ class NsgDataClient {
   }
 
   Type getTypeByName(String typeName) {
-    assert(_registeredItems.containsKey(typeName));
+    assert(_registeredItems.containsKey(typeName), 'typeName = $typeName');
     return _registeredItems[typeName]!.runtimeType;
   }
 
