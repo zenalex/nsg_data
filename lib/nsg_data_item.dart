@@ -120,24 +120,25 @@ class NsgDataItem {
     }
     if (value is NsgEnum) {
       value = value.value;
-    }
-    if (value is NsgDataItem) {
-      value = value.getFieldValue(value.primaryKeyField);
-    }
-    if (value is DateTime) {
+    } else if (value is NsgDataItem) {
+      if (fieldList.fields[name] is NsgDataUntypedReferenceField) {
+        value = '${value.getFieldValue(value.primaryKeyField)}.${value.runtimeType}';
+      } else {
+        value = value.getFieldValue(value.primaryKeyField);
+      }
+    } else if (value is DateTime) {
       value = value.toIso8601String();
-    }
-    if (name != primaryKeyField) {
+    } else if (name != primaryKeyField) {
       if (value is String) {
         var field = this.getField(name);
         if (field is NsgDataStringField && value.length > field.maxLength && field.maxLength != 0) {
           value = value.toString().substring(0, field.maxLength);
         }
-      } else if (value is double) {
-        var field = this.getField(name);
-        if (field is NsgDataDoubleField) {
-          value = num.parse(value.toStringAsFixed(field.maxDecimalPlaces));
-        }
+      }
+    } else if (value is double) {
+      var field = this.getField(name);
+      if (field is NsgDataDoubleField) {
+        value = num.parse(value.toStringAsFixed(field.maxDecimalPlaces));
       }
     }
     fieldValues.setValue(this, name, value);

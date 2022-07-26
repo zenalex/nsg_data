@@ -352,6 +352,7 @@ class NsgDataRequest<T extends NsgDataItem> {
               comparisonOperator: NsgComparisonOperator.inList);
           var filter = NsgDataRequestParams(compare: cmp);
           refItems = await request.requestItems(filter: filter, loadReference: []);
+          print('Дочитывание ${field.referentElementType}');
           checkItems.addAll(refItems);
         }
       } else if (field is NsgDataReferenceListField) {
