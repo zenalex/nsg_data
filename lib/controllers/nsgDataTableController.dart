@@ -133,6 +133,8 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       masterController!.sendNotify();
     }
     currentStatus = RxStatus.success();
-    sendNotify();
+    if (!goBack) {
+      sendNotify();
+    }
   }
 }
