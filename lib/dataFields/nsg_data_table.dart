@@ -36,4 +36,12 @@ class NsgDataTable<T extends NsgDataItem> {
     allRows.add(row);
     owner.setFieldValue(fieldName, allRows);
   }
+
+  ///Удалить строку тз табличной части
+  ///dataItem - объект, в поле которого добавляем значение
+  ///row - удаляемая строка
+  bool removeRow(T row) {
+    var allRows = (owner.getFieldValue(fieldName, allowNullValue: true) as List<T>?) ?? <T>[];
+    return allRows.remove(row);
+  }
 }

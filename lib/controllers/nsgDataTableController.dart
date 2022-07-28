@@ -114,4 +114,25 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     dataItemList = dataTable.rows;
     Get.toNamed(pageName);
   }
+
+  ///Удаление текущего элемента
+  ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
+  @override
+  Future itemRemove({bool goBack = true}) async {
+    assert(selectedItem != null, 'itemDelete');
+    assert(masterController != null && masterController!.selectedItem != null, 'itemDelete');
+    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
+    dataTable.removeRow(currentItem);
+    dataItemList = dataTable.rows;
+    selectedItem = null;
+    backupItem = null;
+    if (goBack) {
+      Get.back();
+    }
+    if (masterController != null) {
+      masterController!.sendNotify();
+    }
+    currentStatus = RxStatus.success();
+    sendNotify();
+  }
 }

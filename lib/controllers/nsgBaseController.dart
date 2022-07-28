@@ -504,4 +504,24 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       return 0;
     }));
   }
+
+  ///Удаление текущего элемента
+  ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
+  Future itemRemove({bool goBack = true}) async {
+    // assert(selectedItem != null, 'itemDelete');
+    // if (dataItemList.contains(selectedItem)) {
+    //   dataItemList.remove(selectedItem!);
+    //   sortDataItemList();
+    // }
+    // selectedItem = null;
+    // backupItem = null;
+    // if (goBack) {
+    //   Get.back();
+    // }
+    // if (masterController != null) {
+    //   masterController!.sendNotify();
+    // }
+    // currentStatus = RxStatus.success();
+    // sendNotify();
+  }
 }
