@@ -42,7 +42,7 @@ class NsgControllerFilter {
   bool periodTimeEnabled = false;
 
   ///Задержка на обновление контроллера при изменении текста пользователем
-  Duration updateDalay = Duration(milliseconds: 500);
+  Duration updateDalay = Duration(milliseconds: 1000);
 
   ///Таймер задержки обновления контроллера
   Timer? _updateTimer;
