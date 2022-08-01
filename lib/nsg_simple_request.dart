@@ -82,7 +82,7 @@ class NsgSimpleRequest<T extends Object> {
       postData.addAll(filter.toJson());
     }
 
-    var url = provider.serverUri + '/$function';
+    var url = provider.serverUri + '$function';
     var response = await provider.baseRequestList(
         function: url, headers: provider.getAuthorizationHeader(), url: url, method: method, params: filterMap, postData: postData, cancelToken: cancelToken);
     items = <T>[];
