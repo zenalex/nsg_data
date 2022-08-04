@@ -43,3 +43,4 @@ export 'package:nsg_data/controllers/nsg_default_controller.dart';
 export 'package:nsg_data/controllers/nsg_cancel_token.dart';
 export 'nsg_data_sorting.dart';
 export 'nsg_simple_request.dart';
+export 'helpers/nsg_validate_result.dart';

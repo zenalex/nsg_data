@@ -1,5 +1,6 @@
 import 'package:nsg_data/nsg_data.dart';
 import 'helpers/nsg_data_guid.dart';
+import 'helpers/nsg_validate_result.dart';
 import 'nsg_data_paramList.dart';
 
 class NsgDataItem {
@@ -298,5 +299,15 @@ class NsgDataItem {
       list.add(fieldName);
     }
     return list;
+  }
+
+  ///Проверка является ли поле с именем fieldName обязательным к заполнению пользователем
+  bool isFieldRequired(String fieldName) {
+    return false;
+  }
+
+  ///Метод проверки правильности запорлненности всех полей объекта перед его сохранением
+  NsgValidateResult validateFieldValues() {
+    return NsgValidateResult();
   }
 }
