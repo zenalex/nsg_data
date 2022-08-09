@@ -22,6 +22,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   //Referenses to load
   List<String>? referenceList;
   final selectedItemChanged = Event<EventArgs>();
+  //Запрошено обновление данных
   final itemsRequested = Event<EventArgs>();
 
   ///Use update method on data update
@@ -44,8 +45,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Status of last data request operation
   RxStatus get currentStatus {
-    if (_currentStatus == RxStatus.success()) {
-      if (masterController != null && masterController!.currentStatus != RxStatus.success()) {
+    if (_currentStatus.isSuccess) {
+      if (masterController != null && !masterController!.currentStatus.isSuccess) {
         return masterController!.currentStatus;
       }
     }
@@ -146,6 +147,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //при изменении selectedItem в master контроллере
     if (masterController != null) {
       masterController!.selectedItemChanged.subscribe(masterValueChanged);
+      masterController!.itemsRequested.subscribe(masterItemsRequested);
     }
     if (dependsOnControllers != null) {
       dependsOnControllers!.forEach((element) {
@@ -179,6 +181,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   void onClose() {
     if (masterController != null) {
       masterController!.selectedItemChanged.unsubscribe(masterValueChanged);
+      masterController!.itemsRequested.unsubscribe(masterItemsRequested);
     }
     if (dependsOnControllers != null) {
       dependsOnControllers!.forEach((element) {
@@ -193,6 +196,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Request Items
   Future requestItems() async {
     lateInit = false;
+    itemsRequested.broadcast();
     await _requestItems();
     itemsRequested.broadcast();
     sendNotify();
@@ -486,7 +490,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
     currentStatus = RxStatus.loading();
     sendNotify();
-
+    itemsRequested.broadcast();
     var newItem = await refreshItem(item, referenceList);
     var index = dataItemList.indexOf(item);
     if (index >= 0) {
@@ -500,6 +504,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     await afterRefreshItem(selectedItem!, referenceList);
     currentStatus = RxStatus.success();
     sendNotify();
+    itemsRequested.broadcast();
   }
 
   void sortDataItemList() {
@@ -534,5 +539,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     // }
     // currentStatus = RxStatus.success();
     // sendNotify();
+  }
+
+  void masterItemsRequested(EventArgs? args) {
+    sendNotify();
   }
 }
