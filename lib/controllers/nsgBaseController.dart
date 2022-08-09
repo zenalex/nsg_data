@@ -40,8 +40,19 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Binding rule
   NsgDataBinding? dataBinding;
 
+  RxStatus _currentStatus = RxStatus.loading();
+
   ///Status of last data request operation
-  RxStatus currentStatus = RxStatus.loading();
+  RxStatus get currentStatus {
+    if (_currentStatus == RxStatus.success()) {
+      if (masterController != null && masterController!.currentStatus != RxStatus.success()) {
+        return masterController!.currentStatus;
+      }
+    }
+    return _currentStatus;
+  }
+
+  set currentStatus(RxStatus value) => _currentStatus = value;
 
   ///Enable auto repeate attempts of requesting data
   bool autoRepeate;
