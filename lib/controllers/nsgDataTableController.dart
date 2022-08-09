@@ -100,6 +100,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (masterController == null || masterController!.selectedItem == null) return;
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     dataItemList = dataTable.rows;
+    sortDataItemList();
     currentStatus = RxStatus.success();
     sendNotify();
   }

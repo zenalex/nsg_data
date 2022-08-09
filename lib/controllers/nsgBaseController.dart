@@ -514,7 +514,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         var field = a.getField(param.parameterName);
         int result = field.compareTo(a, b);
         if (result == 0) continue;
-        if (param.direction == NsgSortingDirection.ascending) return result;
+        if (param.direction == NsgSortingDirection.descending) return result;
         return result == 1 ? -1 : 1;
       }
       return 0;
