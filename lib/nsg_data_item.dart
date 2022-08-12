@@ -216,7 +216,7 @@ class NsgDataItem {
   ///Внимание! Проверка осуществляется только по значению ключевого поля
   ///Объект будет считалься пустым, если это значение не задано или является нулевым Guid
   bool get isEmpty {
-    var guidString = getFieldValue(primaryKeyField).toString();
+    var guidString = id;
     return guidString == Guid.Empty || guidString.isEmpty;
   }
 
