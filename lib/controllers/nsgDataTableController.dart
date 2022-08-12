@@ -54,6 +54,11 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   ///Close row page and post current (selectedItem) item to dataTable
   @override
   Future itemPagePost({bool goBack = true}) async {
+    assert(selectedItem != null);
+    if (!selectedItem!.validateFieldValues().isValid) {
+      sendNotify();
+      return;
+    }
     if (backupItem != null && dataItemList.contains(backupItem)) {
       dataItemList.remove(backupItem!);
     }
