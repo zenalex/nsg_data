@@ -504,7 +504,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     await afterRefreshItem(selectedItem!, referenceList);
     currentStatus = RxStatus.success();
     sendNotify();
-    itemsRequested.broadcast();
+    selectedItemChanged.broadcast(null);
   }
 
   void sortDataItemList() {
