@@ -34,23 +34,19 @@ class NsgPhoneLoginPage extends StatelessWidget {
     return logo;
   }
 
-  Widget background() {
+  /*Widget background() {
     return ConstrainedBox(
       constraints: const BoxConstraints.tightFor(),
-      child: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            fit: BoxFit.cover,
-            image: AssetImage('lib/assets/titan-back.png'),
-          ),
-        ),
+      child: Positioned.fill(
+        child: getBackground(),
       ),
     );
-  }
+  }*/
 
-  Widget getBackground() {
-    var background = Image(
-      image: AssetImage('lib/assets/titan-back.png'),
+  Image getBackground() {
+    var background = Image.asset(
+      'lib/assets/titan-back.png',
+      repeat: ImageRepeat.repeat,
     );
     return background;
   }
@@ -131,16 +127,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   Widget _getBody(BuildContext context) {
     return Stack(
       children: <Widget>[
-        ConstrainedBox(
-          constraints: const BoxConstraints.tightFor(),
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                fit: BoxFit.cover,
-                image: AssetImage('lib/assets/titan-back.png'),
-              ),
-            ),
-          ),
+        Positioned.fill(
+          child: widget.loginPage.getBackground(),
         ),
         Align(
           alignment: Alignment.center,
