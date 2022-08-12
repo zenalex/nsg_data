@@ -461,6 +461,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     } finally {
       currentStatus = RxStatus.success();
       sendNotify();
+      selectedItemChanged.broadcast(null);
     }
   }
 
