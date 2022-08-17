@@ -31,6 +31,7 @@ class NsgPhoneLoginParams {
   String Function(int)? errorMessageByStatusCode;
   void Function(BuildContext? context, dynamic parameter)? loginSuccessful;
   void Function()? loginFailed;
+  String? mainPage;
 
   static NsgPhoneLoginParams defaultParams = NsgPhoneLoginParams();
   bool? appbar;
@@ -42,8 +43,7 @@ class NsgPhoneLoginParams {
       this.buttonSize = 42.0,
       this.headerMessage = 'Welcome',
       this.headerMessageVerification = 'Enter security code',
-      this.descriptionMessegeVerification =
-          'We sent code in SMS\nto phone number\n{{phone}}',
+      this.descriptionMessegeVerification = 'We sent code in SMS\nto phone number\n{{phone}}',
       this.headerMessageStyle,
       this.textEnterPhone = 'Enter your phone',
       this.textResendSms = 'Send SMS again',
@@ -52,8 +52,7 @@ class NsgPhoneLoginParams {
       this.textEnterCaptcha = 'Enter captcha text',
       this.textLoginSuccessful = 'Login successful',
       this.textEnterCorrectPhone = 'Enter correct phone',
-      this.textCheckInternet =
-          'Cannot compleate request. Check internet connection and repeate.',
+      this.textCheckInternet = 'Cannot compleate request. Check internet connection and repeate.',
       this.textPhoneField,
       this.cardColor,
       this.textColor = Colors.black,
@@ -66,7 +65,8 @@ class NsgPhoneLoginParams {
       this.errorMessageByStatusCode,
       this.appbar,
       this.headerMessageVisible,
-      this.useCaptcha = true}) {
+      this.useCaptcha = true,
+      this.mainPage}) {
     headerMessageStyle ??= TextStyle(
       fontFamily: 'Roboto',
       fontSize: 20.0,
@@ -143,10 +143,6 @@ class NsgPhoneLoginParams {
   void showError(BuildContext? context, String message) {
     if (message == '') return;
     Get.snackbar('ОШИБКА', message,
-        isDismissible: true,
-        duration: Duration(seconds: 5),
-        backgroundColor: Colors.red[200],
-        colorText: Colors.black,
-        snackPosition: SnackPosition.BOTTOM);
+        isDismissible: true, duration: Duration(seconds: 5), backgroundColor: Colors.red[200], colorText: Colors.black, snackPosition: SnackPosition.BOTTOM);
   }
 }

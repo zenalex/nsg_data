@@ -156,7 +156,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   TextEditingController? _captchaController;
   Widget _getContext(BuildContext context) {
     if (isLoginSuccessfull) {
-      Future.delayed(Duration(seconds: 2)).then((e) => Navigator.pop<bool>(context, true));
+      Future.delayed(Duration(seconds: 2)).then((e) {
+        if (widget.widgetParams != null && widget.widgetParams!.mainPage != null) {
+          Get.offAndToNamed(widget.widgetParams!.mainPage!);
+        } else {
+          Get.back();
+        }
+      });
       return _getContextSuccessful(context);
     }
     _captchaController ??= TextEditingController();
