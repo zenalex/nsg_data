@@ -265,9 +265,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
           await Get.to(provider.loginPage)!.then((value) => Get.back());
         }
       }
-      if (exception.error.code == 500) {
-        return false;
-      }
+      // if (exception.error.code == 500) {
+      //   return false;
+      // }
     }
     if (retryIf != null) {
       return await retryIf!(exception);
