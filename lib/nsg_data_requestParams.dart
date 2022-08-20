@@ -25,8 +25,10 @@ class NsgDataRequestParams {
   ///Имеет смысл использовать только при тонкой оптимизации объема передаваемых данных
   String? fieldsToRead;
 
+  NsgCompare _compare = NsgCompare();
+
   ///Условие на запрашиваемые данные
-  NsgCompare? compare;
+  NsgCompare get compare => _compare;
 
   Map<String, dynamic> toJson() {
     var filter = <String, dynamic>{};
@@ -35,7 +37,7 @@ class NsgDataRequestParams {
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
     if (readNestedField != null) filter['ReadNestedField'] = readNestedField.toString();
     if (fieldsToRead != null) filter['FieldsToRead'] = fieldsToRead.toString();
-    if (compare != null) filter['Compare'] = compare?.toJson();
+    if (compare.isNotEmpty) filter['Compare'] = compare.toJson();
     if (params != null) {
       var paramDict = <String, dynamic>{};
       paramDict.addAll(params!);
@@ -44,5 +46,14 @@ class NsgDataRequestParams {
     return filter;
   }
 
-  NsgDataRequestParams({this.top = 0, this.count = 0, this.params, this.sorting, this.readNestedField, this.compare});
+  ///Заменить действующее условие на новое
+  void replaceCompare(NsgCompare newCompare) {
+    _compare = newCompare;
+  }
+
+  NsgDataRequestParams({this.top = 0, this.count = 0, this.params, this.sorting, this.readNestedField, NsgCompare? compare}) {
+    if (compare != null) {
+      _compare = compare;
+    }
+  }
 }

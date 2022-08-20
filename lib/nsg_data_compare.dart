@@ -25,6 +25,8 @@ class NsgCompare {
     return res;
   }
 
+  bool get isNotEmpty => !isEmpty;
+
   int get length => paramList.length;
 
   /// Возвращаем количество параметров с учетов всех вложенных параметров
@@ -59,35 +61,9 @@ class NsgCompare {
     return map;
   }
 
-  // String toXml() {
-  //   StringBuffer sb =
-  //       StringBuffer('<?xml version=\"1.0\" encoding=\"utf-16\"?>');
-  //   sb.write(
-  //       '<NsgCompare XMLSerializerVersion=\"1\" LogicalOperator=\"$logicalOperator\" type=\"NsgSoft.DataObjects.NsgCompare\">'
-  //       '<Parameters>');
-  //   _writeParamsToXml(sb, paramList);
-  //   sb.write('</Parameters></NsgCompare>');
-  //   return sb.toString();
-  // }
-
-  // void _writeParamsToXml(StringBuffer sb, List<NsgCompareParam> params) {
-  //   params.forEach((param) {
-  //     if (param.parameterValue is NsgCompare) {
-  //       var iCmp = param.parameterValue as NsgCompare;
-  //       sb.write(
-  //           '<NsgCompareParam type=\"NsgSoft.DataObjects.NsgCompareParam\" Enabled=\"${param.enabled}\" Key=\"\" ValueMode=\"Manual\" '
-  //           'ComparisonOperator=\"${param.comparisonOperator}\" ParameterName=\"${param.parameterName}\" Name="${param.name}">'
-  //           '<ParameterValue LogicalOperator="${iCmp.logicalOperator}" type="NsgSoft.DataObjects.NsgCompare"><Parameters>');
-  //       _writeParamsToXml(sb, iCmp.paramList);
-  //       sb.write('</Parameters></ParameterValue></NsgCompareParam>');
-  //     } else {
-  //       sb.write(
-  //           '<NsgCompareParam type=\"NsgSoft.DataObjects.NsgCompareParam\" Enabled=\"${param.enabled}\" Key=\"\" ValueMode=\"Manual\" '
-  //           'ParameterValue=\"${param.type}|${param.parameterValue}\" ComparisonOperator=\"${param.comparisonOperator}\" '
-  //           'ParameterName=\"${param.parameterName}\" Name="${param.name}" />');
-  //     }
-  //   });
-  // }
+  void clear() {
+    paramList.clear();
+  }
 }
 
 class NsgCompareParam {

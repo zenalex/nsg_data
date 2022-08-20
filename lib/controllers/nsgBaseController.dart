@@ -365,7 +365,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
 
     var param = NsgDataRequestParams();
-    param.compare = cmp;
+    param.replaceCompare(cmp);
     if (sorting.isNotEmpty) {
       param.sorting = sorting.toString();
     }
