@@ -347,7 +347,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
     }
     //Добавляем условие по строке поиска если фильтр разрешен и открыт
-    if (controllerFilter.isAllowed && controllerFilter.isOpen && controllerFilter.searchString.isNotEmpty) {
+    if (controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
       var dataItem = NsgDataClient.client.getNewObject(dataType);
       var fieldNames = dataItem.searchFieldList;
 
