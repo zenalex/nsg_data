@@ -1,6 +1,5 @@
 import 'package:nsg_data/nsg_data.dart';
 import 'helpers/nsg_data_guid.dart';
-import 'helpers/nsg_validate_result.dart';
 import 'nsg_data_paramList.dart';
 
 class NsgDataItem {

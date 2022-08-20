@@ -93,7 +93,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   }
 
   @override
-  NsgDataRequestParams? get getRequestFilter {
+  NsgDataRequestParams get getRequestFilter {
     var param = NsgDataRequestParams();
     return param;
   }

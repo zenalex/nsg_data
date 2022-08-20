@@ -332,7 +332,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return filter(list).isNotEmpty;
   }
 
-  NsgDataRequestParams? get getRequestFilter {
+  NsgDataRequestParams get getRequestFilter {
     var cmp = NsgCompare();
     //Добавление условия на мастер-деталь
     if (masterController != null &&
@@ -521,7 +521,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     dataItemList.sort(((a, b) {
       for (var param in sorting.paramList) {
         var fieldA = a.getField(param.parameterName);
-        var fieldB = b.getField(param.parameterName);
+        //var fieldB = b.getField(param.parameterName);
         int result = fieldA.compareTo(a, b);
         if (result == 0) continue;
         if (param.direction == NsgSortingDirection.ascending) return result;
