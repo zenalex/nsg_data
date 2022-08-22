@@ -87,8 +87,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     sendNotify();
     try {
       var elem = await doCreateNewItem();
-      currentItem = elem;
       currentStatus = RxStatus.success();
+      currentItem = elem;
       sendNotify();
       return elem;
     } catch (e) {
