@@ -332,7 +332,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return filter(list).isNotEmpty;
   }
 
-  NsgDataRequestParams? get getRequestFilter {
+  NsgDataRequestParams get getRequestFilter {
     var cmp = NsgCompare();
     //Добавление условия на мастер-деталь
     if (masterController != null &&
@@ -347,7 +347,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
     }
     //Добавляем условие по строке поиска если фильтр разрешен и открыт
-    if (controllerFilter.isAllowed && controllerFilter.isOpen && controllerFilter.searchString.isNotEmpty) {
+    if (controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
       var dataItem = NsgDataClient.client.getNewObject(dataType);
       var fieldNames = dataItem.searchFieldList;
 
@@ -365,7 +365,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
 
     var param = NsgDataRequestParams();
-    param.compare = cmp;
+    param.replaceCompare(cmp);
     if (sorting.isNotEmpty) {
       param.sorting = sorting.toString();
     }
@@ -521,7 +521,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     dataItemList.sort(((a, b) {
       for (var param in sorting.paramList) {
         var fieldA = a.getField(param.parameterName);
-        var fieldB = b.getField(param.parameterName);
+        //var fieldB = b.getField(param.parameterName);
         int result = fieldA.compareTo(a, b);
         if (result == 0) continue;
         if (param.direction == NsgSortingDirection.ascending) return result;

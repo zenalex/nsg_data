@@ -9,7 +9,7 @@ class NsgSimpleRequest<T extends Object> {
   ///Сколько всего элементов, удовлетворяющих условиям поиска, есть на сервере
   int? totalCount;
 
-  NsgSimpleRequest() {}
+  NsgSimpleRequest();
 
   Future<List<T>> requestItems({
     required NsgDataProvider provider,
@@ -96,7 +96,6 @@ class NsgSimpleRequest<T extends Object> {
               assert(data is List);
               items = (data as List).cast();
             }
-            ;
           });
         }
       }
