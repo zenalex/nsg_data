@@ -345,7 +345,8 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
         }
 
-        if (refList.isNotEmpty) {
+        //TODO: временно отключил пост-дочитывание untypedReference
+        if (refList.isNotEmpty && !(field is NsgDataUntypedReferenceField)) {
           var request = NsgDataRequest(dataItemType: field.referentElementType);
           var cmp = NsgCompare();
           cmp.add(
