@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
 import 'helpers/nsg_data_guid.dart';
@@ -323,53 +324,56 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (items.isEmpty || loadReference == null || loadReference.isEmpty) {
       return;
     }
+    try {
+      for (var fieldName in loadReference) {
+        var splitedName = fieldName.split('.');
+        var field = NsgDataClient.client.getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
+        if (!(field is NsgDataBaseReferenceField)) continue;
+        var refList = <String>[];
+        var refItems = <NsgDataItem>[];
+        var checkItems = <NsgDataItem>[];
 
-    for (var fieldName in loadReference) {
-      var splitedName = fieldName.split('.');
-      var field = NsgDataClient.client.getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
-      if (!(field is NsgDataBaseReferenceField)) continue;
-      var refList = <String>[];
-      var refItems = <NsgDataItem>[];
-      var checkItems = <NsgDataItem>[];
-
-      if (field is NsgDataReferenceField) {
-        for (var item in items) {
-          var checkedItem = field.getReferent(item, allowNull: true);
-          if (checkedItem == null) {
-            var fieldValue = item.getFieldValue(fieldName).toString();
-            if (!fieldValue.contains(Guid.Empty) && (!refList.contains(fieldValue))) {
-              refList.add(fieldValue);
+        if (field is NsgDataReferenceField) {
+          for (var item in items) {
+            var checkedItem = field.getReferent(item, allowNull: true);
+            if (checkedItem == null) {
+              var fieldValue = item.getFieldValue(fieldName).toString();
+              if (!fieldValue.contains(Guid.Empty) && (!refList.contains(fieldValue))) {
+                refList.add(fieldValue);
+              }
+            } else {
+              checkItems.add(checkedItem);
             }
-          } else {
-            checkItems.add(checkedItem);
+          }
+
+          //TODO: временно отключил пост-дочитывание untypedReference
+          if (refList.isNotEmpty && !(field is NsgDataUntypedReferenceField)) {
+            var request = NsgDataRequest(dataItemType: field.referentElementType);
+            var cmp = NsgCompare();
+            cmp.add(
+                name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
+                value: refList,
+                comparisonOperator: NsgComparisonOperator.inList);
+            var filter = NsgDataRequestParams(compare: cmp);
+            refItems = await request.requestItems(filter: filter, loadReference: []);
+            print('Дочитывание ${field.referentElementType}');
+            checkItems.addAll(refItems);
+          }
+        } else if (field is NsgDataReferenceListField) {
+          for (var item in items) {
+            var fieldValue = item.getFieldValue(splitedName[0]);
+            refItems.addAll(fieldValue as List<NsgDataItem>);
+            checkItems.addAll(fieldValue);
           }
         }
 
-        //TODO: временно отключил пост-дочитывание untypedReference
-        if (refList.isNotEmpty && !(field is NsgDataUntypedReferenceField)) {
-          var request = NsgDataRequest(dataItemType: field.referentElementType);
-          var cmp = NsgCompare();
-          cmp.add(
-              name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
-              value: refList,
-              comparisonOperator: NsgComparisonOperator.inList);
-          var filter = NsgDataRequestParams(compare: cmp);
-          refItems = await request.requestItems(filter: filter, loadReference: []);
-          print('Дочитывание ${field.referentElementType}');
-          checkItems.addAll(refItems);
-        }
-      } else if (field is NsgDataReferenceListField) {
-        for (var item in items) {
-          var fieldValue = item.getFieldValue(splitedName[0]);
-          refItems.addAll(fieldValue as List<NsgDataItem>);
-          checkItems.addAll(fieldValue);
+        if (splitedName.length > 1 && checkItems.isNotEmpty) {
+          splitedName.removeAt(0);
+          await loadAllReferents(checkItems, [splitedName.join('.')], tag: tag);
         }
       }
-
-      if (splitedName.length > 1 && checkItems.isNotEmpty) {
-        splitedName.removeAt(0);
-        await loadAllReferents(checkItems, [splitedName.join('.')], tag: tag);
-      }
+    } catch (ex) {
+      debugPrint('ERROR LAR-375: $ex');
     }
   }
 }
