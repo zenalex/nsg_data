@@ -34,7 +34,8 @@ class NsgDataDoubleField extends NsgDataField {
       fieldValues.fields[name] = value;
     } else if (value is int) {
       fieldValues.fields[name] = value.toDouble();
+    } else {
+      fieldValues.fields[name] = 0.0;
     }
-    fieldValues.fields[name] = 0.0;
   }
 }
