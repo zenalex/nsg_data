@@ -128,6 +128,11 @@ class NsgDataItem {
       }
     } else if (value is DateTime) {
       value = value.toIso8601String();
+    } else if (value is double) {
+      var field = this.getField(name);
+      if (field is NsgDataDoubleField) {
+        value = num.parse(value.toStringAsFixed(field.maxDecimalPlaces));
+      }
     } else if (name != primaryKeyField) {
       if (value is String) {
         var field = this.getField(name);
@@ -139,11 +144,6 @@ class NsgDataItem {
           field.setValue(fieldValues, value);
           return;
         }
-      }
-    } else if (value is double) {
-      var field = this.getField(name);
-      if (field is NsgDataDoubleField) {
-        value = num.parse(value.toStringAsFixed(field.maxDecimalPlaces));
       }
     }
     fieldValues.setValue(this, name, value);
