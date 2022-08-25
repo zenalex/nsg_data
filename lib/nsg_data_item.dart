@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:nsg_data/nsg_data.dart';
 import 'helpers/nsg_data_guid.dart';
 import 'nsg_data_paramList.dart';
@@ -131,7 +133,7 @@ class NsgDataItem {
     } else if (value is double) {
       var field = this.getField(name);
       if (field is NsgDataDoubleField) {
-        value = num.parse(value.toStringAsFixed(field.maxDecimalPlaces));
+        value = value.nsgRoundToDouble(field.maxDecimalPlaces);
       }
     } else if (name != primaryKeyField) {
       if (value is String) {

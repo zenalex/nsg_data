@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../nsg_data.dart';
 
 class NsgDataDoubleField extends NsgDataField {
@@ -31,6 +33,7 @@ class NsgDataDoubleField extends NsgDataField {
     if (value is String) {
       fieldValues.fields[name] = double.tryParse(value) ?? 0.0;
     } else if (value is double) {
+      value = value.nsgRoundToDouble(maxDecimalPlaces);
       fieldValues.fields[name] = value;
     } else if (value is int) {
       fieldValues.fields[name] = value.toDouble();
