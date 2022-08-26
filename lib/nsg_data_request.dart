@@ -237,7 +237,8 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
       }
     });
-    //await loadAllReferents(newItems, loadReference, tag: tag);
+    //TODO: отключить после исправления дочитывания (пример - hardwareId в ticket.address.hardware)
+    await loadAllReferents(newItems, loadReference, tag: tag);
     return newItems;
   }
 
