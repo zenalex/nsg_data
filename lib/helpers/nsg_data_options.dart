@@ -17,13 +17,17 @@ class NsgDataOptions {
   /// Конфигурация
   Map<String, dynamic> config = Map<String, dynamic>();
   static Map<String, dynamic> _getConfig(File file) {
+    var res = Map<String, dynamic>();
     if (file.existsSync()) {
       if (file.path.endsWith('json')) {
         return (jsonDecode(file.readAsStringSync()) as Map<String, dynamic>);
       }
-      return file.readAsLinesSync().map((e) => MapEntry(e.substring(0, e.indexOf(':')).trim(), e.substring(e.indexOf(':') + 1).trim())) as Map<String, dynamic>;
+      var lines = file.readAsLinesSync();
+      lines.forEach((e) {
+        res[e.substring(0, e.indexOf(':')).trim()] = e.substring(e.indexOf(':') + 1).trim();
+      });
     }
-    return Map<String, dynamic>();
+    return res;
   }
 
   Uri? get serverUri {
@@ -33,7 +37,9 @@ class NsgDataOptions {
     return null;
   }
 
-  NsgDataOptions({configPath = 'config.txt'});
+  NsgDataOptions({configPath = 'config.txt'}) {
+    this.configPath = configPath;
+  }
 
   static NsgDataOptions instance = NsgDataOptions();
 }
