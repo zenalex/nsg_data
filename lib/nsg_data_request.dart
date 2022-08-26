@@ -221,10 +221,10 @@ class NsgDataRequest<T extends NsgDataItem> {
           if (name.length > 0) {
             name = name.replaceRange(0, 1, name.substring(0, 1).toUpperCase());
           }
-          if (NsgDataClient.client.isRegisteredByName(name)) {
+          if (NsgDataClient.client.isRegisteredByServerName(name)) {
             var refItems = <NsgDataItem>[];
             data.forEach((m) {
-              var elem = NsgDataClient.client.getNewObject(NsgDataClient.client.getTypeByName(name));
+              var elem = NsgDataClient.client.getNewObject(NsgDataClient.client.getTypeByServerName(name));
               elem.fromJson(m as Map<String, dynamic>);
               refItems.add(elem);
             });

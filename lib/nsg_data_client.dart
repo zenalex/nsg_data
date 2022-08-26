@@ -8,6 +8,7 @@ class NsgDataClient {
   static NsgDataClient client = NsgDataClient._();
 
   final _registeredItems = <String, NsgDataItem>{};
+  final _registeredServerNames = <String, String>{};
   final _fieldList = <String, NsgFieldList>{};
   final _paramList = <String, NsgParamList>{};
   final _itemList = <String, NsgItemList>{};
@@ -15,6 +16,7 @@ class NsgDataClient {
   void registerDataItem(NsgDataItem item, {NsgDataProvider? remoteProvider}) {
     if (remoteProvider != null) item.remoteProvider = remoteProvider;
     _registeredItems[item.runtimeType.toString()] = item;
+    _registeredServerNames[item.typeName] = item.runtimeType.toString();
     _fieldList[item.runtimeType.toString()] = NsgFieldList();
     item.initialize();
   }
@@ -32,6 +34,10 @@ class NsgDataClient {
     return (_registeredItems.containsKey(typeName));
   }
 
+  bool isRegisteredByServerName(String typeName) {
+    return (_registeredServerNames.containsKey(typeName) && _registeredItems.containsKey(_registeredServerNames[typeName]));
+  }
+
   NsgDataItem getNewObject(Type type) {
     return getNewObjectByTypeName(type.toString());
   }
@@ -44,6 +50,11 @@ class NsgDataClient {
   Type getTypeByName(String typeName) {
     assert(_registeredItems.containsKey(typeName), 'typeName = $typeName');
     return _registeredItems[typeName]!.runtimeType;
+  }
+
+  Type getTypeByServerName(String typeName) {
+    assert(_registeredServerNames.containsKey(typeName), 'typeName = $typeName');
+    return _registeredItems[_registeredServerNames[typeName]]!.runtimeType;
   }
 
   NsgParamList getParamList(Type itemType) {
