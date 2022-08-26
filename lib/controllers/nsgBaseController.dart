@@ -505,6 +505,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     var index = dataItemList.indexOf(item);
     if (index >= 0) {
       dataItemList.replaceRange(index, index + 1, [newItem]);
+    } else if (newItem.isEmpty) {
+      //TODO: ОТОБРАЖЕНИЕ ОШИБКИ
+      //NsgError = RxStatus.error('Ошибка NBC-509 при попытке прочитать с сервера элемент данных');
+      //sendNotify();
+      throw new Exception('Ошибка NBC-509');
     }
     //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
     //вернуть результат обратно
