@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 class NsgDataOptions {
   /// Форматирование даты по умолчанию
   String dateformat = 'dd.MM.yy';
@@ -38,7 +40,7 @@ class NsgDataOptions {
   }
 
   NsgDataOptions({configPath = 'config.txt'}) {
-    this.configPath = configPath;
+    if (!kIsWeb) this.configPath = configPath;
   }
 
   static NsgDataOptions instance = NsgDataOptions();
