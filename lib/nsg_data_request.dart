@@ -237,7 +237,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
       }
     });
-    //await loadAllReferents(newItems, loadReference, tag: tag);
+    await loadAllReferents(newItems, loadReference, tag: tag);
     return newItems;
   }
 
