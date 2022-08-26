@@ -497,6 +497,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
+    assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     currentStatus = RxStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
