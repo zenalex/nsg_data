@@ -33,6 +33,8 @@ class NsgDataItem {
 
   int loadTime = 0;
 
+  String stringTypeName = '';
+
   ///Чтение полей объекта из JSON
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
