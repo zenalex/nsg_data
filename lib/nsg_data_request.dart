@@ -237,7 +237,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
       }
     });
-    await loadAllReferents(newItems, loadReference, tag: tag);
+    //await loadAllReferents(newItems, loadReference, tag: tag);
     return newItems;
   }
 
@@ -248,7 +248,8 @@ class NsgDataRequest<T extends NsgDataItem> {
     List<String> loadReference = [];
     var allFields = NsgDataClient.client.getFieldList(type);
     for (var field in allFields.fields.values) {
-      if (field is NsgDataReferenceField) {
+      //TODO: "ownerId" строкой - косяк
+      if ((field is NsgDataReferenceField || field is NsgDataReferenceListField) && field.name != "ownerId") {
         loadReference.add(field.name);
       }
       if (field is NsgDataReferenceListField) {
