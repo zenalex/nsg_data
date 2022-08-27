@@ -411,6 +411,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
   void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
     } else {
@@ -506,10 +507,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (index >= 0) {
       dataItemList.replaceRange(index, index + 1, [newItem]);
     } else if (newItem.isEmpty) {
-      //TODO: ОТОБРАЖЕНИЕ ОШИБКИ
-      //NsgError = RxStatus.error('Ошибка NBC-509 при попытке прочитать с сервера элемент данных');
-      //sendNotify();
-      throw new Exception('Ошибка NBC-509');
+      currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+      sendNotify();
+      //throw new Exception('Ошибка NBC-509');
     }
     //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
     //вернуть результат обратно
