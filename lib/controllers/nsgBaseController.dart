@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:nsg_data/controllers/nsg_controller_filter.dart';
-import 'package:nsg_data/nsg_comparison_operator.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'nsg_controller_filter.dart';
@@ -265,9 +264,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
           await Get.to(provider.loginPage)!.then((value) => Get.back());
         }
       }
-      // if (exception.error.code == 500) {
-      //   return false;
-      // }
+      if (exception.error.code == 400) {
+        //TODO: высвечивать ошибку? 400
+        return false;
+      }
     }
     if (retryIf != null) {
       return await retryIf!(exception);
@@ -282,7 +282,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         loadReference: referenceList,
         autoRepeate: autoRepeate,
         autoRepeateCount: autoRepeateCount,
-        retryIf: (e) => retryRequestIf(e));
+        userRetryIf: (e) => retryRequestIf(e));
     totalCount = request.totalCount;
     return newItems;
   }

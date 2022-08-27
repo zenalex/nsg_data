@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
-import 'helpers/nsg_data_guid.dart';
-import 'nsg_comparison_operator.dart';
 
 class NsgDataRequest<T extends NsgDataItem> {
   List<T> items = <T>[];
@@ -12,6 +10,7 @@ class NsgDataRequest<T extends NsgDataItem> {
   ///Сколько всего элементов, удовлетворяющих условиям поиска, есть на сервере
   int? totalCount;
   Type dataItemType;
+  FutureOr<bool> Function(Exception)? retryIf;
 
   NsgDataRequest({this.dataItemType = NsgDataItem}) {
     if (dataItemType == NsgDataItem) dataItemType = T;
@@ -53,39 +52,41 @@ class NsgDataRequest<T extends NsgDataItem> {
     dynamic postData,
     bool autoRepeate = false,
     int autoRepeateCount = 1000,
-    FutureOr<bool> Function(Exception)? retryIf,
-    FutureOr<void> Function(Exception)? onRetry,
+    FutureOr<bool> Function(Exception)? userRetryIf,
+    FutureOr<void> Function(Exception)? userOnRetry,
+    NsgCancelToken? cancelToken,
   }) async {
+    this.retryIf = retryIf;
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       return await r.retry(
           () => _requestItems(
-                filter: filter,
-                autoAuthorize: autoAuthorize,
-                tag: tag,
-                loadReference: loadReference,
-                function: function,
-                method: method,
-                postData: postData,
-              ),
-          retryIf: retryIf,
-          onRetry: onRetry);
+              filter: filter,
+              autoAuthorize: autoAuthorize,
+              tag: tag,
+              loadReference: loadReference,
+              function: function,
+              method: method,
+              postData: postData,
+              externalCancelToken: cancelToken),
+          retryIf: _retryIfInternal,
+          onRetry: userOnRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
       return await _requestItems(
-        filter: filter,
-        autoAuthorize: autoAuthorize,
-        tag: tag,
-        loadReference: loadReference,
-        function: function,
-        method: method,
-        postData: postData,
-      );
+          filter: filter,
+          autoAuthorize: autoAuthorize,
+          tag: tag,
+          loadReference: loadReference,
+          function: function,
+          method: method,
+          postData: postData,
+          externalCancelToken: cancelToken);
     }
   }
 
   ///Токен текущего запроса. При повторном вызове запроса, предыдущий запрос будет отменен автоматически
-  ///В будущем, планируется добавить механизм, уведомляющий сервер об отмене запраса с целью прекращения подготовки ненужных данных
+  ///В будущем, планируется добавить механизм, уведомляющий сервер об отмене запроса с целью прекращения подготовки ненужных данных
   NsgCancelToken? cancelToken;
   Future<List<T>> _requestItems({
     NsgDataRequestParams? filter,
@@ -95,11 +96,11 @@ class NsgDataRequest<T extends NsgDataItem> {
     String function = '',
     String method = 'GET',
     Map<String, dynamic>? postData,
+    NsgCancelToken? externalCancelToken,
   }) async {
-    if (cancelToken != null && !cancelToken!.isCalceled) {
+    if (cancelToken != null && externalCancelToken != cancelToken && !cancelToken!.isCalceled) {
       cancelToken!.calcel();
     }
-    cancelToken = NsgCancelToken();
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     var filterMap = <String, dynamic>{};
 
@@ -293,7 +294,8 @@ class NsgDataRequest<T extends NsgDataItem> {
       bool autoRepeate = false,
       int autoRepeateCount = 1000,
       FutureOr<bool> Function(Exception)? retryIf,
-      FutureOr<void> Function(Exception)? onRetry}) async {
+      FutureOr<void> Function(Exception)? onRetry,
+      NsgCancelToken? cancelToken}) async {
     NsgDataRequestParams? newFilter;
     if (addCount) {
       if (filter == null) {
@@ -304,18 +306,18 @@ class NsgDataRequest<T extends NsgDataItem> {
       }
     }
     var data = await requestItems(
-      filter: newFilter,
-      autoAuthorize: autoAuthorize,
-      tag: tag,
-      loadReference: loadReference,
-      function: function,
-      method: method,
-      postData: postData,
-      autoRepeate: autoRepeate,
-      autoRepeateCount: autoRepeateCount,
-      retryIf: retryIf,
-      onRetry: onRetry,
-    );
+        filter: newFilter,
+        autoAuthorize: autoAuthorize,
+        tag: tag,
+        loadReference: loadReference,
+        function: function,
+        method: method,
+        postData: postData,
+        autoRepeate: autoRepeate,
+        autoRepeateCount: autoRepeateCount,
+        userRetryIf: _retryIfInternal,
+        userOnRetry: onRetry,
+        cancelToken: cancelToken);
     if (data.isEmpty) {
       return NsgDataClient.client.getNewObject(dataItemType) as T;
     }
@@ -377,5 +379,12 @@ class NsgDataRequest<T extends NsgDataItem> {
     } catch (ex) {
       debugPrint('ERROR LAR-375: $ex');
     }
+  }
+
+  FutureOr<bool> _retryIfInternal(Exception ex) async {
+    //400 - код ошибки сервера, не предполагающий повторного запроса данных
+    if (ex is NsgApiException && ex.error.code == 400) return false;
+    if (this.retryIf != null) return (await this.retryIf!(ex));
+    return true;
   }
 }

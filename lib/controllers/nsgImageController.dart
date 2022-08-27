@@ -38,7 +38,7 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
       loadReference: referenceList,
       autoRepeate: autoRepeate,
       autoRepeateCount: autoRepeateCount,
-      retryIf: (e) => retryRequestIf(e),
+      userRetryIf: (e) => retryRequestIf(e),
     );
   }
 

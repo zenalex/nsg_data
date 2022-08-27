@@ -111,6 +111,10 @@ class NsgDataProvider {
       return response.data;
     } on DioError catch (e) {
       print('dio error. function: $function, error: ${e.error ??= ''}');
+      if (e.response?.statusCode == 400) {
+        //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
+        throw NsgApiException(NsgApiError(code: 400, message: e.response?.data, errorType: e.type));
+      }
       if (e.response?.statusCode == 401) {
         throw NsgApiException(NsgApiError(code: 401, message: 'Authorization error', errorType: e.type));
       }
@@ -118,6 +122,7 @@ class NsgDataProvider {
         var msg = 'Ошибка 500';
         if (e.response!.data is Map && (e.response!.data as Map).containsKey('message')) {
           var msgParts = e.response!.data['message'].split('---> ');
+          //TODO: в нулевом параметре функция, вызвавшая ишибку - надо где-то показывать
           msg = msgParts.last;
         }
         throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));
