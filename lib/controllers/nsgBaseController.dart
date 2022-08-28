@@ -509,7 +509,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     } else if (newItem.isEmpty) {
       currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
       sendNotify();
-      //throw new Exception('Ошибка NBC-509');
+      throw new Exception('Ошибка NBC-509. Данный объект более недоступен');
     }
     //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
     //вернуть результат обратно

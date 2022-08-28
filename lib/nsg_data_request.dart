@@ -383,7 +383,7 @@ class NsgDataRequest<T extends NsgDataItem> {
 
   FutureOr<bool> _retryIfInternal(Exception ex) async {
     //400 - код ошибки сервера, не предполагающий повторного запроса данных
-    if (ex is NsgApiException && ex.error.code == 400) return false;
+    if (ex is NsgApiException && (ex.error.code == 400 || ex.error.code == 401 || ex.error.code == 500)) return false;
     if (this.retryIf != null) return (await this.retryIf!(ex));
     return true;
   }
