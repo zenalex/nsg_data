@@ -100,7 +100,7 @@ class NsgPeriod {
 
   ///Задать текстовое представление периода
   ///Возможно, надо заменить переменные на геттеры
-  String getDateText(bool withTime) {
+  String getDateText(bool? withTime) {
     switch (type) {
       case NsgPeriodType.year:
         return NsgDateFormat.dateFormat(beginDate, format: 'yyyy г.');
@@ -115,7 +115,7 @@ class NsgPeriod {
       case NsgPeriodType.period:
         return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
       case NsgPeriodType.periodWidthTime:
-        if (withTime) {
+        if (withTime != null && withTime) {
           return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy (HH:mm) - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy (HH:mm)');
         } else {
           return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
