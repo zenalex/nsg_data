@@ -1,7 +1,5 @@
 import 'package:nsg_data/nsg_data.dart';
 
-import '../helpers/nsg_data_guid.dart';
-
 class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceField {
   NsgDataReferenceField(String name) : super(name);
 

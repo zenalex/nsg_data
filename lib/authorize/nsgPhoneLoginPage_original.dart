@@ -21,8 +21,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
     //         widgetParams: widgetParams),
     //   );
     // }
-    return NsgPhoneLoginWidget(this, null, provider,
-        widgetParams: widgetParams);
+    return NsgPhoneLoginWidget(this, null, provider, widgetParams: widgetParams);
   }
 
   AppBar getAppBar(BuildContext context) {
@@ -77,9 +76,7 @@ class NsgPhoneLoginWidget extends StatefulWidget {
   final NsgPhoneLoginParams? widgetParams;
   final NsgDataProvider provider;
 
-  NsgPhoneLoginWidget(this.loginPage, this.verificationPage, this.provider,
-      {this.widgetParams})
-      : super();
+  NsgPhoneLoginWidget(this.loginPage, this.verificationPage, this.provider, {this.widgetParams}) : super();
 }
 
 class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
@@ -186,10 +183,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController? _captchaController;
   Widget _getContext(BuildContext context) {
-    print('GETCONTEXT 189');
     if (isLoginSuccessfull) {
-      Future.delayed(Duration(seconds: 2))
-          .then((e) => Navigator.pop<bool>(context, true));
+      Future.delayed(Duration(seconds: 2)).then((e) => Navigator.pop<bool>(context, true));
       return _getContextSuccessful(context);
     }
     _captchaController ??= TextEditingController();
@@ -241,8 +236,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                               textAlign: TextAlign.left,
                               decoration: InputDecoration(
                                 hintText: widget.widgetParams!.textEnterPhone,
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 5.0, vertical: 13.0),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 13.0),
                                 prefixIcon: Icon(
                                   Icons.smartphone,
                                   size: widget.widgetParams!.iconSize,
@@ -251,10 +245,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                                 border: InputBorder.none,
                               ),
                               onChanged: (value) => phoneNumber = value,
-                              validator: (value) =>
-                                  isPhoneValid(value!) && value.length >= 16
-                                      ? null
-                                      : 'Enter correct phone',
+                              validator: (value) => isPhoneValid(value!) && value.length >= 16 ? null : 'Enter correct phone',
                             ),
                           ),
                         ),
@@ -272,8 +263,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                                     },
                                     child: Icon(
                                       Icons.refresh,
-                                      color:
-                                          widget.widgetParams!.phoneIconColor,
+                                      color: widget.widgetParams!.phoneIconColor,
                                       size: widget.widgetParams!.buttonSize,
                                     )),
                                 Text(secondsLeft.toString())
@@ -298,18 +288,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                                 controller: _captchaController,
                                 decoration: InputDecoration(
                                     fillColor: widget.widgetParams!.fillColor,
-                                    hintText:
-                                        widget.widgetParams!.textEnterCaptcha,
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 5.0, vertical: 10.0),
+                                    hintText: widget.widgetParams!.textEnterCaptcha,
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 10.0),
                                     border: InputBorder.none),
                                 style: widget.widgetParams!.textPhoneField,
-                                textCapitalization:
-                                    TextCapitalization.characters,
+                                textCapitalization: TextCapitalization.characters,
                                 onChanged: (value) => captchaCode = value,
-                                validator: (value) => captchaCode.length == 6
-                                    ? null
-                                    : 'Enter captcha code',
+                                validator: (value) => captchaCode.length == 6 ? null : 'Enter captcha code',
                               ),
                             ),
                           ),
@@ -382,8 +367,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
       gotoNextPage(context);
     }
     var needRefreshCaptcha = false;
-    var errorMessage =
-        widget.widgetParams!.errorMessageByStatusCode!(answerCode);
+    var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode);
     switch (answerCode) {
       case 40102:
         needRefreshCaptcha = true;
@@ -411,12 +395,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     setState(() {
       isSMSRequested = true;
     });
-    widget.provider
-        .phoneLoginRequestSMS(phoneNumber, captchaCode)
-        .then((value) => checkRequestSMSanswer(context, value))
-        .catchError((e) {
-      widget.widgetParams!.showError(context,
-          'Cannot compleate request. Check internet connection and repeate.');
+    widget.provider.phoneLoginRequestSMS(phoneNumber, captchaCode).then((value) => checkRequestSMSanswer(context, value)).catchError((e) {
+      widget.widgetParams!.showError(context, 'Cannot compleate request. Check internet connection and repeate.');
     });
   }
 
@@ -430,8 +410,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
             updateTimer!.cancel();
           }
           secondsLeft = 120;
-          updateTimer = Timer.periodic(
-              Duration(seconds: 1), (Timer t) => captchaTimer(t));
+          updateTimer = Timer.periodic(Duration(seconds: 1), (Timer t) => captchaTimer(t));
         }));
   }
 
@@ -448,15 +427,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void gotoNextPage(BuildContext context) async {
-    var result = await Navigator.push<bool>(context,
-        MaterialPageRoute(builder: (context) => widget.verificationPage!));
+    var result = await Navigator.push<bool>(context, MaterialPageRoute(builder: (context) => widget.verificationPage!));
     if (result ??= false) {
       setState(() {
         isLoginSuccessfull = true;
       });
       if (widget.widgetParams!.loginSuccessful != null) {
-        widget.widgetParams!.loginSuccessful!(
-            context, widget.widgetParams!.parameter);
+        widget.widgetParams!.loginSuccessful!(context, widget.widgetParams!.parameter);
       }
     } else {
       refreshCaptcha();
@@ -474,20 +451,14 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
             ),
             child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                          child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                            Text(
-                              'Login successful',
-                              style: widget.widgetParams!.headerMessageStyle,
-                            )
-                          ]))
-                    ]))));
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                  Expanded(
+                      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[
+                    Text(
+                      'Login successful',
+                      style: widget.widgetParams!.headerMessageStyle,
+                    )
+                  ]))
+                ]))));
   }
 }

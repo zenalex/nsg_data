@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import '../nsg_data.dart';
 
 class NsgDataDoubleField extends NsgDataField {

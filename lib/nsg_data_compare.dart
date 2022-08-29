@@ -1,7 +1,4 @@
 import 'dart:convert';
-
-import 'package:nsg_data/nsg_comparison_operator.dart';
-
 import 'nsg_data.dart';
 
 enum NsgLogicalOperator { And, Or }

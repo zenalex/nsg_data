@@ -1,7 +1,4 @@
-import 'dart:math';
-
 import 'package:nsg_data/nsg_data.dart';
-import 'helpers/nsg_data_guid.dart';
 import 'nsg_data_paramList.dart';
 
 class NsgDataItem {

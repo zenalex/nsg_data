@@ -1,5 +1,3 @@
-import 'package:nsg_data/helpers/nsg_data_guid.dart';
-
 import '../nsg_data.dart';
 
 class NsgDataTable<T extends NsgDataItem> {
