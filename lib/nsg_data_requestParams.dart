@@ -25,6 +25,9 @@ class NsgDataRequestParams {
   ///Имеет смысл использовать только при тонкой оптимизации объема передаваемых данных
   String? fieldsToRead;
 
+  ///Возвращать помеченные на удаление
+  bool showDeletedObjects;
+
   NsgCompare _compare = NsgCompare();
 
   ///Условие на запрашиваемые данные
