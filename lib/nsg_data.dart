@@ -48,3 +48,4 @@ export 'nsg_simple_request.dart';
 export 'helpers/nsg_validate_result.dart';
 export 'helpers/double_extension.dart';
 export 'models/nsg_user_settings.dart';
+export 'controllers/nsg_user_settings_controller.dart';
