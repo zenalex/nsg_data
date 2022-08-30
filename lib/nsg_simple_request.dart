@@ -23,32 +23,33 @@ class NsgSimpleRequest<T extends Object> {
     int autoRepeateCount = 1000,
     FutureOr<bool> Function(Exception)? retryIf,
     FutureOr<void> Function(Exception)? onRetry,
+    NsgCancelToken? cancelToken,
   }) async {
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       return await r.retry(
           () => _requestItems(
-                provider: provider,
-                filter: filter,
-                autoAuthorize: autoAuthorize,
-                tag: tag,
-                function: function,
-                method: method,
-                postData: postData,
-              ),
+              provider: provider,
+              filter: filter,
+              autoAuthorize: autoAuthorize,
+              tag: tag,
+              function: function,
+              method: method,
+              postData: postData,
+              externalCancelToken: cancelToken),
           retryIf: retryIf,
           onRetry: onRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
       return await _requestItems(
-        provider: provider,
-        filter: filter,
-        autoAuthorize: autoAuthorize,
-        tag: tag,
-        function: function,
-        method: method,
-        postData: postData,
-      );
+          provider: provider,
+          filter: filter,
+          autoAuthorize: autoAuthorize,
+          tag: tag,
+          function: function,
+          method: method,
+          postData: postData,
+          externalCancelToken: cancelToken);
     }
   }
 
@@ -63,11 +64,12 @@ class NsgSimpleRequest<T extends Object> {
     String tag = '',
     String method = 'GET',
     Map<String, dynamic>? postData,
+    NsgCancelToken? externalCancelToken,
   }) async {
-    if (cancelToken != null && !cancelToken!.isCalceled) {
+    if (cancelToken != null && externalCancelToken != cancelToken && !cancelToken!.isCalceled) {
       cancelToken!.calcel();
     }
-    cancelToken = NsgCancelToken();
+    cancelToken ??= NsgCancelToken();
     var filterMap = <String, dynamic>{};
 
     if (filter == null) {
