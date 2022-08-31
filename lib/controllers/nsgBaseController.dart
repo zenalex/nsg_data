@@ -14,6 +14,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   bool selectedMasterRequired;
   bool useDataCache;
   bool autoSelectFirstItem;
+  String get serverUri => 'http://alex.nsgsoft.ru:5073';
 
   List<NsgDataItem> dataItemList = <NsgDataItem>[];
   List<NsgDataItem> dataCache = <NsgDataItem>[];
