@@ -115,9 +115,15 @@ class NsgDataItem {
 
   ///Установить значение поля
   void setFieldValue(String name, dynamic value) {
+    //TODO: убрать этот метод, присваивать значения в setValue полей
     if (!fieldList.fields.containsKey(name)) {
       print('object $runtimeType does not contains field $name');
       assert(fieldList.fields.containsKey(name));
+    }
+    var field = this.getField(name);
+    if (field is NsgDataDoubleField) {
+      field.setValue(fieldValues, value);
+      return;
     }
     if (value is NsgEnum) {
       value = value.value;

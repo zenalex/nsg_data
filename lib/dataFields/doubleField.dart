@@ -29,7 +29,8 @@ class NsgDataDoubleField extends NsgDataField {
       return;
     }
     if (value is String) {
-      fieldValues.fields[name] = double.tryParse(value) ?? 0.0;
+      var d = (double.tryParse(value) ?? 0.0).nsgRoundToDouble(maxDecimalPlaces);
+      fieldValues.fields[name] = d;
     } else if (value is double) {
       value = value.nsgRoundToDouble(maxDecimalPlaces);
       fieldValues.fields[name] = value;

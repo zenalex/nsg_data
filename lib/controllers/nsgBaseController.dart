@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:nsg_data/controllers/nsg_controller_filter.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
-import 'nsg_controller_filter.dart';
 import 'nsg_controller_regime.dart';
 
 class NsgBaseController extends GetxController with StateMixin<NsgBaseControllerData> {
@@ -482,6 +481,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (backupItem == null || selectedItem == null) {
       return false;
     }
+    for (var field in selectedItem!.fieldList.fields.keys) {
+      result = selectedItem![field] != backupItem![field];
+      if (result) break;
+    }
 
     return result;
   }
@@ -490,6 +493,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///а затем выполняем Back
   Future itemPageCloseCheck() async {
     assert(selectedItem != null);
+    if (!isModified) {
+      Get.back();
+    }
     if (!selectedItem!.validateFieldValues().isValid) {
       sendNotify();
       return;
