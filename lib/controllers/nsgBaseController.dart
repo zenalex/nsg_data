@@ -475,6 +475,57 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
+  ///Возвращает была ли модифицирована текущая строка контроллера после открытии страницы на редактирование
+  ///По сути, сравнивает selectedItem и backupItem
+  bool get isModified {
+    bool result = false;
+    if (backupItem == null || selectedItem == null) {
+      return false;
+    }
+
+    return result;
+  }
+
+  ///Проверить были ли изменения в объекте, если нет, выполняем Back, если были, то спрашиваем пользователя сохранить изменения или отменить,
+  ///а затем выполняем Back
+  Future itemPageCloseCheck() async {
+    assert(selectedItem != null);
+    if (!selectedItem!.validateFieldValues().isValid) {
+      sendNotify();
+      return;
+    }
+    currentStatus = RxStatus.loading();
+    sendNotify();
+    try {
+      await _postSelectedItem();
+      if (backupItem != null && dataItemList.contains(backupItem)) {
+        dataItemList.remove(backupItem!);
+      }
+      if (backupItem != null) {
+        backupItem = null;
+      }
+      if (!dataItemList.contains(selectedItem)) {
+        dataItemList.add(selectedItem!);
+        sortDataItemList();
+      }
+      Get.back();
+      if (masterController != null) {
+        masterController!.sendNotify();
+      }
+    } catch (ex) {
+      //если это NsgApiExceptuion, то отображаем ошибку пользователю
+      if (ex is NsgApiException) {
+        var func = showException ?? NsgApiException.showExceptionDefault;
+        if (func != null) func(ex);
+      }
+      rethrow;
+    } finally {
+      currentStatus = RxStatus.success();
+      sendNotify();
+      selectedItemChanged.broadcast(null);
+    }
+  }
+
   ///Перечитать указанный объект из базы данных
   ///item - перечитываемый объект
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
@@ -503,24 +554,28 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     currentStatus = RxStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
-    var newItem = await refreshItem(item, referenceList);
-    var index = dataItemList.indexOf(item);
-    if (index >= 0) {
-      dataItemList.replaceRange(index, index + 1, [newItem]);
-    } else if (newItem.isEmpty) {
-      currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+    try {
+      var newItem = await refreshItem(item, referenceList);
+      var index = dataItemList.indexOf(item);
+      if (index >= 0) {
+        dataItemList.replaceRange(index, index + 1, [newItem]);
+      } else if (newItem.isEmpty) {
+        currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+        sendNotify();
+        throw new Exception('Ошибка NBC-509. Данный объект более недоступен');
+      }
+      //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
+      //вернуть результат обратно
+      //selectedItem = null;
+      selectedItem = newItem.clone();
+      backupItem = newItem;
+      await afterRefreshItem(selectedItem!, referenceList);
+      currentStatus = RxStatus.success();
       sendNotify();
-      throw new Exception('Ошибка NBC-509. Данный объект более недоступен');
+      selectedItemChanged.broadcast(null);
+    } on Exception catch (e) {
+      _updateStatusError(e);
     }
-    //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
-    //вернуть результат обратно
-    //selectedItem = null;
-    selectedItem = newItem.clone();
-    backupItem = newItem;
-    await afterRefreshItem(selectedItem!, referenceList);
-    currentStatus = RxStatus.success();
-    sendNotify();
-    selectedItemChanged.broadcast(null);
   }
 
   void sortDataItemList() {
