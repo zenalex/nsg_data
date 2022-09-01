@@ -23,4 +23,11 @@ class NsgDataIntField extends NsgDataField {
       fieldValues.fields[name] = value;
     }
   }
+
+  @override
+  int compareTo(NsgDataItem a, NsgDataItem b) {
+    var valueA = a.getFieldValue(name) as int;
+    var valueB = b.getFieldValue(name) as int;
+    return valueA.compareTo(valueB);
+  }
 }

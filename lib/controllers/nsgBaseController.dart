@@ -494,7 +494,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future itemPageCloseCheck() async {
     assert(selectedItem != null);
     if (!isModified) {
-      Get.back();
+      itemPageCancel();
+      return;
     }
     if (!selectedItem!.validateFieldValues().isValid) {
       sendNotify();
@@ -515,6 +516,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         sortDataItemList();
       }
       Get.back();
+      selectedItem = null;
       if (masterController != null) {
         masterController!.sendNotify();
       }

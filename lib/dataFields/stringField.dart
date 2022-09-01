@@ -1,5 +1,7 @@
 import 'package:nsg_data/dataFields/datafield.dart';
 
+import '../nsg_data.dart';
+
 class NsgDataStringField extends NsgDataField {
   final int maxLength;
 
@@ -12,4 +14,11 @@ class NsgDataStringField extends NsgDataField {
 
   @override
   dynamic get defaultValue => '';
+
+  @override
+  int compareTo(NsgDataItem a, NsgDataItem b) {
+    var valueA = a.getFieldValue(name).toString();
+    var valueB = b.getFieldValue(name).toString();
+    return valueA.compareTo(valueB);
+  }
 }

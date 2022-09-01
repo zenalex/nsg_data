@@ -1,7 +1,6 @@
 import 'package:nsg_data/nsg_data.dart';
 
-class NsgDataEnumReferenceField<T extends NsgEnum>
-    extends NsgDataBaseReferenceField {
+class NsgDataEnumReferenceField<T extends NsgEnum> extends NsgDataBaseReferenceField {
   NsgDataEnumReferenceField(String name) : super(name);
 
   @override
@@ -22,8 +21,14 @@ class NsgDataEnumReferenceField<T extends NsgEnum>
     return (NsgEnum.fromValue(referentType, v!) as T);
   }
 
-  Future<NsgDataItem> getReferentAsync(NsgDataItem dataItem,
-      {bool useCache = true}) async {
+  Future<NsgDataItem> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
     return getReferent(dataItem) as NsgDataItem;
+  }
+
+  @override
+  int compareTo(NsgDataItem a, NsgDataItem b) {
+    var valueA = a.getFieldValue(name) as int;
+    var valueB = b.getFieldValue(name) as int;
+    return valueA.compareTo(valueB);
   }
 }

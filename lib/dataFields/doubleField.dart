@@ -40,4 +40,11 @@ class NsgDataDoubleField extends NsgDataField {
       fieldValues.fields[name] = 0.0;
     }
   }
+
+  @override
+  int compareTo(NsgDataItem a, NsgDataItem b) {
+    var valueA = a.getFieldValue(name) as double;
+    var valueB = b.getFieldValue(name) as double;
+    return valueA.compareTo(valueB);
+  }
 }

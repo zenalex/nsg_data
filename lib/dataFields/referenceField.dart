@@ -53,4 +53,11 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
       return referent.toString();
     }
   }
+
+  @override
+  int compareTo(NsgDataItem a, NsgDataItem b) {
+    var valueA = a.getFieldValue(name).toString();
+    var valueB = b.getFieldValue(name).toString();
+    return valueA.compareTo(valueB);
+  }
 }

@@ -32,6 +32,8 @@ class NsgDataBinaryField extends NsgDataField {
 
   @override
   int compareTo(NsgDataItem a, NsgDataItem b) {
-    throw Exception('compareTo is not realized for binary field');
+    var valueA = a.getFieldValue(name) as Uint8List;
+    var valueB = a.getFieldValue(name) as Uint8List;
+    return valueA.hashCode.compareTo(valueB.hashCode);
   }
 }
