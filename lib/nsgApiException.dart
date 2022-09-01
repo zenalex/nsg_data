@@ -12,6 +12,6 @@ class NsgApiException implements Exception {
 
   @override
   String toString() {
-    return "${error.code} | ${error.message}";
+    return "${error.code} ||| ${error.message}";
   }
 }
