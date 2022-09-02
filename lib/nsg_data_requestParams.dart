@@ -41,6 +41,7 @@ class NsgDataRequestParams {
     if (readNestedField != null) filter['ReadNestedField'] = readNestedField.toString();
     if (fieldsToRead != null) filter['FieldsToRead'] = fieldsToRead.toString();
     if (compare.isNotEmpty) filter['Compare'] = compare.toJson();
+    filter['ShowDeletedObjects'] = showDeletedObjects.toString();
     if (params != null) {
       var paramDict = <String, dynamic>{};
       paramDict.addAll(params!);
