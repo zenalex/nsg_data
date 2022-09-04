@@ -437,10 +437,16 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
   Future itemPagePost({bool goBack = true}) async {
     assert(selectedItem != null);
-    if (!selectedItem!.validateFieldValues().isValid) {
+    var validationResult = selectedItem!.validateFieldValues();
+    if (!validationResult.isValid) {
+      var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
+      if (NsgApiException.showExceptionDefault != null) {
+        NsgApiException.showExceptionDefault!(err);
+      }
       sendNotify();
       return;
     }
+
     currentStatus = RxStatus.loading();
     sendNotify();
     try {
