@@ -46,6 +46,9 @@ class NsgDataPost<T extends NsgDataItem> {
 
     var req = NsgDataRequest<T>(dataItemType: dataItemType);
     _items = (await req.loadDataAndReferences(response, loadReference ?? [], tag)).cast();
+    for (var element in _items) {
+      element.state = NsgDataItemState.fill;
+    }
     return _items;
   }
 

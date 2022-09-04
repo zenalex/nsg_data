@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 
+import '../nsgDataApiError.dart';
+
 ///Контроллер объекта табличной части
 ///Не читает ничего из БД, работает с текущей строкой MasterController
 ///Обязательные параметры к заданию:
@@ -31,7 +33,8 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     assert(masterController != null && masterController!.selectedItem != null);
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     var row = NsgDataClient.client.getNewObject(dataTable.dataItemType) as T;
-    dataTable.addRow(row);
+    row.state = NsgDataItemState.create;
+    //dataTable.addRow(row);
     return row;
   }
 
@@ -55,7 +58,12 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   @override
   Future itemPagePost({bool goBack = true}) async {
     assert(selectedItem != null);
-    if (!selectedItem!.validateFieldValues().isValid) {
+    var validationResult = selectedItem!.validateFieldValues();
+    if (!validationResult.isValid) {
+      var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
+      if (NsgApiException.showExceptionDefault != null) {
+        NsgApiException.showExceptionDefault!(err);
+      }
       sendNotify();
       return;
     }
@@ -68,6 +76,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (!dataItemList.contains(selectedItem)) {
       dataItemList.add(selectedItem!);
     }
+    selectedItem!.state = NsgDataItemState.fill;
     Get.back();
     if (masterController != null) {
       masterController!.sendNotify();
@@ -78,7 +87,13 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   ///Open row page to view and edit data
   @override
   void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
-    selectedItem = element;
+    if (backupItem == null) {
+      selectedItem = element.clone();
+      backupItem = element;
+    } else {
+      selectedItem = element;
+    }
+    selectedItem!.state = NsgDataItemState.fill;
     Get.toNamed(pageName);
   }
 
@@ -116,6 +131,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     assert(masterController != null && masterController!.selectedItem != null);
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     currentItem = NsgDataClient.client.getNewObject(dataTable.dataItemType) as T;
+    currentItem.state = NsgDataItemState.create;
     dataTable.addRow(currentItem);
     dataItemList = dataTable.rows;
     Get.toNamed(pageName);

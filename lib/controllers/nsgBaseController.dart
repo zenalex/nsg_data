@@ -415,7 +415,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
     } else {
-      selectedItem = element;
+      selectedItem = element.clone();
+      backupItem = element;
     }
 
     Get.toNamed(pageName);
@@ -481,8 +482,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (backupItem == null || selectedItem == null) {
       return false;
     }
-    for (var field in selectedItem!.fieldList.fields.keys) {
-      result = selectedItem![field] != backupItem![field];
+    for (var fieldName in selectedItem!.fieldList.fields.keys) {
+      var field = selectedItem!.fieldList.fields[fieldName];
+      result = (field!.compareTo(selectedItem!, backupItem!) != 0);
       if (result) break;
     }
 
@@ -491,46 +493,17 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Проверить были ли изменения в объекте, если нет, выполняем Back, если были, то спрашиваем пользователя сохранить изменения или отменить,
   ///а затем выполняем Back
-  Future itemPageCloseCheck() async {
+  Future itemPageCloseCheck(Function saveOrCancel) async {
     assert(selectedItem != null);
     if (!isModified) {
       itemPageCancel();
       return;
     }
-    if (!selectedItem!.validateFieldValues().isValid) {
-      sendNotify();
-      return;
-    }
-    currentStatus = RxStatus.loading();
-    sendNotify();
-    try {
-      await _postSelectedItem();
-      if (backupItem != null && dataItemList.contains(backupItem)) {
-        dataItemList.remove(backupItem!);
-      }
-      if (backupItem != null) {
-        backupItem = null;
-      }
-      if (!dataItemList.contains(selectedItem)) {
-        dataItemList.add(selectedItem!);
-        sortDataItemList();
-      }
-      Get.back();
-      selectedItem = null;
-      if (masterController != null) {
-        masterController!.sendNotify();
-      }
-    } catch (ex) {
-      //если это NsgApiExceptuion, то отображаем ошибку пользователю
-      if (ex is NsgApiException) {
-        var func = showException ?? NsgApiException.showExceptionDefault;
-        if (func != null) func(ex);
-      }
-      rethrow;
-    } finally {
-      currentStatus = RxStatus.success();
-      sendNotify();
-      selectedItemChanged.broadcast(null);
+    var res = saveOrCancel();
+    if (res) {
+      await itemPagePost();
+    } else {
+      itemPageCancel();
     }
   }
 

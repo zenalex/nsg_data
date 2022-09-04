@@ -21,6 +21,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     maps.forEach((m) {
       var elem = NsgDataClient.client.getNewObject(dataItemType);
       elem.fromJson(m as Map<String, dynamic>);
+      elem.state = NsgDataItemState.fill;
       items.add(elem as T);
     });
     return items;
@@ -177,6 +178,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         allItems.addAll(newItems);
         if (newItems.isNotEmpty && filter != null && filter.fieldsToRead != null && filter.fieldsToRead!.isNotEmpty) {
           //Проставить полям из списка признак того, что она пустые - не прочитаны с БД
+          //TODO: спорное решение иметь список  пустых полей, чем это лучше значения по-умолчанию?
           for (var fieldName in newItems.first.fieldList.fields.keys) {
             if (filter.fieldsToRead!.contains(fieldName)) continue;
             for (var item in newItems) {
@@ -184,7 +186,8 @@ class NsgDataRequest<T extends NsgDataItem> {
             }
           }
         }
-        //TODO: При использовании списка полей для чтения, отключил использование кэш
+        //TODO: При использовании списка полей для чтения, решить вопрос кэша.
+        //А если там уже есть такой же элемент с ранее дочитанными полями?
         if (useCache) {
           NsgDataClient.client.addItemsToCache(items: newItems, tag: tag);
         }
@@ -227,6 +230,7 @@ class NsgDataRequest<T extends NsgDataItem> {
             data.forEach((m) {
               var elem = NsgDataClient.client.getNewObject(NsgDataClient.client.getTypeByServerName(name));
               elem.fromJson(m as Map<String, dynamic>);
+              elem.state = NsgDataItemState.fill;
               refItems.add(elem);
             });
             if (useCache) {

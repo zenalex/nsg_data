@@ -88,7 +88,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     try {
       var elem = await doCreateNewItem();
       currentStatus = RxStatus.success();
-      currentItem = elem;
+      currentItem = elem.clone() as T;
+      backupItem = elem;
       sendNotify();
       return elem;
     } catch (e) {
@@ -110,11 +111,11 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     //Если выставлен признак создавать на сервере, создаем запрос на сервер
     if (elem.createOnServer) {
       var request = NsgDataRequest<T>();
-      return await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
+      elem = await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
     } else {
       elem.newRecordFill();
     }
-
+    elem.state = NsgDataItemState.create;
     return elem;
   }
 }

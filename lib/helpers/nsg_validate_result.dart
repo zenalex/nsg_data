@@ -8,4 +8,14 @@ class NsgValidateResult {
 
   ///Дополнительный текст ошибки, не связанный с конкретным полем
   String errorMessage = '';
+  String errorMessageWithFields() {
+    var s = 'Обнаружены следующие ошибки:';
+    if (errorMessage.isNotEmpty) {
+      s += '\n$errorMessage';
+    }
+    for (var value in fieldsWithError.values) {
+      s += '\n$value';
+    }
+    return s;
+  }
 }

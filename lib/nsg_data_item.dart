@@ -28,7 +28,12 @@ class NsgDataItem {
   ///У объекта на сервере будет вызван метод Create
   bool get createOnServer => false;
 
+  ///Время загрузки элемента с сервера. Используется для сравнения элементов: а также,
+  ///для удаления устаревших элементов из кэша
   int loadTime = 0;
+
+  ///Текущее состаяние объекта (новый, сохранен и т.п.)
+  NsgDataItemState state = NsgDataItemState.unknown;
 
   String get typeName => runtimeType.toString();
 
