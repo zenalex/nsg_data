@@ -234,7 +234,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //Возможно, при загрузке всех данных, имеет смысл активировать локальный поиск вместо серврного, но врядли одновременно
       dataItemList = newItemsList;
       //dataItemList = filter(newItemsList);
-      if (selectedItem != null && dataItemList.firstWhereOrNull((e) => e.id == selectedItem!.id) == null) selectedItem = null;
+      if (selectedItem != null && dataItemList.firstWhereOrNull((e) => e.id == selectedItem!.id) == null)
+        selectedItem = null;
       if (selectedItem == null && autoSelectFirstItem && dataItemList.isNotEmpty) {
         selectedItem = dataItemList[0];
       }
@@ -295,7 +296,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
-    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName))
+    if (masterController!.selectedItem == null ||
+        !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName))
       return newItemsList;
     var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
 
@@ -309,7 +311,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') return newItemsList;
+    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '')
+      return newItemsList;
     return newItemsList.where((element) {
       for (var fieldName in element.fieldList.fields.keys) {
         var field = element.getField(fieldName);
@@ -343,8 +346,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
     //Учитываем пользовательский фильтр на дату
     if (controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
-      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.beginDate, comparisonOperator: NsgComparisonOperator.greaterOrEqual);
-      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
+      cmp.add(
+          name: controllerFilter.periodFieldName,
+          value: controllerFilter.nsgPeriod.beginDate,
+          comparisonOperator: NsgComparisonOperator.greaterOrEqual);
+      cmp.add(
+          name: controllerFilter.periodFieldName,
+          value: controllerFilter.nsgPeriod.endDate,
+          comparisonOperator: NsgComparisonOperator.less);
     }
     //Добавляем условие по строке поиска если фильтр разрешен и открыт
     if (controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
@@ -357,7 +366,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         for (var fieldName in fieldNames) {
           var field = dataItem.fieldList.fields[fieldName];
           if (field is NsgDataStringField || field is NsgDataReferenceField) {
-            searchCmp.add(name: fieldName, value: controllerFilter.searchString, comparisonOperator: NsgComparisonOperator.containWords);
+            searchCmp.add(
+                name: fieldName,
+                value: controllerFilter.searchString,
+                comparisonOperator: NsgComparisonOperator.containWords);
           }
         }
         cmp.add(name: "SearchStringComparison", value: searchCmp);
@@ -410,8 +422,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
-  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
-    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
+  void itemPageOpen(NsgDataItem element, String pageName,
+      {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+    assert(element.runtimeType == dataType,
+        'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
     } else {
@@ -497,19 +511,24 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return result;
   }
 
+  static Future<bool?> Function()? saveOrCancelDefaultDialog;
+
   ///Проверить были ли изменения в объекте, если нет, выполняем Back, если были, то спрашиваем пользователя сохранить изменения или отменить,
   ///а затем выполняем Back
-  Future itemPageCloseCheck(Function saveOrCancel) async {
+  Future itemPageCloseCheck() async {
     assert(selectedItem != null);
-    if (!isModified) {
+    if (!isModified || saveOrCancelDefaultDialog == null) {
       itemPageCancel();
       return;
     }
-    var res = saveOrCancel();
-    if (res) {
-      await itemPagePost();
+    bool? res = await saveOrCancelDefaultDialog!();
+    if (res == null) {
     } else {
-      itemPageCancel();
+      if (res) {
+        await itemPagePost();
+      } else {
+        itemPageCancel();
+      }
     }
   }
 
@@ -523,7 +542,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     var filterParam = NsgDataRequestParams(compare: cmp);
     var request = NsgDataRequest(dataItemType: dataType);
     var answer = await request.requestItem(
-        filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
+        filter: filterParam,
+        loadReference: referenceList,
+        autoRepeate: autoRepeate,
+        autoRepeateCount: autoRepeateCount,
+        retryIf: (e) => retryRequestIf(e));
 
     return answer;
   }
