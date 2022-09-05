@@ -159,4 +159,25 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       sendNotify();
     }
   }
+
+  ///Удаление массива строк из табличной части
+  @override
+  Future itemsRemove(List<NsgDataItem> itemsToRemove, {bool goBack = true}) async {
+    assert(masterController != null && masterController!.selectedItem != null, 'itemDelete');
+    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
+    for (var element in itemsToRemove) {
+      dataTable.removeRow(element);
+    }
+    dataItemList = dataTable.rows;
+    selectedItem = null;
+    backupItem = null;
+    if (masterController != null) {
+      masterController!.sendNotify();
+    }
+    if (goBack) {
+      Get.back();
+    }
+    currentStatus = RxStatus.success();
+    sendNotify();
+  }
 }
