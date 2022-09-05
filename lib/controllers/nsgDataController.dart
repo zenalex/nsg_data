@@ -91,6 +91,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       currentItem = elem.clone() as T;
       backupItem = elem;
       sendNotify();
+      selectedItemChanged.broadcast(null);
       return elem;
     } catch (e) {
       var msg = '';
