@@ -127,14 +127,15 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Создает новый элемент и переходит на страницу элемента.
   ///pageName - страница для перехода и отображения/редактирования нового элемента
-  void createNewItem(String pageName) {
+  @override
+  Future<T> createNewItemAsync() async {
     assert(masterController != null && masterController!.selectedItem != null);
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     currentItem = NsgDataClient.client.getNewObject(dataTable.dataItemType) as T;
     currentItem.state = NsgDataItemState.create;
     dataTable.addRow(currentItem);
     dataItemList = dataTable.rows;
-    Get.toNamed(pageName);
+    return currentItem;
   }
 
   ///Удаление текущего элемента
