@@ -285,6 +285,7 @@ class NsgDataItem {
   NsgDataItem clone() {
     var newItem = getNewObject();
     newItem.copyFieldValues(this);
+    newItem.loadTime = loadTime;
     return newItem;
   }
 
