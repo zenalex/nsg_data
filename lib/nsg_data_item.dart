@@ -20,6 +20,11 @@ class NsgDataItem {
   ///Возвращает уникальный идентификатор владельца
   String get id => '';
 
+  set id(String value) {
+    assert(primaryKeyField.isNotEmpty);
+    this[primaryKeyField] = value;
+  }
+
   ///Возвращает идентификатор владельца
   ///Используется для привязки строк к табличной части
   String get ownerId => '';
@@ -242,10 +247,10 @@ class NsgDataItem {
   @override
   bool operator ==(Object other) => other is NsgDataItem && equal(other);
   bool equal(NsgDataItem other) {
-    if (other.runtimeType.toString() == runtimeType.toString()) {
-      if (primaryKeyField == '') return hashCode == other.hashCode;
-      return (getFieldValue(primaryKeyField) == other.getFieldValue(primaryKeyField) && loadTime == other.loadTime);
-    }
+    //if (other.runtimeType.toString() == runtimeType.toString()) {
+    if (primaryKeyField == '') return hashCode == other.hashCode;
+    return (getFieldValue(primaryKeyField) == other.getFieldValue(primaryKeyField) && loadTime == other.loadTime);
+    //}
     return false;
   }
 

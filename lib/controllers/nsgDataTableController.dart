@@ -33,6 +33,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     assert(masterController != null && masterController!.selectedItem != null);
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     var row = NsgDataClient.client.getNewObject(dataTable.dataItemType) as T;
+    row.id = Guid.newGuid();
     row.state = NsgDataItemState.create;
     //dataTable.addRow(row);
     return row;
@@ -131,10 +132,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   Future<T> createNewItemAsync() async {
     assert(masterController != null && masterController!.selectedItem != null);
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
-    currentItem = NsgDataClient.client.getNewObject(dataTable.dataItemType) as T;
-    currentItem.state = NsgDataItemState.create;
-    dataTable.addRow(currentItem);
-    dataItemList = dataTable.rows;
+    currentItem = await doCreateNewItem();
     return currentItem;
   }
 
