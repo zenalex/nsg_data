@@ -502,7 +502,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Проверить были ли изменения в объекте, если нет, выполняем Back, если были, то спрашиваем пользователя сохранить изменения или отменить,
   ///а затем выполняем Back
   Future itemPageCloseCheck() async {
-    assert(selectedItem != null);
+    if (selectedItem == null) return;
     if (!isModified || saveOrCancelDefaultDialog == null) {
       itemPageCancel();
       return;
