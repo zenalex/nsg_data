@@ -29,7 +29,7 @@ class NsgDataTable<T extends NsgDataItem> {
       row.setFieldValue(row.primaryKeyField, Guid.newGuid());
     }
     if (row.ownerId.isNotEmpty) {
-      row.setFieldValue(row.ownerId, owner.id);
+      row.ownerId = owner.id;
     }
     allRows.add(row);
     owner.setFieldValue(fieldName, allRows);

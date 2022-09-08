@@ -6,6 +6,12 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Представляет собой типизированный вариант массива dataItemList
   List<T> get items => dataItemList.cast<T>();
 
+  ///Список избранных элементов
+  List<T> favorites = [];
+
+  ///Список часто используемых элементов
+  List<T> recent = [];
+
   ///Первый элемент из items. Если items  пустой: вернет новый пустой элемент данных  типа T
   T get firstItem => (dataItemList.isEmpty) ? NsgDataClient.client.getNewObject(dataType) as T : items[0];
 
@@ -118,5 +124,21 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     }
     elem.state = NsgDataItemState.create;
     return elem;
+  }
+
+  ///Добавить элемент в избранное
+  Future addFavorite(T item) async {
+    Future.delayed(Duration(seconds: 1));
+    if (!favorites.contains(item)) {
+      favorites.add(item);
+    }
+  }
+
+  ///Добавить элемент в часто используемые
+  Future addRecent(T item) async {
+    Future.delayed(Duration(seconds: 1));
+    if (!recent.contains(item)) {
+      recent.add(item);
+    }
   }
 }

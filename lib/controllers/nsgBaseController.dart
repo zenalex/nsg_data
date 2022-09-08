@@ -425,12 +425,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///element saved in backupItem to have possibility revert changes
   void itemCopyPageOpen(NsgDataItem element, String pageName) {
     assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
-    selectedItem = element.clone();
-    selectedItem!.id = Guid.newGuid();
-    selectedItem!.state = NsgDataItemState.create;
-    backupItem = selectedItem!.clone();
-    sendNotify();
-    selectedItemChanged.broadcast(null);
+    setAndRefreshSelectedItem(element, null).then((value) {
+      selectedItem = element.clone(cloneAsCopy: true);
+
+      backupItem = selectedItem!.clone();
+      sendNotify();
+      selectedItemChanged.broadcast(null);
+    });
     Get.toNamed(pageName);
   }
 

@@ -2,6 +2,8 @@ import 'package:nsg_data/nsg_data.dart';
 import 'nsg_data_paramList.dart';
 
 class NsgDataItem {
+  static String nameOwnerId = 'ownerId';
+
   List<String>? loadReferenceDefault;
 
   ///Get API path for request Items
@@ -28,6 +30,10 @@ class NsgDataItem {
   ///Возвращает идентификатор владельца
   ///Используется для привязки строк к табличной части
   String get ownerId => '';
+
+  ///Устанавливает идентификатор владельца
+  ///Используется для привязки строк к табличной части
+  set ownerId(String value) => setFieldValue(nameOwnerId, value);
 
   ///Признак того: что для создания элемента должно производится на серверной стороне
   ///У объекта на сервере будет вызван метод Create
@@ -279,18 +285,34 @@ class NsgDataItem {
   }
 
   ///Copy all fields values from newItem to this
-  void copyFieldValues(NsgDataItem newItem) {
+  void copyFieldValues(NsgDataItem oldItem, {bool cloneAsCopy = false}) {
     fieldList.fields.forEach((key, value) {
-      setFieldValue(key, newItem.getFieldValue(key));
+      if (fieldList.fields[key] is NsgDataReferenceListField) {
+        var newTable = NsgDataTable(owner: this, fieldName: key);
+        var curTable = NsgDataTable(owner: oldItem, fieldName: key);
+        for (var row in curTable.rows) {
+          var newRow = row.clone(cloneAsCopy: cloneAsCopy);
+          if (cloneAsCopy) {
+            newRow.copyRecordFill();
+          }
+          newTable.addRow(newRow);
+        }
+      } else {
+        setFieldValue(key, oldItem.getFieldValue(key));
+      }
     });
   }
 
   ///Create new object with same filelds values
-  NsgDataItem clone() {
+  ///cloneAsCopy - после копирования подменить id объектов и вызвать метод заполнения после копирования
+  NsgDataItem clone({bool cloneAsCopy = false}) {
     var newItem = getNewObject();
-    newItem.copyFieldValues(this);
+    newItem.copyFieldValues(this, cloneAsCopy: cloneAsCopy);
     newItem.loadTime = loadTime;
-    newItem.state = state;
+    newItem.state = cloneAsCopy ? NsgDataItemState.create : state;
+    if (cloneAsCopy) {
+      newItem.copyRecordFill();
+    }
     return newItem;
   }
 
@@ -304,6 +326,12 @@ class NsgDataItem {
 
   ///Заполнение полей объекта при создании нового
   void newRecordFill() {}
+
+  ///Заполнение полей объекта при создании копии
+  void copyRecordFill() {
+    id = Guid.newGuid();
+    state = NsgDataItemState.create;
+  }
 
   ///Контроллер ранных, который будет использоваться по-умолчанию для подбора значений в полях ввода
   ///Может быть перекрыт. Рекомендуется использовать механизм Get.find

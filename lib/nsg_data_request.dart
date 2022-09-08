@@ -254,8 +254,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     List<String> loadReference = [];
     var allFields = NsgDataClient.client.getFieldList(type);
     for (var field in allFields.fields.values) {
-      //TODO: "ownerId" строкой - косяк
-      if ((field is NsgDataReferenceField || field is NsgDataReferenceListField) && field.name != "ownerId") {
+      if ((field is NsgDataReferenceField || field is NsgDataReferenceListField) && field.name != NsgDataItem.nameOwnerId) {
         loadReference.add(field.name);
       }
       if (field is NsgDataReferenceListField) {
