@@ -49,6 +49,9 @@ class NsgDataItem {
         setFieldValue(name, jsonValue);
       }
     });
+    if (json.containsKey('state')) {
+      state = NsgDataItemState.values[json['state']];
+    }
     loadTime = DateTime.now().microsecondsSinceEpoch;
   }
 
@@ -58,6 +61,7 @@ class NsgDataItem {
     fieldList.fields.forEach((name, value) {
       map[name] = value.convertToJson(getFieldValue(name));
     });
+    map['state'] = state.index;
     return map;
   }
 
@@ -286,6 +290,7 @@ class NsgDataItem {
     var newItem = getNewObject();
     newItem.copyFieldValues(this);
     newItem.loadTime = loadTime;
+    newItem.state = state;
     return newItem;
   }
 

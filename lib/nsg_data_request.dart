@@ -21,7 +21,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     maps.forEach((m) {
       var elem = NsgDataClient.client.getNewObject(dataItemType);
       elem.fromJson(m as Map<String, dynamic>);
-      elem.state = NsgDataItemState.fill;
+      // elem.state = NsgDataItemState.fill;
       items.add(elem as T);
     });
     return items;
