@@ -423,15 +423,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Copy item and open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
-  void itemCopyPageOpen(NsgDataItem element, String pageName) {
+  ///referenceList - список полей для дочитывания. null - перечитать все
+  void itemCopyPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
     assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
-    setAndRefreshSelectedItem(element, null).then((value) {
-      selectedItem = element.clone(cloneAsCopy: true);
-
-      backupItem = selectedItem!.clone();
-      sendNotify();
-      selectedItemChanged.broadcast(null);
-    });
+    copyAndSetItem(element, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList);
     Get.toNamed(pageName);
   }
 
@@ -574,6 +569,36 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //selectedItem = null;
       selectedItem = newItem.clone();
       backupItem = newItem;
+      await afterRefreshItem(selectedItem!, referenceList);
+      currentStatus = RxStatus.success();
+      sendNotify();
+      selectedItemChanged.broadcast(null);
+    } on Exception catch (e) {
+      _updateStatusError(e);
+    }
+  }
+
+  ///Перечитать из базы данных item, создать его копию
+  ///На время чтерния статус контроллера будет loading
+  ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
+  ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
+  Future copyAndSetItem(NsgDataItem item, {bool needRefreshSelectedItem = false, List<String>? referenceList}) async {
+    assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
+    currentStatus = RxStatus.loading();
+    sendNotify();
+    itemsRequested.broadcast();
+    try {
+      var newItem = needRefreshSelectedItem ? await refreshItem(item, referenceList) : item;
+      var index = dataItemList.indexOf(item);
+      if (index >= 0) {
+        dataItemList.replaceRange(index, index + 1, [newItem]);
+      } else if (newItem.isEmpty) {
+        currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+        sendNotify();
+        throw new Exception('Ошибка NBC-509. Данный объект более недоступен');
+      }
+      selectedItem = newItem.clone(cloneAsCopy: true);
+      backupItem = selectedItem!.clone();
       await afterRefreshItem(selectedItem!, referenceList);
       currentStatus = RxStatus.success();
       sendNotify();
