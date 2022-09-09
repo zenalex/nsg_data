@@ -127,16 +127,16 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   }
 
   ///Добавить элемент в избранное
-  Future addFavorite(T item) async {
-    await Future.delayed(Duration(seconds: 1));
+  void toggleFavorite(T item) {
     if (!favorites.contains(item)) {
       favorites.add(item);
+    } else {
+      favorites.remove(item);
     }
   }
 
   ///Добавить элемент в часто используемые
-  Future addRecent(T item) async {
-    await Future.delayed(Duration(seconds: 1));
+  void addRecent(T item) {
     if (!recent.contains(item)) {
       recent.add(item);
     }
