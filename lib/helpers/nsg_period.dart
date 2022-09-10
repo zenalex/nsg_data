@@ -195,7 +195,7 @@ class NsgPeriod {
     if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.WEEK)) && Jiffy(endDate).isSame(Jiffy(beginDate).endOf(Units.WEEK))) return NsgPeriodType.week;
     //Проверка на день
     if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.DAY)) && Jiffy(endDate).isSame(Jiffy(beginDate).endOf(Units.DAY))) return NsgPeriodType.day;
-    if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.DAY)) && Jiffy(endDate).isSame(Jiffy(endDate).endOf(Units.DAY))) return NsgPeriodType.period;
+    if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.DAY)) && Jiffy(endDate).isSame(Jiffy(endDate).startOf(Units.DAY))) return NsgPeriodType.period;
     return NsgPeriodType.periodWidthTime;
   }
 
