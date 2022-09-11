@@ -1,0 +1,1 @@
+enum NsgUpdateKeyType { list, element }

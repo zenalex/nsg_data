@@ -1,5 +1,3 @@
-import 'package:nsg_data/dataFields/datafield.dart';
-
 import '../nsg_data.dart';
 
 class NsgDataStringField extends NsgDataField {

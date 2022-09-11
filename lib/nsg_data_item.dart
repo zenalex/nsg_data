@@ -257,11 +257,8 @@ class NsgDataItem {
   @override
   bool operator ==(Object other) => other is NsgDataItem && equal(other);
   bool equal(NsgDataItem other) {
-    //if (other.runtimeType.toString() == runtimeType.toString()) {
     if (primaryKeyField == '') return hashCode == other.hashCode;
     return (getFieldValue(primaryKeyField) == other.getFieldValue(primaryKeyField) && loadTime == other.loadTime);
-    //}
-    return false;
   }
 
   @override

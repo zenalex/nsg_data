@@ -1,8 +1,6 @@
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 
-import '../nsgDataApiError.dart';
-
 ///Контроллер объекта табличной части
 ///Не читает ничего из БД, работает с текущей строкой MasterController
 ///Обязательные параметры к заданию:
@@ -116,14 +114,14 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Request Items
   @override
-  Future requestItems() async {
+  Future requestItems({List<NsgUpdateKey>? keys}) async {
     lateInit = false;
     if (masterController == null || masterController!.selectedItem == null) return;
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     dataItemList = dataTable.rows;
     sortDataItemList();
     currentStatus = RxStatus.success();
-    sendNotify();
+    sendNotify(keys: keys);
   }
 
   ///Создает новый элемент и переходит на страницу элемента.
@@ -131,7 +129,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   @override
   Future<T> createNewItemAsync() async {
     assert(masterController != null && masterController!.selectedItem != null);
-    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
+    //var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     currentItem = await doCreateNewItem();
     return currentItem;
   }

@@ -51,3 +51,5 @@ export 'models/nsg_user_settings.dart';
 export 'controllers/nsg_user_settings_controller.dart';
 export 'nsg_data_item_state.dart';
 export 'nsgDataApiError.dart';
+export 'controllers/nsg_update_key_type.dart';
+export 'controllers/nsg_update_key.dart';

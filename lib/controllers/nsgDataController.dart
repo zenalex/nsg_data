@@ -41,7 +41,6 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
             requestOnInit: requestOnInit,
             useUpdate: useUpdate,
             useChange: useChange,
-            builderIDs: builderIDs,
             masterController: masterController,
             dataBinding: dataBindign,
             autoRepeate: autoRepeate,

@@ -29,9 +29,6 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Use change method on data update
   bool useChange;
 
-  ///GetBuilder IDs to update
-  List<String>? builderIDs;
-
   ///Master controller. Using for binding.
   NsgBaseController? masterController;
   List<NsgBaseController>? dependsOnControllers;
@@ -108,6 +105,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Событие о выборе значения пользователем. Срабатывает в режиме selection при выборе пользователем элемента в форме списка
   void Function(NsgDataItem)? onSelected;
 
+  List<NsgUpdateKey> updateKeys = [];
+
   set selectedItem(NsgDataItem? newItem) {
     var itemChanged = _selectedItem != newItem;
     _selectedItem = newItem;
@@ -119,9 +118,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   NsgBaseController(
       {this.dataType = NsgDataItem,
       this.requestOnInit = false,
-      this.useUpdate = false,
+      this.useUpdate = true,
       this.useChange = true,
-      this.builderIDs,
       this.masterController,
       this.selectedMasterRequired = true,
       this.dataBinding,
@@ -192,18 +190,18 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Request Items
-  Future requestItems() async {
+  Future requestItems({List<NsgUpdateKey>? keys}) async {
     lateInit = false;
     itemsRequested.broadcast();
     await _requestItems();
     itemsRequested.broadcast();
-    sendNotify();
+    sendNotify(keys: keys);
   }
 
   ///Обновление данных
-  Future refreshData() async {
+  Future refreshData({List<NsgUpdateKey>? keys}) async {
     currentStatus = RxStatus.loading();
-    sendNotify();
+    sendNotify(keys: keys);
     await requestItems();
     // currentStatus = RxStatus.success();
     // sendNotify();
@@ -246,9 +244,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
-  void sendNotify() {
-    if (useUpdate) update(builderIDs);
-    if (useChange) {
+  ///Отправить сообщение о необходимоси обновления
+  ///Если передан список ключей, то обновление будет дано только для них
+  void sendNotify({List<NsgUpdateKey>? keys}) {
+    if (useUpdate || keys != null) {
+      update(keys ?? updateKeys);
+    }
+    if (useChange && keys == null) {
       change(NsgBaseControllerData(controller: this), status: currentStatus);
     }
   }
@@ -373,10 +375,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   FutureOr<void> _updateStatusError(Exception e) {
     currentStatus = RxStatus.error(e.toString());
-    if (useUpdate) update(builderIDs);
-    if (useChange) {
-      change(null, status: currentStatus);
-    }
+    sendNotify();
   }
 
   void masterValueChanged(EventArgs? args) async {
@@ -649,5 +648,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   void masterItemsRequested(EventArgs? args) {
     sendNotify();
+  }
+
+  NsgUpdateKey getUpdateKey(String id, NsgUpdateKeyType type) {
+    var key = updateKeys.firstWhereOrNull((element) => element.id == id);
+    if (key != null) return key;
+    key = NsgUpdateKey(id: id, type: type);
+    updateKeys.add(key);
+    return key;
   }
 }
