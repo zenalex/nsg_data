@@ -72,8 +72,11 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (backupItem != null) {
       backupItem = null;
     }
-    if (!dataItemList.contains(selectedItem)) {
-      dataItemList.add(selectedItem!);
+    if (!dataItemList.contains(currentItem)) {
+      //dataItemList.add(selectedItem!);
+      var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
+      dataTable.addRow(currentItem);
+      items.add(currentItem);
     }
     selectedItem!.state = NsgDataItemState.fill;
     Get.back();

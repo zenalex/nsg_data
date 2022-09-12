@@ -44,4 +44,10 @@ class NsgDataTable<T extends NsgDataItem> {
     var allRows = (owner.getFieldValue(fieldName, allowNullValue: true) as List<T>?) ?? <T>[];
     return allRows.remove(row);
   }
+
+  ///Удалить все строки из табличной чатси
+  void clear() {
+    var allRows = (owner.getFieldValue(fieldName, allowNullValue: true) as List<T>?) ?? <T>[];
+    allRows.clear();
+  }
 }

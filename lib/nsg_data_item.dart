@@ -287,6 +287,7 @@ class NsgDataItem {
       if (fieldList.fields[key] is NsgDataReferenceListField) {
         var newTable = NsgDataTable(owner: this, fieldName: key);
         var curTable = NsgDataTable(owner: oldItem, fieldName: key);
+        newTable.clear();
         for (var row in curTable.rows) {
           var newRow = row.clone(cloneAsCopy: cloneAsCopy);
           if (cloneAsCopy) {
