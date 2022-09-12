@@ -202,7 +202,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future refreshData({List<NsgUpdateKey>? keys}) async {
     currentStatus = RxStatus.loading();
     sendNotify(keys: keys);
-    await requestItems();
+    await requestItems(keys: keys);
     // currentStatus = RxStatus.success();
     // sendNotify();
   }

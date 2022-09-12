@@ -25,7 +25,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
 
   NsgDataController(
       {bool requestOnInit = true,
-      bool useUpdate = false,
+      bool useUpdate = true,
       bool useChange = true,
       List<String>? builderIDs,
       NsgBaseController? masterController,
