@@ -83,7 +83,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (masterController != null) {
       masterController!.sendNotify();
     }
-    sendNotify();
+    requestItems();
   }
 
   ///Open row page to view and edit data
