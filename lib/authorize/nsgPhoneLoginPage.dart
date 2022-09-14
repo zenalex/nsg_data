@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:get/get.dart';
+import 'package:nsg_controls/nsg_border.dart';
+import 'package:nsg_controls/nsg_button.dart';
+import 'package:nsg_controls/nsg_checkbox.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 
 import '../nsg_data_provider.dart';
@@ -34,6 +38,18 @@ class NsgPhoneLoginPage extends StatelessWidget {
     return logo;
   }
 
+  Widget getRememberMeCheckbox() {
+    bool initialValue = true;
+    var checkbox = NsgCheckBox(
+      simple: true,
+      margin: EdgeInsets.only(top: 5, bottom: 5),
+      label: 'Запомнить пользователя',
+      onPressed: () {},
+      value: initialValue,
+    );
+    return checkbox;
+  }
+
   /*Widget background() {
     return ConstrainedBox(
       constraints: const BoxConstraints.tightFor(),
@@ -52,9 +68,10 @@ class NsgPhoneLoginPage extends StatelessWidget {
   }
 
   Widget getButtons() {
-    return ElevatedButton(
+    return NsgButton(
+      margin: EdgeInsets.zero,
       onPressed: null,
-      child: Text('you need to override getButtons'),
+      text: 'you need to override getButtons',
     );
   }
 
@@ -197,79 +214,68 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         )
                       : SizedBox(),
                   SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
-                  Container(
-                    decoration: BoxDecoration(
-                        //color: widget.widgetParams!.phoneFieldColor,
-                        //borderRadius: BorderRadius.circular(5.0),
-                        ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
-                      child: TextFormField(
-                        cursorColor: Colors.black,
-                        keyboardType: TextInputType.phone,
-                        inputFormatters: [phoneFormatter],
-                        style: widget.widgetParams!.textPhoneField,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5.0),
-                          ),
-                          filled: true,
-                          fillColor: widget.widgetParams!.phoneFieldColor,
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.black, width: 1.0),
-                          ),
-                          errorStyle: TextStyle(fontSize: 12),
-                          hintText: widget.widgetParams!.textEnterPhone,
-                        ),
-                        onChanged: (value) => phoneNumber = value,
-                        validator: (value) => isPhoneValid(value!) && value.length >= 16 ? null : widget.widgetParams!.textEnterCorrectPhone,
+                  TextFormField(
+                    cursorColor: Colors.black,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [phoneFormatter],
+                    style: widget.widgetParams!.textPhoneField,
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.only(left: 10, top: 10, right: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
                       ),
+                      filled: true,
+                      fillColor: widget.widgetParams!.phoneFieldColor,
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.black, width: 1.0),
+                      ),
+                      errorStyle: TextStyle(fontSize: 12),
+                      hintText: widget.widgetParams!.textEnterPhone,
                     ),
+                    onChanged: (value) => phoneNumber = value,
+                    validator: (value) => isPhoneValid(value!) && value.length >= 16 ? null : widget.widgetParams!.textEnterCorrectPhone,
                   ),
+                  if (!Platform.isAndroid && !Platform.isIOS) widget.loginPage.getRememberMeCheckbox(),
                   if (widget.widgetParams!.useCaptcha)
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 0.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 160,
-                            child: getcaptchaImage(),
-                          ),
-                          Container(
-                            height: 50,
-                            width: 40,
-                            child: Stack(
-                              children: [
-                                Align(
-                                    alignment: Alignment.topCenter,
-                                    child: IconButton(
-                                      padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
-                                      icon: Icon(
-                                        Icons.cached,
-                                        color: widget.widgetParams!.phoneIconColor,
-                                        size: widget.widgetParams!.buttonSize,
-                                      ),
-                                      onPressed: () {
-                                        refreshCaptcha();
-                                      },
-                                      //padding: EdgeInsets.all(0.0),
-                                    )),
-                                Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Text(
-                                    secondsLeft.toString(),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 14),
-                                  ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 160,
+                          child: getcaptchaImage(),
+                        ),
+                        Container(
+                          height: 50,
+                          width: 40,
+                          child: Stack(
+                            children: [
+                              Align(
+                                  alignment: Alignment.topCenter,
+                                  child: IconButton(
+                                    padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
+                                    icon: Icon(
+                                      Icons.cached,
+                                      color: widget.widgetParams!.phoneIconColor,
+                                      size: widget.widgetParams!.buttonSize,
+                                    ),
+                                    onPressed: () {
+                                      refreshCaptcha();
+                                    },
+                                    //padding: EdgeInsets.all(0.0),
+                                  )),
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Text(
+                                  secondsLeft.toString(),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 14),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   if (widget.widgetParams!.useCaptcha)
                     Container(
@@ -302,7 +308,6 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         ),
                       ),
                     ),
-                  SizedBox(height: 5.0),
                   widget.loginPage.getButtons(),
                 ],
               ),

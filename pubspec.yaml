@@ -23,6 +23,9 @@ dependencies:
   intl: ^0.17.0
   jiffy: ^5.0.0 
   uuid: ^3.0.6
+  nsg_controls:
+    path: 
+      ../nsg_controls
 
 dev_dependencies:
   dart_code_metrics: ^4.16.0
