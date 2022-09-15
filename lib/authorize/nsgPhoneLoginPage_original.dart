@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
@@ -9,7 +11,7 @@ import '../nsg_data_provider.dart';
 class NsgPhoneLoginPage extends StatelessWidget {
   final NsgDataProvider provider;
   final NsgPhoneLoginParams? widgetParams;
-  NsgPhoneLoginPage(this.provider, {this.widgetParams}) : super();
+  const NsgPhoneLoginPage(this.provider, {super.key, this.widgetParams});
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +27,11 @@ class NsgPhoneLoginPage extends StatelessWidget {
   }
 
   AppBar getAppBar(BuildContext context) {
-    return AppBar(title: Text(''), centerTitle: true);
+    return AppBar(title: const Text(''), centerTitle: true);
   }
 
   Widget getLogo() {
-    var logo = Image(
+    var logo = const Image(
       image: AssetImage('lib/assets/logo-wfrs.png', package: 'nsg_data'),
       width: 140.0,
       height: 140.0,
@@ -42,7 +44,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints.tightFor(),
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             fit: BoxFit.cover,
             image: AssetImage('lib/assets/titan-back.png'),
@@ -53,14 +55,14 @@ class NsgPhoneLoginPage extends StatelessWidget {
   }
 
   Widget getBackground() {
-    var background = Image(
+    var background = const Image(
       image: AssetImage('lib/assets/titan-back.png'),
     );
     return background;
   }
 
   Widget getButtons() {
-    return ElevatedButton(
+    return const ElevatedButton(
       onPressed: null,
       child: Text('you need to override getButtons'),
     );
@@ -76,7 +78,8 @@ class NsgPhoneLoginWidget extends StatefulWidget {
   final NsgPhoneLoginParams? widgetParams;
   final NsgDataProvider provider;
 
-  NsgPhoneLoginWidget(this.loginPage, this.verificationPage, this.provider, {this.widgetParams}) : super();
+  // ignore: prefer_const_constructors_in_immutables
+  NsgPhoneLoginWidget(this.loginPage, this.verificationPage, this.provider, {super.key, this.widgetParams});
 }
 
 class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
@@ -125,7 +128,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
         ConstrainedBox(
           constraints: const BoxConstraints.tightFor(),
           child: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 fit: BoxFit.cover,
                 image: AssetImage('lib/assets/titan-back.png'),
@@ -184,7 +187,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   TextEditingController? _captchaController;
   Widget _getContext(BuildContext context) {
     if (isLoginSuccessfull) {
-      Future.delayed(Duration(seconds: 2)).then((e) => Navigator.pop<bool>(context, true));
+      Future.delayed(const Duration(seconds: 2)).then((e) => Navigator.pop<bool>(context, true));
       return _getContextSuccessful(context);
     }
     _captchaController ??= TextEditingController();
@@ -193,13 +196,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
       child: SizedBox(
         width: widget.widgetParams!.cardSize,
         child: Card(
-          margin: EdgeInsets.symmetric(horizontal: 15.0),
+          margin: const EdgeInsets.symmetric(horizontal: 15.0),
           color: widget.widgetParams!.cardColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
+            padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -211,24 +214,24 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                     children: <Widget>[
                       widget.widgetParams!.headerMessageVisible == true
                           ? Padding(
-                              padding: EdgeInsets.symmetric(vertical: 5.0),
+                              padding: const EdgeInsets.symmetric(vertical: 5.0),
                               child: Text(
                                 widget.widgetParams!.headerMessage,
                                 style: widget.widgetParams!.headerMessageStyle,
                                 textAlign: TextAlign.center,
                               ),
                             )
-                          : SizedBox(),
-                      SizedBox(height: 5.0),
+                          : const SizedBox(),
+                      const SizedBox(height: 5.0),
                       Padding(
-                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                        padding: const EdgeInsets.symmetric(vertical: 5.0),
                         child: Container(
                           decoration: BoxDecoration(
                             color: widget.widgetParams!.phoneFieldColor,
                             borderRadius: BorderRadius.circular(5.0),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.only(right: 15.0),
+                            padding: const EdgeInsets.only(right: 15.0),
                             child: TextFormField(
                               keyboardType: TextInputType.phone,
                               inputFormatters: [phoneFormatter],
@@ -236,7 +239,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                               textAlign: TextAlign.left,
                               decoration: InputDecoration(
                                 hintText: widget.widgetParams!.textEnterPhone,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 13.0),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 13.0),
                                 prefixIcon: Icon(
                                   Icons.smartphone,
                                   size: widget.widgetParams!.iconSize,
@@ -251,7 +254,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                        padding: const EdgeInsets.symmetric(vertical: 5.0),
                         child: Row(
                           children: [
                             Expanded(child: getcaptchaImage()!),
@@ -273,15 +276,15 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                        padding: const EdgeInsets.symmetric(vertical: 5.0),
                         child: Container(
                           decoration: BoxDecoration(
                             color: widget.widgetParams!.phoneFieldColor,
                             borderRadius: BorderRadius.circular(5.0),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 5.0),
-                            child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 5.0),
+                            child: SizedBox(
                               height: widget.widgetParams!.buttonSize,
                               width: double.infinity,
                               child: TextFormField(
@@ -289,7 +292,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                                 decoration: InputDecoration(
                                     fillColor: widget.widgetParams!.fillColor,
                                     hintText: widget.widgetParams!.textEnterCaptcha,
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 10.0),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 10.0),
                                     border: InputBorder.none),
                                 style: widget.widgetParams!.textPhoneField,
                                 textCapitalization: TextCapitalization.characters,
@@ -410,7 +413,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
             updateTimer!.cancel();
           }
           secondsLeft = 120;
-          updateTimer = Timer.periodic(Duration(seconds: 1), (Timer t) => captchaTimer(t));
+          updateTimer = Timer.periodic(const Duration(seconds: 1), (Timer t) => captchaTimer(t));
         }));
   }
 
@@ -444,13 +447,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     return SizedBox(
         width: widget.widgetParams!.cardSize,
         child: Card(
-            margin: EdgeInsets.symmetric(horizontal: 15.0),
+            margin: const EdgeInsets.symmetric(horizontal: 15.0),
             color: widget.widgetParams!.cardColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.0),
             ),
             child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
+                padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
                   Expanded(
                       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[

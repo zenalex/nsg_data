@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 class NsgDataBinding {
   final String masterFieldName;
   final String slaveFieldName;

@@ -1,9 +1,11 @@
+// ignore_for_file: file_names
+
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:get/get.dart';
-import 'package:nsg_controls/nsg_border.dart';
 import 'package:nsg_controls/nsg_button.dart';
 import 'package:nsg_controls/nsg_checkbox.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
@@ -13,7 +15,7 @@ import '../nsg_data_provider.dart';
 class NsgPhoneLoginPage extends StatelessWidget {
   final NsgDataProvider provider;
   final NsgPhoneLoginParams widgetParams;
-  NsgPhoneLoginPage(this.provider, {required this.widgetParams}) : super();
+  NsgPhoneLoginPage(this.provider, {super.key, required this.widgetParams});
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +27,11 @@ class NsgPhoneLoginPage extends StatelessWidget {
   }
 
   AppBar getAppBar(BuildContext context) {
-    return AppBar(title: Text(''), centerTitle: true);
+    return AppBar(title: const Text(''), centerTitle: true);
   }
 
   Widget getLogo() {
-    var logo = Image(
+    var logo = const Image(
       image: AssetImage('lib/assets/logo-wfrs.png', package: 'nsg_data'),
       width: 140.0,
       height: 140.0,
@@ -42,7 +44,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
     bool initialValue = true;
     var checkbox = NsgCheckBox(
       simple: true,
-      margin: EdgeInsets.only(top: 5, bottom: 5),
+      margin: const EdgeInsets.only(top: 5, bottom: 5),
       label: 'Запомнить пользователя',
       onPressed: () {},
       value: initialValue,
@@ -68,7 +70,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
   }
 
   Widget getButtons() {
-    return NsgButton(
+    return const NsgButton(
       margin: EdgeInsets.zero,
       onPressed: null,
       text: 'you need to override getButtons',
@@ -99,7 +101,7 @@ class NsgPhoneLoginWidget extends StatefulWidget {
   final NsgPhoneLoginParams? widgetParams;
   final NsgDataProvider provider;
 
-  NsgPhoneLoginWidget(this.loginPage, this.provider, {this.widgetParams}) : super();
+  const NsgPhoneLoginWidget(this.loginPage, this.provider, {super.key, this.widgetParams});
 }
 
 class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
@@ -173,7 +175,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   TextEditingController? _captchaController;
   Widget _getContext(BuildContext context) {
     if (isLoginSuccessfull) {
-      Future.delayed(Duration(seconds: 2)).then((e) {
+      Future.delayed(const Duration(seconds: 2)).then((e) {
         if (widget.widgetParams != null && widget.widgetParams!.mainPage != null) {
           Get.offAndToNamed(widget.widgetParams!.mainPage!);
         } else {
@@ -186,13 +188,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     return Form(
       key: _formKey,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(20.0)),
           boxShadow: [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.15), offset: Offset(0.0, 4.0), blurRadius: 4.0, spreadRadius: 2.0)],
         ),
-        margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
-        padding: EdgeInsets.all(15.0),
+        margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
+        padding: const EdgeInsets.all(15.0),
         width: widget.widgetParams!.cardSize,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -205,14 +207,14 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                 children: <Widget>[
                   widget.widgetParams!.headerMessageVisible == true
                       ? Padding(
-                          padding: EdgeInsets.symmetric(vertical: 5.0),
+                          padding: const EdgeInsets.symmetric(vertical: 5.0),
                           child: Text(
                             widget.widgetParams!.headerMessage,
                             style: widget.widgetParams!.headerMessageStyle,
                             textAlign: TextAlign.center,
                           ),
                         )
-                      : SizedBox(),
+                      : const SizedBox(),
                   SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
                   TextFormField(
                     cursorColor: Colors.black,
@@ -221,31 +223,31 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                     style: widget.widgetParams!.textPhoneField,
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
-                      contentPadding: EdgeInsets.only(left: 10, top: 10, right: 10),
+                      contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5.0),
                       ),
                       filled: true,
                       fillColor: widget.widgetParams!.phoneFieldColor,
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Colors.black, width: 1.0),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black, width: 1.0),
                       ),
-                      errorStyle: TextStyle(fontSize: 12),
+                      errorStyle: const TextStyle(fontSize: 12),
                       hintText: widget.widgetParams!.textEnterPhone,
                     ),
                     onChanged: (value) => phoneNumber = value,
                     validator: (value) => isPhoneValid(value!) && value.length >= 16 ? null : widget.widgetParams!.textEnterCorrectPhone,
                   ),
-                  if (!Platform.isAndroid && !Platform.isIOS) widget.loginPage.getRememberMeCheckbox(),
+                  if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) widget.loginPage.getRememberMeCheckbox(),
                   if (widget.widgetParams!.useCaptcha)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
+                        SizedBox(
                           width: 160,
                           child: getcaptchaImage(),
                         ),
-                        Container(
+                        SizedBox(
                           height: 50,
                           width: 40,
                           child: Stack(
@@ -253,7 +255,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                               Align(
                                   alignment: Alignment.topCenter,
                                   child: IconButton(
-                                    padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
+                                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
                                     icon: Icon(
                                       Icons.cached,
                                       color: widget.widgetParams!.phoneIconColor,
@@ -269,7 +271,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                                 child: Text(
                                   secondsLeft.toString(),
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 14),
+                                  style: const TextStyle(fontSize: 14),
                                 ),
                               ),
                             ],
@@ -279,26 +281,26 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                     ),
                   if (widget.widgetParams!.useCaptcha)
                     Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                           //color: widget.widgetParams!.phoneFieldColor,
                           //borderRadius: BorderRadius.circular(5.0),
                           ),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
                         child: TextFormField(
                           controller: _captchaController,
                           textAlign: TextAlign.center,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(5.0),
                             ),
                             filled: true,
                             fillColor: widget.widgetParams!.phoneFieldColor,
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.black, width: 1.0),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black, width: 1.0),
                             ),
-                            errorStyle: TextStyle(fontSize: 12),
+                            errorStyle: const TextStyle(fontSize: 12),
                             hintText: widget.widgetParams!.textEnterCaptcha,
                           ),
                           style: widget.widgetParams!.textPhoneField,
@@ -392,7 +394,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
             updateTimer!.cancel();
           }
           secondsLeft = 120;
-          updateTimer = Timer.periodic(Duration(seconds: 1), (Timer t) => captchaTimer(t));
+          updateTimer = Timer.periodic(const Duration(seconds: 1), (Timer t) => captchaTimer(t));
         }));
   }
 
@@ -425,13 +427,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   Widget _getContextSuccessful(BuildContext context) {
     return Center(
       child: Card(
-          margin: EdgeInsets.symmetric(horizontal: 15.0),
+          margin: const EdgeInsets.symmetric(horizontal: 15.0),
           color: widget.widgetParams!.cardColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
           ),
           child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
+              padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
               child: Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
                 Expanded(
                     child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[

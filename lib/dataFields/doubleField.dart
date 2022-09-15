@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import '../nsg_data.dart';
 
 class NsgDataDoubleField extends NsgDataField {

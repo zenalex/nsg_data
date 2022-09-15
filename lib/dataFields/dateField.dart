@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:jiffy/jiffy.dart';
 
 import '../nsg_data.dart';

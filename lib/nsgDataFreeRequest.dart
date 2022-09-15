@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:nsg_data/nsg_data_provider.dart';
 import 'package:nsg_data/nsg_data_requestParams.dart';
 
@@ -16,12 +18,7 @@ class NsgDataFreeRequest {
 
     function = dataProvider.serverUri + function;
     var response = await dataProvider.baseRequestList(
-        function: '$function',
-        headers: dataProvider.getAuthorizationHeader(),
-        url: function,
-        method: method,
-        params: filterMap,
-        postData: postData);
+        function: function, headers: dataProvider.getAuthorizationHeader(), url: function, method: method, params: filterMap, postData: postData);
 
     return response;
   }

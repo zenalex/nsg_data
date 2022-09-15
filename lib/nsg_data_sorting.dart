@@ -17,7 +17,7 @@ class NsgSorting {
   int get length => paramList.length;
 
   void add({required String name, required NsgSortingDirection direction}) {
-    paramList.add(new NsgSortingParam(parameterName: name, direction: direction));
+    paramList.add(NsgSortingParam(parameterName: name, direction: direction));
   }
 
   void clear() {
@@ -27,10 +27,10 @@ class NsgSorting {
   @override
   String toString() {
     var s = '';
-    paramList.forEach((param) {
-      if (s.length > 0) s += ',';
+    for (var param in paramList) {
+      if (s.isNotEmpty) s += ',';
       s += param.parameterName + (param.direction == NsgSortingDirection.ascending ? '+' : '-');
-    });
+    }
 
     return s;
   }

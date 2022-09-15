@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'dart:async';
 
 import 'package:event/event.dart';
@@ -146,9 +148,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       masterController!.itemsRequested.subscribe(masterItemsRequested);
     }
     if (dependsOnControllers != null) {
-      dependsOnControllers!.forEach((element) {
+      for (var element in dependsOnControllers!) {
         element.selectedItemChanged.subscribe(masterValueChanged);
-      });
+      }
     }
     //Проверяем, есть ли у типа данных, зарегистрированных в контроллере
     //заданное имя поля для задания фильтра по периоду (periodFieldName)
@@ -166,10 +168,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
     controllerFilter.controller = this;
 
-    if (requestOnInit)
+    if (requestOnInit) {
       requestItems();
-    else
+    } else {
       lateInit = true;
+    }
     super.onInit();
   }
 
@@ -180,9 +183,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       masterController!.itemsRequested.unsubscribe(masterItemsRequested);
     }
     if (dependsOnControllers != null) {
-      dependsOnControllers!.forEach((element) {
+      for (var element in dependsOnControllers!) {
         element.selectedItemChanged.unsubscribe(masterValueChanged);
-      });
+      }
     }
     currentStatus = RxStatus.empty();
     sendNotify();
@@ -296,16 +299,17 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
-    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName))
+    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
       return newItemsList;
+    }
     var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
 
     var list = <NsgDataItem>[];
-    newItemsList.forEach((element) {
+    for (var element in newItemsList) {
       if (element.fieldValues.fields[dataBinding!.slaveFieldName] == masterValue) {
         list.add(element);
       }
-    });
+    }
     return _applyControllerFilter(list);
   }
 
@@ -354,7 +358,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
       if (fieldNames.isNotEmpty) {
         var searchCmp = NsgCompare();
-        searchCmp.logicalOperator = NsgLogicalOperator.Or;
+        searchCmp.logicalOperator = NsgLogicalOperator.or;
         for (var fieldName in fieldNames) {
           var field = dataItem.fieldList.fields[fieldName];
           if (field is NsgDataStringField || field is NsgDataReferenceField) {
@@ -397,7 +401,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Post selected item to the server
   Future _postSelectedItem() async {
     if (selectedItem == null) {
-      throw new Exception("No selected item to post");
+      throw Exception("No selected item to post");
     }
     if (selectedItem == null) return;
     await selectedItem!.post();
@@ -561,7 +565,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       } else if (newItem.isEmpty) {
         currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
         sendNotify();
-        throw new Exception('Ошибка NBC-509. Данный объект более недоступен');
+        throw Exception('Ошибка NBC-509. Данный объект более недоступен');
       }
       //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
       //вернуть результат обратно
@@ -594,7 +598,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       } else if (newItem.isEmpty) {
         currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
         sendNotify();
-        throw new Exception('Ошибка NBC-509. Данный объект более недоступен');
+        throw Exception('Ошибка NBC-509. Данный объект более недоступен');
       }
       selectedItem = newItem.clone(cloneAsCopy: true);
       backupItem = selectedItem!.clone();

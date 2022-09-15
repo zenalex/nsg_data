@@ -104,13 +104,12 @@ class NsgDataProvider {
         response = await _dio.post(url!, queryParameters: params, data: postData, cancelToken: dioCancelToken);
       }
       if (isDebug) {
-        print('HTTP STATUS: ${response.statusCode}');
-        //print(response.data);
+        debugPrint('HTTP STATUS: ${response.statusCode}');
       }
 
       return response.data;
     } on DioError catch (e) {
-      print('dio error. function: $function, error: ${e.error ??= ''}');
+      debugPrint('dio error. function: $function, error: ${e.error ??= ''}');
       if (e.response?.statusCode == 400) {
         //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
         throw NsgApiException(NsgApiError(code: 400, message: e.response?.data, errorType: e.type));
@@ -132,7 +131,7 @@ class NsgDataProvider {
         throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
       }
     } catch (e) {
-      print('network error. function: $function, error: $e');
+      debugPrint('network error. function: $function, error: $e');
       return NsgApiException(NsgApiError(code: 0, message: '$e'));
     }
   }
@@ -204,10 +203,10 @@ class NsgDataProvider {
       var curData = response.data;
       return curData;
     } on DioError catch (e) {
-      print('dio error. function: $function, error: ${e.error ??= ''}');
+      debugPrint('dio error. function: $function, error: ${e.error ??= ''}');
       throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
-      print('network error. function: $function, error: $e');
+      debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
     }
   }
@@ -238,16 +237,16 @@ class NsgDataProvider {
         response = await _dio.post<Uint8List>(url!, data: params, options: Options(responseType: ResponseType.bytes));
       }
       if (debug) {
-        print('HTTP STATUS: ${response.statusCode}');
+        debugPrint('HTTP STATUS: ${response.statusCode}');
         //print(response.data);
       }
 
       return Image.memory(response.data!);
     } on DioError catch (e) {
-      print('dio error. function: $function, error: ${e.error ??= ''}');
+      debugPrint('dio error. function: $function, error: ${e.error ??= ''}');
       throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
-      print('network error. function: $function, error: $e');
+      debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
     }
   }
@@ -261,7 +260,7 @@ class NsgDataProvider {
   ///If error will be occured, NsgApiException will be generated
   Future connect(NsgBaseController? controller) async {
     if (!_initialized) await initialize();
-    var onRetry = controller != null ? controller.onRetry : null;
+    var onRetry = controller?.onRetry;
 
     if (useNsgAuthorization) {
       if (token == '') {
@@ -340,7 +339,7 @@ class NsgDataProvider {
     } catch (e) {
       getx.Get.snackbar('ОШИБКА', 'Произошла ошибка. Попробуйте еще раз.',
           isDismissible: true,
-          duration: Duration(seconds: 5),
+          duration: const Duration(seconds: 5),
           backgroundColor: Colors.red[200],
           colorText: Colors.black,
           snackPosition: getx.SnackPosition.BOTTOM);

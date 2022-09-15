@@ -1,7 +1,7 @@
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataUntypedReferenceField extends NsgDataReferenceField {
-  NsgDataUntypedReferenceField(String name) : super(name);
+  NsgDataUntypedReferenceField(String name, {this.defaultReferentType = NsgDataItem}) : super(name);
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {
@@ -17,13 +17,22 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
   @override
   Type get referentType => NsgDataItem;
 
+  ///Объект какого типа возвращать, если будет рапрошен метод getReferent у незаполненной ссылки
+  Type defaultReferentType;
+
+  @override
   NsgDataItem? getReferent(NsgDataItem dataItem, {bool useCache = true, bool allowNull = false}) {
     var id = dataItem.getFieldValue(name).toString();
     var uid = UntypedId(id);
 
     //Если тип не указан, возвращаем null
-    if (uid.referentType == null) return null;
-
+    if (uid.referentType == null) {
+      if (allowNull) {
+        return null;
+      } else {
+        return NsgDataClient.client.getNewObject(defaultReferentType);
+      }
+    }
     if (uid.guid == Guid.Empty || uid.guid == '') {
       return NsgDataClient.client.getNewObject(uid.referentType!);
     }
@@ -31,7 +40,11 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
       var item = NsgDataClient.client.getItemsFromCache(uid.referentType!, uid.guid, allowNull: allowNull);
       return item;
     } else {
-      return null;
+      if (allowNull) {
+        return null;
+      } else {
+        return NsgDataClient.client.getNewObject(defaultReferentType);
+      }
     }
   }
 
@@ -42,6 +55,7 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
     return NsgDataClient.client.getNewObject(uid.referentType!);
   }
 
+  @override
   Future<NsgDataItem> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
     var item = getReferent(dataItem, useCache: useCache);
     if (item == null) {
@@ -75,6 +89,7 @@ class UntypedId {
   Type? referentType;
 
   UntypedId(String id) {
+    //print('UUID = $id');
     if (id == '') {
       return;
     }

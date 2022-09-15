@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -11,7 +13,7 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
   final NsgDataProvider provider;
   final NsgPhoneLoginParams? widgetParams;
 
-  NsgPhoneLoginVerificationPage(this.provider, {this.widgetParams}) : super();
+  const NsgPhoneLoginVerificationPage(this.provider, {super.key, this.widgetParams});
 
   @override
   Widget build(BuildContext context) {
@@ -23,11 +25,11 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
   }
 
   AppBar getAppBar(BuildContext context) {
-    return AppBar(title: Text(''), centerTitle: true);
+    return AppBar(title: const Text(''), centerTitle: true);
   }
 
   Widget getLogo() {
-    var logo = Image(
+    var logo = const Image(
       image: AssetImage('lib/assets/logo-wfrs.png', package: 'nsg_data'),
       width: 140.0,
       height: 140.0,
@@ -45,7 +47,7 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
   }
 
   Widget getButtons() {
-    return ElevatedButton(
+    return const ElevatedButton(
       onPressed: null,
       child: Text('you need to override getButtons'),
     );
@@ -57,7 +59,7 @@ class NsgPhoneLoginVerificationWidget extends StatefulWidget {
   final NsgDataProvider provider;
   final NsgPhoneLoginVerificationPage verificationPage;
 
-  NsgPhoneLoginVerificationWidget(this.verificationPage, this.provider, {this.widgetParams}) : super();
+  const NsgPhoneLoginVerificationWidget(this.verificationPage, this.provider, {super.key, this.widgetParams});
   @override
   State<StatefulWidget> createState() => _NsgPhoneLoginVerificationState();
 }
@@ -84,7 +86,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
   }
 
   void startTimer() {
-    updateTimer ??= updateTimer = Timer.periodic(Duration(seconds: 1), (Timer t) => updateTimerEvent(t));
+    updateTimer ??= updateTimer = Timer.periodic(const Duration(seconds: 1), (Timer t) => updateTimerEvent(t));
   }
 
   void stopTimer() {
@@ -128,13 +130,13 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
     return Form(
       key: _formKey,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(20.0)),
           boxShadow: [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.15), offset: Offset(0.0, 4.0), blurRadius: 4.0, spreadRadius: 2.0)],
         ),
-        margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
-        padding: EdgeInsets.all(15.0),
+        margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
+        padding: const EdgeInsets.all(15.0),
         width: widget.widgetParams!.cardSize,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -147,39 +149,39 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                 children: <Widget>[
                   widget.widgetParams!.headerMessageVisible == true
                       ? Padding(
-                          padding: EdgeInsets.symmetric(vertical: 5.0),
+                          padding: const EdgeInsets.symmetric(vertical: 5.0),
                           child: Text(
                             widget.widgetParams!.headerMessage,
                             style: widget.widgetParams!.headerMessageStyle,
                             textAlign: TextAlign.center,
                           ),
                         )
-                      : SizedBox(),
+                      : const SizedBox(),
                   SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
                   Text(
                     widget.widgetParams!.headerMessageVerification,
                     style: widget.widgetParams!.headerMessageStyle,
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 15.0),
+                  const SizedBox(height: 15.0),
                   Text(
                     widget.widgetParams!.interpolate(widget.widgetParams!.descriptionMessegeVerification, params: {'phone': widget.provider.phoneNumber}),
                     style: widget.widgetParams!.descriptionStyle,
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 15.0),
+                  const SizedBox(height: 15.0),
                   Container(
                     decoration: BoxDecoration(
                       color: widget.widgetParams!.phoneFieldColor,
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
                       child: TextFormField(
                         keyboardType: TextInputType.number,
                         style: widget.widgetParams!.textPhoneField,
                         textAlign: TextAlign.center,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           border: InputBorder.none,
                         ),
                         onChanged: (text) {
@@ -191,7 +193,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                       ),
                     ),
                   ),
-                  SizedBox(height: 15.0),
+                  const SizedBox(height: 15.0),
                   widget.verificationPage.getButtons(),
                 ],
               ),
@@ -233,7 +235,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
       setState(() {
         isBusy = true;
       });
-      await Future.delayed(Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 3));
       Get.back<bool>(result: false);
     }
   }

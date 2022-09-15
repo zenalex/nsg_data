@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -67,28 +69,28 @@ class NsgPhoneLoginParams {
       this.headerMessageVisible,
       this.useCaptcha = true,
       this.mainPage}) {
-    headerMessageStyle ??= TextStyle(
+    headerMessageStyle ??= const TextStyle(
       fontFamily: 'Roboto',
       fontSize: 20.0,
       fontWeight: FontWeight.bold,
       color: Colors.black,
     );
-    textPhoneField ??= TextStyle(
+    textPhoneField ??= const TextStyle(
       fontSize: 18.0,
       fontFamily: 'Roboto',
       color: Color.fromRGBO(2, 54, 92, 1.0),
       fontWeight: FontWeight.normal,
     );
-    headerMessageStyle ??= TextStyle(
+    headerMessageStyle ??= const TextStyle(
       fontFamily: 'Roboto',
       fontSize: 18.0,
       color: Colors.black,
     );
     cardColor ??= Colors.white;
-    sendSmsButtonColor ??= Color.fromRGBO(0, 101, 175, 1.0);
-    sendSmsBorderColor ??= Color.fromRGBO(0, 301, 175, 1.0);
-    phoneIconColor ??= Color.fromRGBO(50, 50, 50, 1.0);
-    phoneFieldColor ??= Color.fromRGBO(2, 54, 92, 0.1);
+    sendSmsButtonColor ??= const Color.fromRGBO(0, 101, 175, 1.0);
+    sendSmsBorderColor ??= const Color.fromRGBO(0, 301, 175, 1.0);
+    phoneIconColor ??= const Color.fromRGBO(50, 50, 50, 1.0);
+    phoneFieldColor ??= const Color.fromRGBO(2, 54, 92, 0.1);
 
     errorMessageByStatusCode ??= errorMessage;
   }
@@ -143,6 +145,10 @@ class NsgPhoneLoginParams {
   void showError(BuildContext? context, String message) {
     if (message == '') return;
     Get.snackbar('ОШИБКА', message,
-        isDismissible: true, duration: Duration(seconds: 5), backgroundColor: Colors.red[200], colorText: Colors.black, snackPosition: SnackPosition.BOTTOM);
+        isDismissible: true,
+        duration: const Duration(seconds: 5),
+        backgroundColor: Colors.red[200],
+        colorText: Colors.black,
+        snackPosition: SnackPosition.BOTTOM);
   }
 }

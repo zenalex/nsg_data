@@ -18,6 +18,7 @@ class NsgEnum extends NsgDataItem {
     return list;
   }
 
+  @override
   void initialize() {
     throw Exception('initialize for type {runtimeType} is not defined');
   }

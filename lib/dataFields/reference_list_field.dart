@@ -47,7 +47,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
 
   List<T> fromJsonList(List<dynamic> maps) {
     var items = <T>[];
-    maps.forEach((m) {
+    for (var m in maps) {
       var elem = NsgDataClient.client.getNewObject(referentElementType);
       if (m is Map<String, dynamic>) {
         elem.fromJson(m);
@@ -57,7 +57,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
         throw Exception("Exception ReferenceListField 65. Unknown value type");
       }
       items.add(elem as T);
-    });
+    }
     return items;
   }
 

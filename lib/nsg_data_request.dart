@@ -18,12 +18,12 @@ class NsgDataRequest<T extends NsgDataItem> {
 
   List<NsgDataItem> _fromJsonList(List<dynamic> maps) {
     var items = <T>[];
-    maps.forEach((m) {
+    for (var m in maps) {
       var elem = NsgDataClient.client.getNewObject(dataItemType);
       elem.fromJson(m as Map<String, dynamic>);
       // elem.state = NsgDataItemState.fill;
       items.add(elem as T);
-    });
+    }
     return items;
   }
 
@@ -57,7 +57,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     FutureOr<void> Function(Exception)? userOnRetry,
     NsgCancelToken? cancelToken,
   }) async {
-    this.retryIf = retryIf;
+    retryIf = retryIf;
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       return await r.retry(
@@ -113,16 +113,14 @@ class NsgDataRequest<T extends NsgDataItem> {
       loadReference = [];
       loadReference = _addAllReferences(dataItem.runtimeType);
     }
-    if (filter == null) {
-      filter = NsgDataRequestParams();
-    }
+    filter ??= NsgDataRequestParams();
     filter.readNestedField = loadReference.join(',');
 
     method = 'POST';
     if (method == 'GET') {
       filterMap = filter.toJson();
     } else {
-      if (postData == null) postData = {};
+      postData ??= {};
       postData.addAll(filter.toJson());
     }
 
@@ -131,7 +129,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     } else {
       function = dataItem.remoteProvider.serverUri + function;
     }
-    var url = '$function';
+    var url = function;
     var response = await dataItem.remoteProvider.baseRequestList(
         function: url,
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
@@ -147,7 +145,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         if (response is Map) {
           items = (await loadDataAndReferences(response, loadReference, tag, filter: filter)).cast();
         } else {
-          if (!(response is List)) {
+          if (response is! List) {
             response = <dynamic>[response];
           }
           items = _fromJsonList(response).cast();
@@ -158,7 +156,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
       }
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
     return items;
   }
@@ -192,7 +190,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           NsgDataClient.client.addItemsToCache(items: newItems, tag: tag);
         }
       } else if (name == 'resultsCount') {
-        totalCount = int.tryParse(data) ?? null;
+        totalCount = int.tryParse(data);
       } else {
         // var foundField = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
         // if (foundField != null) {
@@ -222,7 +220,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         //   }
         // } else
         {
-          if (name.length > 0) {
+          if (name.isNotEmpty) {
             name = name.replaceRange(0, 1, name.substring(0, 1).toUpperCase());
           }
           if (NsgDataClient.client.isRegisteredByServerName(name)) {
@@ -237,7 +235,7 @@ class NsgDataRequest<T extends NsgDataItem> {
               NsgDataClient.client.addItemsToCache(items: refItems, tag: tag);
             }
           } else {
-            print('ERROR: $dataItemType.$name not found');
+            debugPrint('ERROR: $dataItemType.$name not found');
           }
         }
       }
@@ -335,7 +333,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       for (var fieldName in loadReference) {
         var splitedName = fieldName.split('.');
         var field = NsgDataClient.client.getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
-        if (!(field is NsgDataBaseReferenceField)) continue;
+        if (field is! NsgDataBaseReferenceField) continue;
         var refList = <String>[];
         var refItems = <NsgDataItem>[];
         var checkItems = <NsgDataItem>[];
@@ -354,7 +352,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
 
           //TODO: временно отключил пост-дочитывание untypedReference
-          if (refList.isNotEmpty && !(field is NsgDataUntypedReferenceField)) {
+          if (refList.isNotEmpty && field is! NsgDataUntypedReferenceField) {
             var request = NsgDataRequest(dataItemType: field.referentElementType);
             var cmp = NsgCompare();
             cmp.add(
@@ -363,7 +361,7 @@ class NsgDataRequest<T extends NsgDataItem> {
                 comparisonOperator: NsgComparisonOperator.inList);
             var filter = NsgDataRequestParams(compare: cmp);
             refItems = await request.requestItems(filter: filter, loadReference: []);
-            print('Дочитывание ${field.referentElementType}');
+            debugPrint('Дочитывание ЗАКОНЧЕНО ${field.referentElementType}');
             checkItems.addAll(refItems);
           }
         } else if (field is NsgDataReferenceListField) {
@@ -387,7 +385,7 @@ class NsgDataRequest<T extends NsgDataItem> {
   FutureOr<bool> _retryIfInternal(Exception ex) async {
     //400 - код ошибки сервера, не предполагающий повторного запроса данных
     if (ex is NsgApiException && (ex.error.code == 400 || ex.error.code == 401 || ex.error.code == 500)) return false;
-    if (this.retryIf != null) return (await this.retryIf!(ex));
+    if (retryIf != null) return (await retryIf!(ex));
     return true;
   }
 }

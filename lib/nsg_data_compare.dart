@@ -1,24 +1,24 @@
 import 'dart:convert';
 import 'nsg_data.dart';
 
-enum NsgLogicalOperator { And, Or }
+enum NsgLogicalOperator { and, or }
 
 class NsgCompare {
   /// логический оператор
-  var logicalOperator = NsgLogicalOperator.And;
+  var logicalOperator = NsgLogicalOperator.and;
   // параметры условий
   List<NsgCompareParam> paramList = [];
 
   /// Проверка наличия в фильтре хотя бы одного условия
   bool get isEmpty {
     var res = true;
-    this.paramList.forEach((param) {
+    for (var param in paramList) {
       if (param.parameterValue is NsgCompare) {
         res = res && (param.parameterValue as NsgCompare).isEmpty;
       } else {
         res = false;
       }
-    });
+    }
     return res;
   }
 
@@ -29,14 +29,20 @@ class NsgCompare {
   /// Возвращаем количество параметров с учетов всех вложенных параметров
   int get lengthAll {
     int i = 0;
-    paramList.forEach((param) => {
-          if (param.parameterValue is NsgCompare) {i += (param.parameterValue as NsgCompare).lengthAll} else {i++}
-        });
+    for (var param in paramList) {
+      {
+        if (param.parameterValue is NsgCompare) {
+          i += (param.parameterValue as NsgCompare).lengthAll;
+        } else {
+          i++;
+        }
+      }
+    }
     return i;
   }
 
   void add({required String name, required dynamic value, NsgComparisonOperator comparisonOperator = NsgComparisonOperator.equal}) {
-    paramList.add(new NsgCompareParam(parameterName: name, parameterValue: value, comparisonOperator: comparisonOperator));
+    paramList.add(NsgCompareParam(parameterName: name, parameterValue: value, comparisonOperator: comparisonOperator));
   }
 
   // void fromJson(Map<String, dynamic> json) {
@@ -50,10 +56,10 @@ class NsgCompare {
   Map<String, dynamic> toJson() {
     var map = <String, dynamic>{};
     var list = <Map<String, dynamic>>[];
-    paramList.forEach((param) {
+    for (var param in paramList) {
       list.add(param.toJson());
-    });
-    map['LogicalOperator'] = logicalOperator == NsgLogicalOperator.And ? 1 : 2;
+    }
+    map['LogicalOperator'] = logicalOperator == NsgLogicalOperator.and ? 1 : 2;
     map['ParamList'] = list;
     return map;
   }
@@ -90,7 +96,7 @@ class NsgCompareParam {
       map["Value"] = (parameterValue as NsgEnum).value;
     } else if (parameterValue is NsgDataItem) {
       map["Value"] = (parameterValue as NsgDataItem).id;
-    } else if (parameterValue is List && (parameterValue as List).length > 0 && (parameterValue as List).first is NsgDataItem) {
+    } else if (parameterValue is List && (parameterValue as List).isNotEmpty && (parameterValue as List).first is NsgDataItem) {
       var idList = <String>[];
       for (NsgDataItem e in parameterValue as List) {
         idList.add(e.id);

@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataEnumReferenceField<T extends NsgEnum> extends NsgDataBaseReferenceField {
@@ -11,13 +13,12 @@ class NsgDataEnumReferenceField<T extends NsgEnum> extends NsgDataBaseReferenceF
   @override
   dynamic get defaultValue => 0;
 
+  @override
   Type get referentType => T;
 
   T? getReferent(NsgDataItem dataItem, {bool useCache = true}) {
     int? v = dataItem.fieldValues.fields[name];
-    if (v == null) {
-      v = defaultValue;
-    }
+    v ??= defaultValue;
     return (NsgEnum.fromValue(referentType, v!) as T);
   }
 

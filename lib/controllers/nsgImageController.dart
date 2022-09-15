@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер для работы с объектами, содержащими картинки

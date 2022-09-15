@@ -68,9 +68,9 @@ class NsgDataClient {
     if (items == null || items.isEmpty) return;
     var time = DateTime.now();
     var cache = _getItemsCacheByType(items[0].runtimeType);
-    items.forEach((item) {
+    for (var item in items) {
       cache!.add(item: item!, time: time, tag: tag);
-    });
+    }
   }
 
   NsgItemList? _getItemsCacheByType(Type type) {

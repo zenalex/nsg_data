@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
 
@@ -72,19 +73,17 @@ class NsgSimpleRequest<T extends Object> {
     cancelToken ??= NsgCancelToken();
     var filterMap = <String, dynamic>{};
 
-    if (filter == null) {
-      filter = NsgDataRequestParams();
-    }
+    filter ??= NsgDataRequestParams();
 
     method = 'POST';
     if (method == 'GET') {
       filterMap = filter.toJson();
     } else {
-      if (postData == null) postData = {};
+      postData ??= {};
       postData.addAll(filter.toJson());
     }
 
-    var url = provider.serverUri + '$function';
+    var url = provider.serverUri + function;
     var response = await provider.baseRequestList(
         function: url, headers: provider.getAuthorizationHeader(), url: url, method: method, params: filterMap, postData: postData, cancelToken: cancelToken);
     items = <T>[];
@@ -102,7 +101,7 @@ class NsgSimpleRequest<T extends Object> {
         }
       }
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
     return items;
   }

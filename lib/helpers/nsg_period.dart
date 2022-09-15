@@ -61,7 +61,7 @@ class NsgPeriod {
         break;
 
       default:
-        print('не задан период');
+      //print('не задан период');
     }
   }
 
@@ -94,7 +94,7 @@ class NsgPeriod {
         break;
 
       default:
-        print("добавление - ошибка");
+      //print("добавление - ошибка");
     }
   }
 
@@ -122,7 +122,7 @@ class NsgPeriod {
         }
 
       default:
-        print("добавление - ошибка");
+      //print("добавление - ошибка");
     }
     return '';
   }
@@ -189,8 +189,9 @@ class NsgPeriod {
     var qe = qb.add(months: 3).endOf(Units.MONTH);
     if (Jiffy(beginDate).isSame(qb) && Jiffy(endDate).isSame(qe)) return NsgPeriodType.quarter;
     //Проверка на месяц
-    if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.MONTH)) && Jiffy(endDate).isSame(Jiffy(beginDate).endOf(Units.MONTH)))
+    if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.MONTH)) && Jiffy(endDate).isSame(Jiffy(beginDate).endOf(Units.MONTH))) {
       return NsgPeriodType.month;
+    }
     //Проверка на неделю
     if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.WEEK)) && Jiffy(endDate).isSame(Jiffy(beginDate).endOf(Units.WEEK))) return NsgPeriodType.week;
     //Проверка на день

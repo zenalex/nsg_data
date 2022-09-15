@@ -84,10 +84,10 @@ class NsgDataItem {
 
   ///Возвращает список полей объекта.
   ///Внимание! это единый список для всех объектов данного типа
-  NsgFieldList get fieldList => NsgDataClient.client.getFieldList(this.runtimeType);
+  NsgFieldList get fieldList => NsgDataClient.client.getFieldList(runtimeType);
 
   ///Список дополнительных параметров
-  NsgParamList get paramList => NsgDataClient.client.getParamList(this.runtimeType);
+  NsgParamList get paramList => NsgDataClient.client.getParamList(runtimeType);
 
   ///Значения полей объекта
   ///Так как поля обшие, значения храняться в отдельном объекте для экономии памяти
@@ -137,10 +137,9 @@ class NsgDataItem {
   void setFieldValue(String name, dynamic value) {
     //TODO: убрать этот метод, присваивать значения в setValue полей
     if (!fieldList.fields.containsKey(name)) {
-      print('object $runtimeType does not contains field $name');
-      assert(fieldList.fields.containsKey(name));
+      assert(fieldList.fields.containsKey(name), 'object $runtimeType does not contains field $name');
     }
-    var field = this.getField(name);
+    var field = getField(name);
     if (field is NsgDataDoubleField) {
       field.setValue(fieldValues, value);
       return;
@@ -149,20 +148,20 @@ class NsgDataItem {
       value = value.value;
     } else if (value is NsgDataItem) {
       if (fieldList.fields[name] is NsgDataUntypedReferenceField) {
-        value = '${value.getFieldValue(value.primaryKeyField)}.${value.runtimeType}';
+        value = '${value.getFieldValue(value.primaryKeyField)}.${value.typeName}';
       } else {
         value = value.getFieldValue(value.primaryKeyField);
       }
     } else if (value is DateTime) {
       value = value.toIso8601String();
     } else if (value is double) {
-      var field = this.getField(name);
+      var field = getField(name);
       if (field is NsgDataDoubleField) {
         value = value.nsgRoundToDouble(field.maxDecimalPlaces);
       }
     } else if (name != primaryKeyField) {
       if (value is String) {
-        var field = this.getField(name);
+        var field = getField(name);
         if (field is NsgDataStringField && value.length > field.maxLength && field.maxLength != 0) {
           value = value.toString().substring(0, field.maxLength);
         } else if (field is NsgDataDoubleField) {
@@ -184,6 +183,7 @@ class NsgDataItem {
     fieldValues.setEmpty(this, name);
   }
 
+  // ignore: constant_identifier_names
   static const String _PARAM_REMOTE_PROVIDER = 'RemoteProvider';
   NsgDataProvider get remoteProvider {
     if (paramList.params.containsKey(_PARAM_REMOTE_PROVIDER)) {
@@ -207,6 +207,19 @@ class NsgDataItem {
     throw Exception('field $name is not ReferencedField');
   }
 
+  ///В случае ссылочного поля позвращает объект, на который ссылается данное поле
+  ///Допускает возврат null, если ссылка не задана
+  T? getReferentOrNull<T extends NsgDataItem?>(String name) {
+    assert(fieldList.fields.containsKey(name));
+    var field = fieldList.fields[name]!;
+    if (field is NsgDataReferenceField) {
+      return field.getReferent(this, allowNull: true) as T;
+    } else if (field is NsgDataEnumReferenceField) {
+      return field.getReferent(this) as T;
+    }
+    throw Exception('field $name is not ReferencedField');
+  }
+
   ///В случае ссылочного поля позвращает объект, на который ссылается данное поле. Если поле не прочитано из БД, читает его асинхронно
   Future<T> getReferentAsync<T extends NsgDataItem>(String name, {bool useCache = true}) async {
     assert(fieldValues.fields.containsKey(name));
@@ -216,6 +229,7 @@ class NsgDataItem {
     return dataItem as T;
   }
 
+  // ignore: constant_identifier_names
   static const String _PRIMARY_KEY_FIELD = 'PrimaryKeyField';
 
   ///Возвращает значение ключегого поля (обычно Guid)
@@ -233,12 +247,12 @@ class NsgDataItem {
   ///Возвращает список всех полей ссылочных типов
   List<String> getAllReferenceFields() {
     var list = <String>[];
-    fieldValues.fields.keys.forEach((name) {
+    for (var name in fieldValues.fields.keys) {
       var field = fieldList.fields[name];
       if (field is NsgDataReferenceField) {
         list.add(name);
       }
-    });
+    }
 
     return list;
   }

@@ -18,9 +18,9 @@ class NsgDataPost<T extends NsgDataItem> {
 
   List<Map<String, dynamic>> _toJson() {
     var list = <Map<String, dynamic>>[];
-    itemsToPost.forEach((i) {
+    for (var i in itemsToPost) {
       list.add(i.toJson());
-    });
+    }
     return list;
   }
 
