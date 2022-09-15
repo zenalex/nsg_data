@@ -43,6 +43,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
   Widget getRememberMeCheckbox() {
     bool initialValue = true;
     var checkbox = NsgCheckBox(
+      toggleInside: true,
       simple: true,
       margin: const EdgeInsets.only(top: 5, bottom: 5),
       label: 'Запомнить пользователя',
