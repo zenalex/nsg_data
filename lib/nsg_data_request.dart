@@ -157,6 +157,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       }
     } catch (e) {
       debugPrint(e.toString());
+      rethrow;
     }
     return items;
   }

@@ -23,7 +23,7 @@ class NsgDataDateField extends NsgDataField {
   @override
   void setValue(NsgFieldValues fieldValues, dynamic value) {
     if (value is String) {
-      fieldValues.fields[name] = DateTime.parse(value);
+      fieldValues.fields[name] = DateTime.parse(value).toLocal();
     } else {
       fieldValues.fields[name] = value;
     }
