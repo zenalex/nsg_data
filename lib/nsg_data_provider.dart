@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' as getx;
@@ -24,9 +26,10 @@ class NsgDataProvider {
   bool useNsgAuthorization = true;
   bool _initialized = false;
   bool isAnonymous = true;
+  bool saveToken = true;
   String? phoneNumber;
   DateTime? smsRequestedTime;
-  bool isDebug = true;
+  bool isDebug = kDebugMode;
 
   ///Firebase token for this device
   String firebaseToken;
@@ -67,6 +70,11 @@ class NsgDataProvider {
     if (useNsgAuthorization) {
       var _prefs = await SharedPreferences.getInstance();
       if (_prefs.containsKey(applicationName)) token = _prefs.getString(applicationName);
+      if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+        saveToken = false;
+      } else {
+        saveToken = true;
+      }
     }
     _initialized = true;
   }
@@ -330,7 +338,7 @@ class NsgDataProvider {
         token = loginResponse.token;
         isAnonymous = loginResponse.isAnonymous;
       }
-      if (!isAnonymous) {
+      if (!isAnonymous && saveToken) {
         var _prefs = await SharedPreferences.getInstance();
         await _prefs.setString(applicationName, token!);
       }
@@ -348,7 +356,12 @@ class NsgDataProvider {
   }
 
   Future<bool> logout() async {
-    await baseRequest(function: 'Logout', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/Logout', method: 'GET');
+    try {
+      //TODO: проверить работу на стороне сервера
+      await baseRequest(function: 'Logout', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/Logout', method: 'GET');
+    } catch (ex) {
+      debugPrint('ERROR logout: ${ex.toString()}');
+    }
     if (!isAnonymous) {
       var _prefs = await SharedPreferences.getInstance();
       await _prefs.remove(applicationName);

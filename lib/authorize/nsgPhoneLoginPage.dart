@@ -47,7 +47,9 @@ class NsgPhoneLoginPage extends StatelessWidget {
       simple: true,
       margin: const EdgeInsets.only(top: 5, bottom: 5),
       label: 'Запомнить пользователя',
-      onPressed: () {},
+      onPressed: (currentValue) {
+        provider.saveToken = currentValue;
+      },
       value: initialValue,
     );
     return checkbox;
