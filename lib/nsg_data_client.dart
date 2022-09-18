@@ -13,6 +13,9 @@ class NsgDataClient {
   final _paramList = <String, NsgParamList>{};
   final _itemList = <String, NsgItemList>{};
 
+  ///Количество зарегистрированных типов данных в провайдере
+  int get registeredDataItemsCount => _registeredItems.keys.length;
+
   void registerDataItem(NsgDataItem item, {NsgDataProvider? remoteProvider}) {
     if (remoteProvider != null) item.remoteProvider = remoteProvider;
     _registeredItems[item.runtimeType.toString()] = item;

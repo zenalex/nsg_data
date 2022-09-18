@@ -41,7 +41,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
   }
 
   Widget getRememberMeCheckbox() {
-    bool initialValue = true;
+    bool initialValue = provider.saveToken;
     var checkbox = NsgCheckBox(
       toggleInside: true,
       simple: true,
