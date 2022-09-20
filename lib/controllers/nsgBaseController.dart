@@ -198,13 +198,17 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     itemsRequested.broadcast();
     await _requestItems();
     itemsRequested.broadcast();
-    sendNotify(keys: keys);
+    //TODO: sendNotify
+    //sendNotify(keys: keys);
+    sendNotify();
   }
 
   ///Обновление данных
   Future refreshData({List<NsgUpdateKey>? keys}) async {
     currentStatus = RxStatus.loading();
-    sendNotify(keys: keys);
+    //TODO: доделать обновление таблицы
+    //sendNotify(keys: keys);
+    sendNotify();
     await requestItems(keys: keys);
     // currentStatus = RxStatus.success();
     // sendNotify();
