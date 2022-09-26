@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -24,6 +23,7 @@ class NsgDataProvider {
   String? name;
   String applicationName;
   bool useNsgAuthorization = true;
+  bool allowConnect;
   bool _initialized = false;
   bool isAnonymous = true;
   bool saveToken = true;
@@ -62,6 +62,7 @@ class NsgDataProvider {
       this.serverUri = 'http://alex.nsgsoft.ru:5073',
       this.authorizationApi = 'Api/Auth',
       this.useNsgAuthorization = true,
+      this.allowConnect = true,
       required this.firebaseToken});
 
   ///Initialization. Load saved token if useNsgAuthorization == true
@@ -69,7 +70,9 @@ class NsgDataProvider {
     if (_initialized) return;
     if (useNsgAuthorization) {
       var _prefs = await SharedPreferences.getInstance();
-      if (_prefs.containsKey(applicationName)) token = _prefs.getString(applicationName);
+      if (_prefs.containsKey(applicationName)) {
+        token = _prefs.getString(applicationName);
+      }
       if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
         saveToken = false;
       } else {
@@ -266,11 +269,11 @@ class NsgDataProvider {
 
   ///Connect to server
   ///If error will be occured, NsgApiException will be generated
-  Future connect(NsgBaseController? controller) async {
+  Future connect(NsgBaseController controller) async {
     if (!_initialized) await initialize();
-    var onRetry = controller?.onRetry;
+    var onRetry = controller.onRetry;
 
-    if (useNsgAuthorization) {
+    if (useNsgAuthorization && allowConnect) {
       if (token == '') {
         await _anonymousLogin(onRetry);
         return;
@@ -291,7 +294,11 @@ class NsgDataProvider {
         }
       }
     }
-    return;
+    if (allowConnect && isAnonymous) {
+      await getx.Get.to(loginPage)?.then((value) => controller.loadProviderData());
+    } else {
+      await controller.loadProviderData();
+    }
   }
 
   Future<Image> getCaptcha() async {

@@ -665,4 +665,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     updateKeys.add(key);
     return key;
   }
+
+  ///Метод, вызываемый при инициализации provider (загрузка приложения)
+  Future loadProviderData() async {
+  }
 }
