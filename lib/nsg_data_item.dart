@@ -96,7 +96,7 @@ class NsgDataItem {
 
   ///Добавление ногого поля в объект
   ///Вызывается при инициализации
-  void addField(NsgDataField field, {bool primaryKey = false}) {
+  void addField(NsgDataField field, {bool primaryKey = false, String? presentation}) {
     var name = field.name;
     assert(!fieldList.fields.containsKey(name));
     fieldList.fields[name] = field;
@@ -104,6 +104,7 @@ class NsgDataItem {
       assert(primaryKeyField == '');
       primaryKeyField = name;
     }
+    if (presentation != null) field.presentation = presentation;
   }
 
   ///Получить поле объекта по его имени
