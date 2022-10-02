@@ -276,21 +276,15 @@ class NsgDataProvider {
     if (useNsgAuthorization && allowConnect) {
       if (token == '') {
         await _anonymousLogin(onRetry);
-        return;
       } else {
         try {
           await _checkToken(onRetry);
-          return;
         } on NsgApiException catch (e) {
           if (e.error.errorType == null) {
-            if (e.error.code != 401 && e.error.code != 500) {
-              rethrow;
-            }
           } else {
             rethrow;
           }
           await _anonymousLogin(onRetry);
-          return;
         }
       }
     }
