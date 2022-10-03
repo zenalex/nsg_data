@@ -22,6 +22,7 @@ class NsgDataProvider {
   String authorizationApi = 'Api/Auth/Login';
   String? name;
   String applicationName;
+  String applicationVersion;
   bool useNsgAuthorization = true;
   bool allowConnect;
   bool _initialized = false;
@@ -63,7 +64,8 @@ class NsgDataProvider {
       this.authorizationApi = 'Api/Auth',
       this.useNsgAuthorization = true,
       this.allowConnect = true,
-      required this.firebaseToken});
+      required this.firebaseToken,
+      required this.applicationVersion});
 
   ///Initialization. Load saved token if useNsgAuthorization == true
   Future initialize() async {
@@ -416,6 +418,24 @@ class NsgDataProvider {
       return true;
     }
     throw NsgApiException(NsgApiError(code: loginResponse.errorCode));
+  }
+
+  Future<int> _checkVersion(FutureOr<void> Function(Exception)? onRetry) async {
+    var params = <String, dynamic>{};
+    params['appId'] = applicationName;
+    params['version'] = applicationVersion;
+    var response = await (baseRequest(
+        function: 'CheckVersion',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/CheckVersion',
+        method: 'GET',
+        params: params,
+        autoRepeate: true,
+        autoRepeateCount: 1000,
+        onRetry: onRetry));
+
+    var loginResponse = NsgLoginResponse.fromJson(response);
+    return loginResponse.errorCode;
   }
 
   Map<String, String?> getAuthorizationHeader() {

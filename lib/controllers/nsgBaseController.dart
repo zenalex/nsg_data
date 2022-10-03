@@ -351,12 +351,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
     }
     //Учитываем пользовательский фильтр на дату
-    if (controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
+    if (controllerFilter.isOpen && controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
       cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.beginDate, comparisonOperator: NsgComparisonOperator.greaterOrEqual);
       cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
     }
     //Добавляем условие по строке поиска если фильтр разрешен и открыт
-    if (controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
+    if (controllerFilter.isOpen && controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
       var dataItem = NsgDataClient.client.getNewObject(dataType);
       var fieldNames = dataItem.searchFieldList;
 
@@ -667,6 +667,5 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Метод, вызываемый при инициализации provider (загрузка приложения)
-  Future loadProviderData() async {
-  }
+  Future loadProviderData() async {}
 }
