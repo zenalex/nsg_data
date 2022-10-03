@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' as getx;
+import 'package:nsg_controls/widgets/nsg_error_widget.dart';
 import 'package:nsg_data/controllers/nsgBaseController.dart';
 import 'package:nsg_data/nsgApiException.dart';
 import 'package:retry/retry.dart';
@@ -276,6 +277,11 @@ class NsgDataProvider {
     var onRetry = controller.onRetry;
 
     if (useNsgAuthorization && allowConnect) {
+      if (await _checkVersion(onRetry) != 0) {
+        NsgErrorWidget.showErrorByString('Требуетс яобновление программы');
+        await Future.delayed(const Duration(seconds: 5));
+      }
+      ;
       if (token == '') {
         await _anonymousLogin(onRetry);
       } else {
