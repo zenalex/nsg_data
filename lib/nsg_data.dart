@@ -53,3 +53,4 @@ export 'nsg_data_item_state.dart';
 export 'nsgDataApiError.dart';
 export 'controllers/nsg_update_key_type.dart';
 export 'controllers/nsg_update_key.dart';
+export 'controllers/nsgDataTableController.dart';

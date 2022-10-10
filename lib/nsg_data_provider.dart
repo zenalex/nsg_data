@@ -430,18 +430,24 @@ class NsgDataProvider {
     var params = <String, dynamic>{};
     params['appId'] = applicationName;
     params['version'] = applicationVersion;
-    var response = await (baseRequest(
-        function: 'CheckVersion',
-        headers: getAuthorizationHeader(),
-        url: '$serverUri/$authorizationApi/CheckVersion',
-        method: 'GET',
-        params: params,
-        autoRepeate: true,
-        autoRepeateCount: 1000,
-        onRetry: onRetry));
-
-    var loginResponse = NsgLoginResponse.fromJson(response);
-    return loginResponse.errorCode;
+    try {
+      var response = await (baseRequest(
+          function: 'CheckVersion',
+          headers: getAuthorizationHeader(),
+          url: '$serverUri/$authorizationApi/CheckVersion',
+          method: 'GET',
+          params: params,
+          autoRepeate: true,
+          autoRepeateCount: 1000,
+          onRetry: onRetry));
+      var loginResponse = NsgLoginResponse.fromJson(response);
+      return loginResponse.errorCode;
+    } on NsgApiException catch (e) {
+      if (e.error.code == 404) {
+        return 0;
+      }
+    }
+    return 0;
   }
 
   Map<String, String?> getAuthorizationHeader() {
