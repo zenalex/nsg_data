@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:get/get.dart';
 import 'package:nsg_controls/nsg_button.dart';
-import 'package:nsg_controls/nsg_checkbox.dart';
+import 'package:nsg_controls/formfields/nsg_checkbox.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 
 import '../nsg_data_provider.dart';
