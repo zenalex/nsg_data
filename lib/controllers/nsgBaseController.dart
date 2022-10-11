@@ -209,7 +209,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //TODO: доделать обновление таблицы
     //sendNotify(keys: keys);
     sendNotify();
-    await requestItems(keys: keys);
+    await requestItems(keys: null);
     // currentStatus = RxStatus.success();
     // sendNotify();
   }
