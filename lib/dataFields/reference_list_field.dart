@@ -56,7 +56,18 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
       } else {
         throw Exception("Exception ReferenceListField 65. Unknown value type");
       }
-      items.add(elem as T);
+      //TODO: проверка на дубл икат строк для
+      var dublicate = false;
+      for (var item in items) {
+        if (item.isNotEmpty && item.id == elem.id) {
+          print('ОШИБКА RLF-62: дубликат стртоки в таб. части');
+          dublicate = true;
+          break;
+        }
+      }
+      if (!dublicate) {
+        items.add(elem as T);
+      }
     }
     return items;
   }
