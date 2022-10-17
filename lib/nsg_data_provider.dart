@@ -281,7 +281,6 @@ class NsgDataProvider {
         NsgErrorWidget.showErrorByString('Требуетс яобновление программы');
         await Future.delayed(const Duration(seconds: 5));
       }
-      ;
       if (token == '') {
         await _anonymousLogin(onRetry);
       } else {
