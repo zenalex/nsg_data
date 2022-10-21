@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../nsg_data.dart';
 
 class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseReferenceField {
@@ -60,7 +62,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
       var dublicate = false;
       for (var item in items) {
         if (item.isNotEmpty && item.id == elem.id) {
-          print('ОШИБКА RLF-62: дубликат стртоки в таб. части');
+          debugPrint('ОШИБКА RLF-62: дубликат стртоки в таб. части');
           dublicate = true;
           break;
         }
