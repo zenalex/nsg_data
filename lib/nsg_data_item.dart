@@ -96,7 +96,8 @@ class NsgDataItem {
 
   ///Добавление ногого поля в объект
   ///Вызывается при инициализации
-  void addField(NsgDataField field, {bool primaryKey = false, String? presentation}) {
+  void addField(NsgDataField field,
+      {bool primaryKey = false, String? presentation}) {
     var name = field.name;
     assert(!fieldList.fields.containsKey(name));
     fieldList.fields[name] = field;
@@ -138,7 +139,8 @@ class NsgDataItem {
   void setFieldValue(String name, dynamic value) {
     //TODO: убрать этот метод, присваивать значения в setValue полей
     if (!fieldList.fields.containsKey(name)) {
-      assert(fieldList.fields.containsKey(name), 'object $runtimeType does not contains field $name');
+      assert(fieldList.fields.containsKey(name),
+          'object $runtimeType does not contains field $name');
     }
     var field = getField(name);
     if (field is NsgDataDoubleField) {
@@ -149,7 +151,8 @@ class NsgDataItem {
       value = value.value;
     } else if (value is NsgDataItem) {
       if (fieldList.fields[name] is NsgDataUntypedReferenceField) {
-        value = '${value.getFieldValue(value.primaryKeyField)}.${value.typeName}';
+        value =
+            '${value.getFieldValue(value.primaryKeyField)}.${value.typeName}';
       } else {
         value = value.getFieldValue(value.primaryKeyField);
       }
@@ -163,7 +166,9 @@ class NsgDataItem {
     } else if (name != primaryKeyField) {
       if (value is String) {
         var field = getField(name);
-        if (field is NsgDataStringField && value.length > field.maxLength && field.maxLength != 0) {
+        if (field is NsgDataStringField &&
+            value.length > field.maxLength &&
+            field.maxLength != 0) {
           value = value.toString().substring(0, field.maxLength);
         } else if (field is NsgDataDoubleField) {
           //TODO: такое впечатление, что весь это метод надо заменить на данную строку.
@@ -179,7 +184,8 @@ class NsgDataItem {
   ///Пометить поле пустым, т.е. что оно не загружалось из БД
   void setFieldEmpty(String name) {
     if (!fieldList.fields.containsKey(name)) {
-      assert(fieldList.fields.containsKey(name), 'object $runtimeType does not contains field $name');
+      assert(fieldList.fields.containsKey(name),
+          'object $runtimeType does not contains field $name');
     }
     fieldValues.setEmpty(this, name);
   }
@@ -194,7 +200,8 @@ class NsgDataItem {
     }
   }
 
-  set remoteProvider(NsgDataProvider? value) => paramList.params[_PARAM_REMOTE_PROVIDER] = value;
+  set remoteProvider(NsgDataProvider? value) =>
+      paramList.params[_PARAM_REMOTE_PROVIDER] = value;
 
   ///В случае ссылочного поля позвращает объект, на который ссылается данное поле
   T getReferent<T extends NsgDataItem?>(String name) {
@@ -217,16 +224,21 @@ class NsgDataItem {
       return field.getReferent(this, allowNull: true) as T;
     } else if (field is NsgDataEnumReferenceField) {
       return field.getReferent(this) as T;
+    } else if (field is NsgDataReferenceListField) {
+      // Пока решил возвращать null, т.к. иначе непонятно что возвращать
+      return null;
     }
     throw Exception('field $name is not ReferencedField');
   }
 
   ///В случае ссылочного поля позвращает объект, на который ссылается данное поле. Если поле не прочитано из БД, читает его асинхронно
-  Future<T> getReferentAsync<T extends NsgDataItem>(String name, {bool useCache = true}) async {
+  Future<T> getReferentAsync<T extends NsgDataItem>(String name,
+      {bool useCache = true}) async {
     assert(fieldValues.fields.containsKey(name));
     var field = fieldList.fields[name]!;
     assert(field is NsgDataReferenceField);
-    var dataItem = await ((field as NsgDataReferenceField).getReferentAsync(this, useCache: useCache));
+    var dataItem = await ((field as NsgDataReferenceField)
+        .getReferentAsync(this, useCache: useCache));
     return dataItem as T;
   }
 
@@ -243,7 +255,8 @@ class NsgDataItem {
   }
 
   ///Устанавливает значение ключевого поля (обычно Guid)
-  set primaryKeyField(String value) => paramList.params[_PRIMARY_KEY_FIELD] = value;
+  set primaryKeyField(String value) =>
+      paramList.params[_PRIMARY_KEY_FIELD] = value;
 
   ///Возвращает список всех полей ссылочных типов
   List<String> getAllReferenceFields() {
@@ -272,14 +285,16 @@ class NsgDataItem {
   @override
   bool operator ==(Object other) => other is NsgDataItem && equal(other);
   bool equal(NsgDataItem other) {
-    if (primaryKeyField == '') return hashCode == other.hashCode;
-    return (getFieldValue(primaryKeyField) == other.getFieldValue(primaryKeyField) && loadTime == other.loadTime);
+    return hashCode == other.hashCode;
+    // if (primaryKeyField == '') return hashCode == other.hashCode;
+    // return (getFieldValue(primaryKeyField) == other.getFieldValue(primaryKeyField) && loadTime == other.loadTime);
   }
 
   @override
   int get hashCode {
     if (primaryKeyField == '') return super.hashCode;
-    return (getFieldValue(primaryKeyField).toString() + loadTime.toString()).hashCode;
+    //return (getFieldValue(primaryKeyField).toString() + loadTime.toString()).hashCode;
+    return (getFieldValue(primaryKeyField).toString()).hashCode;
   }
 
   operator [](String name) => getFieldValue(name);
@@ -361,7 +376,10 @@ class NsgDataItem {
     var list = <String>[];
     for (var fieldName in fieldList.fields.keys) {
       var field = getField(fieldName);
-      if (field.name == primaryKeyField || field is NsgDataUntypedReferenceField || field is NsgDataEnumReferenceField || field is NsgDataDateField) {
+      if (field.name == primaryKeyField ||
+          field is NsgDataUntypedReferenceField ||
+          field is NsgDataEnumReferenceField ||
+          field is NsgDataDateField) {
         continue;
       }
       list.add(fieldName);
