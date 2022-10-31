@@ -93,7 +93,7 @@ class NsgSimpleRequest<T extends Object> {
         if (response is Map) {
           var maps = response as Map<String, dynamic>;
           maps.forEach((name, data) {
-            if (name == 'results') {
+            if (name == '_results_') {
               assert(data is List);
               items = (data as List).cast();
             }
