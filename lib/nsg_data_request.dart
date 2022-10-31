@@ -135,7 +135,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
         url: url,
         method: method,
-        params: filterMap,3
+        params: filterMap,
         postData: postData,
         cancelToken: cancelToken);
     items = <T>[];
