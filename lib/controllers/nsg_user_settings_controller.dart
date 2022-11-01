@@ -37,7 +37,7 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       try {
         settingsMap = jsonDecode((currentItem as NsgUserSettings).settings);
       } catch (e) {
-        debugPrint('Ошибка загрузки настроект пользователя');
+        debugPrint('Ошибка загрузки настроек пользователя');
       }
     }
     return;
