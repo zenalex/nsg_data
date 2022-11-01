@@ -172,7 +172,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     var allItems = <NsgDataItem>[];
     var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty);
     maps.forEach((name, data) {
-      if (name == 'results') {
+      if (name == '_results_') {
         newItems = _fromJsonList(data);
         allItems.addAll(newItems);
         if (newItems.isNotEmpty && filter != null && filter.fieldsToRead != null && filter.fieldsToRead!.isNotEmpty) {
