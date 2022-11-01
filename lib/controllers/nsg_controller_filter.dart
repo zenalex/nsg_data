@@ -28,6 +28,9 @@ class NsgControllerFilter {
   ///Открыт ли фильтр на экране
   bool isOpen = false;
 
+  ///Открыт ли фильтр по строке на экране
+  bool? isSearchStringFilterOpen = null;
+
   ///Строка поиска. Должна применяться через метод updateController для задержки срабатывания,
   ///что дает пользователю ввести строку поиска не вызвав серию обновлений контроллера до окончания ввода
   String searchString = '';
