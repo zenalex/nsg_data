@@ -402,6 +402,29 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return obx(widget, onError: onError, onLoading: onLoading, onEmpty: onEmpty);
   }
 
+  static Widget Function() getDefaultProgressIndicator = _defaultProgressIndicator;
+  static Widget _defaultProgressIndicator() {
+    return const Center(child: CircularProgressIndicator());
+  }
+
+  Widget obx(
+    NotifierBuilder<NsgBaseControllerData?> widget, {
+    Widget Function(String? error)? onError,
+    Widget? onLoading,
+    Widget? onEmpty,
+  }) {
+    return SimpleBuilder(builder: (_) {
+      if (status.isLoading) {
+        return onLoading ?? getDefaultProgressIndicator();
+      } else if (status.isError) {
+        return onError != null ? onError(status.errorMessage) : Center(child: Text('A error occurred: ${status.errorMessage}'));
+      } else if (status.isEmpty) {
+        return onEmpty ?? const SizedBox.shrink(); // Also can be widget(null); but is risky
+      }
+      return widget(value);
+    });
+  }
+
   ///Post selected item to the server
   Future _postSelectedItem() async {
     if (selectedItem == null) {
