@@ -691,4 +691,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Метод, вызываемый при инициализации provider (загрузка приложения)
   Future loadProviderData() async {}
+
+  List<String> get objectFieldsNames => NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
+    
 }
