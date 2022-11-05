@@ -111,7 +111,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
     if (loadReference == null) {
       loadReference = [];
-      loadReference = _addAllReferences(dataItem.runtimeType);
+      loadReference = addAllReferences(dataItem.runtimeType);
     }
     filter ??= NsgDataRequestParams();
     filter.readNestedField = loadReference.join(',');
@@ -249,15 +249,18 @@ class NsgDataRequest<T extends NsgDataItem> {
   ///Добавить в вписок все ссылочные типа объекта типа type
   ///Если среди полей будет табличная часть, ее ссылочные поля также будут
   ///добавлены в список через имяТаблицы.имяПоля
-  List<String> _addAllReferences(Type type) {
+  static List<String> addAllReferences(Type type, {List<String> exceptFields = const []}) {
     List<String> loadReference = [];
     var allFields = NsgDataClient.client.getFieldList(type);
     for (var field in allFields.fields.values) {
+      if (exceptFields.contains(field.name)) {
+        continue;
+      }
       if ((field is NsgDataReferenceField || field is NsgDataReferenceListField) && field.name != NsgDataItem.nameOwnerId) {
         loadReference.add(field.name);
       }
       if (field is NsgDataReferenceListField) {
-        var tableRefereces = _addAllReferences(field.referentElementType);
+        var tableRefereces = addAllReferences(field.referentElementType);
         for (var item in tableRefereces) {
           loadReference.add(field.name + '.' + item);
         }
