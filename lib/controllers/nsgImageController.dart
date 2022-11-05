@@ -18,7 +18,7 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
       super.dataBindign,
       super.autoRepeate = false,
       super.autoRepeateCount = 10,
-      super.useDataCache = true,
+      super.useDataCache = false,
       super.selectedMasterRequired = true,
       super.autoSelectFirstItem = false,
       super.dependsOnControllers}) {
