@@ -83,6 +83,7 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
     if (_imageQueue.any((e) => e.id == imageQueueParam.id && e.fieldName == imageQueueParam.fieldName)) return;
     //Если картинка ранее не читалась и отсутствует в кэше, добавляем ее в список на чтение
     _imageQueue.add(imageQueueParam);
+    startImageQueueRead();
   }
 
   ///Запуск фонового чтения картинки из очереди
@@ -106,7 +107,14 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
     var filter = NsgDataRequestParams(compare: cmp, readNestedField: fields);
     var req = NsgDataRequest(dataItemType: dataType);
     var item = await req.requestItem(filter: filter);
+    if (items.contains(item)) {
+      var oldItem = items.firstWhere((e) => e.id == item.id);
+      oldItem[imageQueueParam.fieldName] = item[imageQueueParam.fieldName];
+    } else {
+      items.add(item as T);
+    }
     _requestList.remove(imageQueueParam);
+    startImageQueueRead();
     sendNotify(keys: [NsgUpdateKey(id: item.id.toString(), type: NsgUpdateKeyType.element)]);
     //var oldItem =
   }
