@@ -44,8 +44,8 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   }
 
   @override
-  Future itemPagePost({bool goBack = true}) async {
+  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
     (currentItem as NsgUserSettings).settings = jsonEncode(settingsMap);
-    return await super.itemPagePost(goBack: goBack);
+    return await super.itemPagePost(goBack: goBack, useValidation: useValidation);
   }
 }

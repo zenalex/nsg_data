@@ -473,16 +473,18 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Close item page and post current (selectedItem) item to databese (server)
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
-  Future itemPagePost({bool goBack = true}) async {
+  ///useValidation == true перед сохранением проводится валидация
+  ///В случае успешного сохранения возвращает true
+  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
     assert(selectedItem != null);
     var validationResult = selectedItem!.validateFieldValues();
-    if (!validationResult.isValid) {
+    if (useValidation && !validationResult.isValid) {
       var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
       if (NsgApiException.showExceptionDefault != null) {
         NsgApiException.showExceptionDefault!(err);
       }
       sendNotify();
-      return;
+      return false;
     }
 
     currentStatus = RxStatus.loading();
@@ -517,6 +519,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       sendNotify();
       selectedItemChanged.broadcast(null);
     }
+    return true;
   }
 
   ///Возвращает была ли модифицирована текущая строка контроллера после открытии страницы на редактирование
@@ -693,5 +696,4 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future loadProviderData() async {}
 
   List<String> get objectFieldsNames => NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
-    
 }

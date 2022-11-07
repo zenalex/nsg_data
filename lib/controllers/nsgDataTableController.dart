@@ -57,7 +57,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Close row page and post current (selectedItem) item to dataTable
   @override
-  Future itemPagePost({bool goBack = true}) async {
+  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
     assert(selectedItem != null);
     var validationResult = selectedItem!.validateFieldValues();
     if (!validationResult.isValid) {
@@ -66,7 +66,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
         NsgApiException.showExceptionDefault!(err);
       }
       sendNotify();
-      return;
+      return false;
     }
     if (backupItem != null && dataItemList.contains(backupItem)) {
       dataItemList.remove(backupItem!);
@@ -86,6 +86,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       masterController!.sendNotify();
     }
     requestItems();
+    return true;
   }
 
   ///Open row page to view and edit data
