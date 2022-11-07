@@ -1,5 +1,7 @@
 // ignore_for_file: file_names
 
+import 'dart:collection';
+
 import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер для работы с объектами, содержащими картинки
@@ -12,6 +14,19 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
   ///Поля для чтения основым запросом. Не должны содержать полей типа картинка. Формируется автоматически в конструкторе.
   List<String> fieldsToRead = [];
 
+  ///Если параметр true, то чтение картинок будет и дти отдельными фоновыми запросами по факту необходимости
+  ///их отображения в NsgImage. При этом команда обновления будет подаваться конкретному NsgImage
+  ///Максимальное количество одновременно запрашиваемых картинок ограничивается maxСoncurrentlyRequests
+  bool lateImageRead;
+
+  ///Максимальное количество одновременно запрашиваемых картинок в случае их отложенного чтения
+  int maxConcurrentlyRequests;
+
+  ///Очередь картинок на чтение в режиме отложенного чтения
+  final _imageQueue = Queue<ImageQueueParam>();
+  final _requestList = <ImageQueueParam>[];
+  String nameId = '';
+
   NsgImageController(
       {super.requestOnInit = true,
       super.masterController,
@@ -21,7 +36,9 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
       super.useDataCache = false,
       super.selectedMasterRequired = true,
       super.autoSelectFirstItem = false,
-      super.dependsOnControllers}) {
+      super.dependsOnControllers,
+      this.lateImageRead = false,
+      this.maxConcurrentlyRequests = 5}) {
     var elem = NsgDataClient.client.getNewObject(dataType) as T;
     for (var fieldName in elem.fieldList.fields.keys) {
       if (elem.fieldList.fields[fieldName] is NsgDataImageField) {
@@ -30,22 +47,86 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
         fieldsToRead.add(fieldName);
       }
     }
+    nameId = elem.primaryKeyField;
   }
 
   @override
   Future<List<NsgDataItem>> doRequestItems() async {
     var request = NsgDataRequest(dataItemType: dataType);
     //TODO: отложенное дочитывание картинок
-    return await request.requestItems(
+    var list = await request.requestItems(
       filter: getRequestFilter,
       loadReference: referenceList,
       autoRepeate: autoRepeate,
       autoRepeateCount: autoRepeateCount,
       userRetryIf: (e) => retryRequestIf(e),
     );
+    if (lateImageRead) {
+      //В случае отложенного чтения проверяем не была ли картинка уже загружена и проставляем статус в объект
+
+    }
+    return list;
   }
 
-  // Future loadImages(){
+  @override
+  NsgDataRequestParams get getRequestFilter {
+    var filter = super.getRequestFilter;
+    if (lateImageRead) {
+      //При отложенном чтении не читаем поля с картинками, дочитываем их позже отдельными запросами
+      filter.fieldsToRead = fieldsToRead.join(',');
+    }
+    return filter;
+  }
 
-  // }
+  void addImageToQueue(ImageQueueParam imageQueueParam) {
+    //Проверяем на наличие картинки в списке на дочитываение
+    if (_imageQueue.any((e) => e.id == imageQueueParam.id && e.fieldName == imageQueueParam.fieldName)) return;
+    //Если картинка ранее не читалась и отсутствует в кэше, добавляем ее в список на чтение
+    _imageQueue.add(imageQueueParam);
+  }
+
+  ///Запуск фонового чтения картинки из очереди
+  Future startImageQueueRead() async {
+    if (_requestList.length < maxConcurrentlyRequests && _imageQueue.isNotEmpty) {
+      //Если количество текущих запросов меньше максимального, запрашиваем картинку из очереди
+      var item = _imageQueue.removeFirst();
+      startImageRequest(item);
+    }
+  }
+
+  ///Запуск запроса чтения картинки с сервера
+  Future startImageRequest(ImageQueueParam imageQueueParam) async {
+    _requestList.add(imageQueueParam);
+    var cmp = NsgCompare();
+    cmp.add(name: nameId, value: imageQueueParam.id);
+    var fields = '$nameId,${imageQueueParam.fieldName}';
+    //if (!items.any((e) => e.id == imageQueueParam.id)) {
+    fields += ',' + fieldsToRead.join(',');
+    //}
+    var filter = NsgDataRequestParams(compare: cmp, readNestedField: fields);
+    var req = NsgDataRequest(dataItemType: dataType);
+    var item = await req.requestItem(filter: filter);
+    _requestList.remove(imageQueueParam);
+    sendNotify(keys: [NsgUpdateKey(id: item.id.toString(), type: NsgUpdateKeyType.element)]);
+    //var oldItem =
+  }
+
+  ImageStatus getImageStstus(NsgDataItem item, String fieldName) {
+    if (_requestList.any((e) => e.id == item.id && e.fieldName == fieldName) || _imageQueue.any((e) => e.id == item.id && e.fieldName == fieldName)) {
+      return ImageStatus.loading;
+    }
+
+    return ImageStatus.empty;
+  }
 }
+
+///Класс параметров картинки, назначенной для отложенного чтения
+class ImageQueueParam {
+  String id;
+  String fieldName;
+  NsgDataRequest? request;
+
+  ImageQueueParam(this.id, this.fieldName);
+}
+
+enum ImageStatus { empty, loading, successful, error }
