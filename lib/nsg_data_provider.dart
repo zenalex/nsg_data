@@ -278,7 +278,7 @@ class NsgDataProvider {
 
     if (useNsgAuthorization && allowConnect) {
       if (await _checkVersion(onRetry) != 0) {
-        NsgErrorWidget.showErrorByString('Требуетс яобновление программы');
+        NsgErrorWidget.showErrorByString('Требуется обновление программы');
         await Future.delayed(const Duration(seconds: 5));
       }
       if (token == '') {

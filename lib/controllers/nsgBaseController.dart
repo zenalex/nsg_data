@@ -198,18 +198,18 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     itemsRequested.broadcast();
     await _requestItems();
     itemsRequested.broadcast();
-    //TODO: sendNotify
-    //sendNotify(keys: keys);
-    sendNotify();
+    //TODO: 1011
+    sendNotify(keys: keys);
+    //sendNotify();
   }
 
   ///Обновление данных
   Future refreshData({List<NsgUpdateKey>? keys}) async {
     currentStatus = RxStatus.loading();
-    //TODO: доделать обновление таблицы
-    //sendNotify(keys: keys);
-    sendNotify();
-    await requestItems(keys: null);
+    //TODO: 1011
+    sendNotify(keys: keys);
+    //sendNotify();
+    await requestItems(keys: keys);
     // currentStatus = RxStatus.success();
     // sendNotify();
   }
@@ -254,7 +254,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Отправить сообщение о необходимоси обновления
   ///Если передан список ключей, то обновление будет дано только для них
   void sendNotify({List<NsgUpdateKey>? keys}) {
-    if (useUpdate || keys != null) {
+    if (useUpdate) {
+      if (keys != null) {
+        update(keys);
+      } else {
+        update(_registeredUpdateKeys.keys.toList());
+      }
       update(keys ?? updateKeys);
     }
     if (useChange && keys == null) {
@@ -477,14 +482,16 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///В случае успешного сохранения возвращает true
   Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
     assert(selectedItem != null);
-    var validationResult = selectedItem!.validateFieldValues();
-    if (useValidation && !validationResult.isValid) {
-      var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
-      if (NsgApiException.showExceptionDefault != null) {
-        NsgApiException.showExceptionDefault!(err);
+    if (useValidation) {
+      var validationResult = selectedItem!.validateFieldValues();
+      if (!validationResult.isValid) {
+        var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
+        if (NsgApiException.showExceptionDefault != null) {
+          NsgApiException.showExceptionDefault!(err);
+        }
+        sendNotify();
+        return false;
       }
-      sendNotify();
-      return false;
     }
 
     currentStatus = RxStatus.loading();
@@ -690,6 +697,26 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     key = NsgUpdateKey(id: id, type: type);
     updateKeys.add(key);
     return key;
+  }
+
+  //Блок для работы с ключами обновления
+  //Используется для частичного обновления страниц
+  final Map<NsgUpdateKey, int> _registeredUpdateKeys = {};
+  void registerUpdateKey(NsgUpdateKey updateKey) {
+    var count = _registeredUpdateKeys[updateKey] ?? 0;
+    _registeredUpdateKeys[updateKey] = count + 1;
+  }
+
+  void unregisterUpdateKey(NsgUpdateKey updateKey) {
+    var count = _registeredUpdateKeys[updateKey] ?? 0;
+    if (count > 0) {
+      count--;
+      if (count == 0) {
+        _registeredUpdateKeys.remove(updateKey);
+      } else {
+        _registeredUpdateKeys[updateKey] = count;
+      }
+    }
   }
 
   ///Метод, вызываемый при инициализации provider (загрузка приложения)
