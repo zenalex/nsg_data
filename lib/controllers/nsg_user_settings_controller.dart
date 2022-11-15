@@ -19,7 +19,7 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
     super.dependsOnControllers,
     super.masterController,
   }) : super() {
-    //assert(NsgDataClient.client.getNewObject(T) is NsgUserSettings);
+    assert(NsgDataClient.client.getNewObject(T) is NsgUserSettings);
   }
 
   Map<String, dynamic> settingsMap = {};
