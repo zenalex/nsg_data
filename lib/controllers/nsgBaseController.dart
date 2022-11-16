@@ -188,7 +188,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       }
     }
     currentStatus = RxStatus.empty();
-    sendNotify();
+    //sendNotify();
     super.onClose();
   }
 

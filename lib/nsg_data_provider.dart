@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dio/adapter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -109,6 +110,14 @@ class NsgDataProvider {
     late Response<dynamic> response;
 
     try {
+      if (!kIsWeb) {
+        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+            return true;
+          };
+          return client;
+        };
+      }
       //TODO: сделать генерацию метода запроса GET/POST
       var method2 = 'POST';
       var dioCancelToken = cancelToken?.dioCancelToken;
@@ -205,6 +214,15 @@ class NsgDataProvider {
     late Response<Map<String, dynamic>> response;
 
     try {
+      //BrowserHttpClientAdapter
+      if (!kIsWeb) {
+        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+            return true;
+          };
+          return client;
+        };
+      }
       if (method == 'GET') {
         response = await _dio.get(url!, queryParameters: params);
       } else if (method == 'POST') {
@@ -245,6 +263,14 @@ class NsgDataProvider {
     late Response<Uint8List> response;
 
     try {
+      if (!kIsWeb) {
+        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+            return true;
+          };
+          return client;
+        };
+      }
       if (method == 'GET') {
         response = await _dio.get<Uint8List>(url!, queryParameters: params, options: Options(responseType: ResponseType.bytes));
       } else if (method == 'POST') {
