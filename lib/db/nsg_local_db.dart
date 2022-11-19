@@ -32,15 +32,42 @@ class NsgLocalDb {
   Future<List<NsgDataItem>> requestItems(NsgDataItem dataItem, NsgDataRequestParams params) async {
     var box = await getTable(dataItem.typeName);
     var items = <NsgDataItem>[];
+    //определяем нет ли в запросе ограничения по id
+    var idList = <String>[];
+    _getIdFromCompare(idList, dataItem, params.compare);
 
-    var valueMap = await box.getAllValues();
-    for (var mapKey in valueMap.keys) {
-      var item = NsgDataClient.client.getNewObject(dataItem.runtimeType);
-      item.fromJson(valueMap[mapKey]!.cast());
-      item.storageType = NsgDataStorageType.local;
-      items.add(item);
+    if (idList.isEmpty) {
+      var valueMap = await box.getAllValues();
+      for (var mapKey in valueMap.keys) {
+        var item = NsgDataClient.client.getNewObject(dataItem.runtimeType);
+        item.fromJson(valueMap[mapKey]!.cast());
+        item.storageType = NsgDataStorageType.local;
+        items.add(item);
+      }
+    } else {
+      var valueMap = await box.getAll(idList);
+      for (var mapValue in valueMap) {
+        if (mapValue == null) continue;
+        var item = NsgDataClient.client.getNewObject(dataItem.runtimeType);
+        item.fromJson(mapValue.cast());
+        item.storageType = NsgDataStorageType.local;
+        items.add(item);
+      }
     }
+
     return items;
+  }
+
+  void _getIdFromCompare(List<String> ids, NsgDataItem dataItem, NsgCompare cmp) {
+    for (var param in cmp.paramList) {
+      if (param.parameterValue is NsgCompare) {
+        _getIdFromCompare(ids, dataItem, param.parameterValue);
+      } else {
+        if (param.parameterName == dataItem.primaryKeyField) {
+          ids.add(param.parameterValue);
+        }
+      }
+    }
   }
 
   Future postItems(List<NsgDataItem> itemsToPost) async {
