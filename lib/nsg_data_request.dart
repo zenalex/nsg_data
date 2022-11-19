@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:nsg_data/controllers/nsg_data_controller_mode.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
+
+import 'db/nsg_local_db.dart';
 
 class NsgDataRequest<T extends NsgDataItem> {
   List<T> items = <T>[];
@@ -11,8 +14,9 @@ class NsgDataRequest<T extends NsgDataItem> {
   int? totalCount;
   Type dataItemType;
   FutureOr<bool> Function(Exception)? retryIf;
+  NsgDataStorageType storageType;
 
-  NsgDataRequest({this.dataItemType = NsgDataItem}) {
+  NsgDataRequest({this.dataItemType = NsgDataItem, this.storageType = NsgDataStorageType.server}) {
     if (dataItemType == NsgDataItem) dataItemType = T;
   }
 
@@ -57,32 +61,36 @@ class NsgDataRequest<T extends NsgDataItem> {
     FutureOr<void> Function(Exception)? userOnRetry,
     NsgCancelToken? cancelToken,
   }) async {
-    retryIf = retryIf;
-    if (autoRepeate) {
-      final r = RetryOptions(maxAttempts: autoRepeateCount);
-      return await r.retry(
-          () => _requestItems(
-              filter: filter,
-              autoAuthorize: autoAuthorize,
-              tag: tag,
-              loadReference: loadReference,
-              function: function,
-              method: method,
-              postData: postData,
-              externalCancelToken: cancelToken),
-          retryIf: _retryIfInternal,
-          onRetry: userOnRetry);
-      // onRetry: (error) => _updateStatusError(error.toString()));
+    if (storageType == NsgDataStorageType.server) {
+      retryIf = retryIf;
+      if (autoRepeate) {
+        final r = RetryOptions(maxAttempts: autoRepeateCount);
+        return await r.retry(
+            () => _requestItems(
+                filter: filter,
+                autoAuthorize: autoAuthorize,
+                tag: tag,
+                loadReference: loadReference,
+                function: function,
+                method: method,
+                postData: postData,
+                externalCancelToken: cancelToken),
+            retryIf: _retryIfInternal,
+            onRetry: userOnRetry);
+        // onRetry: (error) => _updateStatusError(error.toString()));
+      } else {
+        return await _requestItems(
+            filter: filter,
+            autoAuthorize: autoAuthorize,
+            tag: tag,
+            loadReference: loadReference,
+            function: function,
+            method: method,
+            postData: postData,
+            externalCancelToken: cancelToken);
+      }
     } else {
-      return await _requestItems(
-          filter: filter,
-          autoAuthorize: autoAuthorize,
-          tag: tag,
-          loadReference: loadReference,
-          function: function,
-          method: method,
-          postData: postData,
-          externalCancelToken: cancelToken);
+      return await _requestItemsFromDb(filter: filter, tag: tag, loadReference: loadReference);
     }
   }
 
@@ -162,6 +170,34 @@ class NsgDataRequest<T extends NsgDataItem> {
     return items;
   }
 
+  Future<List<T>> _requestItemsFromDb({NsgDataRequestParams? filter, String tag = '', List<String>? loadReference}) async {
+    var dataItem = NsgDataClient.client.getNewObject(dataItemType);
+
+    //Добавление в запрос имен полей, требующих дочитывания
+    if (loadReference == null && dataItem.loadReferenceDefault != null) {
+      loadReference = dataItem.loadReferenceDefault;
+    }
+    if (loadReference == null) {
+      loadReference = [];
+      loadReference = addAllReferences(dataItem.runtimeType);
+    }
+    filter ??= NsgDataRequestParams();
+    filter.readNestedField = loadReference.join(',');
+
+    items = (await NsgLocalDb.instance.requestItems(dataItem, filter)).cast();
+
+    try {
+      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+
+      //Check referent field list
+      await loadAllReferents(items, loadReference, tag: tag);
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+    return items;
+  }
+
   ///Загружает данные из response, представляющего из себя Map.
   ///основные объекты лежат в results, кэшируемые по названию полей основного объекта
   Future<List> loadDataAndReferences(Map response, List<String> loadReference, String tag, {NsgDataRequestParams? filter}) async {
@@ -198,7 +234,6 @@ class NsgDataRequest<T extends NsgDataItem> {
         //   var refItems = <NsgDataItem>[];
         //   data.forEach((m) {
         //     if (foundField is NsgDataUntypedReferenceField) {
-        //       //TODO: 2777777777
         //       // var elem = NsgDataClient.client.getNewObject(foundField.referentElementType!);
         //       // elem.fromJson(m as Map<String, dynamic>);
         //       // refItems.add(elem);
@@ -355,7 +390,6 @@ class NsgDataRequest<T extends NsgDataItem> {
             }
           }
 
-          //TODO: временно отключил пост-дочитывание untypedReference
           if (refList.isNotEmpty && field is! NsgDataUntypedReferenceField) {
             var request = NsgDataRequest(dataItemType: field.referentElementType);
             var cmp = NsgCompare();
@@ -364,8 +398,11 @@ class NsgDataRequest<T extends NsgDataItem> {
                 value: refList,
                 comparisonOperator: NsgComparisonOperator.inList);
             var filter = NsgDataRequestParams(compare: cmp);
-            refItems = await request.requestItems(filter: filter, loadReference: []);
-            debugPrint('Дочитывание ЗАКОНЧЕНО ${field.referentElementType}');
+            if (storageType == NsgDataStorageType.server) {
+              refItems = await request.requestItems(filter: filter, loadReference: []);
+            } else {
+              refItems = await NsgLocalDb.instance.requestItems(NsgDataClient.client.getNewObject(field.referentElementType), filter);
+            }
             checkItems.addAll(refItems);
           }
         } else if (field is NsgDataReferenceListField) {

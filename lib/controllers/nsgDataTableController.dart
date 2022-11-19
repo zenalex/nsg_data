@@ -24,7 +24,8 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       super.autoSelectFirstItem = false,
       super.dependsOnControllers,
       required super.masterController,
-      required this.tableFieldName})
+      required this.tableFieldName,
+      super.controllerMode})
       : super();
 
   ///Создает новую строку.
@@ -35,6 +36,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     var row = NsgDataClient.client.getNewObject(dataTable.dataItemType) as T;
     row.id = Guid.newGuid();
     row.state = NsgDataItemState.create;
+    row.storageType = controllerMode.storageType;
     //dataTable.addRow(row);
     return row;
   }

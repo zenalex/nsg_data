@@ -13,6 +13,9 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
+  nsg_controls:
+    path: 
+      ../nsg_controls
   shared_preferences: ^2.0.6
   flutter_multi_formatter: ^2.2.0
   dio: ^4.0.6
@@ -23,9 +26,8 @@ dependencies:
   intl: ^0.17.0
   jiffy: ^5.0.0 
   uuid: ^3.0.6
-  nsg_controls:
-    path: 
-      ../nsg_controls
+
+  hive: ^2.2.3
 
 dev_dependencies:
   dart_code_metrics: ^4.16.0

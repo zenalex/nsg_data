@@ -53,7 +53,6 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
   @override
   Future<List<NsgDataItem>> doRequestItems() async {
     var request = NsgDataRequest(dataItemType: dataType);
-    //TODO: отложенное дочитывание картинок
     var list = await request.requestItems(
       filter: getRequestFilter,
       loadReference: referenceList,

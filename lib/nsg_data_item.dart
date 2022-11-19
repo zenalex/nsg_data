@@ -46,6 +46,8 @@ class NsgDataItem {
   ///Текущее состаяние объекта (новый, сохранен и т.п.)
   NsgDataItemState state = NsgDataItemState.unknown;
 
+  NsgDataStorageType storageType = NsgDataStorageType.server;
+
   String get typeName => runtimeType.toString();
 
   ///Чтение полей объекта из JSON
@@ -303,12 +305,16 @@ class NsgDataItem {
   ///Сохранение объекта в БД
   ///В случае успеха, поля текущего объекта будут заполнены полями объекта из БД
   Future post() async {
-    var p = NsgDataPost(dataItemType: runtimeType);
-    p.itemsToPost = <NsgDataItem>[this];
-    var newItem = await p.postItem();
-    if (newItem != null) {
-      copyFieldValues(newItem);
-      state = newItem.state;
+    if (storageType == NsgDataStorageType.server) {
+      var p = NsgDataPost(dataItemType: runtimeType);
+      p.itemsToPost = <NsgDataItem>[this];
+      var newItem = await p.postItem();
+      if (newItem != null) {
+        copyFieldValues(newItem);
+        state = newItem.state;
+      }
+    } else {
+      await NsgLocalDb.instance.postItems([this]);
     }
   }
 
@@ -339,6 +345,7 @@ class NsgDataItem {
     newItem.copyFieldValues(this, cloneAsCopy: cloneAsCopy);
     newItem.loadTime = loadTime;
     newItem.state = cloneAsCopy ? NsgDataItemState.create : state;
+    newItem.storageType = storageType;
     if (cloneAsCopy) {
       newItem.copyRecordFill();
     }

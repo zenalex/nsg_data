@@ -25,20 +25,21 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Установка текущего элемента для контроллера
   set currentItem(T item) => selectedItem = item;
 
-  NsgDataController(
-      {bool requestOnInit = true,
-      bool useUpdate = true,
-      bool useChange = true,
-      List<String>? builderIDs,
-      NsgBaseController? masterController,
-      NsgDataBinding? dataBindign,
-      bool autoRepeate = false,
-      int autoRepeateCount = 10,
-      bool useDataCache = false,
-      bool selectedMasterRequired = true,
-      bool autoSelectFirstItem = false,
-      List<NsgBaseController>? dependsOnControllers})
-      : super(
+  NsgDataController({
+    bool requestOnInit = true,
+    bool useUpdate = true,
+    bool useChange = true,
+    List<String>? builderIDs,
+    NsgBaseController? masterController,
+    NsgDataBinding? dataBindign,
+    bool autoRepeate = false,
+    int autoRepeateCount = 10,
+    bool useDataCache = false,
+    bool selectedMasterRequired = true,
+    bool autoSelectFirstItem = false,
+    List<NsgBaseController>? dependsOnControllers,
+    super.controllerMode,
+  }) : super(
             dataType: T,
             requestOnInit: requestOnInit,
             useUpdate: useUpdate,
@@ -96,6 +97,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       var elem = await doCreateNewItem();
       currentStatus = RxStatus.success();
       currentItem = elem.clone() as T;
+      
       backupItem = elem;
       sendNotify();
       selectedItemChanged.broadcast(null);
@@ -124,6 +126,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       elem.newRecordFill();
     }
     elem.state = NsgDataItemState.create;
+    elem.storageType = controllerMode.storageType;
     return elem;
   }
 

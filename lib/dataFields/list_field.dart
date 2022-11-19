@@ -22,7 +22,6 @@ class NsgDataListField<T> extends NsgDataField {
 
   @override
   int compareTo(NsgDataItem a, NsgDataItem b) {
-    //TODO: compareTo
     var valueA = a.getFieldValue(name) as List;
     var valueB = b.getFieldValue(name) as List;
     return valueA.hashCode.compareTo(valueB.hashCode);
