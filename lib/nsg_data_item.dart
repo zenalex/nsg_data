@@ -408,4 +408,75 @@ class NsgDataItem {
     }
     return answer;
   }
+
+  NsgDataField? getFieldByFullPath(String fullPath) {
+    var splitedPath = fullPath.split('.');
+    var fieldFound = false;
+    NsgDataField? foundField;
+    Type type = runtimeType;
+    for (var i = 0; i < splitedPath.length; i++) {
+      fieldFound = false;
+      if (type == NsgDataItem) {
+        break;
+      }
+      var fieldList = NsgDataClient.client.getFieldList(type);
+      if (fieldList.fields.containsKey(splitedPath[i])) {
+        var field = fieldList.fields[splitedPath[i]];
+        if (field is NsgDataReferenceField) {
+          type = field.referentType;
+          foundField = field;
+          fieldFound = true;
+        } else if (field is NsgDataReferenceListField) {
+          type = field.referentElementType;
+          fieldFound = true;
+          foundField = field;
+        } else {
+          type = NsgDataItem;
+          fieldFound = true;
+          foundField = field;
+        }
+      }
+    }
+    if (fieldFound) {
+      return foundField;
+    } else {
+      return null;
+    }
+  }
+
+  //TODO: ДОДЕЛАТЬ!!!
+  dynamic getFieldValueByFullPath(String fullPath) {
+    var splitedPath = fullPath.split('.');
+    var fieldFound = false;
+    NsgDataField? foundField;
+    Type type = runtimeType;
+    for (var i = 0; i < splitedPath.length; i++) {
+      fieldFound = false;
+      if (type == NsgDataItem) {
+        break;
+      }
+      var fieldList = NsgDataClient.client.getFieldList(type);
+      if (fieldList.fields.containsKey(splitedPath[i])) {
+        var field = fieldList.fields[splitedPath[i]];
+        if (field is NsgDataReferenceField) {
+          type = field.referentType;
+          foundField = field;
+          fieldFound = true;
+        } else if (field is NsgDataReferenceListField) {
+          type = field.referentElementType;
+          fieldFound = true;
+          foundField = field;
+        } else {
+          type = NsgDataItem;
+          fieldFound = true;
+          foundField = field;
+        }
+      }
+    }
+    if (fieldFound) {
+      return this[foundField!.name];
+    } else {
+      return null;
+    }
+  }
 }

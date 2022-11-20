@@ -67,6 +67,19 @@ class NsgCompare {
   void clear() {
     paramList.clear();
   }
+
+  bool isValid(NsgDataItem item) {
+    if (isEmpty) return true;
+    var r = logicalOperator == NsgLogicalOperator.and;
+    for (var param in paramList) {
+      if (logicalOperator == NsgLogicalOperator.and) {
+        r &= param.isValid(item);
+      } else {
+        r |= param.isValid(item);
+      }
+    }
+    return r;
+  }
 }
 
 class NsgCompareParam {
@@ -116,6 +129,33 @@ class NsgCompareParam {
       return parameterValue.toJson();
     }
     return jsonEncode(parameterValue);
+  }
+
+  bool isValid(NsgDataItem item) {
+    if (parameterValue is NsgCompare) {
+      return (parameterValue as NsgCompare).isValid(item);
+    }
+
+    var value = item.getFieldValueByFullPath(parameterName);
+    if (value == null) {
+      return false;
+    }
+    if (comparisonOperator == NsgComparisonOperator.beginWith) {
+      return (value.toString().toLowerCase().startsWith(parameterValue.toString().toLowerCase()));
+    } else if (comparisonOperator == NsgComparisonOperator.contain) {
+      return (value.toString().toLowerCase().contains(parameterValue.toString().toLowerCase()));
+    } else if (comparisonOperator == NsgComparisonOperator.containWords) {
+      var words = parameterValue.toString().split(' ');
+      value = value.toString().toLowerCase();
+      return words.every(((e) => value.contains(e.toLowerCase())));
+    } else if (comparisonOperator == NsgComparisonOperator.endWith) {
+      return (value.toString().toLowerCase().endsWith(parameterValue.toString().toLowerCase()));
+    } else if (comparisonOperator == NsgComparisonOperator.equal) {
+      //TODO: fix
+      return (value == parameterValue);
+    } else {
+      return false;
+    }
   }
 }
 
