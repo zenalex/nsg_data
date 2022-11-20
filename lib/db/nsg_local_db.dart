@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,14 +13,15 @@ class NsgLocalDb {
   Map<String, CollectionBox<Map>> tables = {};
 
   Future init(String databaseName) async {
-    String localPath = (await getApplicationDocumentsDirectory()).path + '/';
+    String localPath = './';
+    if (!kIsWeb) {
+      localPath = (await getApplicationDocumentsDirectory()).path + '/';
+    }
+
     collection = await BoxCollection.open(
-      '/'+ databaseName, // Name of database
-      NsgDataClient.client
-          .getAllRegisteredTypes()
-          .toSet(), // Names of your boxes
-      path:
-          localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
+      '/' + databaseName, // Name of database
+      NsgDataClient.client.getAllRegisteredTypes().toSet(), // Names of your boxes
+      path: localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
       //key: null, // Key to encrypt your boxes (Only used in Flutter / Dart IO)
     );
   }
@@ -34,8 +36,7 @@ class NsgLocalDb {
     return box;
   }
 
-  Future<List<NsgDataItem>> requestItems(
-      NsgDataItem dataItem, NsgDataRequestParams params) async {
+  Future<List<NsgDataItem>> requestItems(NsgDataItem dataItem, NsgDataRequestParams params) async {
     var box = await getTable(dataItem.typeName);
     var items = <NsgDataItem>[];
     //определяем нет ли в запросе ограничения по id
@@ -64,8 +65,7 @@ class NsgLocalDb {
     return items;
   }
 
-  void _getIdFromCompare(
-      List<String> ids, NsgDataItem dataItem, NsgCompare cmp) {
+  void _getIdFromCompare(List<String> ids, NsgDataItem dataItem, NsgCompare cmp) {
     for (var param in cmp.paramList) {
       if (param.parameterValue is NsgCompare) {
         _getIdFromCompare(ids, dataItem, param.parameterValue);
@@ -118,10 +118,7 @@ class NsgLocalDb {
               oldRowsId.remove(e);
             }
             if (oldRowsId.isNotEmpty) {
-              var tableBox = await getTable(
-                  (item.getField(name) as NsgDataReferenceListField)
-                      .referentElementType
-                      .toString());
+              var tableBox = await getTable((item.getField(name) as NsgDataReferenceListField).referentElementType.toString());
               tableBox.deleteAll(oldRowsId);
             }
           }
