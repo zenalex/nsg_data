@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../nsg_data.dart';
 
-class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseReferenceField {
+class NsgDataReferenceListField<T extends NsgDataItem>
+    extends NsgDataBaseReferenceField {
   NsgDataReferenceListField(String name) : super(name);
 
   @override
@@ -23,7 +24,8 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
     return dataItem.getFieldValue(name);
   }
 
-  Future<List<T>> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
+  Future<List<T>> getReferentAsync(NsgDataItem dataItem,
+      {bool useCache = true}) async {
     var item = getReferent(dataItem, useCache: useCache);
     if (item == null) {
       var id = dataItem.getFieldValue(name).toString();
@@ -55,6 +57,8 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
         elem.fromJson(m);
       } else if (m.runtimeType == referentElementType) {
         elem.copyFieldValues(m);
+      } else if (m is String) {
+        elem.id = m;
       } else {
         throw Exception("Exception ReferenceListField 65. Unknown value type");
       }
@@ -78,7 +82,9 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
   ///dataItem - объект, в поле которого добавляем значение
   ///row - добавляемое значение
   void addRow(NsgDataItem dataItem, T row) {
-    var allRows = (dataItem.getFieldValue(name, allowNullValue: true) as List<T>?) ?? <T>[];
+    var allRows =
+        (dataItem.getFieldValue(name, allowNullValue: true) as List<T>?) ??
+            <T>[];
     allRows.add(row);
     setValue(dataItem.fieldValues, allRows);
   }

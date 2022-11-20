@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:nsg_data/controllers/nsg_data_controller_mode.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
@@ -16,7 +17,9 @@ class NsgDataRequest<T extends NsgDataItem> {
   FutureOr<bool> Function(Exception)? retryIf;
   NsgDataStorageType storageType;
 
-  NsgDataRequest({this.dataItemType = NsgDataItem, this.storageType = NsgDataStorageType.server}) {
+  NsgDataRequest(
+      {this.dataItemType = NsgDataItem,
+      this.storageType = NsgDataStorageType.server}) {
     if (dataItemType == NsgDataItem) dataItemType = T;
   }
 
@@ -90,7 +93,8 @@ class NsgDataRequest<T extends NsgDataItem> {
             externalCancelToken: cancelToken);
       }
     } else {
-      return await _requestItemsFromDb(filter: filter, tag: tag, loadReference: loadReference);
+      return await _requestItemsFromDb(
+          filter: filter, tag: tag, loadReference: loadReference);
     }
   }
 
@@ -107,7 +111,9 @@ class NsgDataRequest<T extends NsgDataItem> {
     Map<String, dynamic>? postData,
     NsgCancelToken? externalCancelToken,
   }) async {
-    if (cancelToken != null && externalCancelToken != cancelToken && !cancelToken!.isCalceled) {
+    if (cancelToken != null &&
+        externalCancelToken != cancelToken &&
+        !cancelToken!.isCalceled) {
       cancelToken!.calcel();
     }
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
@@ -151,7 +157,9 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (response == '' || response == null) {
       } else {
         if (response is Map) {
-          items = (await loadDataAndReferences(response, loadReference, tag, filter: filter)).cast();
+          items = (await loadDataAndReferences(response, loadReference, tag,
+                  filter: filter))
+              .cast();
         } else {
           if (response is! List) {
             response = <dynamic>[response];
@@ -170,7 +178,10 @@ class NsgDataRequest<T extends NsgDataItem> {
     return items;
   }
 
-  Future<List<T>> _requestItemsFromDb({NsgDataRequestParams? filter, String tag = '', List<String>? loadReference}) async {
+  Future<List<T>> _requestItemsFromDb(
+      {NsgDataRequestParams? filter,
+      String tag = '',
+      List<String>? loadReference}) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
 
     //Добавление в запрос имен полей, требующих дочитывания
@@ -190,7 +201,8 @@ class NsgDataRequest<T extends NsgDataItem> {
       NsgDataClient.client.addItemsToCache(items: items, tag: tag);
 
       //Check referent field list
-      await loadAllReferents(items, loadReference, tag: tag);
+      await loadAllReferents(items, loadReference,
+          tag: tag, readTableParts: true);
     } catch (e) {
       debugPrint(e.toString());
       rethrow;
@@ -200,18 +212,25 @@ class NsgDataRequest<T extends NsgDataItem> {
 
   ///Загружает данные из response, представляющего из себя Map.
   ///основные объекты лежат в results, кэшируемые по названию полей основного объекта
-  Future<List> loadDataAndReferences(Map response, List<String> loadReference, String tag, {NsgDataRequestParams? filter}) async {
+  Future<List> loadDataAndReferences(
+      Map response, List<String> loadReference, String tag,
+      {NsgDataRequestParams? filter}) async {
     var maps = response as Map<String, dynamic>;
     //Новые основные элементы
     var newItems = <NsgDataItem>[];
     //Все новые элементы, включая дочитанные объекты для поиска строк табличных частей
     var allItems = <NsgDataItem>[];
-    var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty);
+    var useCache = (filter == null ||
+        filter.fieldsToRead == null ||
+        filter.fieldsToRead!.isEmpty);
     maps.forEach((name, data) {
       if (name == '_results_' || name == 'results') {
         newItems = _fromJsonList(data);
         allItems.addAll(newItems);
-        if (newItems.isNotEmpty && filter != null && filter.fieldsToRead != null && filter.fieldsToRead!.isNotEmpty) {
+        if (newItems.isNotEmpty &&
+            filter != null &&
+            filter.fieldsToRead != null &&
+            filter.fieldsToRead!.isNotEmpty) {
           //Проставить полям из списка признак того, что она пустые - не прочитаны с БД
           //TODO: спорное решение иметь список  пустых полей, чем это лучше значения по-умолчанию?
           for (var fieldName in newItems.first.fieldList.fields.keys) {
@@ -262,7 +281,8 @@ class NsgDataRequest<T extends NsgDataItem> {
           if (NsgDataClient.client.isRegisteredByServerName(name)) {
             var refItems = <NsgDataItem>[];
             data.forEach((m) {
-              var elem = NsgDataClient.client.getNewObject(NsgDataClient.client.getTypeByServerName(name));
+              var elem = NsgDataClient.client
+                  .getNewObject(NsgDataClient.client.getTypeByServerName(name));
               elem.fromJson(m as Map<String, dynamic>);
               elem.state = NsgDataItemState.fill;
               refItems.add(elem);
@@ -284,14 +304,17 @@ class NsgDataRequest<T extends NsgDataItem> {
   ///Добавить в вписок все ссылочные типа объекта типа type
   ///Если среди полей будет табличная часть, ее ссылочные поля также будут
   ///добавлены в список через имяТаблицы.имяПоля
-  static List<String> addAllReferences(Type type, {List<String> exceptFields = const []}) {
+  static List<String> addAllReferences(Type type,
+      {List<String> exceptFields = const []}) {
     List<String> loadReference = [];
     var allFields = NsgDataClient.client.getFieldList(type);
     for (var field in allFields.fields.values) {
       if (exceptFields.contains(field.name)) {
         continue;
       }
-      if ((field is NsgDataReferenceField || field is NsgDataReferenceListField) && field.name != NsgDataItem.nameOwnerId) {
+      if ((field is NsgDataReferenceField ||
+              field is NsgDataReferenceListField) &&
+          field.name != NsgDataItem.nameOwnerId) {
         loadReference.add(field.name);
       }
       if (field is NsgDataReferenceListField) {
@@ -342,7 +365,12 @@ class NsgDataRequest<T extends NsgDataItem> {
         newFilter = NsgDataRequestParams(count: 1);
       } else {
         newFilter = NsgDataRequestParams(
-            top: filter.top, count: 1, params: filter.params, sorting: filter.sorting, readNestedField: filter.readNestedField, compare: filter.compare);
+            top: filter.top,
+            count: 1,
+            params: filter.params,
+            sorting: filter.sorting,
+            readNestedField: filter.readNestedField,
+            compare: filter.compare);
       }
     }
     var data = await requestItems(
@@ -364,14 +392,16 @@ class NsgDataRequest<T extends NsgDataItem> {
     return data[0];
   }
 
-  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference, {String tag = ''}) async {
+  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference,
+      {String tag = '', bool readTableParts = false}) async {
     if (items.isEmpty || loadReference == null || loadReference.isEmpty) {
       return;
     }
     try {
       for (var fieldName in loadReference) {
         var splitedName = fieldName.split('.');
-        var field = NsgDataClient.client.getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
+        var field = NsgDataClient.client
+            .getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
         if (field is! NsgDataBaseReferenceField) continue;
         var refList = <String>[];
         var refItems = <NsgDataItem>[];
@@ -382,7 +412,8 @@ class NsgDataRequest<T extends NsgDataItem> {
             var checkedItem = field.getReferent(item, allowNull: true);
             if (checkedItem == null) {
               var fieldValue = item.getFieldValue(fieldName).toString();
-              if (!fieldValue.contains(Guid.Empty) && (!refList.contains(fieldValue))) {
+              if (!fieldValue.contains(Guid.Empty) &&
+                  (!refList.contains(fieldValue))) {
                 refList.add(fieldValue);
               }
             } else {
@@ -391,24 +422,55 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
 
           if (refList.isNotEmpty && field is! NsgDataUntypedReferenceField) {
-            var request = NsgDataRequest(dataItemType: field.referentElementType);
+            var request =
+                NsgDataRequest(dataItemType: field.referentElementType);
             var cmp = NsgCompare();
             cmp.add(
-                name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
+                name: NsgDataClient.client
+                    .getNewObject(field.referentElementType)
+                    .primaryKeyField,
                 value: refList,
                 comparisonOperator: NsgComparisonOperator.inList);
             var filter = NsgDataRequestParams(compare: cmp);
             if (storageType == NsgDataStorageType.server) {
-              refItems = await request.requestItems(filter: filter, loadReference: []);
+              refItems =
+                  await request.requestItems(filter: filter, loadReference: []);
             } else {
-              refItems = await NsgLocalDb.instance.requestItems(NsgDataClient.client.getNewObject(field.referentElementType), filter);
+              refItems = await NsgLocalDb.instance.requestItems(
+                  NsgDataClient.client.getNewObject(field.referentElementType),
+                  filter);
             }
             checkItems.addAll(refItems);
           }
         } else if (field is NsgDataReferenceListField) {
           for (var item in items) {
-            var fieldValue = item.getFieldValue(splitedName[0]);
-            refItems.addAll(fieldValue as List<NsgDataItem>);
+            var fieldValue =
+                item.getFieldValue(splitedName[0]) as List<NsgDataItem>;
+            if (readTableParts) {
+              if (fieldValue.isNotEmpty) {
+                var cmp = NsgCompare();
+                var ids = <String>[];
+                for (var e in fieldValue) {
+                  ids.add(e.id);
+                }
+                cmp.add(
+                    name: fieldValue[0].primaryKeyField,
+                    value: ids,
+                    comparisonOperator: NsgComparisonOperator.inList);
+                var request = NsgDataRequest(
+                    dataItemType: fieldValue[0].runtimeType,
+                    storageType: NsgDataStorageType.local);
+                var rows = await request.requestItems(
+                    filter: NsgDataRequestParams(compare: cmp));
+                for (var row in rows) {
+                  var tr = fieldValue.firstWhereOrNull((e) => e.id == row.id);
+                  if (tr != null) {
+                    tr.copyFieldValues(row);
+                  }
+                }
+              }
+            }
+            refItems.addAll(fieldValue);
             checkItems.addAll(fieldValue);
           }
         }
@@ -425,7 +487,9 @@ class NsgDataRequest<T extends NsgDataItem> {
 
   FutureOr<bool> _retryIfInternal(Exception ex) async {
     //400 - код ошибки сервера, не предполагающий повторного запроса данных
-    if (ex is NsgApiException && (ex.error.code == 400 || ex.error.code == 401 || ex.error.code == 500)) return false;
+    if (ex is NsgApiException &&
+        (ex.error.code == 400 || ex.error.code == 401 || ex.error.code == 500))
+      return false;
     if (retryIf != null) return (await retryIf!(ex));
     return true;
   }

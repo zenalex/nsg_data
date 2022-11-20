@@ -64,7 +64,11 @@ class NsgLocalDb {
         _getIdFromCompare(ids, dataItem, param.parameterValue);
       } else {
         if (param.parameterName == dataItem.primaryKeyField) {
-          ids.add(param.parameterValue);
+          if (param.parameterValue is List) {
+            ids.addAll(param.parameterValue);
+          } else {
+            ids.add(param.parameterValue);
+          }
         }
       }
     }
@@ -74,14 +78,57 @@ class NsgLocalDb {
     if (itemsToPost.isEmpty) {
       return;
     }
-    var box = await getTable(itemsToPost.first.typeName);
-
+    var firstItem = itemsToPost.first;
+    var box = await getTable(firstItem.typeName);
+    var tableFields = <String>[];
+    for (var name in firstItem.fieldList.fields.keys) {
+      if (firstItem.fieldList.fields[name] is NsgDataReferenceListField) {
+        tableFields.add(name);
+      }
+    }
     for (var item in itemsToPost) {
       if (item.id.isEmpty) {
         item.id = Guid.newGuid();
       }
-      var map = item.toJson();
-      box.put(item.id, map);
+      //var map = item.toJson(excludeFields: tableFields);
+      Map<dynamic, dynamic>? oldObject;
+      if (tableFields.isNotEmpty) {
+        oldObject = await box.get(item.id.toString());
+      }
+      var map = <String, dynamic>{};
+      for (var name in item.fieldList.fields.keys) {
+        if (tableFields.contains(name)) {
+          var ls = <String>[];
+          for (var row in item[name] as List<NsgDataItem>) {
+            row.ownerId = item.id;
+            ls.add(row.id);
+          }
+          //Читаем старый объект, извлекаем из него идентификаторы строк таб частей
+          //Сравниваем с новыми, удаляем неиспользуемые
+          var oldRowsId = oldObject != null ? oldObject![name] : null;
+          if (oldRowsId != null && (oldRowsId is List<String>?) && oldRowsId!.isNotEmpty) {
+            for (var e in ls) {
+              oldRowsId.remove(e);
+            }
+            if (oldRowsId.isNotEmpty) {
+              var tableBox = await getTable((item.getField(name) as NsgDataReferenceListField).referentElementType.toString());
+              tableBox.deleteAll(oldRowsId);
+            }
+          }
+
+          map[name] = ls;
+        } else {
+          var value = item.fieldList.fields[name];
+          map[name] = value!.convertToJson(item[name]);
+        }
+        box.put(item.id, map);
+        for (var name in tableFields) {
+          var list = item[name] as List<NsgDataItem>;
+          if (list.isNotEmpty) {
+            postItems(list);
+          }
+        }
+      }
     }
   }
 }
