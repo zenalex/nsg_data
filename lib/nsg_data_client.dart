@@ -1,5 +1,4 @@
 import 'package:nsg_data/nsg_data_itemList.dart';
-import 'db/nsg_local_db.dart';
 import 'nsg_data.dart';
 import 'nsg_data_paramList.dart';
 
@@ -45,8 +44,7 @@ class NsgDataClient {
   }
 
   bool isRegisteredByServerName(String typeName) {
-    return (_registeredServerNames.containsKey(typeName) &&
-        _registeredItems.containsKey(_registeredServerNames[typeName]));
+    return (_registeredServerNames.containsKey(typeName) && _registeredItems.containsKey(_registeredServerNames[typeName]));
   }
 
   NsgDataItem getNewObject(Type type) {
@@ -64,8 +62,7 @@ class NsgDataClient {
   }
 
   Type getTypeByServerName(String typeName) {
-    assert(
-        _registeredServerNames.containsKey(typeName), 'typeName = $typeName');
+    assert(_registeredServerNames.containsKey(typeName), 'typeName = $typeName');
     return _registeredItems[_registeredServerNames[typeName]]!.runtimeType;
   }
 
@@ -92,17 +89,13 @@ class NsgDataClient {
     return _itemList[type.toString()];
   }
 
-  NsgDataItem? getItemsFromCache(Type type, String id,
-      {bool allowNull = false}) {
+  NsgDataItem? getItemsFromCache(Type type, String id, {bool allowNull = false}) {
     var cache = _getItemsCacheByType(type)!;
     var item = cache.getItem(id);
-    return item == null
-        ? (allowNull ? null : NsgDataClient.client.getNewObject(type))
-        : item.dataItem;
+    return item == null ? (allowNull ? null : NsgDataClient.client.getNewObject(type)) : item.dataItem;
   }
 
-  NsgDataBaseReferenceField? getReferentFieldByFullPath(
-      Type dataType, String fullPath) {
+  NsgDataBaseReferenceField? getReferentFieldByFullPath(Type dataType, String fullPath) {
     var splitedPath = fullPath.split('.');
     var type = dataType;
     var fieldFound = false;

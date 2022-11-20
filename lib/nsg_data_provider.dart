@@ -391,7 +391,6 @@ class NsgDataProvider {
 
   Future<bool> logout() async {
     try {
-      //TODO: проверить работу на стороне сервера
       await baseRequest(function: 'Logout', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/Logout', method: 'GET');
     } catch (ex) {
       debugPrint('ERROR logout: ${ex.toString()}');

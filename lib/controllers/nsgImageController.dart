@@ -118,7 +118,7 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
     //var oldItem =
   }
 
-  ImageStatus getImageStstus(NsgDataItem item, String fieldName) {
+  ImageStatus getImageStatus(NsgDataItem item, String fieldName) {
     if (_requestList.any((e) => e.id == item.id && e.fieldName == fieldName) || _imageQueue.any((e) => e.id == item.id && e.fieldName == fieldName)) {
       return ImageStatus.loading;
     }

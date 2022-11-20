@@ -5,13 +5,11 @@ import 'dart:async';
 import 'package:event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:nsg_data/controllers/nsg_controller_filter.dart';
-import 'package:nsg_data/controllers/nsg_data_controller_mode.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'nsg_controller_regime.dart';
 
-class NsgBaseController extends GetxController
-    with StateMixin<NsgBaseControllerData> {
+class NsgBaseController extends GetxController with StateMixin<NsgBaseControllerData> {
   Type dataType;
   bool requestOnInit;
   bool selectedMasterRequired;
@@ -47,8 +45,7 @@ class NsgBaseController extends GetxController
   ///Status of last data request operation
   RxStatus get currentStatus {
     if (_currentStatus.isSuccess) {
-      if (masterController != null &&
-          !masterController!.currentStatus.isSuccess) {
+      if (masterController != null && !masterController!.currentStatus.isSuccess) {
         return masterController!.currentStatus;
       }
     }
@@ -139,8 +136,7 @@ class NsgBaseController extends GetxController
       this.retryIf,
       this.editModeAllowed = true,
       this.readOnly = true,
-      this.controllerMode =
-          const NsgDataControllerMode(storageType: NsgDataStorageType.server)})
+      this.controllerMode = const NsgDataControllerMode(storageType: NsgDataStorageType.server)})
       : super() {
     onRetry ??= _updateStatusError;
   }
@@ -216,9 +212,7 @@ class NsgBaseController extends GetxController
 
   Future _requestItems() async {
     try {
-      if (masterController != null &&
-          selectedMasterRequired &&
-          masterController!.selectedItem == null) {
+      if (masterController != null && selectedMasterRequired && masterController!.selectedItem == null) {
         if (dataItemList.isNotEmpty) {
           dataItemList.clear();
         }
@@ -240,12 +234,8 @@ class NsgBaseController extends GetxController
       //Возможно, при загрузке всех данных, имеет смысл активировать локальный поиск вместо серврного, но врядли одновременно
       dataItemList = newItemsList;
       //dataItemList = filter(newItemsList);
-      if (selectedItem != null &&
-          dataItemList.firstWhereOrNull((e) => e.id == selectedItem!.id) ==
-              null) selectedItem = null;
-      if (selectedItem == null &&
-          autoSelectFirstItem &&
-          dataItemList.isNotEmpty) {
+      if (selectedItem != null && dataItemList.firstWhereOrNull((e) => e.id == selectedItem!.id) == null) selectedItem = null;
+      if (selectedItem == null && autoSelectFirstItem && dataItemList.isNotEmpty) {
         selectedItem = dataItemList[0];
       }
       //service method for descendants
@@ -276,8 +266,7 @@ class NsgBaseController extends GetxController
   FutureOr<bool> retryRequestIf(Exception exception) async {
     if (exception is NsgApiException) {
       if (exception.error.code == 401) {
-        var provider =
-            NsgDataClient.client.getNewObject(dataType).remoteProvider;
+        var provider = NsgDataClient.client.getNewObject(dataType).remoteProvider;
         await provider.connect(this);
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
@@ -296,8 +285,7 @@ class NsgBaseController extends GetxController
   }
 
   Future<List<NsgDataItem>> doRequestItems() async {
-    var request = NsgDataRequest(
-        dataItemType: dataType, storageType: controllerMode.storageType);
+    var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     var newItems = await request.requestItems(
         filter: getRequestFilter,
         loadReference: referenceList,
@@ -316,18 +304,14 @@ class NsgBaseController extends GetxController
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
-    if (masterController!.selectedItem == null ||
-        !masterController!.selectedItem!.fieldList.fields
-            .containsKey(dataBinding!.masterFieldName)) {
+    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
       return newItemsList;
     }
-    var masterValue = masterController!
-        .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+    var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
 
     var list = <NsgDataItem>[];
     for (var element in newItemsList) {
-      if (element.fieldValues.fields[dataBinding!.slaveFieldName] ==
-          masterValue) {
+      if (element.fieldValues.fields[dataBinding!.slaveFieldName] == masterValue) {
         list.add(element);
       }
     }
@@ -335,9 +319,7 @@ class NsgBaseController extends GetxController
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed ||
-        !controllerFilter.isOpen ||
-        controllerFilter.searchString == '') return newItemsList;
+    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') return newItemsList;
     return newItemsList.where((element) {
       for (var fieldName in element.fieldList.fields.keys) {
         var field = element.getField(fieldName);
@@ -347,10 +329,7 @@ class NsgBaseController extends GetxController
         } else {
           s = element.getFieldValue(fieldName).toString();
         }
-        if (s
-            .toString()
-            .toUpperCase()
-            .contains(controllerFilter.searchString.toUpperCase())) {
+        if (s.toString().toUpperCase().contains(controllerFilter.searchString.toUpperCase())) {
           return true;
         }
       }
@@ -368,29 +347,17 @@ class NsgBaseController extends GetxController
     //Добавление условия на мастер-деталь
     if (masterController != null &&
         masterController!.selectedItem != null &&
-        masterController!.selectedItem!.fieldList.fields
-            .containsKey(dataBinding!.masterFieldName)) {
-      var masterValue = masterController!
-          .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+        masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
+      var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
       cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
     }
     //Учитываем пользовательский фильтр на дату
-    if (controllerFilter.isOpen &&
-        controllerFilter.isPeriodAllowed &&
-        controllerFilter.periodFieldName.isNotEmpty) {
-      cmp.add(
-          name: controllerFilter.periodFieldName,
-          value: controllerFilter.nsgPeriod.beginDate,
-          comparisonOperator: NsgComparisonOperator.greaterOrEqual);
-      cmp.add(
-          name: controllerFilter.periodFieldName,
-          value: controllerFilter.nsgPeriod.endDate,
-          comparisonOperator: NsgComparisonOperator.less);
+    if (controllerFilter.isOpen && controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.beginDate, comparisonOperator: NsgComparisonOperator.greaterOrEqual);
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
     }
     //Добавляем условие по строке поиска если фильтр разрешен и открыт
-    if (controllerFilter.isOpen &&
-        controllerFilter.isAllowed &&
-        controllerFilter.searchString.isNotEmpty) {
+    if (controllerFilter.isOpen && controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
       var dataItem = NsgDataClient.client.getNewObject(dataType);
       var fieldNames = dataItem.searchFieldList;
 
@@ -399,12 +366,8 @@ class NsgBaseController extends GetxController
         searchCmp.logicalOperator = NsgLogicalOperator.or;
         for (var fieldName in fieldNames) {
           var field = dataItem.fieldList.fields[fieldName];
-          if ((field is NsgDataStringField || field is NsgDataReferenceField) &&
-              field is! NsgDataEnumReferenceField) {
-            searchCmp.add(
-                name: fieldName,
-                value: controllerFilter.searchString,
-                comparisonOperator: NsgComparisonOperator.containWords);
+          if ((field is NsgDataStringField || field is NsgDataReferenceField) && field is! NsgDataEnumReferenceField) {
+            searchCmp.add(name: fieldName, value: controllerFilter.searchString, comparisonOperator: NsgComparisonOperator.containWords);
           }
         }
         cmp.add(name: "SearchStringComparison", value: searchCmp);
@@ -437,12 +400,10 @@ class NsgBaseController extends GetxController
     Widget? onLoading,
     Widget? onEmpty,
   }) {
-    return obx(widget,
-        onError: onError, onLoading: onLoading, onEmpty: onEmpty);
+    return obx(widget, onError: onError, onLoading: onLoading, onEmpty: onEmpty);
   }
 
-  static Widget Function() getDefaultProgressIndicator =
-      _defaultProgressIndicator;
+  static Widget Function() getDefaultProgressIndicator = _defaultProgressIndicator;
   static Widget _defaultProgressIndicator() {
     return const Center(child: CircularProgressIndicator());
   }
@@ -457,12 +418,9 @@ class NsgBaseController extends GetxController
       if (status.isLoading) {
         return onLoading ?? getDefaultProgressIndicator();
       } else if (status.isError) {
-        return onError != null
-            ? onError(status.errorMessage)
-            : Center(child: Text('A error occurred: ${status.errorMessage}'));
+        return onError != null ? onError(status.errorMessage) : Center(child: Text('A error occurred: ${status.errorMessage}'));
       } else if (status.isEmpty) {
-        return onEmpty ??
-            const SizedBox.shrink(); // Also can be widget(null); but is risky
+        return onEmpty ?? const SizedBox.shrink(); // Also can be widget(null); but is risky
       }
       return widget(value);
     });
@@ -482,10 +440,8 @@ class NsgBaseController extends GetxController
   ///Open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
-  void itemPageOpen(NsgDataItem element, String pageName,
-      {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
-    assert(element.runtimeType == dataType,
-        'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
+  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
     } else {
@@ -499,13 +455,9 @@ class NsgBaseController extends GetxController
   ///Copy item and open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///referenceList - список полей для дочитывания. null - перечитать все
-  void itemCopyPageOpen(NsgDataItem element, String pageName,
-      {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
-    assert(element.runtimeType == dataType,
-        'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
-    copyAndSetItem(element,
-        needRefreshSelectedItem: needRefreshSelectedItem,
-        referenceList: referenceList);
+  void itemCopyPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
+    copyAndSetItem(element, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList);
     Get.toNamed(pageName);
   }
 
@@ -524,14 +476,12 @@ class NsgBaseController extends GetxController
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
   ///useValidation == true перед сохранением проводится валидация
   ///В случае успешного сохранения возвращает true
-  Future<bool> itemPagePost(
-      {bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
     assert(selectedItem != null);
     if (useValidation) {
       var validationResult = selectedItem!.validateFieldValues();
       if (!validationResult.isValid) {
-        var err = NsgApiException(NsgApiError(
-            code: 999, message: validationResult.errorMessageWithFields()));
+        var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
         if (NsgApiException.showExceptionDefault != null) {
           NsgApiException.showExceptionDefault!(err);
         }
@@ -616,38 +566,27 @@ class NsgBaseController extends GetxController
   ///item - перечитываемый объект
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future<NsgDataItem> refreshItem(
-      NsgDataItem item, List<String>? referenceList) async {
+  Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList) async {
     var cmp = NsgCompare();
-    cmp.add(
-        name: item.primaryKeyField,
-        value: item.getFieldValue(item.primaryKeyField));
+    cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
     var filterParam = NsgDataRequestParams(compare: cmp);
-    var request = NsgDataRequest(
-        dataItemType: dataType, storageType: controllerMode.storageType);
+    var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     var answer = await request.requestItem(
-        filter: filterParam,
-        loadReference: referenceList,
-        autoRepeate: autoRepeate,
-        autoRepeateCount: autoRepeateCount,
-        retryIf: (e) => retryRequestIf(e));
+        filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
 
     return answer;
   }
 
   ///Вызывается после метода refreshItem.
   ///Можно использовать, например, для обновления связанных контроллеров
-  Future afterRefreshItem(
-      NsgDataItem item, List<String>? referenceList) async {}
+  Future afterRefreshItem(NsgDataItem item, List<String>? referenceList) async {}
 
   ///Перечитать из базы данных текущий объект (selectedItem)
   ///На время чтерния статус контроллера будет loading
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future setAndRefreshSelectedItem(
-      NsgDataItem item, List<String>? referenceList) async {
-    assert(item.isNotEmpty,
-        'Попытка перечитать с сервера объект с пустым guid (например, новый)');
+  Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
+    assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     selectedItem = item;
     currentStatus = RxStatus.loading();
     sendNotify();
@@ -658,8 +597,7 @@ class NsgBaseController extends GetxController
       if (index >= 0) {
         dataItemList.replaceRange(index, index + 1, [newItem]);
       } else if (newItem.isEmpty) {
-        currentStatus =
-            RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+        currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
         sendNotify();
         throw Exception('Ошибка NBC-509. Данный объект более недоступен');
       }
@@ -681,24 +619,18 @@ class NsgBaseController extends GetxController
   ///На время чтерния статус контроллера будет loading
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future copyAndSetItem(NsgDataItem item,
-      {bool needRefreshSelectedItem = false,
-      List<String>? referenceList}) async {
-    assert(item.isNotEmpty,
-        'Попытка перечитать с сервера объект с пустым guid (например, новый)');
+  Future copyAndSetItem(NsgDataItem item, {bool needRefreshSelectedItem = false, List<String>? referenceList}) async {
+    assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     currentStatus = RxStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
     try {
-      var newItem = needRefreshSelectedItem
-          ? await refreshItem(item, referenceList)
-          : item;
+      var newItem = needRefreshSelectedItem ? await refreshItem(item, referenceList) : item;
       var index = dataItemList.indexOf(item);
       if (index >= 0) {
         dataItemList.replaceRange(index, index + 1, [newItem]);
       } else if (newItem.isEmpty) {
-        currentStatus =
-            RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+        currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
         sendNotify();
         throw Exception('Ошибка NBC-509. Данный объект более недоступен');
       }
@@ -787,6 +719,5 @@ class NsgBaseController extends GetxController
   ///Метод, вызываемый при инициализации provider (загрузка приложения)
   Future loadProviderData() async {}
 
-  List<String> get objectFieldsNames =>
-      NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
+  List<String> get objectFieldsNames => NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
 }

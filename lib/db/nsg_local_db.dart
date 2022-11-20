@@ -105,7 +105,7 @@ class NsgLocalDb {
           }
           //Читаем старый объект, извлекаем из него идентификаторы строк таб частей
           //Сравниваем с новыми, удаляем неиспользуемые
-          var oldRowsId = oldObject != null ? oldObject![name] : null;
+          var oldRowsId = oldObject != null ? oldObject[name] : null;
           if (oldRowsId != null && (oldRowsId is List<String>?) && oldRowsId!.isNotEmpty) {
             for (var e in ls) {
               oldRowsId.remove(e);
