@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataRequestParams {
-  //TODO: проверить используется ли где-то. Скорее всего, надо объеденить с Count
   int top;
 
   ///Ограничение на максимальное количество запрашиваемых данных
