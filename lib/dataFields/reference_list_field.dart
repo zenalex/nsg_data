@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../nsg_data.dart';
 
-class NsgDataReferenceListField<T extends NsgDataItem>
-    extends NsgDataBaseReferenceField {
+class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseReferenceField {
   NsgDataReferenceListField(String name) : super(name);
 
   @override
@@ -24,8 +23,7 @@ class NsgDataReferenceListField<T extends NsgDataItem>
     return dataItem.getFieldValue(name);
   }
 
-  Future<List<T>> getReferentAsync(NsgDataItem dataItem,
-      {bool useCache = true}) async {
+  Future<List<T>> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
     var item = getReferent(dataItem, useCache: useCache);
     if (item == null) {
       var id = dataItem.getFieldValue(name).toString();
@@ -82,10 +80,29 @@ class NsgDataReferenceListField<T extends NsgDataItem>
   ///dataItem - объект, в поле которого добавляем значение
   ///row - добавляемое значение
   void addRow(NsgDataItem dataItem, T row) {
-    var allRows =
-        (dataItem.getFieldValue(name, allowNullValue: true) as List<T>?) ??
-            <T>[];
+    var allRows = (dataItem.getFieldValue(name, allowNullValue: true) as List<T>?) ?? <T>[];
     allRows.add(row);
     setValue(dataItem.fieldValues, allRows);
+  }
+
+  @override
+  int compareTo(NsgDataItem a, NsgDataItem b) {
+    var valueA = a.getFieldValue(name) as List;
+    var valueB = b.getFieldValue(name) as List;
+    if (valueA.length != valueB.length) return valueA.length.compareTo(valueB.length);
+    for (var i = 0; i < valueA.length; i++) {
+      if (valueA[i] is NsgDataItem) {
+        for (var fieldName in valueA[i].fieldList.fields.keys) {
+          var field = valueA[i].fieldList.fields[fieldName];
+          var result = (field!.compareTo(valueA[i], valueB[i]) != 0);
+          if (result) return -1;
+        }
+      } else {
+        if (valueA[i] != valueB[i]) {
+          return -1;
+        }
+      }
+    }
+    return 0;
   }
 }
