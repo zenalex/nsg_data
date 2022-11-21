@@ -41,8 +41,14 @@ class NsgCompare {
     return i;
   }
 
-  void add({required String name, required dynamic value, NsgComparisonOperator comparisonOperator = NsgComparisonOperator.equal}) {
-    paramList.add(NsgCompareParam(parameterName: name, parameterValue: value, comparisonOperator: comparisonOperator));
+  void add(
+      {required String name,
+      required dynamic value,
+      NsgComparisonOperator comparisonOperator = NsgComparisonOperator.equal}) {
+    paramList.add(NsgCompareParam(
+        parameterName: name,
+        parameterValue: value,
+        comparisonOperator: comparisonOperator));
   }
 
   // void fromJson(Map<String, dynamic> json) {
@@ -92,7 +98,11 @@ class NsgCompareParam {
   /// Значение
   final dynamic parameterValue;
 
-  NsgCompareParam({required this.parameterName, required this.parameterValue, this.comparisonOperator = NsgComparisonOperator.equal}) : super();
+  NsgCompareParam(
+      {required this.parameterName,
+      required this.parameterValue,
+      this.comparisonOperator = NsgComparisonOperator.equal})
+      : super();
   //   {
   // if (parameterValue is NsgDataItem) {
   //   parameterValue =
@@ -109,7 +119,9 @@ class NsgCompareParam {
       map["Value"] = (parameterValue as NsgEnum).value;
     } else if (parameterValue is NsgDataItem) {
       map["Value"] = (parameterValue as NsgDataItem).id;
-    } else if (parameterValue is List && (parameterValue as List).isNotEmpty && (parameterValue as List).first is NsgDataItem) {
+    } else if (parameterValue is List &&
+        (parameterValue as List).isNotEmpty &&
+        (parameterValue as List).first is NsgDataItem) {
       var idList = <String>[];
       for (NsgDataItem e in parameterValue as List) {
         idList.add(e.id);
@@ -141,18 +153,29 @@ class NsgCompareParam {
       return false;
     }
     if (comparisonOperator == NsgComparisonOperator.beginWith) {
-      return (value.toString().toLowerCase().startsWith(parameterValue.toString().toLowerCase()));
+      return (value
+          .toString()
+          .toLowerCase()
+          .startsWith(parameterValue.toString().toLowerCase()));
     } else if (comparisonOperator == NsgComparisonOperator.contain) {
-      return (value.toString().toLowerCase().contains(parameterValue.toString().toLowerCase()));
+      return (value
+          .toString()
+          .toLowerCase()
+          .contains(parameterValue.toString().toLowerCase()));
     } else if (comparisonOperator == NsgComparisonOperator.containWords) {
       var words = parameterValue.toString().split(' ');
       value = value.toString().toLowerCase();
       return words.every(((e) => value.contains(e.toLowerCase())));
     } else if (comparisonOperator == NsgComparisonOperator.endWith) {
-      return (value.toString().toLowerCase().endsWith(parameterValue.toString().toLowerCase()));
+      return (value
+          .toString()
+          .toLowerCase()
+          .endsWith(parameterValue.toString().toLowerCase()));
     } else if (comparisonOperator == NsgComparisonOperator.equal) {
       //TODO: fix
       return (value == parameterValue);
+    } else if (comparisonOperator == NsgComparisonOperator.inList) {
+      return ((parameterValue as List).contains(value));
     } else {
       return false;
     }
