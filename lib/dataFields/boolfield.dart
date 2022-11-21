@@ -16,7 +16,7 @@ class NsgDataBoolField extends NsgDataField {
   @override
   int compareTo(NsgDataItem a, NsgDataItem b) {
     var valueA = a.getFieldValue(name) as bool;
-    var valueB = a.getFieldValue(name) as bool;
+    var valueB = b.getFieldValue(name) as bool;
     return valueA == valueB
         ? 0
         : valueA && !valueB
