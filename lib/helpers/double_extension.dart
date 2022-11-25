@@ -8,7 +8,7 @@ extension NsgDoubleExtension on double {
   }
 
   String toStringFormatted() {
-    var formatter = NumberFormat("#,###,000", "ru_RU");
+    var formatter = NumberFormat("#,##0", "ru_RU");
     return formatter.format(this);
   }
 }
