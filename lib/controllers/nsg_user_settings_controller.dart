@@ -53,9 +53,27 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
 
   static const String _favoriteSettingsName = '_favorites_';
 
-  Future addFavoriteId(String typeName, String id) async {
-    var s = _favoriteSettingsName;
+  void addFavoriteId(String typeName, String id) {
+    var keyName = _favoriteSettingsName + typeName;
+    var objFavorite = items.firstWhere((e) => (e as NsgUserSettings).name == keyName, orElse: () {
+      var obj = NsgDataClient.client.getNewObject(T) as T;
+      obj.newRecord();
+      (obj as NsgUserSettings).name = keyName;
+      return obj;
+    }) as NsgUserSettings;
+    if (objFavorite.settings.contains(id)) {
+      return;
+    }
+    var ids = objFavorite.settings.split(',');
+    ids.add(id);
+    objFavorite.settings += ids.join(',');
+    postUserSettings(objFavorite);
   }
 
-  Future removeFavoriteId(String typeName, String id) async {}
+  void removeFavoriteId(String typeName, String id) {}
+
+  Future postUserSettings(NsgUserSettings objFavorite) async {
+    //Поставить в очередь на сохранение, чтобы избезать параллельного сохранения настроек пользователя
+    //Уменьшив таким образом нагрузку на сервер и избежать коллизий
+  }
 }

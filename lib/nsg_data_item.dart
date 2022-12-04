@@ -350,6 +350,7 @@ class NsgDataItem {
   void newRecord() {
     assert(id.isNotEmpty && id != Guid.Empty);
     setFieldValue(primaryKeyField, Guid.newGuid());
+    state = NsgDataItemState.create;
   }
 
   ///Заполнение полей объекта при создании нового
