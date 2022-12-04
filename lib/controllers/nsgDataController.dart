@@ -8,8 +8,19 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Представляет собой типизированный вариант массива dataItemList
   List<T> get items => dataItemList.cast<T>();
 
+  final List<T> _favorites = [];
+
   ///Список избранных элементов
-  List<T> favorites = [];
+  Future<List<T>> getFavorites() async {
+    if (_favorites.isNotEmpty) {
+      return _favorites;
+    }
+    // if (userSettingsController != null) {
+    //   var ids = userSettingsController!.getFavorites(dataType);
+    //   _favorites.addAll(await loadFavorites(ids));
+    // }
+    return _favorites;
+  }
 
   ///Список часто используемых элементов
   List<T> recent = [];
@@ -25,21 +36,26 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Установка текущего элемента для контроллера
   set currentItem(T item) => selectedItem = item;
 
-  NsgDataController({
-    bool requestOnInit = true,
-    bool useUpdate = true,
-    bool useChange = true,
-    List<String>? builderIDs,
-    NsgBaseController? masterController,
-    NsgDataBinding? dataBindign,
-    bool autoRepeate = false,
-    int autoRepeateCount = 10,
-    bool useDataCache = false,
-    bool selectedMasterRequired = true,
-    bool autoSelectFirstItem = false,
-    List<NsgBaseController>? dependsOnControllers,
-    super.controllerMode,
-  }) : super(
+  ///Контроллер настроек пользователя. Если задан, используется для хранения и извлечения информации
+  ///об избранных элементах и последних используемых
+  final NsgUserSettingsController? userSettingsController;
+
+  NsgDataController(
+      {bool requestOnInit = true,
+      bool useUpdate = true,
+      bool useChange = true,
+      List<String>? builderIDs,
+      NsgBaseController? masterController,
+      NsgDataBinding? dataBindign,
+      bool autoRepeate = false,
+      int autoRepeateCount = 10,
+      bool useDataCache = false,
+      bool selectedMasterRequired = true,
+      bool autoSelectFirstItem = false,
+      List<NsgBaseController>? dependsOnControllers,
+      super.controllerMode,
+      this.userSettingsController})
+      : super(
             dataType: T,
             requestOnInit: requestOnInit,
             useUpdate: useUpdate,
@@ -97,7 +113,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       var elem = await doCreateNewItem();
       currentStatus = RxStatus.success();
       currentItem = elem.clone() as T;
-      
+
       backupItem = elem;
       sendNotify();
       selectedItemChanged.broadcast(null);
@@ -132,10 +148,12 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
 
   ///Добавить элемент в избранное
   void toggleFavorite(T item) {
-    if (!favorites.contains(item)) {
-      favorites.add(item);
+    if (!_favorites.contains(item)) {
+      _favorites.add(item);
+      //userSettingsController?.addFavoriteId(dataType, item.id);
     } else {
-      favorites.remove(item);
+      _favorites.remove(item);
+      //userSettingsController?.removeFavoriteId(dataType, item.id);
     }
   }
 
@@ -144,5 +162,14 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     if (!recent.contains(item)) {
       recent.add(item);
     }
+  }
+
+  Future<List<T>> loadFavorites(List<String> ids) async {
+    var cmp = NsgCompare();
+    var dataItem = NsgDataClient.client.getNewObject(dataType);
+    cmp.add(name: dataItem.typeName, value: ids, comparisonOperator: NsgComparisonOperator.inList);
+    var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
+    var request = NsgDataRequest<T>(storageType: controllerMode.storageType);
+    return await request.requestItems(filter: params);
   }
 }
