@@ -4,8 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер для управления настройками пользователя
-class NsgUserSettingsController<T extends NsgDataItem>
-    extends NsgDataController<T> {
+class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController<T> {
   NsgUserSettingsController(
       {super.requestOnInit,
       super.useUpdate,
@@ -46,11 +45,17 @@ class NsgUserSettingsController<T extends NsgDataItem>
   }
 
   @override
-  Future<bool> itemPagePost(
-      {bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
     (currentItem as NsgUserSettings).settings = jsonEncode(settingsMap);
     currentItem.storageType = controllerMode.storageType;
-    return await super
-        .itemPagePost(goBack: goBack, useValidation: useValidation);
+    return await super.itemPagePost(goBack: goBack, useValidation: useValidation);
   }
+
+  static const String _favoriteSettingsName = '_favorites_';
+
+  Future addFavoriteId(String typeName, String id) async {
+    var s = _favoriteSettingsName;
+  }
+
+  Future removeFavoriteId(String typeName, String id) async {}
 }

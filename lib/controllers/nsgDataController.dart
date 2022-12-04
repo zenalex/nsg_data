@@ -150,10 +150,10 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   void toggleFavorite(T item) {
     if (!_favorites.contains(item)) {
       _favorites.add(item);
-      //userSettingsController?.addFavoriteId(dataType, item.id);
+      userSettingsController?.addFavoriteId(item.typeName, item.id);
     } else {
       _favorites.remove(item);
-      //userSettingsController?.removeFavoriteId(dataType, item.id);
+      userSettingsController?.removeFavoriteId(item.typeName, item.id);
     }
   }
 
