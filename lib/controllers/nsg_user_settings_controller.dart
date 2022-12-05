@@ -67,13 +67,66 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
     var ids = objFavorite.settings.split(',');
     ids.add(id);
     objFavorite.settings += ids.join(',');
-    postUserSettings(objFavorite);
+    postUserSettings(objFavorite as T);
   }
 
   void removeFavoriteId(String typeName, String id) {}
 
-  Future postUserSettings(NsgUserSettings objFavorite) async {
-    //Поставить в очередь на сохранение, чтобы избезать параллельного сохранения настроек пользователя
-    //Уменьшив таким образом нагрузку на сервер и избежать коллизий
+  final List<T> _settingsPostQueue = [];
+  final List<T> _settingsPostingItems = [];
+  bool _isSettingsPosting = false;
+
+  ///Поставить в очередь на сохранение, чтобы избезать параллельного сохранения настроек пользователя
+  ///Уменьшив таким образом нагрузку на сервер и избежать коллизий
+  Future postUserSettings(T objFavorite) async {
+    if (_settingsPostQueue.contains(objFavorite)) {
+      return;
+    }
+    _settingsPostQueue.add(objFavorite);
+    if (_isSettingsPosting) {
+      return;
+    }
+  }
+
+  Future _postingUserSettings() async {
+    if (_settingsPostQueue.isEmpty) {
+      _isSettingsPosting = false;
+      return;
+    }
+    _isSettingsPosting = true;
+    var error = false;
+    try {
+      //Переносим массив сохраняемых элементов в отдельный список
+      _settingsPostingItems.addAll(_settingsPostQueue);
+      //Очищаем очередь, чтобы избежать повторного сохранения
+      _settingsPostQueue.clear();
+      //Непосредственно сохранение
+      if (controllerMode.storageType == NsgDataStorageType.server) {
+        var p = NsgDataPost(dataItemType: runtimeType);
+        p.itemsToPost = _settingsPostingItems;
+        await p.postItems();
+      } else {
+        await NsgLocalDb.instance.postItems(_settingsPostingItems);
+      }
+
+      for (var item in _settingsPostingItems) {
+        item.state = NsgDataItemState.fill;
+      }
+      _settingsPostingItems.clear();
+    } catch (e) {
+      error = true;
+      rethrow;
+    } finally {
+      //Если во время сохранения произошла ошибка, возвращаем несохраненные элементы в очередь
+      //Но так как там уже могут быть эти же элементы, делаем это через проверку
+      for (var item in _settingsPostingItems) {
+        postUserSettings(item);
+      }
+      _settingsPostingItems.clear();
+      _isSettingsPosting = false;
+    }
+    if (error) {
+      //var
+    }
   }
 }
