@@ -8,17 +8,19 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Представляет собой типизированный вариант массива dataItemList
   List<T> get items => dataItemList.cast<T>();
 
+  final _isFavoritesRequered = false;
   final List<T> _favorites = [];
 
   ///Список избранных элементов
   Future<List<T>> getFavorites() async {
-    if (_favorites.isNotEmpty) {
+    if (_isFavoritesRequered) {
       return _favorites;
     }
-    // if (userSettingsController != null) {
-    //   var ids = userSettingsController!.getFavorites(dataType);
-    //   _favorites.addAll(await loadFavorites(ids));
-    // }
+    if (userSettingsController != null) {
+      var dataItem = NsgDataClient.client.getNewObject(dataType);
+      var ids = userSettingsController!.getFavoriteIds(dataItem.typeName);
+      _favorites.addAll(await loadFavorites(ids));
+    }
     return _favorites;
   }
 

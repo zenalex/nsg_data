@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
@@ -53,6 +54,18 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
 
   static const String _favoriteSettingsName = '_favorites_';
 
+  ///Возвращает список идентификоторов, занесенных в избранное по данному типу данных
+  List<String> getFavoriteIds(String typeName) {
+    var keyName = _favoriteSettingsName + typeName;
+    var objFavorite = items.firstWhere((e) => (e as NsgUserSettings).name == keyName, orElse: () {
+      var obj = NsgDataClient.client.getNewObject(T) as T;
+      obj.newRecord();
+      (obj as NsgUserSettings).name = keyName;
+      return obj;
+    }) as NsgUserSettings;
+    return objFavorite.settings.split(',');
+  }
+  
   void addFavoriteId(String typeName, String id) {
     var keyName = _favoriteSettingsName + typeName;
     var objFavorite = items.firstWhere((e) => (e as NsgUserSettings).name == keyName, orElse: () {
@@ -86,9 +99,15 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
     if (_isSettingsPosting) {
       return;
     }
+    _postingUserSettings();
   }
 
+  int _errorsPostUserSettings = 0;
+  int maxErrorsPostUserSettings = 10;
   Future _postingUserSettings() async {
+    if (_isSettingsPosting) {
+      return true;
+    }
     if (_settingsPostQueue.isEmpty) {
       _isSettingsPosting = false;
       return;
@@ -115,18 +134,25 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       _settingsPostingItems.clear();
     } catch (e) {
       error = true;
-      rethrow;
-    } finally {
+    } finally {}
+    if (error) {
+      _errorsPostUserSettings++;
+      if (_errorsPostUserSettings < maxErrorsPostUserSettings) {
+        Timer(const Duration(seconds: 1), () => _postingUserSettings);
+      }
+    } else {
       //Если во время сохранения произошла ошибка, возвращаем несохраненные элементы в очередь
       //Но так как там уже могут быть эти же элементы, делаем это через проверку
       for (var item in _settingsPostingItems) {
-        postUserSettings(item);
+        if (_settingsPostQueue.contains(item)) {
+          continue;
+        }
+        _settingsPostQueue.add(item);
       }
       _settingsPostingItems.clear();
       _isSettingsPosting = false;
-    }
-    if (error) {
-      //var
+      _errorsPostUserSettings = 0;
+      _postingUserSettings();
     }
   }
 }
