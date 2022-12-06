@@ -24,7 +24,7 @@ class NsgDataPost<T extends NsgDataItem> {
     return list;
   }
 
-  Future<List<T>?> postItems({bool autoAuthorize = true, String tag = '', List<String>? loadReference, String function = ''}) async {
+  Future<List<T>> postItems({bool autoAuthorize = true, String tag = '', List<String>? loadReference, String function = ''}) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
 
     var header = <String, String?>{};

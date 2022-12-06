@@ -716,6 +716,24 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
+  Future postItems(List<NsgDataItem> itemsToPost) async {
+    if (controllerMode.storageType == NsgDataStorageType.server) {
+      var p = NsgDataPost(dataItemType: runtimeType);
+      p.itemsToPost = itemsToPost;
+      var newItems = await p.postItems();
+      for (var item in newItems) {
+        var old = itemsToPost.firstWhereOrNull((e) => e.id == item.id);
+        if (old == null) {
+          continue;
+        }
+        old.copyFieldValues(item);
+        old.state = NsgDataItemState.fill;
+      }
+    } else {
+      await NsgLocalDb.instance.postItems(itemsToPost);
+    }
+  }
+
   ///Метод, вызываемый при инициализации provider (загрузка приложения)
   Future loadProviderData() async {}
 
