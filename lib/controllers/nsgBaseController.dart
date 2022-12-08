@@ -107,6 +107,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Если значение null, значит не было успешного запроса к серверу, либо, сервер не вернул общее количество элементов
   int? totalCount;
 
+  ///Номер элемента, начиная с которого возвращать данные
+  ///Используется для пейджинга
+  int? top;
+
   ///Событие о выборе значения пользователем. Срабатывает в режиме selection при выборе пользователем элемента в форме списка
   void Function(NsgDataItem)? onSelected;
 
@@ -383,6 +387,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
 
     var param = NsgDataRequestParams();
+    param.top = top ?? 0;
     param.replaceCompare(cmp);
     if (sorting.isNotEmpty) {
       param.sorting = sorting.toString();
