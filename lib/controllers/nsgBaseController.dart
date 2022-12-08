@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:nsg_data/controllers/nsg_controller_filter.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
+import 'package:nsg_data/nsg_data_delete.dart';
 import 'nsg_controller_regime.dart';
 
 class NsgBaseController extends GetxController with StateMixin<NsgBaseControllerData> {
@@ -140,7 +141,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       this.retryIf,
       this.editModeAllowed = true,
       this.readOnly = true,
-      this.controllerMode = const NsgDataControllerMode(storageType: NsgDataStorageType.server,
+      this.controllerMode = const NsgDataControllerMode(
+        storageType: NsgDataStorageType.server,
       )})
       : super() {
     onRetry ??= _updateStatusError;
@@ -435,9 +437,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Post selected item to the server
   Future _postSelectedItem() async {
-    assert (selectedItem != null, 'No selected item to post');
-    
-    
+    assert(selectedItem != null, 'No selected item to post');
+
     await selectedItem!.post();
 
     //sendNotify();
@@ -737,6 +738,21 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       }
     } else {
       await NsgLocalDb.instance.postItems(itemsToPost);
+    }
+  }
+
+  Future deleteItems(List<NsgDataItem> itemsToDelete) async {
+    if (controllerMode.storageType == NsgDataStorageType.server) {
+      if (itemsToDelete.isEmpty) return;
+      var p = NsgDataDelete(dataItemType: itemsToDelete[0].runtimeType, itemsToDelete: itemsToDelete);
+      await p.deleteItems();
+    } else {
+      await NsgLocalDb.instance.deleteItems(itemsToDelete);
+    }
+    for (var item in itemsToDelete) {
+      if (dataItemList.contains(item)) {
+        dataItemList.remove(item);
+      }
     }
   }
 

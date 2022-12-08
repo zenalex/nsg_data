@@ -142,4 +142,20 @@ class NsgLocalDb {
       }
     }
   }
+
+  Future deleteItems(List<NsgDataItem> itemsToDelete) async {
+    if (itemsToDelete.isEmpty) {
+      return;
+    }
+    var firstItem = itemsToDelete.first;
+    var box = await getTable(firstItem.typeName);
+    var ids = <String>[];
+    for (var item in itemsToDelete) {
+      if (item.id.isEmpty) {
+        continue;
+      }
+      ids.add(item.id);
+    }
+    await box.deleteAll(ids);
+  }
 }

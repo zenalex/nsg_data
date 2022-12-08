@@ -13,6 +13,8 @@ class NsgDataItem {
 
   ///Get API path for posting Items
   String get apiPostItems => apiRequestItems + '/Post';
+  ///Get API path for delete Items
+  String get apiDeleteItems => apiRequestItems + '/Delete';
 
   ///Имя поля для фильтрации в контроллере по периоду
   ///Используется, например, в NsgListPage
