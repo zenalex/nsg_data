@@ -39,7 +39,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Binding rule
   NsgDataBinding? dataBinding;
 
-  final NsgDataControllerMode controllerMode;
+  NsgDataControllerMode controllerMode = NsgDataControllerMode.defaultDataControllerMode;
 
   RxStatus _currentStatus = RxStatus.loading();
 
@@ -141,11 +141,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       this.retryIf,
       this.editModeAllowed = true,
       this.readOnly = true,
-      this.controllerMode = const NsgDataControllerMode(
-        storageType: NsgDataStorageType.server,
-      )})
+      NsgDataControllerMode? controllerMode})
       : super() {
     onRetry ??= _updateStatusError;
+    this.controllerMode = controllerMode ?? NsgDataControllerMode.defaultDataControllerMode;
   }
 
   @override
