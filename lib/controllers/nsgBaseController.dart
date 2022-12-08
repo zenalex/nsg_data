@@ -109,6 +109,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Событие о выборе значения пользователем. Срабатывает в режиме selection при выборе пользователем элемента в форме списка
   void Function(NsgDataItem)? onSelected;
 
+  ///Контроллер настроек пользователя. Если задан, используется для хранения и извлечения информации
+  ///об избранных элементах и последних используемых
+  NsgUserSettingsController? userSettingsController;
+
   List<NsgUpdateKey> updateKeys = [];
 
   set selectedItem(NsgDataItem? newItem) {
@@ -136,7 +140,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       this.retryIf,
       this.editModeAllowed = true,
       this.readOnly = true,
-      this.controllerMode = const NsgDataControllerMode(storageType: NsgDataStorageType.server)})
+      this.controllerMode = const NsgDataControllerMode(storageType: NsgDataStorageType.server,
+      )})
       : super() {
     onRetry ??= _updateStatusError;
   }
@@ -170,12 +175,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
 
     controllerFilter.controller = this;
+    userSettingsController ??= NsgUserSettings.controller;
 
     if (requestOnInit) {
       requestItems();
     } else {
       lateInit = true;
     }
+
     super.onInit();
   }
 
@@ -428,10 +435,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Post selected item to the server
   Future _postSelectedItem() async {
-    if (selectedItem == null) {
-      throw Exception("No selected item to post");
-    }
-    if (selectedItem == null) return;
+    assert (selectedItem != null, 'No selected item to post');
+    
+    
     await selectedItem!.post();
 
     //sendNotify();

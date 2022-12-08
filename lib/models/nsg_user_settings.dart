@@ -1,3 +1,5 @@
+import 'package:nsg_data/nsg_data.dart';
+
 abstract class NsgUserSettings {
   String get id;
   String get userId;
@@ -5,4 +7,5 @@ abstract class NsgUserSettings {
   set name(String value);
   String get settings;
   set settings(String value);
+  static NsgUserSettingsController? controller;
 }
