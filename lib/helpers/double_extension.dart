@@ -7,12 +7,19 @@ extension NsgDoubleExtension on double {
     return (m * this).roundToDouble() / m;
   }
 
-  String toStringFormatted({bool? showCents}) {
-    if (showCents) {
-      var formatter = NumberFormat("#,##0.00", "ru_RU");
+  String toStringFormatted({bool? showCents, bool? showRubles}) {
+    NumberFormat formatter;
+    String result;
+    if (showCents == true) {
+      formatter = NumberFormat("#,##0.00", "ru_RU");
     } else {
-      var formatter = NumberFormat("#,##0", "ru_RU");
+      formatter = NumberFormat("#,##0", "ru_RU");
     }
-    return formatter.format(this);
+    if (showRubles == true) {
+      result = formatter.format(this) + ' ₽';
+    } else {
+      result = formatter.format(this);
+    }
+    return result;
   }
 }
