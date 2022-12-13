@@ -7,8 +7,12 @@ extension NsgDoubleExtension on double {
     return (m * this).roundToDouble() / m;
   }
 
-  String toStringFormatted() {
-    var formatter = NumberFormat("#,##0", "ru_RU");
+  String toStringFormatted({bool? showCents}) {
+    if (showCents) {
+      var formatter = NumberFormat("#,##0.00", "ru_RU");
+    } else {
+      var formatter = NumberFormat("#,##0", "ru_RU");
+    }
     return formatter.format(this);
   }
 }
