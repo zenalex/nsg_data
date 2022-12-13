@@ -7,16 +7,16 @@ extension NsgDoubleExtension on double {
     return (m * this).roundToDouble() / m;
   }
 
-  String toStringFormatted({bool? showCents, bool? showRubles}) {
+  String toNumberFormat({bool? showHundredth, bool? showCurrencySymbol, String currencySymbol = '₽'}) {
     NumberFormat formatter;
     String result;
-    if (showCents == true) {
+    if (showHundredth == true) {
       formatter = NumberFormat("#,##0.00", "ru_RU");
     } else {
       formatter = NumberFormat("#,##0", "ru_RU");
     }
-    if (showRubles == true) {
-      result = formatter.format(this) + ' ₽';
+    if (showCurrencySymbol == true) {
+      result = formatter.format(this) + ' ' + currencySymbol;
     } else {
       result = formatter.format(this);
     }
