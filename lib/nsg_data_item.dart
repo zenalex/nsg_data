@@ -13,6 +13,7 @@ class NsgDataItem {
 
   ///Get API path for posting Items
   String get apiPostItems => apiRequestItems + '/Post';
+
   ///Get API path for delete Items
   String get apiDeleteItems => apiRequestItems + '/Delete';
 
@@ -115,7 +116,7 @@ class NsgDataItem {
 
   ///Получить поле объекта по его имени
   NsgDataField getField(String name) {
-    assert(fieldList.fields.containsKey(name));
+    assert(fieldList.fields.containsKey(name), 'containsKey >> $name');
     return fieldList.fields[name]!;
   }
 
