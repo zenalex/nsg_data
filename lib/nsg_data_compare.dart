@@ -172,8 +172,11 @@ class NsgCompareParam {
           .toLowerCase()
           .endsWith(parameterValue.toString().toLowerCase()));
     } else if (comparisonOperator == NsgComparisonOperator.equal) {
-      //TODO: fix
-      return (value == parameterValue);
+      var pv = parameterValue;
+      if (parameterValue is NsgDataItem) {
+        pv = (parameterValue as NsgDataItem).id;
+      }
+      return (value == pv);
     } else if (comparisonOperator == NsgComparisonOperator.inList) {
       return ((parameterValue as List).contains(value));
     } else {
