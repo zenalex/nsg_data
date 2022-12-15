@@ -133,6 +133,7 @@ class NsgLocalDb {
           map[name] = value!.convertToJson(item[name]);
         }
         box.put(item.id, map);
+
         for (var name in tableFields) {
           var list = item[name] as List<NsgDataItem>;
           if (list.isNotEmpty) {
@@ -141,6 +142,7 @@ class NsgLocalDb {
         }
       }
     }
+    NsgDataClient.client.addItemsToCache(items: itemsToPost);
   }
 
   Future deleteItems(List<NsgDataItem> itemsToDelete) async {

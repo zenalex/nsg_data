@@ -59,7 +59,7 @@ class NsgDataPost<T extends NsgDataItem> {
     String function = '',
   }) async {
     var data = await postItems(autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function);
-    if (data == null || data.isEmpty) {
+    if (data.isEmpty) {
       return null;
     }
     return data[0];

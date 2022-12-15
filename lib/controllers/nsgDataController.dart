@@ -114,7 +114,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       backupItem = elem;
       sendNotify();
       selectedItemChanged.broadcast(null);
-      return elem;
+      return currentItem;
     } catch (e) {
       var msg = '';
       if (e is NsgApiException && e.error.message != null) {
@@ -124,23 +124,6 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       sendNotify();
     }
     return NsgDataClient.client.getNewObject(dataType) as T;
-  }
-
-  ///Создает новый элемент. Вызывается из createNewItem
-  ///Может быть перекрыт для организации бизнес-логики запросов, например, заполнения нового элемента на сервере
-  ///или проверки возможности создания нового элемента
-  Future<T> doCreateNewItem() async {
-    var elem = NsgDataClient.client.getNewObject(dataType) as T;
-    //Если выставлен признак создавать на сервере, создаем запрос на сервер
-    if (elem.createOnServer) {
-      var request = NsgDataRequest<T>();
-      elem = await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
-    } else {
-      elem.newRecordFill();
-    }
-    elem.state = NsgDataItemState.create;
-    elem.storageType = controllerMode.storageType;
-    return elem;
   }
 
   ///Добавить элемент в избранное

@@ -463,6 +463,51 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     Get.toNamed(pageName);
   }
 
+  ///Создает новый элемент. Вызывается из createNewItem
+  ///Может быть перекрыт для организации бизнес-логики запросов, например, заполнения нового элемента на сервере
+  ///или проверки возможности создания нового элемента
+  Future<NsgDataItem> doCreateNewItem() async {
+    var elem = NsgDataClient.client.getNewObject(dataType);
+    //Если выставлен признак создавать на сервере, создаем запрос на сервер
+    if (elem.createOnServer) {
+      var request = NsgDataRequest(dataItemType: dataType);
+      elem = await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
+    } else {
+      elem.newRecordFill();
+    }
+    elem.state = NsgDataItemState.create;
+    elem.storageType = controllerMode.storageType;
+    return elem;
+  }
+
+  ///Create new item and open page to view and edit it
+  ///pageName -  страница, которую необходимо открыть по окончанию создания нового элемента
+  void newItemPageOpen({required String pageName}) {
+    createAndSetSelectedItem();
+    Get.toNamed(pageName);
+  }
+
+  ///Создает новый элемент БД и устанавливает его в текущее selectedItem (currentItem)
+  ///На время чтерния статус контроллера будет loading
+  Future createAndSetSelectedItem() async {
+    currentStatus = RxStatus.loading();
+    sendNotify();
+    itemsRequested.broadcast();
+    try {
+      var newItem = await doCreateNewItem();
+      //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности
+      //сравнить были ли сделаны какие-либо изменения пользователем
+      selectedItem = newItem.clone();
+      backupItem = newItem;
+      await afterRefreshItem(selectedItem!, referenceList);
+      currentStatus = RxStatus.success();
+      sendNotify();
+      selectedItemChanged.broadcast(null);
+    } on Exception catch (e) {
+      _updateStatusError(e);
+    }
+  }
+
   ///Copy item and open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///referenceList - список полей для дочитывания. null - перечитать все
