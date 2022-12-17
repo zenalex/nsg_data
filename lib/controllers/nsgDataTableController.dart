@@ -8,8 +8,7 @@ import 'package:nsg_data/nsg_data.dart';
 ///Обязательные параметры к заданию:
 ///masterController - контроллер основного объекта, строку табличной части которого редактируем
 ///tableFieldName - имя поля типа NsgDafaReferenceList объектов из masterController - ссылка на строки табличной части
-class NsgDataTableController<T extends NsgDataItem>
-    extends NsgDataController<T> {
+class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T> {
   ///Имя поля ссылки на таблицу
   String tableFieldName;
   NsgDataTableController(
@@ -33,8 +32,7 @@ class NsgDataTableController<T extends NsgDataItem>
   @override
   Future<T> doCreateNewItem() async {
     assert(masterController != null && masterController!.selectedItem != null);
-    var dataTable = NsgDataTable(
-        owner: masterController!.selectedItem!, fieldName: tableFieldName);
+    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     var row = NsgDataClient.client.getNewObject(dataTable.dataItemType) as T;
     row.id = Guid.newGuid();
     row.state = NsgDataItemState.create;
@@ -46,8 +44,7 @@ class NsgDataTableController<T extends NsgDataItem>
 
   ///Установить текущей переданную строку
   @override
-  Future setAndRefreshSelectedItem(
-      NsgDataItem item, List<String>? referenceList) async {
+  Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
     selectedItem = item.clone();
     backupItem = item;
     await afterRefreshItem(item, referenceList);
@@ -57,36 +54,33 @@ class NsgDataTableController<T extends NsgDataItem>
   ///Перечитать указанный объект из базы данных
   ///Так как данный объект является строкой таблицы, читать из БД ничего не нужно
   @override
-  Future<NsgDataItem> refreshItem(
-      NsgDataItem item, List<String>? referenceList) async {
+  Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList) async {
     return item;
   }
 
   ///Close row page and post current (selectedItem) item to dataTable
   @override
-  Future<bool> itemPagePost(
-      {bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
     assert(selectedItem != null);
     var validationResult = selectedItem!.validateFieldValues();
     if (!validationResult.isValid) {
-      var err = NsgApiException(NsgApiError(
-          code: 999, message: validationResult.errorMessageWithFields()));
+      var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
       if (NsgApiException.showExceptionDefault != null) {
         NsgApiException.showExceptionDefault!(err);
       }
       sendNotify();
       return false;
     }
+    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     if (backupItem != null && dataItemList.contains(backupItem)) {
       dataItemList.remove(backupItem!);
+      dataTable.removeRow(backupItem!);
     }
     if (backupItem != null) {
       backupItem = null;
     }
     if (!dataItemList.contains(currentItem)) {
       //dataItemList.add(selectedItem!);
-      var dataTable = NsgDataTable(
-          owner: masterController!.selectedItem!, fieldName: tableFieldName);
       dataTable.addRow(currentItem);
       //items.add(currentItem);
     }
@@ -101,8 +95,7 @@ class NsgDataTableController<T extends NsgDataItem>
 
   ///Open row page to view and edit data
   @override
-  void itemPageOpen(NsgDataItem element, String pageName,
-      {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
     if (backupItem == null) {
       selectedItem = element.clone();
       backupItem = element;
@@ -133,10 +126,8 @@ class NsgDataTableController<T extends NsgDataItem>
   @override
   Future requestItems({List<NsgUpdateKey>? keys}) async {
     lateInit = false;
-    if (masterController == null || masterController!.selectedItem == null)
-      return;
-    var dataTable = NsgDataTable(
-        owner: masterController!.selectedItem!, fieldName: tableFieldName);
+    if (masterController == null || masterController!.selectedItem == null) return;
+    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     dataItemList = dataTable.rows;
     sortDataItemList();
     currentStatus = RxStatus.success();
@@ -158,10 +149,8 @@ class NsgDataTableController<T extends NsgDataItem>
   @override
   Future itemRemove({bool goBack = true}) async {
     assert(selectedItem != null, 'itemDelete');
-    assert(masterController != null && masterController!.selectedItem != null,
-        'itemDelete');
-    var dataTable = NsgDataTable(
-        owner: masterController!.selectedItem!, fieldName: tableFieldName);
+    assert(masterController != null && masterController!.selectedItem != null, 'itemDelete');
+    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     dataTable.removeRow(currentItem);
     dataItemList = dataTable.rows;
     selectedItem = null;
@@ -180,12 +169,9 @@ class NsgDataTableController<T extends NsgDataItem>
 
   ///Удаление массива строк из табличной части
   @override
-  Future itemsRemove(List<NsgDataItem> itemsToRemove,
-      {bool goBack = true}) async {
-    assert(masterController != null && masterController!.selectedItem != null,
-        'itemDelete');
-    var dataTable = NsgDataTable(
-        owner: masterController!.selectedItem!, fieldName: tableFieldName);
+  Future itemsRemove(List<NsgDataItem> itemsToRemove, {bool goBack = true}) async {
+    assert(masterController != null && masterController!.selectedItem != null, 'itemDelete');
+    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     for (var element in itemsToRemove) {
       dataTable.removeRow(element);
     }
