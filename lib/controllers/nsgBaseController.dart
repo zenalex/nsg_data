@@ -43,6 +43,18 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   RxStatus _currentStatus = RxStatus.loading();
 
+  //Переменные, отвечающие за очередь сохранения данных
+  //Слишком частое сохранение может приводить к ошибкам и создавать излишнюю нагрузку на сервер
+  //Также, это дает возможность выделения в будущем подобных процессов в отдельный поток
+  ///Очередь элементов, отправленных на сохранение
+  final List<NsgDataItem> _postQueue = [];
+
+  ///Списох элементов, отправленных на сервер
+  final List<NsgDataItem> _postingItems = [];
+
+  ///Флажок активности сохранения данных через очередь
+  bool _isPosting = false;
+
   ///Status of last data request operation
   RxStatus get currentStatus {
     if (_currentStatus.isSuccess) {
@@ -809,4 +821,60 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future loadProviderData() async {}
 
   List<String> get objectFieldsNames => NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
+
+  ///Поставить в очередь на сохранение, чтобы избезать параллельного сохранения
+  ///Уменьшив таким образом нагрузку на сервер и избежать коллизий
+  Future postItemQueue(NsgDataItem obj) async {
+    if (_postQueue.contains(obj)) {
+      return;
+    }
+    _postQueue.add(obj);
+    if (_isPosting) {
+      return;
+    }
+    _postingItemQueue();
+  }
+
+  int _errorsPostQueue = 0;
+  Future _postingItemQueue() async {
+    if (_isPosting) {
+      return true;
+    }
+    if (_postQueue.isEmpty) {
+      _isPosting = false;
+      return;
+    }
+    _isPosting = true;
+    var error = false;
+    try {
+      //Переносим массив сохраняемых элементов в отдельный список
+      _postingItems.addAll(_postQueue);
+      //Очищаем очередь, чтобы избежать повторного сохранения
+      _postQueue.clear();
+      //Непосредственно сохранение
+      await postItems(_postingItems);
+      _postingItems.clear();
+    } catch (e) {
+      error = true;
+    } finally {}
+    if (error) {
+      _errorsPostQueue++;
+      if (_errorsPostQueue < autoRepeateCount) {
+        Timer(const Duration(seconds: 1), () => _postingItemQueue);
+      }
+    } else {
+      //Если во время сохранения произошла ошибка, возвращаем несохраненные элементы в очередь
+      //Но так как там уже могут быть эти же элементы, делаем это через проверку
+      for (var item in _postingItems) {
+        if (_postQueue.contains(item)) {
+          continue;
+        }
+        _postQueue.add(item);
+      }
+      _postingItems.clear();
+      _isPosting = false;
+      _errorsPostQueue = 0;
+      _postingItemQueue();
+    }
+  }
 }
