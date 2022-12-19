@@ -133,7 +133,7 @@ class NsgDataItem {
       return fieldValues.fields[name];
     } else {
       //Проверка на наличие поля в списке полей объекта
-      assert(fieldList.fields.containsKey(name), name);
+      assert(fieldList.fields.containsKey(name), '!!! Не существует поля с именем: ' + name + ' в объекте: ' + typeName);
       //Проверка не является ли поле пустым (умышленно не читалось из БД, следовательно, нельзя брать значение из него)
       assert(!fieldValues.emptyFields.contains(name));
       if (allowNullValue) return null;
