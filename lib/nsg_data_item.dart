@@ -357,7 +357,9 @@ class NsgDataItem {
   }
 
   ///Заполнение полей объекта при создании нового
-  void newRecordFill() {}
+  void newRecordFill() {
+    id = Guid.newGuid();
+  }
 
   ///Заполнение полей объекта при создании копии
   void copyRecordFill() {
