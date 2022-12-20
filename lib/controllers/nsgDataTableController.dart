@@ -103,7 +103,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       selectedItem = element;
     }
     selectedItem!.state = NsgDataItemState.fill;
-    Get.toNamed(pageName);
+    NsgNavigator.instance.toPage(pageName);
   }
 
   ///Close row page and restore current (selectedItem) item from backup

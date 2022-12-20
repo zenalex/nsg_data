@@ -472,7 +472,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       backupItem = element;
     }
 
-    Get.toNamed(pageName);
+    NsgNavigator.instance.toPage(pageName);
   }
 
   ///Создает новый элемент. Вызывается из createNewItem
@@ -496,7 +496,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///pageName -  страница, которую необходимо открыть по окончанию создания нового элемента
   void newItemPageOpen({required String pageName}) {
     createAndSetSelectedItem();
-    Get.toNamed(pageName);
+    NsgNavigator.instance.toPage(pageName);
   }
 
   ///Создает новый элемент БД и устанавливает его в текущее selectedItem (currentItem)
@@ -526,7 +526,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   void itemCopyPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
     assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     copyAndSetItem(element, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList);
-    Get.toNamed(pageName);
+    NsgNavigator.instance.toPage(pageName);
   }
 
   ///Close item page and restore current (selectedItem) item from backup

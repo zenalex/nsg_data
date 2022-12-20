@@ -56,3 +56,6 @@ export 'controllers/nsg_update_key.dart';
 export 'controllers/nsgDataTableController.dart';
 export 'db/nsg_local_db.dart';
 export 'controllers/nsg_data_controller_mode.dart';
+export 'navigator/nsg_navigator.dart';
+export 'navigator/nsg_get_page.dart';
+export 'navigator/nsg_middleware.dart';
