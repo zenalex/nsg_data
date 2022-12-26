@@ -6,10 +6,10 @@ import 'package:flutter/foundation.dart';
 class NsgMetrica {
   static bool useYandexMetrica = false;
 
-  static void activate(String id) {
-    if (id.isNotEmpty && !kIsWeb && (io.Platform.isAndroid || io.Platform.isIOS)) {
+  static void activate() {
+    if (NsgMetricaOptions.yandexMetricaId.isNotEmpty && !kIsWeb && (io.Platform.isAndroid || io.Platform.isIOS)) {
       useYandexMetrica = true;
-      AppMetrica.activate(AppMetricaConfig(id));
+      AppMetrica.activate(AppMetricaConfig(NsgMetricaOptions.yandexMetricaId));
     }
   }
 
@@ -48,4 +48,8 @@ class NsgMetrica {
       AppMetrica.reportEventWithMap('to page', {'pageName': pageName});
     }
   }
+}
+
+class NsgMetricaOptions {
+  static String yandexMetricaId = '';
 }
