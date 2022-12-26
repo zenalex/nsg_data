@@ -6,4 +6,8 @@ class NsgNavigator {
   Future toPage(String pageName) async {
     return await Get.toNamed(pageName);
   }
+
+  Future offAndToPage(String pageName) async {
+    return await Get.offAndToNamed(pageName);
+  }
 }

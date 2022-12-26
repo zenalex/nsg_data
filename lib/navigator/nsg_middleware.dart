@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../metrica/nsg_metrica.dart';
+
 class NsgMiddleware extends GetMiddleware {
   static bool isFirstStep = true;
   String initialPage = '';
@@ -20,11 +22,16 @@ class NsgMiddleware extends GetMiddleware {
   RouteSettings? redirect(String? route) {
     if (!useDeepLinks && isFirstStep && initialPage.isNotEmpty) {
       isFirstStep = false;
+      NsgMetrica.reportToPage(initialPage);
       return RouteSettings(name: initialPage);
     } else if (isFirstStep) {
       pageParameters = Get.parameters;
       initialBinding(route);
+      NsgMetrica.reportToPage(initialPage);
       return RouteSettings(name: initialPage);
+    }
+    if (route != null) {
+      NsgMetrica.reportToPage(route);
     }
     return super.redirect(route);
   }

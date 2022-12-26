@@ -10,6 +10,7 @@ import 'package:nsg_controls/nsg_button.dart';
 import 'package:nsg_controls/formfields/nsg_checkbox.dart';
 import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 
+import '../metrica/nsg_metrica.dart';
 import '../nsg_data_provider.dart';
 
 class NsgPhoneLoginPage extends StatelessWidget {
@@ -349,6 +350,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
       setState(() {
         isSMSRequested = false;
       });
+      NsgMetrica.reportLoginSuccess('Phone');
       gotoNextPage(context);
     }
     var needRefreshCaptcha = false;
@@ -364,6 +366,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
         needRefreshCaptcha = false;
     }
     isSMSRequested = false;
+    NsgMetrica.reportLoginFailed('Phone', answerCode.toString());
     widget.widgetParams!.showError(context, errorMessage);
 
     if (needRefreshCaptcha) {
@@ -381,6 +384,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     setState(() {
       isSMSRequested = true;
     });
+    NsgMetrica.reportLoginStart('Phone');
+
     widget.provider.phoneLoginRequestSMS(phoneNumber, captchaCode).then((value) => checkRequestSMSanswer(context, value)).catchError((e) {
       widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
     });
