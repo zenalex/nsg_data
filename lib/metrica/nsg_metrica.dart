@@ -39,7 +39,7 @@ class NsgMetrica {
 
   static void reportLoginFailed(String loginType, String errorCode) {
     if (useYandexMetrica) {
-      AppMetrica.reportEventWithMap('Login success', {'loginType': loginType, 'errorCode': errorCode});
+      AppMetrica.reportEventWithMap('Login failed', {'loginType': loginType, 'errorCode': errorCode});
     }
   }
 
