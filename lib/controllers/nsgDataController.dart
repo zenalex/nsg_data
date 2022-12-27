@@ -162,7 +162,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     }
     //Дочитываем недостающие элементы
     if (listToRequest.isNotEmpty) {
-      cmp.add(name: dataItem.typeName, value: listToRequest, comparisonOperator: NsgComparisonOperator.inList);
+      cmp.add(name: dataItem.primaryKeyField, value: listToRequest, comparisonOperator: NsgComparisonOperator.inList);
       var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
       var request = NsgDataRequest<T>(storageType: controllerMode.storageType);
       answerList.addAll(await request.requestItems(filter: params));
