@@ -63,9 +63,10 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       (obj as NsgUserSettings).name = keyName;
       return obj;
     }) as NsgUserSettings;
-    return objFavorite.settings.split(',');
+    var s = objFavorite.settings;
+    return s.isEmpty ? [] : s.split(',');
   }
-  
+
   void addFavoriteId(String typeName, String id) {
     var keyName = _favoriteSettingsName + typeName;
     var objFavorite = items.firstWhere((e) => (e as NsgUserSettings).name == keyName, orElse: () {
@@ -77,7 +78,7 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
     if (objFavorite.settings.contains(id)) {
       return;
     }
-    var ids = objFavorite.settings.split(',');
+    var ids = objFavorite.settings.isEmpty ? [] : objFavorite.settings.split(',');
     ids.add(id);
     objFavorite.settings += ids.join(',');
     postUserSettings(objFavorite as T);
@@ -154,5 +155,10 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       _errorsPostUserSettings = 0;
       _postingUserSettings();
     }
+  }
+
+  @override
+  Future requestItems({List<NsgUpdateKey>? keys}) async {
+    await super.requestItems(keys: keys);
   }
 }

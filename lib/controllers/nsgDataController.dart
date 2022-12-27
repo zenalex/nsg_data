@@ -8,7 +8,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Представляет собой типизированный вариант массива dataItemList
   List<T> get items => dataItemList.cast<T>();
 
-  final isFavoritesRequested = false;
+  bool isFavoritesRequested = false;
   final List<T> favorites = [];
 
   ///Список избранных элементов
@@ -20,6 +20,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       var dataItem = NsgDataClient.client.getNewObject(dataType);
       var ids = userSettingsController!.getFavoriteIds(dataItem.typeName);
       favorites.addAll(await loadFavorites(ids));
+      isFavoritesRequested = true;
     }
     return favorites;
   }
@@ -147,9 +148,31 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   Future<List<T>> loadFavorites(List<String> ids) async {
     var cmp = NsgCompare();
     var dataItem = NsgDataClient.client.getNewObject(dataType);
-    cmp.add(name: dataItem.typeName, value: ids, comparisonOperator: NsgComparisonOperator.inList);
-    var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
-    var request = NsgDataRequest<T>(storageType: controllerMode.storageType);
-    return await request.requestItems(filter: params);
+    var answerList = <T>[];
+    var listToRequest = <String>[];
+    //Проверяем нет ли избранного в items чтобы не делать лишний запрос
+    for (var e in ids) {
+      if (e.isEmpty) continue;
+      var item = items.firstWhereOrNull((item) => item.id == e);
+      if (item == null) {
+        listToRequest.add(e);
+      } else {
+        answerList.add(item!);
+      }
+    }
+    //Дочитываем недостающие элементы
+    if (listToRequest.isNotEmpty) {
+      cmp.add(name: dataItem.typeName, value: listToRequest, comparisonOperator: NsgComparisonOperator.inList);
+      var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
+      var request = NsgDataRequest<T>(storageType: controllerMode.storageType);
+      answerList.addAll(await request.requestItems(filter: params));
+    }
+    return answerList;
+  }
+
+  @override
+  Future requestItems({List<NsgUpdateKey>? keys}) async {
+    await super.requestItems(keys: keys);
+    await getFavorites();
   }
 }

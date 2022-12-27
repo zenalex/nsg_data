@@ -351,7 +351,7 @@ class NsgDataItem {
   ///По факту: создает новый Guid ключевому полю
   ///Если ключевое поле заполнено не нулевым Guid, будет сгенерирована ошибка
   void newRecord() {
-    assert(id.isNotEmpty && id != Guid.Empty);
+    assert(id.isEmpty || id == Guid.Empty);
     setFieldValue(primaryKeyField, Guid.newGuid());
     state = NsgDataItemState.create;
   }

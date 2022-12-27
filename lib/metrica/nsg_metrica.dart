@@ -7,7 +7,7 @@ class NsgMetrica {
   static bool useYandexMetrica = false;
 
   static void activate() {
-    if (NsgMetricaOptions.yandexMetricaId.isNotEmpty && !kIsWeb && (io.Platform.isAndroid || io.Platform.isIOS)) {
+    if (kReleaseMode && NsgMetricaOptions.yandexMetricaId.isNotEmpty && !kIsWeb && (io.Platform.isAndroid || io.Platform.isIOS)) {
       useYandexMetrica = true;
       AppMetrica.activate(AppMetricaConfig(NsgMetricaOptions.yandexMetricaId));
     }
