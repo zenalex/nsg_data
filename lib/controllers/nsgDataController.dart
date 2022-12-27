@@ -19,7 +19,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     if (userSettingsController != null) {
       var dataItem = NsgDataClient.client.getNewObject(dataType);
       var ids = userSettingsController!.getFavoriteIds(dataItem.typeName);
-      favorites.addAll(await loadFavorites(ids));
+      favorites.addAll(await loadFavorites(userSettingsController!, ids));
       isFavoritesRequested = true;
     }
     return favorites;
@@ -145,7 +145,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     }
   }
 
-  Future<List<T>> loadFavorites(List<String> ids) async {
+  Future<List<T>> loadFavorites(NsgUserSettingsController userSetiingsController, List<String> ids) async {
     var cmp = NsgCompare();
     var dataItem = NsgDataClient.client.getNewObject(dataType);
     var answerList = <T>[];
@@ -166,6 +166,13 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
       var request = NsgDataRequest<T>(storageType: controllerMode.storageType);
       answerList.addAll(await request.requestItems(filter: params));
+
+      var newIds = answerList.map((e) => e.id).join(',');
+      if (newIds != ids.join(',')) {
+        var objFavorite = userSetiingsController.getFavoriteObject(dataItem.typeName);
+        objFavorite.settings = newIds;
+        await userSettingsController!.postUserSettings(objFavorite as NsgDataItem);
+      }
     }
     return answerList;
   }

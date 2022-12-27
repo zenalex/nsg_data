@@ -54,8 +54,7 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
 
   static const String _favoriteSettingsName = '_favorites_';
 
-  ///Возвращает список идентификоторов, занесенных в избранное по данному типу данных
-  List<String> getFavoriteIds(String typeName) {
+  NsgUserSettings getFavoriteObject(String typeName) {
     var keyName = _favoriteSettingsName + typeName;
     var objFavorite = items.firstWhere((e) => (e as NsgUserSettings).name == keyName, orElse: () {
       var obj = NsgDataClient.client.getNewObject(T) as T;
@@ -63,24 +62,24 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       (obj as NsgUserSettings).name = keyName;
       return obj;
     }) as NsgUserSettings;
+    return objFavorite;
+  }
+
+  ///Возвращает список идентификоторов, занесенных в избранное по данному типу данных
+  List<String> getFavoriteIds(String typeName) {
+    var objFavorite = getFavoriteObject(typeName);
     var s = objFavorite.settings;
     return s.isEmpty ? [] : s.split(',');
   }
 
   void addFavoriteId(String typeName, String id) {
-    var keyName = _favoriteSettingsName + typeName;
-    var objFavorite = items.firstWhere((e) => (e as NsgUserSettings).name == keyName, orElse: () {
-      var obj = NsgDataClient.client.getNewObject(T) as T;
-      obj.newRecord();
-      (obj as NsgUserSettings).name = keyName;
-      return obj;
-    }) as NsgUserSettings;
+    var objFavorite = getFavoriteObject(typeName);
     if (objFavorite.settings.contains(id)) {
       return;
     }
     var ids = objFavorite.settings.isEmpty ? [] : objFavorite.settings.split(',');
     ids.add(id);
-    objFavorite.settings += ids.join(',');
+    objFavorite.settings = ids.join(',');
     postUserSettings(objFavorite as T);
   }
 
