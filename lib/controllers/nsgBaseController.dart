@@ -298,7 +298,6 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         }
       }
       if (exception.error.code == 400) {
-        //TODO: высвечивать ошибку? 400
         return false;
       }
     }

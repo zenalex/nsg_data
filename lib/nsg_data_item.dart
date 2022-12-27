@@ -450,7 +450,6 @@ class NsgDataItem {
     }
   }
 
-  //TODO: ДОДЕЛАТЬ!!!
   dynamic getFieldValueByFullPath(String fullPath) {
     var splitedPath = fullPath.split('.');
     var fieldFound = false;
