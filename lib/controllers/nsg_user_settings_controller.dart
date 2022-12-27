@@ -122,7 +122,7 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       _settingsPostQueue.clear();
       //Непосредственно сохранение
       if (controllerMode.storageType == NsgDataStorageType.server) {
-        var p = NsgDataPost(dataItemType: runtimeType);
+        var p = NsgDataPost(dataItemType: dataType);
         p.itemsToPost = _settingsPostingItems;
         await p.postItems();
       } else {
@@ -135,7 +135,9 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       _settingsPostingItems.clear();
     } catch (e) {
       error = true;
-    } finally {}
+    } finally {
+      _isSettingsPosting = false;
+    }
     if (error) {
       _errorsPostUserSettings++;
       if (_errorsPostUserSettings < maxErrorsPostUserSettings) {

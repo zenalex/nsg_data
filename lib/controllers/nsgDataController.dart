@@ -157,7 +157,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       if (item == null) {
         listToRequest.add(e);
       } else {
-        answerList.add(item!);
+        answerList.add(item);
       }
     }
     //Дочитываем недостающие элементы
