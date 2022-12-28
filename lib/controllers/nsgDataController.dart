@@ -17,9 +17,14 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       return favorites;
     }
     if (userSettingsController != null) {
+      //Загрузка избранных
       var dataItem = NsgDataClient.client.getNewObject(dataType);
       var ids = userSettingsController!.getFavoriteIds(dataItem.typeName);
       favorites.addAll(await loadFavorites(userSettingsController!, ids));
+      //Загрузка последних
+      ids = userSettingsController!.getRecentIds(dataItem.typeName);
+      recent.addAll(await loadFavorites(userSettingsController!, ids));
+
       isFavoritesRequested = true;
     }
     return favorites;
@@ -140,9 +145,17 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
 
   ///Добавить элемент в часто используемые
   void addRecent(T item) {
-    if (!recent.contains(item)) {
-      recent.add(item);
+    if (userSettingsController == null) {
+      return;
     }
+    if (recent.contains(item)) {
+      recent.remove(item);
+    }
+    recent.insert(0, item);
+    while (userSettingsController!.maxRecent < recent.length) {
+      recent.removeLast();
+    }
+    userSettingsController!.addRecentId(item.typeName, item.id);
   }
 
   Future<List<T>> loadFavorites(NsgUserSettingsController userSetiingsController, List<String> ids) async {

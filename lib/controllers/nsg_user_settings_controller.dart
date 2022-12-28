@@ -20,7 +20,8 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       super.dependsOnControllers,
       super.masterController,
       super.controllerMode,
-      this.maxFavotrites = 100})
+      this.maxFavotrites = 100,
+      this.maxRecent = 25})
       : super() {
     assert(NsgDataClient.client.getNewObject(T) is NsgUserSettings);
   }
@@ -29,6 +30,9 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
 
   ///Максимально разрешенное число избранныъ элементов объектов одного типа. По умолчанию = 100
   final int maxFavotrites;
+
+  ///Максимально число хранимых объектов одного типа в списке последних используемых. По умолчанию = 25
+  final int maxRecent;
 
   @override
   Future afterRequestItems(List<NsgDataItem> newItemsList) async {
@@ -57,16 +61,25 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   }
 
   static const String _favoriteSettingsName = '_favorites_';
+  static const String _recentSettingsName = '_recent_';
 
-  NsgUserSettings getFavoriteObject(String typeName) {
-    var keyName = _favoriteSettingsName + typeName;
-    var objFavorite = items.firstWhere((e) => (e as NsgUserSettings).name == keyName, orElse: () {
+  NsgUserSettings getUserSettingsObject(String key) {
+    var obj = items.firstWhere((e) => (e as NsgUserSettings).name == key, orElse: () {
       var obj = NsgDataClient.client.getNewObject(T) as T;
       obj.newRecord();
-      (obj as NsgUserSettings).name = keyName;
+      (obj as NsgUserSettings).name = key;
+      items.add(obj);
       return obj;
     }) as NsgUserSettings;
-    return objFavorite;
+    return obj;
+  }
+
+  NsgUserSettings getFavoriteObject(String typeName) {
+    return getUserSettingsObject(_favoriteSettingsName + typeName);
+  }
+
+  NsgUserSettings getRecentObject(String typeName) {
+    return getUserSettingsObject(_recentSettingsName + typeName);
   }
 
   ///Возвращает список идентификоторов, занесенных в избранное по данному типу данных
@@ -76,6 +89,14 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
     return s.isEmpty ? [] : s.split(',');
   }
 
+  ///Возвращает список идентификоторов последних используемых объектов данного типа
+  List<String> getRecentIds(String typeName) {
+    var obj = getRecentObject(typeName);
+    var s = obj.settings;
+    return s.isEmpty ? [] : s.split(',');
+  }
+
+  ///Добавить объект в избранные и сохранить на сервере (БД)
   void addFavoriteId(String typeName, String id) {
     var objFavorite = getFavoriteObject(typeName);
     if (objFavorite.settings.contains(id)) {
@@ -88,6 +109,24 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
     ids.add(id);
     objFavorite.settings = ids.join(',');
     postUserSettings(objFavorite as T);
+  }
+
+  ///Добавить объект в последние используемые и сохранить на сервере (БД)
+  void addRecentId(String typeName, String id) {
+    var obj = getRecentObject(typeName);
+    var ids = obj.settings.isEmpty ? [] : obj.settings.split(',');
+    if (ids.contains(id)) {
+      if (ids.first == id) {
+        return;
+      }
+      ids.remove(id);
+    }
+    ids.insert(0, id);
+    while (ids.length > maxRecent) {
+      ids.removeLast();
+    }
+    obj.settings = ids.join(',');
+    postUserSettings(obj as T);
   }
 
   void removeFavoriteId(String typeName, String id) {
@@ -177,5 +216,23 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   @override
   Future requestItems({List<NsgUpdateKey>? keys}) async {
     await super.requestItems(keys: keys);
+    //Проверка на наличие одинаковых записей
+    //В случае обнаружения, дубликаты удаляем
+    var itemsMap = <String, T>{};
+    var itemsToRemove = <T>[];
+    for (var item in items) {
+      var nus = item as NsgUserSettings;
+      if (itemsMap.containsKey(nus.name)) {
+        itemsToRemove.add(item);
+        continue;
+      }
+      itemsMap[nus.name] = item;
+    }
+    if (itemsToRemove.isNotEmpty) {
+      await itemsRemove(itemsToRemove);
+      for (var i in itemsToRemove) {
+        items.remove(i);
+      }
+    }
   }
 }
