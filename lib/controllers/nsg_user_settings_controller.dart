@@ -83,7 +83,16 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
     postUserSettings(objFavorite as T);
   }
 
-  void removeFavoriteId(String typeName, String id) {}
+  void removeFavoriteId(String typeName, String id) {
+    var objFavorite = getFavoriteObject(typeName);
+    if (objFavorite.settings.isEmpty || !objFavorite.settings.contains(id)) {
+      return;
+    }
+    var ids = objFavorite.settings.split(',');
+    ids.remove(id);
+    objFavorite.settings = ids.join(',');
+    postUserSettings(objFavorite as T);
+  }
 
   final List<T> _settingsPostQueue = [];
   final List<T> _settingsPostingItems = [];
