@@ -839,7 +839,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (_isPosting) {
       return true;
     }
-    if (_postQueue.isEmpty) {
+    if (_postQueue.isEmpty && _postingItems.isEmpty) {
       _isPosting = false;
       return;
     }
