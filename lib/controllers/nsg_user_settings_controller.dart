@@ -19,12 +19,16 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       super.autoSelectFirstItem = false,
       super.dependsOnControllers,
       super.masterController,
-      super.controllerMode})
+      super.controllerMode,
+      this.maxFavotrites = 100})
       : super() {
     assert(NsgDataClient.client.getNewObject(T) is NsgUserSettings);
   }
 
   Map<String, dynamic> settingsMap = {};
+
+  ///Максимально разрешенное число избранныъ элементов объектов одного типа. По умолчанию = 100
+  final int maxFavotrites;
 
   @override
   Future afterRequestItems(List<NsgDataItem> newItemsList) async {
@@ -78,6 +82,9 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       return;
     }
     var ids = objFavorite.settings.isEmpty ? [] : objFavorite.settings.split(',');
+    if (ids.length >= maxFavotrites) {
+      throw Exception("Превышено максимальное число элементов в избранном ($maxFavotrites)");
+    }
     ids.add(id);
     objFavorite.settings = ids.join(',');
     postUserSettings(objFavorite as T);
