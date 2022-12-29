@@ -13,9 +13,13 @@ class NsgMetrica {
     }
   }
 
-  static void reportEvent(String event) {
+  static void reportEvent(String event, {Map<String, Object>? map}) {
     if (useYandexMetrica) {
-      AppMetrica.reportEvent(event);
+      if (map == null) {
+        AppMetrica.reportEvent(event);
+      } else {
+        AppMetrica.reportEventWithMap(event, map);
+      }
     }
   }
 
@@ -46,6 +50,12 @@ class NsgMetrica {
   static void reportToPage(String pageName) {
     if (useYandexMetrica) {
       AppMetrica.reportEventWithMap('to page', {'pageName': pageName});
+    }
+  }
+
+  static void reportTableButtonTap(String tableId, String buttonName) {
+    if (useYandexMetrica && tableId.isNotEmpty) {
+      AppMetrica.reportEventWithMap('table button tap', {'tableId': tableId, 'buttonName': buttonName});
     }
   }
 }
