@@ -223,6 +223,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     lateInit = false;
     itemsRequested.broadcast();
     await _requestItems();
+    await getFavorites();
     itemsRequested.broadcast();
     sendNotify(keys: keys);
   }
@@ -875,5 +876,62 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       _errorsPostQueue = 0;
       _postingItemQueue();
     }
+  }
+
+  Future<List<NsgDataItem>> loadFavorites(NsgUserSettingsController userSetiingsController, List<String> ids) async {
+    var cmp = NsgCompare();
+    var dataItem = NsgDataClient.client.getNewObject(dataType);
+    var answerList = <NsgDataItem>[];
+    var listToRequest = <String>[];
+    //Проверяем нет ли избранного в items чтобы не делать лишний запрос
+    for (var e in ids) {
+      if (e.isEmpty) continue;
+      var item = dataItemList.firstWhereOrNull((item) => item.id == e);
+      if (item == null) {
+        listToRequest.add(e);
+      } else {
+        answerList.add(item);
+      }
+    }
+    //Дочитываем недостающие элементы
+    if (listToRequest.isNotEmpty) {
+      cmp.add(name: dataItem.primaryKeyField, value: listToRequest, comparisonOperator: NsgComparisonOperator.inList);
+      var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
+      var request = NsgDataRequest<NsgDataItem>(storageType: controllerMode.storageType);
+      answerList.addAll(await request.requestItems(filter: params));
+
+      var newIds = answerList.map((e) => e.id).join(',');
+      if (newIds != ids.join(',')) {
+        var objFavorite = userSetiingsController.getFavoriteObject(dataItem.typeName);
+        objFavorite.settings = newIds;
+        await userSettingsController!.postUserSettings(objFavorite as NsgDataItem);
+      }
+    }
+    return answerList;
+  }
+
+  bool isFavoritesRequested = false;
+  final List<NsgDataItem> favorites = [];
+
+  ///Список часто используемых элементов
+  List<NsgDataItem> recent = [];
+
+  ///Список избранных элементов
+  Future<List<NsgDataItem>> getFavorites() async {
+    if (isFavoritesRequested) {
+      return favorites;
+    }
+    if (userSettingsController != null) {
+      //Загрузка избранных
+      var dataItem = NsgDataClient.client.getNewObject(dataType);
+      var ids = userSettingsController!.getFavoriteIds(dataItem.typeName);
+      favorites.addAll(await loadFavorites(userSettingsController!, ids));
+      //Загрузка последних
+      ids = userSettingsController!.getRecentIds(dataItem.typeName);
+      recent.addAll(await loadFavorites(userSettingsController!, ids));
+
+      isFavoritesRequested = true;
+    }
+    return favorites;
   }
 }

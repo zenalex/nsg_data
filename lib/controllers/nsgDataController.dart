@@ -8,31 +8,6 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Представляет собой типизированный вариант массива dataItemList
   List<T> get items => dataItemList.cast<T>();
 
-  bool isFavoritesRequested = false;
-  final List<T> favorites = [];
-
-  ///Список избранных элементов
-  Future<List<T>> getFavorites() async {
-    if (isFavoritesRequested) {
-      return favorites;
-    }
-    if (userSettingsController != null) {
-      //Загрузка избранных
-      var dataItem = NsgDataClient.client.getNewObject(dataType);
-      var ids = userSettingsController!.getFavoriteIds(dataItem.typeName);
-      favorites.addAll(await loadFavorites(userSettingsController!, ids));
-      //Загрузка последних
-      ids = userSettingsController!.getRecentIds(dataItem.typeName);
-      recent.addAll(await loadFavorites(userSettingsController!, ids));
-
-      isFavoritesRequested = true;
-    }
-    return favorites;
-  }
-
-  ///Список часто используемых элементов
-  List<T> recent = [];
-
   ///Первый элемент из items. Если items  пустой: вернет новый пустой элемент данных  типа T
   T get firstItem => (dataItemList.isEmpty) ? NsgDataClient.client.getNewObject(dataType) as T : items[0];
 
@@ -158,41 +133,16 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     userSettingsController!.addRecentId(item.typeName, item.id);
   }
 
-  Future<List<T>> loadFavorites(NsgUserSettingsController userSetiingsController, List<String> ids) async {
-    var cmp = NsgCompare();
-    var dataItem = NsgDataClient.client.getNewObject(dataType);
-    var answerList = <T>[];
-    var listToRequest = <String>[];
-    //Проверяем нет ли избранного в items чтобы не делать лишний запрос
-    for (var e in ids) {
-      if (e.isEmpty) continue;
-      var item = items.firstWhereOrNull((item) => item.id == e);
-      if (item == null) {
-        listToRequest.add(e);
-      } else {
-        answerList.add(item);
-      }
-    }
-    //Дочитываем недостающие элементы
-    if (listToRequest.isNotEmpty) {
-      cmp.add(name: dataItem.primaryKeyField, value: listToRequest, comparisonOperator: NsgComparisonOperator.inList);
-      var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
-      var request = NsgDataRequest<T>(storageType: controllerMode.storageType);
-      answerList.addAll(await request.requestItems(filter: params));
+  // @override
+  // Future<List<NsgDataItem>> doRequestItems() async {
+  //   var newItems = await super.doRequestItems();
+  //   await getFavorites();
+  //   return newItems;
+  // }
 
-      var newIds = answerList.map((e) => e.id).join(',');
-      if (newIds != ids.join(',')) {
-        var objFavorite = userSetiingsController.getFavoriteObject(dataItem.typeName);
-        objFavorite.settings = newIds;
-        await userSettingsController!.postUserSettings(objFavorite as NsgDataItem);
-      }
-    }
-    return answerList;
-  }
-
-  @override
-  Future requestItems({List<NsgUpdateKey>? keys}) async {
-    await super.requestItems(keys: keys);
-    await getFavorites();
-  }
+  // @override
+  // Future requestItems({List<NsgUpdateKey>? keys}) async {
+  //   await super.requestItems(keys: keys);
+  //   await getFavorites();
+  // }
 }
