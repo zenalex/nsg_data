@@ -897,7 +897,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (listToRequest.isNotEmpty) {
       cmp.add(name: dataItem.primaryKeyField, value: listToRequest, comparisonOperator: NsgComparisonOperator.inList);
       var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
-      var request = NsgDataRequest<NsgDataItem>(storageType: controllerMode.storageType);
+      var request = NsgDataRequest<NsgDataItem>(storageType: controllerMode.storageType, dataItemType: dataType);
       answerList.addAll(await request.requestItems(filter: params));
 
       var newIds = answerList.map((e) => e.id).join(',');
