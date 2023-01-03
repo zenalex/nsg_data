@@ -25,6 +25,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   final selectedItemChanged = Event<EventArgs>();
   //Запрошено обновление данных
   final itemsRequested = Event<EventArgs>();
+  //Смерился статус контроллера
+  final statusChanged = Event<EventArgs>();
 
   ///Use update method on data update
   bool useUpdate;
@@ -286,6 +288,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (useChange && keys == null) {
       change(NsgBaseControllerData(controller: this), status: currentStatus);
     }
+    statusChanged.broadcast(null);
   }
 
   FutureOr<bool> retryRequestIf(Exception exception) async {
