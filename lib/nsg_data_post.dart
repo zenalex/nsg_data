@@ -37,12 +37,20 @@ class NsgDataPost<T extends NsgDataItem> {
       function = dataItem.remoteProvider.serverUri + function;
     }
 
+    Map<String, dynamic>? filterMap;
+    //Добавим поля для дочитывания
+    if (loadReference != null) {
+      var filter = NsgDataRequestParams();
+      filter.readNestedField = loadReference.join(',');
+      filterMap = filter.toJson();
+    }
     var response = await dataItem.remoteProvider.baseRequestList(
         function: '$function ${dataItem.runtimeType}',
         headers: dataItem.remoteProvider.getAuthorizationHeader(),
         url: function,
         postData: _toJson(),
-        method: 'POST');
+        method: 'POST',
+        params: filterMap);
 
     var req = NsgDataRequest<T>(dataItemType: dataItemType);
     _items = (await req.loadDataAndReferences(response, loadReference ?? [], tag)).cast();

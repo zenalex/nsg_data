@@ -303,7 +303,7 @@ class NsgDataItem {
     if (storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: runtimeType);
       p.itemsToPost = <NsgDataItem>[this];
-      var newItem = await p.postItem();
+      var newItem = await p.postItem(loadReference: NsgDataRequest.addAllReferences(runtimeType));
       if (newItem != null) {
         copyFieldValues(newItem);
         state = newItem.state;

@@ -791,7 +791,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (controllerMode.storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: dataType);
       p.itemsToPost = itemsToPost;
-      var newItems = await p.postItems();
+      var newItems = await p.postItems(loadReference: NsgDataRequest.addAllReferences(dataType));
       for (var item in newItems) {
         var old = itemsToPost.firstWhereOrNull((e) => e.id == item.id);
         if (old == null) {
