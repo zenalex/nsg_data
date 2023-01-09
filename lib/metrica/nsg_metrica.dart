@@ -53,9 +53,9 @@ class NsgMetrica {
     }
   }
 
-  static void reportTableButtonTap(String tableId, String buttonName) {
+  static void reportTableButtonTap(String tableId, String buttonName, {String state = ''}) {
     if (useYandexMetrica && tableId.isNotEmpty) {
-      AppMetrica.reportEventWithMap('table button tap', {'tableId': tableId, 'buttonName': buttonName});
+      AppMetrica.reportEventWithMap('table button tap', {'tableId': tableId, 'buttonName': buttonName, 'state': state});
     }
   }
 }
