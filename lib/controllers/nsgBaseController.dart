@@ -753,7 +753,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Удаление массива строк из табличной части
   ///На данный момент, метод реализован только для контроллера табличной части
-  Future itemsRemove(List<NsgDataItem> itemsToRemove) async {}
+  Future itemsRemove(List<NsgDataItem> itemsToRemove) async {
+    await deleteItems(itemsToRemove);
+  }
 
   void masterItemsRequested(EventArgs? args) {
     sendNotify();
