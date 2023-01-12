@@ -861,7 +861,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       _postingItems.clear();
     } catch (e) {
       error = true;
-    } finally {}
+    } finally {
+      _isPosting = false;
+    }
     if (error) {
       _errorsPostQueue++;
       if (_errorsPostQueue < autoRepeateCount) {
