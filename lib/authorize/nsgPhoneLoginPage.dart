@@ -180,11 +180,11 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   Widget _getContext(BuildContext context) {
     if (isLoginSuccessfull) {
       // Future.delayed(const Duration(seconds: 2)).then((e) {
-      //   if (widget.widgetParams != null && widget.widgetParams!.mainPage != null) {
-      Get.offAndToNamed(widget.widgetParams!.mainPage!);
-      //   } else {
-      //     Get.back();
-      //   }
+      if (widget.widgetParams != null && widget.widgetParams!.mainPage != null) {
+        Get.offAndToNamed(widget.widgetParams!.mainPage!);
+      } else {
+        Get.back();
+      }
       // });
       // return getContextSuccessful(context);
     }
