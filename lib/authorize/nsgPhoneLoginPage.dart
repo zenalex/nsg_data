@@ -179,14 +179,17 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   TextEditingController? _captchaController;
   Widget _getContext(BuildContext context) {
     if (isLoginSuccessfull) {
-      // Future.delayed(const Duration(seconds: 2)).then((e) {
-      if (widget.widgetParams != null && widget.widgetParams!.mainPage != null) {
-        Get.offAndToNamed(widget.widgetParams!.mainPage!);
-      } else {
-        Get.back();
-      }
-      // });
-      // return getContextSuccessful(context);
+      Future.delayed(const Duration(milliseconds: 10)).then((e) {
+        if (widget.widgetParams != null && widget.widgetParams!.mainPage != null) {
+          Get.offAndToNamed(widget.widgetParams!.mainPage!);
+        } else {
+          //if (widget.widgetParams!.needOpenPage) {
+          Get.back();
+          //}
+        }
+
+        return getContextSuccessful(context);
+      });
     }
     _captchaController ??= TextEditingController();
     return Form(
@@ -432,25 +435,25 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     }
   }
 
-  // Widget getContextSuccessful(BuildContext context) {
-  //   return Center(
-  //     child: Card(
-  //         margin: const EdgeInsets.symmetric(horizontal: 15.0),
-  //         color: widget.widgetParams!.cardColor,
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(10.0),
-  //         ),
-  //         child: Padding(
-  //             padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
-  //             child: Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
-  //               Expanded(
-  //                   child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[
-  //                 Text(
-  //                   widget.widgetParams!.textLoginSuccessful,
-  //                   style: widget.widgetParams!.headerMessageStyle,
-  //                 )
-  //               ]))
-  //             ]))),
-  //   );
-  // }
+  Widget getContextSuccessful(BuildContext context) {
+    return Center(
+      child: Card(
+          margin: const EdgeInsets.symmetric(horizontal: 15.0),
+          color: widget.widgetParams!.cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                Expanded(
+                    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[
+                  Text(
+                    widget.widgetParams!.textLoginSuccessful,
+                    style: widget.widgetParams!.headerMessageStyle,
+                  )
+                ]))
+              ]))),
+    );
+  }
 }
