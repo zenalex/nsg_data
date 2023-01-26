@@ -3,7 +3,8 @@ import '../nsg_data.dart';
 class NsgDataTable<T extends NsgDataItem> {
   NsgDataTable({required this.owner, required this.fieldName}) : super() {
     assert(owner.getField(fieldName) is NsgDataReferenceListField);
-    dataItemType = (owner.getField(fieldName) as NsgDataReferenceListField).referentElementType;
+    dataItemType = (owner.getField(fieldName) as NsgDataReferenceListField)
+        .referentElementType;
   }
 
   final NsgDataItem owner;
@@ -41,13 +42,18 @@ class NsgDataTable<T extends NsgDataItem> {
   ///dataItem - объект, в поле которого добавляем значение
   ///row - удаляемая строка
   bool removeRow(T row) {
-    var allRows = (owner.getFieldValue(fieldName, allowNullValue: true) as List<T>?) ?? <T>[];
+    var allRows =
+        ((owner.getFieldValue(fieldName, allowNullValue: true) as List)
+                .cast<List<T>?>()) ??
+            <T>[];
     return allRows.remove(row);
   }
 
   ///Удалить все строки из табличной чатси
   void clear() {
-    var allRows = (owner.getFieldValue(fieldName, allowNullValue: true) as List<T>?) ?? <T>[];
+    var allRows =
+        (owner.getFieldValue(fieldName, allowNullValue: true) as List<T>?) ??
+            <T>[];
     allRows.clear();
   }
 }
