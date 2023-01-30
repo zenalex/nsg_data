@@ -78,7 +78,8 @@ class NsgDataProvider {
       if (_prefs.containsKey(applicationName)) {
         token = _prefs.getString(applicationName);
       }
-      if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+      if (kIsWeb) {
+        // || (!Platform.isAndroid && !Platform.isIOS)) {
         saveToken = false;
       } else {
         saveToken = true;
@@ -304,9 +305,14 @@ class NsgDataProvider {
     var onRetry = controller.onRetry;
 
     if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
-      if (await _checkVersion(onRetry) != 0) {
+      var checkResult = await _checkVersion(onRetry);
+      if (checkResult == 2) {
         NsgErrorWidget.showErrorByString('Требуется обновление программы');
-        await Future.delayed(const Duration(seconds: 5));
+        //TODO: сменить на диалог и запретить работу при наличии обязательного обновления
+        await Future.delayed(const Duration(seconds: 60));
+      } else if (checkResult == 1) {
+        NsgErrorWidget.showErrorByString('Есть более новая версия. Рекомендуется обновление программы');
+        await Future.delayed(const Duration(seconds: 10));
       }
       if (token == '') {
         await _anonymousLogin(onRetry);
