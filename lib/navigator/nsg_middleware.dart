@@ -44,4 +44,9 @@ class NsgMiddleware extends GetMiddleware {
   void initialBinding(String? route) {
     isFirstStep = false;
   }
+
+  @override
+  GetPageBuilder? onPageBuildStart(GetPageBuilder? page) {
+    return page;
+  }
 }

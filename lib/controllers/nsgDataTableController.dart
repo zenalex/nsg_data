@@ -130,7 +130,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     dataItemList = dataTable.rows;
     sortDataItemList();
-    currentStatus = RxStatus.success();
+    currentStatus = GetStatus.success(NsgBaseController.emptyData);
     sendNotify(keys: keys);
   }
 
@@ -161,7 +161,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (masterController != null) {
       masterController!.sendNotify();
     }
-    currentStatus = RxStatus.success();
+    currentStatus = GetStatus.success(NsgBaseController.emptyData);
     if (!goBack) {
       sendNotify();
     }
@@ -184,7 +184,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (goBack) {
       Get.back();
     }
-    currentStatus = RxStatus.success();
+    currentStatus = GetStatus.success(NsgBaseController.emptyData);
     sendNotify();
   }
 }

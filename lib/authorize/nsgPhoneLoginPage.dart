@@ -422,7 +422,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void gotoNextPage(BuildContext? context) async {
-    var result = await Get.to<bool>(widget.provider.getVerificationWidget!(widget.provider));
+    var result = await Get.to<bool>(_getVerificationWidget);
     if (result ??= false) {
       setState(() {
         isLoginSuccessfull = true;
@@ -433,6 +433,10 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     } else {
       refreshCaptcha();
     }
+  }
+
+  Widget _getVerificationWidget() {
+    return widget.provider.getVerificationWidget!(widget.provider);
   }
 
   Widget getContextSuccessful(BuildContext context) {

@@ -43,7 +43,7 @@ class NsgDataProvider {
   int connectDuration = 15000;
 
   NsgPhoneLoginPage Function(NsgDataProvider provider)? getLoginWidget;
-  NsgPhoneLoginPage get loginPage {
+  NsgPhoneLoginPage loginPage() {
     if (getLoginWidget == null) {
       return NsgPhoneLoginPage(this, widgetParams: NsgPhoneLoginParams.defaultParams);
     } else {
@@ -51,7 +51,7 @@ class NsgDataProvider {
     }
   }
 
-  NsgPhoneLoginVerificationPage Function(NsgDataProvider provider)? getVerificationWidget;
+  Function(NsgDataProvider provider)? getVerificationWidget;
   NsgPhoneLoginVerificationPage get verificationPage {
     if (getVerificationWidget == null) {
       return NsgPhoneLoginVerificationPage(this, widgetParams: NsgPhoneLoginParams.defaultParams);
@@ -391,7 +391,7 @@ class NsgDataProvider {
           duration: const Duration(seconds: 5),
           backgroundColor: Colors.red[200],
           colorText: Colors.black,
-          snackPosition: getx.SnackPosition.BOTTOM);
+          snackPosition: getx.SnackPosition.bottom);
     }
     return NsgLoginResponse(isError: true, errorCode: 500);
   }

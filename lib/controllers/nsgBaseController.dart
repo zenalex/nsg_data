@@ -43,7 +43,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   NsgDataControllerMode controllerMode = NsgDataControllerMode.defaultDataControllerMode;
 
-  RxStatus _currentStatus = RxStatus.loading();
+  GetStatus<NsgBaseControllerData> _currentStatus = GetStatus.loading();
 
   //Переменные, отвечающие за очередь сохранения данных
   //Слишком частое сохранение может приводить к ошибкам и создавать излишнюю нагрузку на сервер
@@ -58,7 +58,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   bool _isPosting = false;
 
   ///Status of last data request operation
-  RxStatus get currentStatus {
+  GetStatus<NsgBaseControllerData> get currentStatus {
     if (_currentStatus.isSuccess) {
       if (masterController != null && !masterController!.currentStatus.isSuccess) {
         return masterController!.currentStatus;
@@ -67,7 +67,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return _currentStatus;
   }
 
-  set currentStatus(RxStatus value) => _currentStatus = value;
+  set currentStatus(GetStatus<NsgBaseControllerData> value) => _currentStatus = value;
 
   ///Enable auto repeate attempts of requesting data
   bool autoRepeate;
@@ -216,7 +216,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         element.selectedItemChanged.unsubscribe(masterValueChanged);
       }
     }
-    currentStatus = RxStatus.empty();
+    currentStatus = GetStatus.empty();
     super.onClose();
   }
 
@@ -232,7 +232,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Обновление данных
   Future refreshData({List<NsgUpdateKey>? keys}) async {
-    currentStatus = RxStatus.loading();
+    currentStatus = GetStatus.loading();
     sendNotify(keys: keys);
     await requestItems(keys: keys);
   }
@@ -248,12 +248,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       List<NsgDataItem> newItemsList;
       if (useDataCache && dataCache.isNotEmpty) {
         newItemsList = dataCache;
-        currentStatus = RxStatus.success();
+        currentStatus = GetStatus.success(emptyData);
       } else {
         newItemsList = await doRequestItems();
 
         //service method for descendants
-        currentStatus = RxStatus.success();
+        currentStatus = GetStatus.success(emptyData);
         await afterRequestItems(newItemsList);
         if (useDataCache) dataCache = newItemsList;
       }
@@ -286,7 +286,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       update(keys ?? updateKeys);
     }
     if (useChange && keys == null) {
-      change(NsgBaseControllerData(controller: this), status: currentStatus);
+      change(currentStatus);
     }
     statusChanged.broadcast(null);
   }
@@ -411,7 +411,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   FutureOr<void> _updateStatusError(Exception e) {
-    currentStatus = RxStatus.error(e.toString());
+    currentStatus = GetStatus.error(e.toString());
     sendNotify();
   }
 
@@ -442,13 +442,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     Widget? onLoading,
     Widget? onEmpty,
   }) {
-    return SimpleBuilder(builder: (_) {
+    return Observer(builder: (_) {
       if (status.isLoading) {
         return onLoading ?? getDefaultProgressIndicator();
       } else if (status.isError) {
         return onError != null ? onError(status.errorMessage) : Center(child: Text('A error occurred: ${status.errorMessage}'));
       } else if (status.isEmpty) {
-        return onEmpty ?? const SizedBox.shrink(); // Also can be widget(null); but is risky
+        return onEmpty ?? const SizedBox.shrink();
       }
       return widget(value);
     });
@@ -505,7 +505,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Создает новый элемент БД и устанавливает его в текущее selectedItem (currentItem)
   ///На время чтерния статус контроллера будет loading
   Future createAndSetSelectedItem() async {
-    currentStatus = RxStatus.loading();
+    currentStatus = GetStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
     try {
@@ -515,7 +515,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       selectedItem = newItem.clone();
       backupItem = newItem;
       await afterRefreshItem(selectedItem!, referenceList);
-      currentStatus = RxStatus.success();
+      currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       selectedItemChanged.broadcast(null);
     } on Exception catch (e) {
@@ -561,7 +561,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       }
     }
 
-    currentStatus = RxStatus.loading();
+    currentStatus = GetStatus.loading();
     sendNotify();
     try {
       await _postSelectedItem();
@@ -589,7 +589,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       }
       rethrow;
     } finally {
-      currentStatus = RxStatus.success();
+      currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       selectedItemChanged.broadcast(null);
     }
@@ -659,7 +659,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
     assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     selectedItem = item;
-    currentStatus = RxStatus.loading();
+    currentStatus = GetStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
     try {
@@ -668,7 +668,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (index >= 0) {
         dataItemList.replaceRange(index, index + 1, [newItem]);
       } else if (newItem.isEmpty) {
-        currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+        currentStatus = GetStatus.error('Ошибка NBC-509. Данный объект более недоступен');
         sendNotify();
         throw Exception('Ошибка NBC-509. Данный объект более недоступен');
       }
@@ -678,7 +678,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       selectedItem = newItem.clone();
       backupItem = newItem;
       await afterRefreshItem(selectedItem!, referenceList);
-      currentStatus = RxStatus.success();
+      currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       selectedItemChanged.broadcast(null);
     } on Exception catch (e) {
@@ -692,7 +692,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future copyAndSetItem(NsgDataItem item, {bool needRefreshSelectedItem = false, List<String>? referenceList}) async {
     assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
-    currentStatus = RxStatus.loading();
+    currentStatus = GetStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
     try {
@@ -701,14 +701,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (index >= 0) {
         dataItemList.replaceRange(index, index + 1, [newItem]);
       } else if (newItem.isEmpty) {
-        currentStatus = RxStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+        currentStatus = GetStatus.error('Ошибка NBC-509. Данный объект более недоступен');
         sendNotify();
         throw Exception('Ошибка NBC-509. Данный объект более недоступен');
       }
       selectedItem = newItem.clone(cloneAsCopy: true);
       backupItem = selectedItem!.clone();
       await afterRefreshItem(selectedItem!, referenceList);
-      currentStatus = RxStatus.success();
+      currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       selectedItemChanged.broadcast(null);
     } on Exception catch (e) {
@@ -941,4 +941,6 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
     return favorites;
   }
+
+  static NsgBaseControllerData emptyData = NsgBaseControllerData();
 }

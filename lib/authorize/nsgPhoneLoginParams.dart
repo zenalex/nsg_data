@@ -149,6 +149,6 @@ class NsgPhoneLoginParams {
         duration: const Duration(seconds: 5),
         backgroundColor: Colors.red[200],
         colorText: Colors.black,
-        snackPosition: SnackPosition.BOTTOM);
+        snackPosition: SnackPosition.bottom);
   }
 }
