@@ -422,7 +422,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void gotoNextPage(BuildContext? context) async {
-    var result = await Get.to<dynamic>(_getVerificationWidget);
+    var result = await Navigator.push<bool>(context!, MaterialPageRoute(builder: (context) => _getVerificationWidget()));
+    //var result = await Get.to(_getVerificationWidget);
     if (result ??= false) {
       setState(() {
         isLoginSuccessfull = true;
