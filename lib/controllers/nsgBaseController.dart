@@ -727,7 +727,10 @@ class NsgBaseController extends GetxController
         'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     selectedItem = item;
     currentStatus = GetStatus.loading();
-    sendNotify();
+    //11.02.2023 Зенков. Заменил на refresh, потому что иногда происходил конфликт обновления в процессе перерисовки
+    //Например, TaskTuner, открытие задачи на просмотр
+    refresh();
+    //sendNotify();
     itemsRequested.broadcast();
     try {
       var newItem = await refreshItem(item, referenceList);
