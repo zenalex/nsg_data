@@ -72,7 +72,9 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       return false;
     }
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
+    var oldIndex = dataTable.length - 1;
     if (backupItem != null && dataItemList.contains(backupItem)) {
+      oldIndex = dataItemList.indexOf(backupItem!);
       dataItemList.remove(backupItem!);
       dataTable.removeRow(backupItem!);
     }
@@ -81,7 +83,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     }
     if (!dataItemList.contains(currentItem)) {
       //dataItemList.add(selectedItem!);
-      dataTable.addRow(currentItem);
+      dataTable.insertRow(oldIndex, currentItem);
       //items.add(currentItem);
     }
     selectedItem!.state = NsgDataItemState.fill;

@@ -24,8 +24,8 @@ class NsgDataTable<T extends NsgDataItem> {
   ///dataItem - объект, в поле которого добавляем значение
   ///row - добавляемое значение
   void addRow(T row) {
-    var untypedRows = owner.getFieldValue(fieldName, allowNullValue: true);
-    untypedRows ??= <T>[];
+    List<T>? untypedRows = owner.getFieldValue(fieldName, allowNullValue: true);
+    untypedRows ??= [];
     var allRows = untypedRows.cast<T>();
     if (row.isEmpty) {
       row.setFieldValue(row.primaryKeyField, Guid.newGuid());
@@ -34,6 +34,24 @@ class NsgDataTable<T extends NsgDataItem> {
       row.ownerId = owner.id;
     }
     allRows.add(row);
+    owner.setFieldValue(fieldName, allRows);
+  }
+
+  ///Вставить новую строку в табличную часть
+  ///dataItem - объект, в поле которого добавляем значение
+  ///index - место вставки
+  ///row - добавляемое значение
+  void insertRow(int index, T row) {
+    List<T>? untypedRows = owner.getFieldValue(fieldName, allowNullValue: true);
+    untypedRows ??= [];
+    var allRows = untypedRows.cast<T>();
+    if (row.isEmpty) {
+      row.setFieldValue(row.primaryKeyField, Guid.newGuid());
+    }
+    if (row.ownerId.isNotEmpty) {
+      row.ownerId = owner.id;
+    }
+    allRows.insert(index, row);
     owner.setFieldValue(fieldName, allRows);
   }
 
