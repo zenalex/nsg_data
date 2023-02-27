@@ -72,7 +72,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       return false;
     }
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
-    var oldIndex = dataTable.length - 1;
+    var oldIndex = dataTable.length;
     if (backupItem != null && dataItemList.contains(backupItem)) {
       oldIndex = dataItemList.indexOf(backupItem!);
       dataItemList.remove(backupItem!);
@@ -133,8 +133,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (masterController == null || masterController!.selectedItem == null) {
       return;
     }
-    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
-    dataItemList = dataTable.rows;
+    await filterData();
     sortDataItemList();
     currentStatus = GetStatus.success(NsgBaseController.emptyData);
     sendNotify(keys: keys);
@@ -158,7 +157,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     assert(masterController != null && masterController!.selectedItem != null, 'itemDelete');
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     dataTable.removeRow(currentItem);
-    dataItemList = dataTable.rows;
+    await filterData();
     selectedItem = null;
     backupItem = null;
     if (goBack) {
@@ -181,7 +180,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     for (var element in itemsToRemove) {
       dataTable.removeRow(element);
     }
-    dataItemList = dataTable.rows;
+    await filterData();
     selectedItem = null;
     backupItem = null;
     if (masterController != null) {
@@ -192,5 +191,17 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     }
     currentStatus = GetStatus.success(NsgBaseController.emptyData);
     sendNotify();
+  }
+
+  ///Фильтрует строки из мастер и удовлетворяющие фильтру добавляет в контроллер
+  Future filterData() async {
+    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
+    var filter = getRequestFilter;
+    dataItemList = [];
+    for (var row in dataTable.rows) {
+      if (filter.compare.isValid(row)) {
+        dataItemList.add(row);
+      }
+    }
   }
 }
