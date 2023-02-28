@@ -685,7 +685,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
       //вернуть результат обратно
       //selectedItem = null;
-      selectedItem = newItem.clone();
+      selectedItem!.copyFieldValues(newItem);
       backupItem = newItem;
       await afterRefreshItem(selectedItem!, referenceList);
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
@@ -806,11 +806,15 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       var newItems = await p.postItems(loadReference: NsgDataRequest.addAllReferences(dataType));
       for (var item in newItems) {
         var old = itemsToPost.firstWhereOrNull((e) => e.id == item.id);
-        if (old == null) {
-          continue;
+        if (old != null) {
+          old.copyFieldValues(item);
+          old.state = NsgDataItemState.fill;
         }
-        old.copyFieldValues(item);
-        old.state = NsgDataItemState.fill;
+        old = dataItemList.firstWhereOrNull((e) => e.id == item.id);
+        if (old != null) {
+          old.copyFieldValues(item);
+          old.state = NsgDataItemState.fill;
+        }
       }
     } else {
       await NsgLocalDb.instance.postItems(itemsToPost);
