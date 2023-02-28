@@ -10,4 +10,8 @@ class NsgNavigator {
   void offAndToPage(String pageName) {
     Get.offAndToNamed(pageName);
   }
+
+  void back() {
+    Get.back();
+  }
 }
