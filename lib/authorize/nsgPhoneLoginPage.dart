@@ -13,17 +13,32 @@ import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 import '../metrica/nsg_metrica.dart';
 import '../nsg_data_provider.dart';
 
+enum NsgLoginType { phone, email }
+
 class NsgPhoneLoginPage extends StatelessWidget {
   final NsgDataProvider provider;
   final NsgPhoneLoginParams widgetParams;
-  NsgPhoneLoginPage(this.provider, {super.key, required this.widgetParams});
+  //final NsgLoginType loginType;
+  NsgPhoneLoginPage(
+    this.provider, {
+    super.key,
+    required this.widgetParams,
+    //this.loginType = NsgLoginType.phone
+  });
 
   @override
   Widget build(BuildContext context) {
+    NsgLoginType loginType;
+    if (widgetParams.usePhoneLogin) {
+      loginType = NsgLoginType.phone;
+    } else {
+      loginType = NsgLoginType.email;
+    }
+
     return Scaffold(
       appBar: widgetParams.appbar! ? getAppBar(context) : null,
       //backgroundColor: Colors.white,
-      body: NsgPhoneLoginWidget(this, provider, widgetParams: widgetParams),
+      body: NsgPhoneLoginWidget(this, provider, widgetParams: widgetParams, loginType: loginType),
     );
   }
 
@@ -104,8 +119,8 @@ class NsgPhoneLoginWidget extends StatefulWidget {
   final NsgPhoneLoginPage loginPage;
   final NsgPhoneLoginParams? widgetParams;
   final NsgDataProvider provider;
-
-  const NsgPhoneLoginWidget(this.loginPage, this.provider, {super.key, this.widgetParams});
+  final NsgLoginType loginType;
+  const NsgPhoneLoginWidget(this.loginPage, this.provider, {super.key, this.widgetParams, required this.loginType});
 }
 
 class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
@@ -116,6 +131,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   int currentStage = _NsgPhoneLoginWidgetState.stagePreLogin;
   bool isLoginSuccessfull = false;
   bool isSMSRequested = false;
+  String password = '';
   PhoneInputFormatter phoneFormatter = PhoneInputFormatter();
   //Осталось секунд до автообновления капчи. Если -1, то капча еще не получена
   //и таймер запускать нет смысла
@@ -130,7 +146,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   @override
   void initState() {
     super.initState();
-    widget.loginPage.callback.sendDataPressed = doSmsRequest;
+    widget.loginPage.callback.sendDataPressed = () => doSmsRequest(loginType: widget.loginType, password: password);
     refreshCaptcha();
   }
 
@@ -225,8 +241,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                   SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
                   TextFormField(
                     cursorColor: Colors.black,
-                    keyboardType: TextInputType.phone,
-                    inputFormatters: [phoneFormatter],
+                    keyboardType: widget.loginType == NsgLoginType.phone ? TextInputType.phone : TextInputType.emailAddress,
+                    inputFormatters: widget.loginType == NsgLoginType.phone ? [phoneFormatter] : null,
                     style: widget.widgetParams!.textPhoneField,
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
@@ -243,8 +259,40 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                       hintText: widget.widgetParams!.textEnterPhone,
                     ),
                     onChanged: (value) => phoneNumber = value,
-                    validator: (value) => isPhoneValid(value!) && value.length >= 16 ? null : widget.widgetParams!.textEnterCorrectPhone,
+                    validator: (value) => widget.loginType == NsgLoginType.phone
+                        ? isPhoneValid(value!) && value.length >= 16
+                            ? null
+                            : widget.widgetParams!.textEnterCorrectPhone
+                        : null,
                   ),
+                  if (widget.widgetParams!.usePasswordLogin)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: TextFormField(
+                        obscureText: true,
+                        cursorColor: Colors.black,
+                        keyboardType: widget.loginType == NsgLoginType.phone ? TextInputType.phone : TextInputType.emailAddress,
+                        inputFormatters: widget.loginType == NsgLoginType.phone ? [phoneFormatter] : null,
+                        style: widget.widgetParams!.textPhoneField,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5.0),
+                          ),
+                          filled: true,
+                          fillColor: widget.widgetParams!.phoneFieldColor,
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black, width: 1.0),
+                          ),
+                          errorStyle: const TextStyle(fontSize: 12),
+                          hintText: widget.widgetParams!.textEnterPassword,
+                        ),
+                        onChanged: (value) {
+                          password = value;
+                        },
+                      ),
+                    ),
                   if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) widget.loginPage.getRememberMeCheckbox(),
                   if (widget.widgetParams!.useCaptcha)
                     Row(
@@ -381,7 +429,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     }
   }
 
-  void doSmsRequest() {
+  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password}) {
     var context = Get.context;
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -389,7 +437,15 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     });
     NsgMetrica.reportLoginStart('Phone');
 
-    widget.provider.phoneLoginRequestSMS(phoneNumber, captchaCode).then((value) => checkRequestSMSanswer(context, value)).catchError((e) {
+/* -------------------------------------------------------------- Если введён пароль -------------------------------------------------------------- */
+    if (password != null && password != '') {
+      captchaCode = password;
+    }
+
+    widget.provider
+        .phoneLoginRequestSMS(phoneNumber: phoneNumber, securityCode: captchaCode, loginType: loginType)
+        .then((value) => checkRequestSMSanswer(context, value))
+        .catchError((e) {
       widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
     });
   }

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class NsgPhoneLoginParams {
+  bool usePasswordLogin;
+  bool usePhoneLogin;
+  bool useEmailLogin;
   double cardSize;
   double iconSize;
   double buttonSize;
@@ -12,12 +15,14 @@ class NsgPhoneLoginParams {
   String descriptionMessegeVerification;
   TextStyle? headerMessageStyle;
   String textEnterPhone;
+  String textEnterEmail;
   String textSendSms;
   String textResendSms;
   String textEnterCaptcha;
   String textLoginSuccessful;
   String textEnterCorrectPhone;
   String textCheckInternet;
+  String textEnterPassword;
   TextStyle? descriptionStyle;
   TextStyle? textPhoneField;
   Color? cardColor;
@@ -40,7 +45,10 @@ class NsgPhoneLoginParams {
   bool? headerMessageVisible;
 
   NsgPhoneLoginParams(
-      {this.cardSize = 345.0,
+      {this.usePasswordLogin = false,
+      this.usePhoneLogin = true,
+      this.useEmailLogin = false,
+      this.cardSize = 345.0,
       this.iconSize = 28.0,
       this.buttonSize = 42.0,
       this.headerMessage = 'Welcome',
@@ -48,6 +56,8 @@ class NsgPhoneLoginParams {
       this.descriptionMessegeVerification = 'We sent code in SMS\nto phone number\n{{phone}}',
       this.headerMessageStyle,
       this.textEnterPhone = 'Enter your phone',
+      this.textEnterEmail = 'Enter your email',
+      this.textEnterPassword = 'Enter you password',
       this.textResendSms = 'Send SMS again',
       this.descriptionStyle,
       this.textSendSms = 'Send SMS',

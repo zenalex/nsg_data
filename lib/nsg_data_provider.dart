@@ -12,6 +12,7 @@ import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsgPhoneLoginPage.dart';
 import 'authorize/nsgPhoneLoginParams.dart';
+import 'authorize/nsgPhoneLoginRegistrationPage.dart';
 import 'authorize/nsgPhoneLoginVerificationPage.dart';
 import 'controllers/nsg_cancel_token.dart';
 import 'models/nsgLoginModel.dart';
@@ -57,6 +58,15 @@ class NsgDataProvider {
       return NsgPhoneLoginVerificationPage(this, widgetParams: NsgPhoneLoginParams.defaultParams);
     } else {
       return getVerificationWidget!(this);
+    }
+  }
+
+  Function(NsgDataProvider provider)? getRegistrationWidget;
+  NsgPhoneLoginRegistrationPage get registrationPage {
+    if (getRegistrationWidget == null) {
+      return NsgPhoneLoginRegistrationPage(this, widgetParams: NsgPhoneLoginParams.defaultParams);
+    } else {
+      return getRegistrationWidget!(this);
     }
   }
 
@@ -342,10 +352,14 @@ class NsgDataProvider {
     return response;
   }
 
-  Future<int> phoneLoginRequestSMS(String phoneNumber, String securityCode) async {
+  Future<int> phoneLoginRequestSMS({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
+    if (loginType != null) login.loginType = loginType;
+    if (securityCode == '') {
+      login.register = true;
+    }
     login.securityCode = securityCode == '' ? 'security' : securityCode;
     var s = login.toJson();
 
