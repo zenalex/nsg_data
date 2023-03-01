@@ -256,7 +256,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         borderSide: BorderSide(color: Colors.black, width: 1.0),
                       ),
                       errorStyle: const TextStyle(fontSize: 12),
-                      hintText: widget.widgetParams!.textEnterPhone,
+                      hintText: widget.loginType == NsgLoginType.phone ? widget.widgetParams!.textEnterPhone : widget.widgetParams!.textEnterEmail,
                     ),
                     onChanged: (value) => phoneNumber = value,
                     validator: (value) => widget.loginType == NsgLoginType.phone
