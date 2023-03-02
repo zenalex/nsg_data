@@ -2,24 +2,31 @@
 
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_multi_formatter/formatters/phone_input_formatter.dart';
+import 'package:get/get.dart';
+import 'package:nsg_controls/nsg_controls.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
-
+import '../metrica/nsg_metrica.dart';
 import '../models/nsgLoginModel.dart';
+import 'package:hovering/hovering.dart';
+import '../navigator/nsg_navigator.dart';
+import 'nsgPhoneLoginPage.dart';
 import 'nsgPhoneLoginParams.dart';
 
 class NsgPhoneLoginRegistrationPage extends StatelessWidget {
   final NsgDataProvider provider;
   final NsgPhoneLoginParams? widgetParams;
 
-  const NsgPhoneLoginRegistrationPage(this.provider, {super.key, this.widgetParams});
+  NsgPhoneLoginRegistrationPage(this.provider, {super.key, this.widgetParams});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: widgetParams!.appbar! ? getAppBar(context) : null,
       //backgroundColor: Colors.white,
-      body: NsgPhoneLoginVerificationWidget(this, provider, widgetParams: widgetParams),
+      body: NsgPhoneLoginRegistrationWidget(this, provider, widgetParams: widgetParams),
     );
   }
 
@@ -51,22 +58,34 @@ class NsgPhoneLoginRegistrationPage extends StatelessWidget {
       child: Text('you need to override getButtons'),
     );
   }
+
+  final callback = CallbackFunctionClass();
+  void sendData() {
+    callback.sendData();
+  }
 }
 
-class NsgPhoneLoginVerificationWidget extends StatefulWidget {
+class NsgPhoneLoginRegistrationWidget extends StatefulWidget {
   final NsgPhoneLoginParams? widgetParams;
   final NsgDataProvider provider;
-  final NsgPhoneLoginRegistrationPage verificationPage;
+  final NsgPhoneLoginRegistrationPage registrationPage;
 
-  const NsgPhoneLoginVerificationWidget(this.verificationPage, this.provider, {super.key, this.widgetParams});
+  const NsgPhoneLoginRegistrationWidget(this.registrationPage, this.provider, {super.key, this.widgetParams});
   @override
-  State<StatefulWidget> createState() => _NsgPhoneLoginVerificationState();
+  State<StatefulWidget> createState() => _NsgPhoneLoginregistrationState();
 }
 
-class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWidget> {
+class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWidget> {
   Timer? updateTimer;
   bool isBusy = false;
   int secondsRepeateLeft = 120;
+  String phoneNumber = '';
+  String email = '';
+  bool isLoginSuccessfull = false;
+  bool isSMSRequested = false;
+  String captchaCode = '';
+  late NsgLoginType loginType;
+
   @override
   Widget build(BuildContext context) {
     return _getBody(context);
@@ -74,32 +93,25 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
 
   @override
   void initState() {
+    widget.registrationPage.callback.sendDataPressed = () => doSmsRequest(loginType: loginType);
+    if (widget.widgetParams!.usePhoneLogin) {
+      loginType = NsgLoginType.phone;
+    } else {
+      loginType = NsgLoginType.email;
+    }
     super.initState();
-    startTimer();
   }
 
   @override
   void dispose() {
-    stopTimer();
     super.dispose();
-  }
-
-  void startTimer() {
-    updateTimer ??= updateTimer = Timer.periodic(const Duration(seconds: 1), (Timer t) => updateTimerEvent(t));
-  }
-
-  void stopTimer() {
-    if (updateTimer != null) {
-      updateTimer!.cancel();
-      updateTimer = null;
-    }
   }
 
   Widget _getBody(BuildContext context) {
     return Stack(
       children: <Widget>[
         Positioned.fill(
-          child: widget.verificationPage.getBackground(),
+          child: widget.registrationPage.getBackground(),
         ),
         Align(
           alignment: Alignment.center,
@@ -110,7 +122,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  child: widget.verificationPage.getLogo(),
+                  child: widget.registrationPage.getLogo(),
                 ),
                 Container(
                   child: _getContext(context),
@@ -125,13 +137,14 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
 
   final _formKey = GlobalKey<FormState>();
   String securityCode = '';
+  PhoneInputFormatter phoneFormatter = PhoneInputFormatter();
   Widget _getContext(BuildContext context) {
     return Form(
       key: _formKey,
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(20.0)),
+          borderRadius: BorderRadius.all(Radius.circular(3)),
           boxShadow: [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.15), offset: Offset(0.0, 4.0), blurRadius: 4.0, spreadRadius: 2.0)],
         ),
         margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
@@ -158,42 +171,116 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                       : const SizedBox(),
                   SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
                   Text(
-                    widget.widgetParams!.headerMessageVerification,
+                    widget.widgetParams!.headerMessageRegistration,
                     style: widget.widgetParams!.headerMessageStyle,
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 15.0),
-                  Text(
-                    widget.widgetParams!.interpolate(widget.widgetParams!.descriptionMessegeVerification, params: {'phone': widget.provider.phoneNumber}),
-                    style: widget.widgetParams!.descriptionStyle,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 15.0),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: widget.widgetParams!.phoneFieldColor,
-                      borderRadius: BorderRadius.circular(5.0),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5, top: 5),
+                    child: Row(
+                      children: [
+                        Expanded(
+                            child: NsgCheckBox(
+                          key: GlobalKey(),
+                          radio: true,
+                          label: widget.widgetParams!.textEnterPhone,
+                          onPressed: (bool currentValue) {
+                            setState(() {
+                              loginType = NsgLoginType.phone;
+                            });
+                          },
+                          value: loginType == NsgLoginType.phone,
+                        )),
+                        Expanded(
+                            child: NsgCheckBox(
+                                key: GlobalKey(),
+                                radio: true,
+                                label: widget.widgetParams!.textEnterEmail,
+                                onPressed: (bool currentValue) {
+                                  setState(() {
+                                    loginType = NsgLoginType.email;
+                                  });
+                                },
+                                value: loginType == NsgLoginType.email)),
+                      ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
-                      child: TextFormField(
-                        keyboardType: TextInputType.number,
+                  ),
+                  if (widget.widgetParams!.usePhoneLogin)
+                    if (loginType == NsgLoginType.phone)
+                      TextFormField(
+                        key: GlobalKey(),
+                        cursorColor: Colors.black,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [phoneFormatter],
                         style: widget.widgetParams!.textPhoneField,
                         textAlign: TextAlign.center,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5.0),
+                          ),
+                          filled: true,
+                          fillColor: widget.widgetParams!.phoneFieldColor,
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black, width: 1.0),
+                          ),
+                          errorStyle: const TextStyle(fontSize: 12),
+                          hintText: widget.widgetParams!.textEnterPhone,
                         ),
-                        onChanged: (text) {
-                          securityCode = text;
-                          if (securityCode.length == 6) {
-                            checkSecurityCode(context, securityCode);
-                          }
-                        },
+                        initialValue: phoneNumber,
+                        onChanged: (value) => phoneNumber = value,
+                        validator: (value) => isPhoneValid(value!) && value.length >= 16 ? null : widget.widgetParams!.textEnterCorrectPhone,
+                      ),
+                  if (widget.widgetParams!.useEmailLogin)
+                    if (loginType == NsgLoginType.email)
+                      TextFormField(
+                        key: GlobalKey(),
+                        cursorColor: Colors.black,
+                        keyboardType: TextInputType.emailAddress,
+                        inputFormatters: null,
+                        style: widget.widgetParams!.textPhoneField,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5.0),
+                          ),
+                          filled: true,
+                          fillColor: widget.widgetParams!.phoneFieldColor,
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black, width: 1.0),
+                          ),
+                          errorStyle: const TextStyle(fontSize: 12),
+                          hintText: widget.widgetParams!.textEnterEmail,
+                        ),
+                        initialValue: email,
+                        onChanged: (value) => email = value,
+                        validator: (value) => null,
+                      ),
+                  const SizedBox(height: 15),
+                  widget.registrationPage.getButtons(),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: InkWell(
+                      onTap: () {
+                        gotoLoginPage(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10, bottom: 10),
+                        child: HoverWidget(
+                          hoverChild: const Text(
+                            'Уже регистрировался / Войти по паролю',
+                            style: TextStyle(),
+                          ),
+                          onHover: (PointerEnterEvent event) {},
+                          child: const Text(
+                            'Уже регистрировался / Войти по паролю',
+                            style: TextStyle(decoration: TextDecoration.underline),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 15.0),
-                  widget.verificationPage.getButtons(),
                 ],
               ),
             ),
@@ -203,14 +290,103 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
     );
   }
 
-  void checkSecurityCode(BuildContext context, String securityCode) {
+  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password}) {
+    var context = Get.context;
+    if (!_formKey.currentState!.validate()) return;
     setState(() {
-      isBusy = true;
+      isSMSRequested = true;
     });
-    widget.provider.phoneLogin(widget.provider.phoneNumber, securityCode).then((result) => checkLoginResult(context, result));
-    setState(() {
-      isBusy = false;
+    NsgMetrica.reportLoginStart('Phone');
+
+/* -------------------------------------------------------------- Если введён пароль -------------------------------------------------------------- */
+    if (password != null && password != '') {
+      captchaCode = password;
+    }
+
+    widget.provider
+        .phoneLoginRequestSMS(phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType)
+        .then((value) => checkRequestSMSanswer(context, value))
+        .catchError((e) {
+      widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
     });
+  }
+
+  void gotoLoginPage(BuildContext? context) {
+    Navigator.push<bool>(context!, MaterialPageRoute(builder: (context) => _getLoginWidget()));
+  }
+
+  Widget _getLoginWidget() {
+    return widget.provider.getLoginWidget!(widget.provider);
+  }
+
+  void gotoVerificationPage(BuildContext? context) async {
+    var result = await Navigator.push<bool>(context!, MaterialPageRoute(builder: (context) => _getVerificationWidget()));
+    //var result = await Get.to(_getVerificationWidget);
+    if (result ??= false) {
+      setState(() {
+        isLoginSuccessfull = true;
+      });
+      if (widget.widgetParams!.loginSuccessful != null) {
+        widget.widgetParams!.loginSuccessful!(context, widget.widgetParams!.parameter);
+      }
+    } else {
+      //   refreshCaptcha();
+    }
+  }
+
+  Widget _getVerificationWidget() {
+    return widget.provider.getVerificationWidget!(widget.provider);
+  }
+
+  void checkRequestSMSanswer(BuildContext? context, int answerCode) {
+    if (updateTimer != null) {
+      updateTimer!.cancel();
+    }
+    if (answerCode == 0) {
+      setState(() {
+        isSMSRequested = false;
+      });
+      NsgMetrica.reportLoginSuccess('Phone');
+      gotoNextPage(context);
+    }
+    var needRefreshCaptcha = false;
+    var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode);
+    switch (answerCode) {
+      case 40102:
+        needRefreshCaptcha = true;
+        break;
+      case 40103:
+        needRefreshCaptcha = true;
+        break;
+      default:
+        needRefreshCaptcha = false;
+    }
+    isSMSRequested = false;
+    NsgMetrica.reportLoginFailed('Phone', answerCode.toString());
+    widget.widgetParams!.showError(context, errorMessage);
+
+    if (needRefreshCaptcha) {
+      //refreshCaptcha();
+    } else {
+      setState(() {
+        isSMSRequested = false;
+      });
+    }
+  }
+
+  void gotoNextPage(BuildContext? context) async {
+    var result = await Navigator.push<bool>(context!, MaterialPageRoute(builder: (context) => _getVerificationWidget()));
+    //var result = await Get.to(_getVerificationWidget);
+    if (result ??= false) {
+      setState(() {
+        isLoginSuccessfull = true;
+      });
+      if (widget.widgetParams!.loginSuccessful != null) {
+        widget.widgetParams!.loginSuccessful!(context, widget.widgetParams!.parameter);
+      }
+    } else {
+      //refreshCaptcha();
+    }
   }
 
   void checkLoginResult(BuildContext context, NsgLoginResponse answer) {
@@ -223,29 +399,18 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
       }
       showError(errorMessage, needEnterCaptcha);
     } else {
-      Navigator.pop(context, true);
+      NsgNavigator.instance.offAndToPage(widget.widgetParams!.mainPage);
     }
   }
 
   Future showError(String errorMessage, bool needEnterCaptcha) async {
     widget.widgetParams!.showError(context, errorMessage);
     if (needEnterCaptcha) {
-      stopTimer();
       setState(() {
         isBusy = true;
       });
       await Future.delayed(const Duration(seconds: 3));
       Navigator.pop(context, false);
     }
-  }
-
-  void updateTimerEvent(Timer t) {
-    if (widget.provider.smsRequestedTime == null) {
-      stopTimer();
-    }
-    setState(() {
-      secondsRepeateLeft = 120 - DateTime.now().difference(widget.provider.smsRequestedTime!).inSeconds;
-      secondsRepeateLeft = secondsRepeateLeft < 0 ? 0 : secondsRepeateLeft;
-    });
   }
 }

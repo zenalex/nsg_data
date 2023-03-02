@@ -377,11 +377,40 @@ class NsgDataProvider {
     return loginResponse.errorCode;
   }
 
-  Future<NsgLoginResponse> phoneLogin(String? phoneNumber, String securityCode) async {
+  Future<int> phoneLoginPassword({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
+    this.phoneNumber = phoneNumber;
+    var login = NsgPhoneLoginModel();
+    login.phoneNumber = phoneNumber;
+    if (loginType != null) login.loginType = loginType;
+    login.securityCode = securityCode == '' ? 'security' : securityCode;
+    var s = login.toJson();
+
+    var response = await (baseRequest(
+        function: 'PhoneLoginRequestSMS',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
+        method: 'POST',
+        params: s));
+
+    var loginResponse = NsgLoginResponse.fromJson(response);
+    if (loginResponse.errorCode == 0) {
+      token = loginResponse.token;
+      isAnonymous = loginResponse.isAnonymous;
+      if (!isAnonymous && saveToken) {
+        var _prefs = await SharedPreferences.getInstance();
+        await _prefs.setString(applicationName, token!);
+      }
+    }
+    return loginResponse.errorCode;
+  }
+
+  Future<NsgLoginResponse> phoneLogin({required String phoneNumber, required String securityCode, bool? register, String? newPassword}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
     login.securityCode = securityCode;
+    login.register = register ?? false;
+    login.newPassword = newPassword;
     var s = login.toJson();
 
     try {

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:nsg_controls/widgets/nsg_snackbar.dart';
 
 class NsgPhoneLoginParams {
   bool usePasswordLogin;
@@ -12,6 +13,8 @@ class NsgPhoneLoginParams {
   double buttonSize;
   String headerMessage;
   String headerMessageVerification;
+  String headerMessageLogin;
+  String headerMessageRegistration;
   String descriptionMessegeVerification;
   TextStyle? headerMessageStyle;
   String textEnterPhone;
@@ -22,7 +25,10 @@ class NsgPhoneLoginParams {
   String textLoginSuccessful;
   String textEnterCorrectPhone;
   String textCheckInternet;
+  String textEnterCode;
   String textEnterPassword;
+  String textEnterNewPassword;
+  String textEnterPasswordAgain;
   TextStyle? descriptionStyle;
   TextStyle? textPhoneField;
   Color? cardColor;
@@ -38,7 +44,7 @@ class NsgPhoneLoginParams {
   String Function(int)? errorMessageByStatusCode;
   void Function(BuildContext? context, dynamic parameter)? loginSuccessful;
   void Function()? loginFailed;
-  String? mainPage;
+  String mainPage;
 
   static NsgPhoneLoginParams defaultParams = NsgPhoneLoginParams();
   bool? appbar;
@@ -51,13 +57,18 @@ class NsgPhoneLoginParams {
       this.cardSize = 345.0,
       this.iconSize = 28.0,
       this.buttonSize = 42.0,
-      this.headerMessage = 'Welcome',
+      this.headerMessage = 'NSG Application',
+      this.headerMessageLogin = 'Enter',
+      this.headerMessageRegistration = 'Registration',
       this.headerMessageVerification = 'Enter security code',
       this.descriptionMessegeVerification = 'We sent code in SMS\nto phone number\n{{phone}}',
       this.headerMessageStyle,
+      this.textEnterCode = 'Code',
       this.textEnterPhone = 'Enter your phone',
       this.textEnterEmail = 'Enter your email',
       this.textEnterPassword = 'Enter you password',
+      this.textEnterNewPassword = 'Enter new password',
+      this.textEnterPasswordAgain = 'Enter password again',
       this.textResendSms = 'Send SMS again',
       this.descriptionStyle,
       this.textSendSms = 'Send SMS',
@@ -78,7 +89,7 @@ class NsgPhoneLoginParams {
       this.appbar,
       this.headerMessageVisible,
       this.useCaptcha = true,
-      this.mainPage}) {
+      this.mainPage = ''}) {
     headerMessageStyle ??= const TextStyle(
       fontFamily: 'Roboto',
       fontSize: 20.0,
@@ -154,11 +165,10 @@ class NsgPhoneLoginParams {
 
   void showError(BuildContext? context, String message) {
     if (message == '') return;
-    Get.snackbar('ОШИБКА', message,
-        isDismissible: true,
-        duration: const Duration(seconds: 5),
-        backgroundColor: Colors.red[200],
-        colorText: Colors.black,
-        snackPosition: SnackPosition.bottom);
+    nsgSnackbar(
+      type: NsgSnarkBarType.error,
+      text: message,
+      duration: const Duration(seconds: 5),
+    );
   }
 }

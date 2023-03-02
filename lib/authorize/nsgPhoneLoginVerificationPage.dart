@@ -2,9 +2,14 @@
 
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:nsg_controls/nsg_controls.dart';
+import 'package:nsg_controls/widgets/nsg_snackbar.dart';
+import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
-
+import 'package:hovering/hovering.dart';
 import '../models/nsgLoginModel.dart';
 import 'nsgPhoneLoginParams.dart';
 
@@ -65,6 +70,8 @@ class NsgPhoneLoginVerificationWidget extends StatefulWidget {
 
 class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWidget> {
   Timer? updateTimer;
+  String newPassword = '';
+  String newPassword2 = '';
   bool isBusy = false;
   int secondsRepeateLeft = 120;
   @override
@@ -131,7 +138,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(20.0)),
+          borderRadius: BorderRadius.all(Radius.circular(3.0)),
           boxShadow: [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.15), offset: Offset(0.0, 4.0), blurRadius: 4.0, spreadRadius: 2.0)],
         ),
         margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
@@ -169,31 +176,104 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 15.0),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: widget.widgetParams!.phoneFieldColor,
-                      borderRadius: BorderRadius.circular(5.0),
+                  TextFormField(
+                    keyboardType: TextInputType.number,
+                    style: widget.widgetParams!.textPhoneField,
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      filled: true,
+                      fillColor: widget.widgetParams!.phoneFieldColor,
+                      errorStyle: const TextStyle(fontSize: 12),
+                      hintText: widget.widgetParams!.textEnterCode,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
-                      child: TextFormField(
-                        keyboardType: TextInputType.number,
-                        style: widget.widgetParams!.textPhoneField,
-                        textAlign: TextAlign.center,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                        ),
-                        onChanged: (text) {
-                          securityCode = text;
-                          if (securityCode.length == 6) {
-                            checkSecurityCode(context, securityCode);
-                          }
-                        },
-                      ),
-                    ),
+                    onChanged: (text) {
+                      securityCode = text;
+                    },
                   ),
                   const SizedBox(height: 15.0),
                   widget.verificationPage.getButtons(),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15),
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          keyboardType: TextInputType.number,
+                          style: widget.widgetParams!.textPhoneField,
+                          textAlign: TextAlign.center,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            filled: true,
+                            fillColor: widget.widgetParams!.phoneFieldColor,
+                            errorStyle: const TextStyle(fontSize: 12),
+                            hintText: widget.widgetParams!.textEnterNewPassword,
+                          ),
+                          onChanged: (text) {
+                            newPassword = text;
+                            //                            checkSecurityCode(context, securityCode);
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 15),
+                          child: TextFormField(
+                            keyboardType: TextInputType.number,
+                            style: widget.widgetParams!.textPhoneField,
+                            textAlign: TextAlign.center,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              filled: true,
+                              fillColor: widget.widgetParams!.phoneFieldColor,
+                              errorStyle: const TextStyle(fontSize: 12),
+                              hintText: widget.widgetParams!.textEnterPasswordAgain,
+                            ),
+                            onChanged: (text) {
+                              newPassword2 = text;
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 15),
+                          child: NsgButton(
+                            margin: EdgeInsets.zero,
+                            onPressed: () {
+                              if (newPassword != newPassword2) {
+                                nsgSnackbar(text: 'Пароли не совпадают');
+                              } else if (newPassword.isEmpty || newPassword2.isEmpty) {
+                                nsgSnackbar(text: 'Введите новый пароль в оба текстовых поля');
+                              } else {
+                                widget.provider
+                                    .phoneLogin(phoneNumber: widget.provider.phoneNumber!, securityCode: securityCode, register: true, newPassword: newPassword)
+                                    .then((result) => checkLoginResult(context, result));
+                              }
+                            },
+                            text: 'ЗАДАТЬ ПАРОЛЬ',
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: InkWell(
+                      onTap: () {
+                        gotoLoginPage(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10, bottom: 10),
+                        child: HoverWidget(
+                          hoverChild: const Text(
+                            'Уже регистрировался / Войти по паролю',
+                            style: TextStyle(),
+                          ),
+                          onHover: (PointerEnterEvent event) {},
+                          child: const Text(
+                            'Уже регистрировался / Войти по паролю',
+                            style: TextStyle(decoration: TextDecoration.underline),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
                 ],
               ),
             ),
@@ -203,14 +283,12 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
     );
   }
 
-  void checkSecurityCode(BuildContext context, String securityCode) {
-    setState(() {
-      isBusy = true;
-    });
-    widget.provider.phoneLogin(widget.provider.phoneNumber, securityCode).then((result) => checkLoginResult(context, result));
-    setState(() {
-      isBusy = false;
-    });
+  void gotoLoginPage(BuildContext? context) {
+    Navigator.push<bool>(context!, MaterialPageRoute(builder: (context) => _getLoginWidget()));
+  }
+
+  Widget _getLoginWidget() {
+    return widget.provider.getLoginWidget!(widget.provider);
   }
 
   void checkLoginResult(BuildContext context, NsgLoginResponse answer) {
@@ -223,20 +301,20 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
       }
       showError(errorMessage, needEnterCaptcha);
     } else {
-      Navigator.pop(context, true);
+      NsgNavigator.instance.offAndToPage(widget.widgetParams!.mainPage);
     }
   }
 
   Future showError(String errorMessage, bool needEnterCaptcha) async {
     widget.widgetParams!.showError(context, errorMessage);
-    if (needEnterCaptcha) {
-      stopTimer();
-      setState(() {
-        isBusy = true;
-      });
-      await Future.delayed(const Duration(seconds: 3));
-      Navigator.pop(context, false);
-    }
+    // if (needEnterCaptcha) {
+    //   stopTimer();
+    //   setState(() {
+    //     isBusy = true;
+    //   });
+    //   await Future.delayed(const Duration(seconds: 3));
+    //   Navigator.pop(context, false);
+    // }
   }
 
   void updateTimerEvent(Timer t) {
