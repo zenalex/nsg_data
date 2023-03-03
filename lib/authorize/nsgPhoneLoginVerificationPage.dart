@@ -193,29 +193,12 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                   ),
                   const SizedBox(height: 15.0),
                   widget.verificationPage.getButtons(),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: Column(
-                      children: [
-                        TextFormField(
-                          keyboardType: TextInputType.number,
-                          style: widget.widgetParams!.textPhoneField,
-                          textAlign: TextAlign.center,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            filled: true,
-                            fillColor: widget.widgetParams!.phoneFieldColor,
-                            errorStyle: const TextStyle(fontSize: 12),
-                            hintText: widget.widgetParams!.textEnterNewPassword,
-                          ),
-                          onChanged: (text) {
-                            newPassword = text;
-                            //                            checkSecurityCode(context, securityCode);
-                          },
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15),
-                          child: TextFormField(
+                  if (widget.widgetParams!.usePasswordLogin)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: Column(
+                        children: [
+                          TextFormField(
                             keyboardType: TextInputType.number,
                             style: widget.widgetParams!.textPhoneField,
                             textAlign: TextAlign.center,
@@ -224,34 +207,71 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                               filled: true,
                               fillColor: widget.widgetParams!.phoneFieldColor,
                               errorStyle: const TextStyle(fontSize: 12),
-                              hintText: widget.widgetParams!.textEnterPasswordAgain,
+                              hintText: widget.widgetParams!.textEnterNewPassword,
                             ),
                             onChanged: (text) {
-                              newPassword2 = text;
+                              newPassword = text;
+                              //                            checkSecurityCode(context, securityCode);
                             },
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15),
-                          child: NsgButton(
-                            margin: EdgeInsets.zero,
-                            onPressed: () {
-                              if (newPassword != newPassword2) {
-                                nsgSnackbar(text: 'Пароли не совпадают');
-                              } else if (newPassword.isEmpty || newPassword2.isEmpty) {
-                                nsgSnackbar(text: 'Введите новый пароль в оба текстовых поля');
-                              } else {
-                                widget.provider
-                                    .phoneLogin(phoneNumber: widget.provider.phoneNumber!, securityCode: securityCode, register: true, newPassword: newPassword)
-                                    .then((result) => checkLoginResult(context, result));
-                              }
-                            },
-                            text: 'ЗАДАТЬ ПАРОЛЬ',
+                          Padding(
+                            padding: const EdgeInsets.only(top: 15),
+                            child: TextFormField(
+                              keyboardType: TextInputType.number,
+                              style: widget.widgetParams!.textPhoneField,
+                              textAlign: TextAlign.center,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                filled: true,
+                                fillColor: widget.widgetParams!.phoneFieldColor,
+                                errorStyle: const TextStyle(fontSize: 12),
+                                hintText: widget.widgetParams!.textEnterPasswordAgain,
+                              ),
+                              onChanged: (text) {
+                                newPassword2 = text;
+                              },
+                            ),
                           ),
-                        )
-                      ],
+                          if (widget.widgetParams!.usePasswordLogin)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 15),
+                              child: NsgButton(
+                                margin: EdgeInsets.zero,
+                                onPressed: () {
+                                  if (newPassword != newPassword2) {
+                                    nsgSnackbar(text: 'Пароли не совпадают');
+                                  } else if (newPassword.isEmpty || newPassword2.isEmpty) {
+                                    nsgSnackbar(text: 'Введите новый пароль в оба текстовых поля');
+                                  } else {
+                                    widget.provider
+                                        .phoneLogin(
+                                            phoneNumber: widget.provider.phoneNumber!, securityCode: securityCode, register: true, newPassword: newPassword)
+                                        .then((result) => checkLoginResult(context, result));
+                                  }
+                                },
+                                text: 'ЗАДАТЬ ПАРОЛЬ',
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
+                  if (!widget.widgetParams!.usePasswordLogin)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: NsgButton(
+                        margin: EdgeInsets.zero,
+                        onPressed: () {
+                          if (newPassword != newPassword2) {
+                            nsgSnackbar(text: 'Пароли не совпадают');
+                          } else {
+                            widget.provider
+                                .phoneLogin(phoneNumber: widget.provider.phoneNumber!, securityCode: securityCode, register: true, newPassword: newPassword)
+                                .then((result) => checkLoginResult(context, result));
+                          }
+                        },
+                        text: 'Проверить'.toUpperCase(),
+                      ),
+                    ),
                   Padding(
                     padding: const EdgeInsets.only(top: 10),
                     child: InkWell(
@@ -262,12 +282,12 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                         padding: const EdgeInsets.only(top: 10, bottom: 10),
                         child: HoverWidget(
                           hoverChild: const Text(
-                            'Уже регистрировался / Войти по паролю',
+                            'Вернуться на страницу входа',
                             style: TextStyle(),
                           ),
                           onHover: (PointerEnterEvent event) {},
                           child: const Text(
-                            'Уже регистрировался / Войти по паролю',
+                            'Вернуться на страницу входа',
                             style: TextStyle(decoration: TextDecoration.underline),
                           ),
                         ),

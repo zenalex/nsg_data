@@ -9,11 +9,8 @@ import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:get/get.dart';
 import 'package:nsg_controls/nsg_button.dart';
 import 'package:nsg_controls/formfields/nsg_checkbox.dart';
-import 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 import 'package:hovering/hovering.dart';
-import '../metrica/nsg_metrica.dart';
 import '../nsg_data.dart';
-import '../nsg_data_provider.dart';
 
 enum NsgLoginType { phone, email }
 
@@ -428,7 +425,16 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         ),
                       ),
                     ),
-                  widget.loginPage.getButtons(),
+                  if (widget.widgetParams!.usePasswordLogin) widget.loginPage.getButtons(),
+                  if (!widget.widgetParams!.usePasswordLogin)
+                    NsgButton(
+                      margin: EdgeInsets.zero,
+                      onPressed: () {
+                        widget.widgetParams!.phoneNumber = phoneNumber;
+                        doSmsRequest(loginType: loginType, password: password);
+                      },
+                      text: 'Выслать код'.toUpperCase(),
+                    ),
                   if (widget.widgetParams!.usePasswordLogin)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -483,9 +489,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     if (updateTimer != null) {
       updateTimer!.cancel();
     }
-    if (answerCode == 0) {
+    if (answerCode == 0 && widget.widgetParams!.usePasswordLogin) {
       NsgMetrica.reportLoginSuccess('Phone');
       NsgNavigator.instance.offAndToPage(widget.widgetParams!.mainPage);
+      return;
+    }
+    if (answerCode == 0 && !widget.widgetParams!.usePasswordLogin) {
+      gotoNextPage(context);
       return;
     }
     var needRefreshCaptcha = false;
@@ -519,12 +529,21 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
       captchaCode = password;
     }
 
-    widget.provider
-        .phoneLoginPassword(phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType)
-        .then((value) => checkRequestSMSanswer(context, value))
-        .catchError((e) {
-      widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
-    });
+    if (widget.widgetParams!.usePasswordLogin) {
+      widget.provider
+          .phoneLoginPassword(phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType)
+          .then((value) => checkRequestSMSanswer(context, value))
+          .catchError((e) {
+        widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
+      });
+    } else {
+      widget.provider
+          .phoneLoginRequestSMS(phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType)
+          .then((value) => checkRequestSMSanswer(context, value))
+          .catchError((e) {
+        widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
+      });
+    }
   }
 
   void refreshCaptcha() {

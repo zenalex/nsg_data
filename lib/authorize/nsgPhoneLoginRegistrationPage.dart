@@ -319,20 +319,20 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
     return widget.provider.getLoginWidget!(widget.provider);
   }
 
-  void gotoVerificationPage(BuildContext? context) async {
-    var result = await Navigator.push<bool>(context!, MaterialPageRoute(builder: (context) => _getVerificationWidget()));
-    //var result = await Get.to(_getVerificationWidget);
-    if (result ??= false) {
-      setState(() {
-        isLoginSuccessfull = true;
-      });
-      if (widget.widgetParams!.loginSuccessful != null) {
-        widget.widgetParams!.loginSuccessful!(context, widget.widgetParams!.parameter);
-      }
-    } else {
-      //   refreshCaptcha();
-    }
-  }
+  // void gotoVerificationPage(BuildContext? context) async {
+  //   var result = await Navigator.push<bool>(context!, MaterialPageRoute(builder: (context) => _getVerificationWidget()));
+  //   //var result = await Get.to(_getVerificationWidget);
+  //   if (result ??= false) {
+  //     setState(() {
+  //       isLoginSuccessfull = true;
+  //     });
+  //     if (widget.widgetParams!.loginSuccessful != null) {
+  //       widget.widgetParams!.loginSuccessful!(context, widget.widgetParams!.parameter);
+  //     }
+  //   } else {
+  //     //   refreshCaptcha();
+  //   }
+  // }
 
   Widget _getVerificationWidget() {
     return widget.provider.getVerificationWidget!(widget.provider);

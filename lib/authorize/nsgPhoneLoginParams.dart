@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:nsg_controls/widgets/nsg_snackbar.dart';
 
 class NsgPhoneLoginParams {
+  String phoneNumber;
   bool usePasswordLogin;
   bool usePhoneLogin;
   bool useEmailLogin;
@@ -51,7 +52,8 @@ class NsgPhoneLoginParams {
   bool? headerMessageVisible;
 
   NsgPhoneLoginParams(
-      {this.usePasswordLogin = false,
+      {this.phoneNumber = '',
+      this.usePasswordLogin = false,
       this.usePhoneLogin = true,
       this.useEmailLogin = false,
       this.cardSize = 345.0,
@@ -87,7 +89,7 @@ class NsgPhoneLoginParams {
       this.phoneFieldColor,
       this.errorMessageByStatusCode,
       this.appbar,
-      this.headerMessageVisible,
+      this.headerMessageVisible = false,
       this.useCaptcha = true,
       this.mainPage = ''}) {
     headerMessageStyle ??= const TextStyle(
