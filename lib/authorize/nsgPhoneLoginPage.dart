@@ -236,10 +236,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         )
                       : const SizedBox(),
                   SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
-                  Text(
-                    widget.widgetParams!.headerMessageLogin,
-                    style: widget.widgetParams!.headerMessageStyle,
-                    textAlign: TextAlign.center,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      widget.widgetParams!.headerMessageLogin,
+                      style: widget.widgetParams!.headerMessageStyle,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                   const SizedBox(height: 5.0),
                   if (widget.widgetParams!.useEmailLogin && widget.widgetParams!.usePhoneLogin)
@@ -431,6 +434,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                       margin: EdgeInsets.zero,
                       onPressed: () {
                         widget.widgetParams!.phoneNumber = phoneNumber;
+                        widget.widgetParams!.loginType = loginType;
                         doSmsRequest(loginType: loginType, password: password);
                       },
                       text: 'Выслать код'.toUpperCase(),

@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:nsg_controls/nsg_controls.dart';
 import 'package:nsg_controls/widgets/nsg_snackbar.dart';
+import 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
 
 class NsgPhoneLoginParams {
   String phoneNumber;
@@ -16,7 +18,8 @@ class NsgPhoneLoginParams {
   String headerMessageVerification;
   String headerMessageLogin;
   String headerMessageRegistration;
-  String descriptionMessegeVerification;
+  String descriptionMessegeVerificationEmail;
+  String descriptionMessegeVerificationPhone;
   TextStyle? headerMessageStyle;
   String textEnterPhone;
   String textEnterEmail;
@@ -40,6 +43,7 @@ class NsgPhoneLoginParams {
   Color? sendSmsBorderColor;
   Color? phoneIconColor;
   Color? phoneFieldColor;
+  NsgLoginType? loginType;
   final bool useCaptcha;
   dynamic parameter;
   String Function(int)? errorMessageByStatusCode;
@@ -52,7 +56,8 @@ class NsgPhoneLoginParams {
   bool? headerMessageVisible;
 
   NsgPhoneLoginParams(
-      {this.phoneNumber = '',
+      {this.loginType,
+      this.phoneNumber = '',
       this.usePasswordLogin = false,
       this.usePhoneLogin = true,
       this.useEmailLogin = false,
@@ -63,7 +68,10 @@ class NsgPhoneLoginParams {
       this.headerMessageLogin = 'Вход', // 'Enter',
       this.headerMessageRegistration = 'Регистрация', // 'Registration',
       this.headerMessageVerification = 'Введите код', // 'Enter security code',
-      this.descriptionMessegeVerification = 'Мы отправили вам код на номер телефона \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
+      this.descriptionMessegeVerificationPhone =
+          'Мы отправили вам код в СМС\nна номер телефона: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
+      this.descriptionMessegeVerificationEmail =
+          'Мы отправили вам код в сообщении\nна e-mail: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
       this.headerMessageStyle,
       this.textEnterCode = 'Код', //'Code',
       this.textEnterPhone = 'Введите номер телефона', //'Enter your phone',
@@ -93,11 +101,11 @@ class NsgPhoneLoginParams {
       this.headerMessageVisible = false,
       this.useCaptcha = true,
       this.mainPage = ''}) {
-    headerMessageStyle ??= const TextStyle(
+    headerMessageStyle ??= TextStyle(
       fontFamily: 'Roboto',
       fontSize: 20.0,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
+      fontWeight: FontWeight.w500,
+      color: ControlOptions.instance.colorText,
     );
     textPhoneField ??= const TextStyle(
       fontSize: 18.0,
@@ -105,10 +113,10 @@ class NsgPhoneLoginParams {
       color: Color.fromRGBO(2, 54, 92, 1.0),
       fontWeight: FontWeight.normal,
     );
-    headerMessageStyle ??= const TextStyle(
+    headerMessageStyle ??= TextStyle(
       fontFamily: 'Roboto',
       fontSize: 18.0,
-      color: Colors.black,
+      color: ControlOptions.instance.colorText,
     );
     cardColor ??= Colors.white;
     sendSmsButtonColor ??= const Color.fromRGBO(0, 101, 175, 1.0);

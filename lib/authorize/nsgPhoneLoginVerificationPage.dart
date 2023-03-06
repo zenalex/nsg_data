@@ -4,14 +4,10 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:nsg_controls/nsg_controls.dart';
 import 'package:nsg_controls/widgets/nsg_snackbar.dart';
 import 'package:nsg_data/nsg_data.dart';
-import 'package:nsg_data/nsg_data_provider.dart';
 import 'package:hovering/hovering.dart';
-import '../models/nsgLoginModel.dart';
-import 'nsgPhoneLoginParams.dart';
 
 class NsgPhoneLoginVerificationPage extends StatelessWidget {
   final NsgDataProvider provider;
@@ -171,7 +167,11 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                   ),
                   const SizedBox(height: 15.0),
                   Text(
-                    widget.widgetParams!.interpolate(widget.widgetParams!.descriptionMessegeVerification, params: {'phone': widget.provider.phoneNumber}),
+                    widget.widgetParams!.interpolate(
+                        widget.widgetParams!.loginType == NsgLoginType.email
+                            ? widget.widgetParams!.descriptionMessegeVerificationEmail
+                            : widget.widgetParams!.descriptionMessegeVerificationPhone,
+                        params: {'phone': widget.provider.phoneNumber}),
                     style: widget.widgetParams!.descriptionStyle,
                     textAlign: TextAlign.center,
                   ),

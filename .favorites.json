@@ -1,0 +1,29 @@
+[
+    {
+        "type": "File",
+        "name": "c:\\work\\zenkov\\nsg_data\\lib\\authorize\\nsgPhoneLoginPage.dart",
+        "parent_id": null,
+        "fsPath": "c:\\work\\zenkov\\nsg_data\\lib\\authorize\\nsgPhoneLoginPage.dart",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "jfg9Wnsk8ClMeLzS"
+    },
+    {
+        "type": "File",
+        "name": "c:\\work\\zenkov\\nsg_data\\lib\\authorize\\nsgPhoneLoginVerificationPage.dart",
+        "parent_id": null,
+        "fsPath": "c:\\work\\zenkov\\nsg_data\\lib\\authorize\\nsgPhoneLoginVerificationPage.dart",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "Sdf9PksD5gL0KyOc"
+    },
+    {
+        "type": "File",
+        "name": "c:\\work\\zenkov\\nsg_data\\lib\\authorize\\nsgPhoneLoginRegistrationPage.dart",
+        "parent_id": null,
+        "fsPath": "c:\\work\\zenkov\\nsg_data\\lib\\authorize\\nsgPhoneLoginRegistrationPage.dart",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "H4nRCo5dQfBqatPA"
+    }
+]
