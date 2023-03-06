@@ -24,7 +24,7 @@ class NsgDataTable<T extends NsgDataItem> {
   ///dataItem - объект, в поле которого добавляем значение
   ///row - добавляемое значение
   void addRow(T row) {
-    List<T>? untypedRows = owner.getFieldValue(fieldName, allowNullValue: true);
+    var untypedRows= owner.getFieldValue(fieldName, allowNullValue: true);
     untypedRows ??= [];
     var allRows = untypedRows.cast<T>();
     if (row.isEmpty) {
