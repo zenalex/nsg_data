@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 
-class NsgNavigator {
+class  NsgNavigator {
   static NsgNavigator instance = NsgNavigator();
 
   void toPage(String pageName) {
