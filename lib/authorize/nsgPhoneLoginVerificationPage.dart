@@ -47,9 +47,12 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
   }
 
   Widget getButtons() {
-    return const ElevatedButton(
+    return NsgButton(
+      backColor: ControlOptions.instance.colorGrey,
+      color: ControlOptions.instance.colorText,
+      margin: EdgeInsets.zero,
       onPressed: null,
-      child: Text('you need to override getButtons'),
+      text: 'Повторить'.toUpperCase(),
     );
   }
 }
