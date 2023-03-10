@@ -524,9 +524,9 @@ class NsgDataProvider {
     return 0;
   }
 
-  Map<String, String?> getAuthorizationHeader() {
-    var map = <String, String?>{};
-    if (token != '') map['Authorization'] = token;
+  Map<String, String> getAuthorizationHeader() {
+    var map = <String, String>{};
+    if (token != '' && token != null) map['Authorization'] = token!;
     return map;
   }
 }
