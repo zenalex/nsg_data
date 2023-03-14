@@ -272,7 +272,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                                 .then((result) => checkLoginResult(context, result));
                           }
                         },
-                        text: 'Проверить'.toUpperCase(),
+                        text: 'Войти'.toUpperCase(),
                       ),
                     ),
                   Padding(
