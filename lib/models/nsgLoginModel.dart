@@ -13,6 +13,7 @@ class NsgLoginResponse {
   bool isAnonymous = true;
   int errorCode = 0;
   double secondsRemaining = 0;
+  double secondsBeforeRepeat = 0;
 
   NsgLoginResponse({this.token = '', this.isError = false, this.errorMessage = '', this.errorCode = 0, this.isAnonymous = true});
 
@@ -24,6 +25,7 @@ class NsgLoginResponse {
       errorCode = (json['errorCode'] ?? 0) as int;
       isAnonymous = (json['isAnonymous'] ?? false) as bool;
       secondsRemaining = (json['secondsRemaining'] ?? 0.0) as double;
+      secondsBeforeRepeat = (json['secondsBeforeRepeat'] ?? 0.0) as double;
     }
   }
 }
