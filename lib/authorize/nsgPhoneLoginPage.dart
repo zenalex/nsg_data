@@ -213,7 +213,10 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(3.0)),
-          boxShadow: [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.15), offset: Offset(0.0, 4.0), blurRadius: 4.0, spreadRadius: 2.0)],
+          boxShadow: [
+            BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, 0.15), offset: Offset(0.0, 4.0), blurRadius: 4.0, spreadRadius: 2.0)
+          ],
         ),
         margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
         padding: const EdgeInsets.all(15.0),
@@ -302,7 +305,9 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         ),
                         initialValue: phoneNumber,
                         onChanged: (value) => phoneNumber = value,
-                        validator: (value) => isPhoneValid(value!) && value.length >= 16 ? null : widget.widgetParams!.textEnterCorrectPhone,
+                        validator: (value) => isPhoneValid(value!) && value.length >= 16
+                            ? null
+                            : widget.widgetParams!.textEnterCorrectPhone,
                       ),
                   if (widget.widgetParams!.useEmailLogin)
                     if (loginType == NsgLoginType.email)
@@ -495,12 +500,12 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     if (updateTimer != null) {
       updateTimer!.cancel();
     }
-    if (answerCode == 0 && widget.widgetParams!.usePasswordLogin) {
+    if (answerCode.errorCode == 0 && widget.widgetParams!.usePasswordLogin) {
       NsgMetrica.reportLoginSuccess('Phone');
       NsgNavigator.instance.offAndToPage(widget.widgetParams!.mainPage);
       return;
     }
-    if (answerCode == 0 && !widget.widgetParams!.usePasswordLogin) {
+    if (answerCode.errorCode == 0 && !widget.widgetParams!.usePasswordLogin) {
       gotoNextPage(context);
       return;
     }
@@ -537,14 +542,20 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
 
     if (widget.widgetParams!.usePasswordLogin) {
       widget.provider
-          .phoneLoginPassword(phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType)
+          .phoneLoginPassword(
+              phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email,
+              securityCode: captchaCode,
+              loginType: loginType)
           .then((value) => checkRequestSMSanswer(context, value))
           .catchError((e) {
         widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
       });
     } else {
       widget.provider
-          .phoneLoginRequestSMS(phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType)
+          .phoneLoginRequestSMS(
+              phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email,
+              securityCode: captchaCode,
+              loginType: loginType)
           .then((value) => checkRequestSMSanswer(context, value))
           .catchError((e) {
         widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
@@ -584,7 +595,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void gotoNextPage(BuildContext? context) async {
-    var result = await Navigator.push<bool>(context!, MaterialPageRoute(builder: (context) => _getVerificationWidget()));
+    var result =
+        await Navigator.push<bool>(context!, MaterialPageRoute(builder: (context) => _getVerificationWidget()));
     //var result = await Get.to(_getVerificationWidget);
     if (result ??= false) {
       setState(() {
@@ -616,15 +628,21 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
           ),
           child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
-              child: Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
-                Expanded(
-                    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[
-                  Text(
-                    widget.widgetParams!.textLoginSuccessful,
-                    style: widget.widgetParams!.headerMessageStyle,
-                  )
-                ]))
-              ]))),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                        child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                          Text(
+                            widget.widgetParams!.textLoginSuccessful,
+                            style: widget.widgetParams!.headerMessageStyle,
+                          )
+                        ]))
+                  ]))),
     );
   }
 }

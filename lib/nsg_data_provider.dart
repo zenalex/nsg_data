@@ -161,7 +161,8 @@ class NsgDataProvider {
         }
         throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));
       } else if (e.type == DioErrorType.receiveTimeout || e.type == DioErrorType.sendTimeout) {
-        throw NsgApiException(NsgApiError(code: 2, message: 'Истекло время ожидания получения или отправки данных', errorType: e.type));
+        throw NsgApiException(
+            NsgApiError(code: 2, message: 'Истекло время ожидания получения или отправки данных', errorType: e.type));
       } else {
         throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
       }
@@ -248,7 +249,8 @@ class NsgDataProvider {
       return curData;
     } on DioError catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ??= ''}');
-      throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: 'Internet connection error', errorType: e.type));
+      throw NsgApiException(
+          NsgApiError(code: e.response?.statusCode, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -284,7 +286,8 @@ class NsgDataProvider {
         };
       }
       if (method == 'GET') {
-        response = await _dio.get<Uint8List>(url!, queryParameters: params, options: Options(responseType: ResponseType.bytes));
+        response = await _dio.get<Uint8List>(url!,
+            queryParameters: params, options: Options(responseType: ResponseType.bytes));
       } else if (method == 'POST') {
         response = await _dio.post<Uint8List>(url!, data: params, options: Options(responseType: ResponseType.bytes));
       }
@@ -347,12 +350,17 @@ class NsgDataProvider {
 
   Future<Image> getCaptcha() async {
     var response = await imageRequest(
-        debug: isDebug, function: 'GetCaptcha', url: '$serverUri/$authorizationApi/GetCaptcha', method: 'GET', headers: getAuthorizationHeader());
+        debug: isDebug,
+        function: 'GetCaptcha',
+        url: '$serverUri/$authorizationApi/GetCaptcha',
+        method: 'GET',
+        headers: getAuthorizationHeader());
 
     return response;
   }
 
-  Future<NsgLoginResponse> phoneLoginRequestSMS({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
+  Future<NsgLoginResponse> phoneLoginRequestSMS(
+      {required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
@@ -377,7 +385,8 @@ class NsgDataProvider {
     return loginResponse;
   }
 
-  Future<NsgLoginResponse> phoneLoginPassword({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
+  Future<NsgLoginResponse> phoneLoginPassword(
+      {required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
@@ -404,7 +413,8 @@ class NsgDataProvider {
     return loginResponse;
   }
 
-  Future<NsgLoginResponse> phoneLogin({required String phoneNumber, required String securityCode, bool? register, String? newPassword}) async {
+  Future<NsgLoginResponse> phoneLogin(
+      {required String phoneNumber, required String securityCode, bool? register, String? newPassword}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
@@ -415,7 +425,11 @@ class NsgDataProvider {
 
     try {
       var response = await (baseRequest(
-          function: 'PhoneLogin', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/PhoneLogin', method: 'POST', params: s));
+          function: 'PhoneLogin',
+          headers: getAuthorizationHeader(),
+          url: '$serverUri/$authorizationApi/PhoneLogin',
+          method: 'POST',
+          params: s));
 
       var loginResponse = NsgLoginResponse.fromJson(response);
       if (loginResponse.errorCode == 0) {
@@ -441,7 +455,11 @@ class NsgDataProvider {
 
   Future<bool> logout() async {
     try {
-      await baseRequest(function: 'Logout', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/Logout', method: 'GET');
+      await baseRequest(
+          function: 'Logout',
+          headers: getAuthorizationHeader(),
+          url: '$serverUri/$authorizationApi/Logout',
+          method: 'GET');
     } catch (ex) {
       debugPrint('ERROR logout: ${ex.toString()}');
     }
