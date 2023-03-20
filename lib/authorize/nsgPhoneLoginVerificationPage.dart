@@ -1,9 +1,9 @@
 // ignore_for_file: file_names
 
 import 'dart:async';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:nsg_controls/nsg_controls.dart';
 import 'package:nsg_controls/widgets/nsg_snackbar.dart';
 import 'package:nsg_data/nsg_data.dart';
@@ -13,7 +13,7 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
   final NsgDataProvider provider;
   final NsgPhoneLoginParams? widgetParams;
 
-  const NsgPhoneLoginVerificationPage(this.provider, {super.key, this.widgetParams});
+  NsgPhoneLoginVerificationPage(this.provider, {super.key, this.widgetParams});
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +55,11 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
       text: 'Повторить'.toUpperCase(),
     );
   }
+
+  final callback = CallbackFunctionClass();
+  void sendData() {
+    callback.sendData();
+  }
 }
 
 class NsgPhoneLoginVerificationWidget extends StatefulWidget {
@@ -71,8 +76,11 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
   Timer? updateTimer;
   String newPassword = '';
   String newPassword2 = '';
+  bool isSMSRequested = false;
   bool isBusy = false;
   int secondsRepeateLeft = 120;
+  String captchaCode = '';
+
   @override
   Widget build(BuildContext context) {
     return _getBody(context);
@@ -80,6 +88,8 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
 
   @override
   void initState() {
+    widget.verificationPage.callback.sendDataPressed =
+        () => doSmsRequest(loginType: widget.widgetParams!.usePhoneLogin ? NsgLoginType.phone : NsgLoginType.email);
     super.initState();
     startTimer();
   }
@@ -304,6 +314,73 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
         ),
       ),
     );
+  }
+
+  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password}) {
+    var context = Get.context;
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      isSMSRequested = true;
+    });
+    NsgMetrica.reportLoginStart('Phone');
+
+/* -------------------------------------------------------------- Если введён пароль -------------------------------------------------------------- */
+    if (password != null && password != '') {
+      captchaCode = password;
+    }
+
+    widget.provider
+        .phoneLoginRequestSMS(
+            phoneNumber: widget.widgetParams!.usePhoneLogin ? widget.widgetParams!.phoneNumber : widget.widgetParams!.email,
+            securityCode: captchaCode,
+            loginType: widget.widgetParams!.usePhoneLogin ? NsgLoginType.phone : NsgLoginType.email)
+        .then((value) => checkRequestSMSanswer(context, value))
+        .catchError((e) {
+      widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
+    });
+  }
+
+  void checkRequestSMSanswer(BuildContext? context, NsgLoginResponse answerCode) {
+    if (updateTimer != null) {
+      updateTimer!.cancel();
+    }
+
+    if (answerCode.errorCode == 40300) {
+      setState(() {});
+      nsgSnackbar(text: answerCode.errorMessage);
+      return;
+    }
+    if (answerCode.errorCode == 0) {
+      setState(() {
+        isSMSRequested = false;
+      });
+      nsgSnackbar(text: '${answerCode.secondsRemaining} ${answerCode.secondsBeforeRepeat}');
+      NsgMetrica.reportLoginSuccess('Phone');
+      //gotoNextPage(context);
+    }
+    var needRefreshCaptcha = false;
+    var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode.errorCode);
+    switch (answerCode.errorCode) {
+      case 40102:
+        needRefreshCaptcha = true;
+        break;
+      case 40103:
+        needRefreshCaptcha = true;
+        break;
+      default:
+        needRefreshCaptcha = false;
+    }
+    isSMSRequested = false;
+    NsgMetrica.reportLoginFailed('Phone', answerCode.toString());
+    widget.widgetParams!.showError(context, errorMessage);
+
+    if (needRefreshCaptcha) {
+      //refreshCaptcha();
+    } else {
+      setState(() {
+        isSMSRequested = false;
+      });
+    }
   }
 
   void gotoLoginPage(BuildContext? context) {

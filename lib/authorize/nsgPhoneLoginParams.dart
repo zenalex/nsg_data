@@ -7,6 +7,7 @@ import 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
 
 class NsgPhoneLoginParams {
   String phoneNumber;
+  String email;
   bool usePasswordLogin;
   bool usePhoneLogin;
   bool useEmailLogin;
@@ -56,6 +57,7 @@ class NsgPhoneLoginParams {
 
   NsgPhoneLoginParams(
       {this.loginType,
+      this.email = '',
       this.phoneNumber = '',
       this.usePasswordLogin = false,
       this.usePhoneLogin = true,

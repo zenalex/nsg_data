@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/formatters/phone_input_formatter.dart';
 import 'package:get/get.dart';
 import 'package:nsg_controls/nsg_controls.dart';
+import 'package:nsg_controls/widgets/nsg_snackbar.dart';
 import 'package:nsg_data/nsg_data_provider.dart';
 import '../metrica/nsg_metrica.dart';
 import '../models/nsgLoginModel.dart';
@@ -302,7 +303,11 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
     if (password != null && password != '') {
       captchaCode = password;
     }
-
+    if (loginType == NsgLoginType.phone) {
+      widget.widgetParams!.phoneNumber = phoneNumber;
+    } else {
+      widget.widgetParams!.email = email;
+    }
     widget.provider
         .phoneLoginRequestSMS(phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType)
         .then((value) => checkRequestSMSanswer(context, value))
@@ -338,11 +343,15 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
     return widget.provider.getVerificationWidget!(widget.provider);
   }
 
-  void checkRequestSMSanswer(BuildContext? context, int answerCode) {
+  void checkRequestSMSanswer(BuildContext? context, NsgLoginResponse answerCode) {
     if (updateTimer != null) {
       updateTimer!.cancel();
     }
-    if (answerCode == 0) {
+    if (answerCode.errorCode == 40300) {
+      nsgSnackbar(text: answerCode.errorMessage);
+      return;
+    }
+    if (answerCode.errorCode == 0) {
       setState(() {
         isSMSRequested = false;
       });
@@ -350,8 +359,8 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
       gotoNextPage(context);
     }
     var needRefreshCaptcha = false;
-    var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode);
-    switch (answerCode) {
+    var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode.errorCode);
+    switch (answerCode.errorCode) {
       case 40102:
         needRefreshCaptcha = true;
         break;
@@ -362,7 +371,7 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
         needRefreshCaptcha = false;
     }
     isSMSRequested = false;
-    NsgMetrica.reportLoginFailed('Phone', answerCode.toString());
+    NsgMetrica.reportLoginFailed('Phone', answerCode.errorCode.toString());
     widget.widgetParams!.showError(context, errorMessage);
 
     if (needRefreshCaptcha) {

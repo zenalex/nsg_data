@@ -55,7 +55,7 @@ class NsgDataProvider {
   Function(NsgDataProvider provider)? getVerificationWidget;
   NsgPhoneLoginVerificationPage get verificationPage {
     if (getVerificationWidget == null) {
-      return NsgPhoneLoginVerificationPage(this, widgetParams: NsgPhoneLoginParams.defaultParams);
+      return NsgPhoneLoginVerificationPage(this, widgetParams: registrationPage.widgetParams!);
     } else {
       return getVerificationWidget!(this);
     }
@@ -352,7 +352,7 @@ class NsgDataProvider {
     return response;
   }
 
-  Future<int> phoneLoginRequestSMS({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
+  Future<NsgLoginResponse> phoneLoginRequestSMS({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
@@ -374,10 +374,10 @@ class NsgDataProvider {
     if (loginResponse.errorCode == 0) {
       smsRequestedTime = DateTime.now();
     }
-    return loginResponse.errorCode;
+    return loginResponse;
   }
 
-  Future<int> phoneLoginPassword({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
+  Future<NsgLoginResponse> phoneLoginPassword({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
@@ -401,7 +401,7 @@ class NsgDataProvider {
         await _prefs.setString(applicationName, token!);
       }
     }
-    return loginResponse.errorCode;
+    return loginResponse;
   }
 
   Future<NsgLoginResponse> phoneLogin({required String phoneNumber, required String securityCode, bool? register, String? newPassword}) async {

@@ -23,7 +23,9 @@ class NsgPhoneLoginPage extends StatelessWidget {
     super.key,
     required this.widgetParams,
     //this.loginType = NsgLoginType.phone
-  });
+  }) {
+    NsgPhoneLoginParams.defaultParams = widgetParams;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -489,7 +491,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     return image;
   }
 
-  void checkRequestSMSanswer(BuildContext? context, int answerCode) {
+  void checkRequestSMSanswer(BuildContext? context, NsgLoginResponse answerCode) {
     if (updateTimer != null) {
       updateTimer!.cancel();
     }
@@ -503,8 +505,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
       return;
     }
     var needRefreshCaptcha = false;
-    var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode);
-    switch (answerCode) {
+    var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode.errorCode);
+    switch (answerCode.errorCode) {
       case 40102:
         needRefreshCaptcha = true;
         break;
