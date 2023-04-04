@@ -220,6 +220,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     super.onClose();
   }
 
+  saveBackup(NsgDataItem item) {
+    selectedItem = item.clone();
+    backupItem = item;
+  }
+
   ///Request Items
   Future requestItems({List<NsgUpdateKey>? keys}) async {
     lateInit = false;
@@ -261,8 +266,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //Возможно, при загрузке всех данных, имеет смысл активировать локальный поиск вместо серврного, но врядли одновременно
       dataItemList = newItemsList;
       //dataItemList = filter(newItemsList);
-      if (selectedItem != null && dataItemList.firstWhereOrNull((e) => e.id == selectedItem!.id) == null)
-        selectedItem = null;
+      if (selectedItem != null && dataItemList.firstWhereOrNull((e) => e.id == selectedItem!.id) == null) selectedItem = null;
       if (selectedItem == null && autoSelectFirstItem && dataItemList.isNotEmpty) {
         selectedItem = dataItemList[0];
       }
@@ -337,8 +341,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
-    if (masterController!.selectedItem == null ||
-        !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
+    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
       return newItemsList;
     }
     var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
@@ -353,8 +356,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '')
-      return newItemsList;
+    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') return newItemsList;
     return newItemsList.where((element) {
       for (var fieldName in element.fieldList.fields.keys) {
         var field = element.getField(fieldName);
@@ -388,14 +390,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
     //Учитываем пользовательский фильтр на дату
     if (controllerFilter.isOpen && controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
-      cmp.add(
-          name: controllerFilter.periodFieldName,
-          value: controllerFilter.nsgPeriod.beginDate,
-          comparisonOperator: NsgComparisonOperator.greaterOrEqual);
-      cmp.add(
-          name: controllerFilter.periodFieldName,
-          value: controllerFilter.nsgPeriod.endDate,
-          comparisonOperator: NsgComparisonOperator.less);
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.beginDate, comparisonOperator: NsgComparisonOperator.greaterOrEqual);
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
     }
     //Добавляем условие по строке поиска если фильтр разрешен и открыт
     if (controllerFilter.isOpen && controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
@@ -408,10 +404,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         for (var fieldName in fieldNames) {
           var field = dataItem.fieldList.fields[fieldName];
           if ((field is NsgDataStringField || field is NsgDataReferenceField) && field is! NsgDataEnumReferenceField) {
-            searchCmp.add(
-                name: fieldName,
-                value: controllerFilter.searchString,
-                comparisonOperator: NsgComparisonOperator.containWords);
+            searchCmp.add(name: fieldName, value: controllerFilter.searchString, comparisonOperator: NsgComparisonOperator.containWords);
           }
         }
         cmp.add(name: "SearchStringComparison", value: searchCmp);
@@ -463,9 +456,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (status.isLoading) {
         return onLoading ?? getDefaultProgressIndicator();
       } else if (status.isError) {
-        return onError != null
-            ? onError(status.errorMessage)
-            : Center(child: Text('A error occurred: ${status.errorMessage}'));
+        return onError != null ? onError(status.errorMessage) : Center(child: Text('A error occurred: ${status.errorMessage}'));
       } else if (status.isEmpty) {
         return onEmpty ?? const SizedBox.shrink();
       }
@@ -485,10 +476,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
-  void itemPageOpen(NsgDataItem element, String pageName,
-      {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
-    assert(element.runtimeType == dataType,
-        'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
+  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
     } else {
@@ -547,10 +536,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Copy item and open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///referenceList - список полей для дочитывания. null - перечитать все
-  void itemCopyPageOpen(NsgDataItem element, String pageName,
-      {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
-    assert(element.runtimeType == dataType,
-        'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
+  void itemCopyPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     copyAndSetItem(element, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList);
     NsgNavigator.instance.toPage(pageName);
   }
@@ -602,6 +589,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       }
       if (goBack) {
         Get.back();
+      } else {
+        saveBackup(selectedItem!);
       }
       if (masterController != null) {
         masterController!.sendNotify();
@@ -668,11 +657,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     var filterParam = NsgDataRequestParams(compare: cmp);
     var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     var answer = await request.requestItem(
-        filter: filterParam,
-        loadReference: referenceList,
-        autoRepeate: autoRepeate,
-        autoRepeateCount: autoRepeateCount,
-        retryIf: (e) => retryRequestIf(e));
+        filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
 
     return answer;
   }
