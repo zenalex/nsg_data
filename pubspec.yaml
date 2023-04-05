@@ -45,3 +45,4 @@ flutter:
   assets:
     - lib/assets/logo-wfrs.png
     - lib/assets/no_image.jpg
+    - lib/assets
