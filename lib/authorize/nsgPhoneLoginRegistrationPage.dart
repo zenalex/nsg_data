@@ -45,11 +45,8 @@ class NsgPhoneLoginRegistrationPage extends StatelessWidget {
     return logo;
   }
 
-  Image getBackground() {
-    var background = Image.asset(
-      'lib/assets/titan-back.png',
-      repeat: ImageRepeat.repeat,
-    );
+  Widget getBackground() {
+    Widget background = const SizedBox();
     return background;
   }
 
