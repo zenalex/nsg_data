@@ -836,7 +836,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     } else {
       await NsgLocalDb.instance.deleteItems(itemsToDelete);
     }
-    for (var item in itemsToDelete) {
+    var deleteList = [];
+    deleteList.addAll(itemsToDelete);
+    for (var item in deleteList) {
       if (dataItemList.contains(item)) {
         dataItemList.remove(item);
       }
