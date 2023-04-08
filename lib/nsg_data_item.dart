@@ -72,7 +72,9 @@ class NsgDataItem {
     for (var name in fieldList.fields.keys) {
       if (excludeFields.contains(name)) continue;
       var value = fieldList.fields[name];
-      map[name] = value!.convertToJson(getFieldValue(name));
+      if (fieldValues.fields.containsKey(name)) {
+        map[name] = value!.convertToJson(getFieldValue(name));
+      }
     }
     map['state'] = state.index;
     return map;
