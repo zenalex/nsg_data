@@ -476,7 +476,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
-  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
     assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
@@ -485,7 +485,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       backupItem = element;
     }
 
-    NsgNavigator.instance.toPage(pageName);
+    if (offPage) {
+      Get.offAndToNamed(pageName);
+    } else {
+      NsgNavigator.instance.toPage(pageName);
+    }
   }
 
   ///Создает новый элемент. Вызывается из createNewItem

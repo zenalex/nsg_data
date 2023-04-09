@@ -99,7 +99,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Open row page to view and edit data
   @override
-  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
     if (backupItem == null) {
       selectedItem = element.clone();
       backupItem = element;
@@ -107,7 +107,11 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       selectedItem = element;
     }
     selectedItem!.state = NsgDataItemState.fill;
-    NsgNavigator.instance.toPage(pageName);
+    if (offPage) {
+      Get.offAndToNamed(pageName);
+    } else {
+      NsgNavigator.instance.toPage(pageName);
+    }
   }
 
   ///Close row page and restore current (selectedItem) item from backup
