@@ -511,9 +511,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Create new item and open page to view and edit it
   ///pageName -  страница, которую необходимо открыть по окончанию создания нового элемента
-  void newItemPageOpen({required String pageName}) {
+  void newItemPageOpen({required String pageName, bool offPage = false}) {
     createAndSetSelectedItem();
-    NsgNavigator.instance.toPage(pageName);
+    if (offPage) {
+      Get.offAndToNamed(pageName);
+    } else {
+      NsgNavigator.instance.toPage(pageName);
+    }
   }
 
   ///Создает новый элемент БД и устанавливает его в текущее selectedItem (currentItem)
