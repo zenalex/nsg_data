@@ -758,23 +758,23 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Удаление текущего элемента
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
-  Future itemRemove({bool goBack = true}) async {
-    // assert(selectedItem != null, 'itemDelete');
-    // if (dataItemList.contains(selectedItem)) {
-    //   dataItemList.remove(selectedItem!);
-    //   sortDataItemList();
-    // }
-    // selectedItem = null;
-    // backupItem = null;
-    // if (goBack) {
-    //   Get.back();
-    // }
-    // if (masterController != null) {
-    //   masterController!.sendNotify();
-    // }
-    // currentStatus = RxStatus.success();
-    // sendNotify();
-  }
+  // Future itemRemove({bool goBack = true}) async {
+  // assert(selectedItem != null, 'itemDelete');
+  // if (dataItemList.contains(selectedItem)) {
+  //   dataItemList.remove(selectedItem!);
+  //   sortDataItemList();
+  // }
+  // selectedItem = null;
+  // backupItem = null;
+  // if (goBack) {
+  //   Get.back();
+  // }
+  // if (masterController != null) {
+  //   masterController!.sendNotify();
+  // }
+  // currentStatus = RxStatus.success();
+  // sendNotify();
+//}
 
   ///Удаление массива строк из табличной части
   ///На данный момент, метод реализован только для контроллера табличной части
@@ -836,6 +836,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
+  /// Удаляет currentItem в БД и в items
+  Future deleteItem() async {
+    await deleteItems([selectedItem]);
+  }
+
+  /// Удаляет выбранные элементы в БД и в items
   Future deleteItems(List<NsgDataItem> itemsToDelete) async {
     if (controllerMode.storageType == NsgDataStorageType.server) {
       if (itemsToDelete.isEmpty) return;
