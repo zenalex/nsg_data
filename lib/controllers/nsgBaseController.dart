@@ -837,9 +837,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   /// Удаляет currentItem в БД и в items
-  Future deleteItem() async {
+  Future deleteItem({bool goBack = true}) async {
     assert(selectedItem != null, 'При выполнении deleteItem() -> currentItem==null');
     await deleteItems([selectedItem!]);
+    if (goBack) {
+      NsgNavigator.instance.back(); 
+    }
   }
 
   /// Удаляет выбранные элементы в БД и в items
