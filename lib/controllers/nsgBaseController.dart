@@ -841,7 +841,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     assert(selectedItem != null, 'При выполнении deleteItem() -> currentItem==null');
     await deleteItems([selectedItem!]);
     if (goBack) {
-      NsgNavigator.instance.back(); 
+      NsgNavigator.instance.back();
     }
   }
 
@@ -861,6 +861,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         dataItemList.remove(item);
       }
     }
+    sendNotify();
   }
 
   ///Метод, вызываемый при инициализации provider (загрузка приложения)
