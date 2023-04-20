@@ -376,7 +376,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           for (var item in items) {
             var checkedItem = field.getReferent(item, allowNull: true);
             if (checkedItem == null) {
-              var fieldValue = item.getFieldValue(fieldName).toString();
+              var fieldValue = item.getFieldValue(splitedName[0]).toString();
               if (!fieldValue.contains(Guid.Empty) && (!refList.contains(fieldValue))) {
                 refList.add(fieldValue);
               }
