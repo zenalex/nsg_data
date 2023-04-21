@@ -34,6 +34,35 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   ///Максимально число хранимых объектов одного типа в списке последних используемых. По умолчанию = 25
   final int maxRecent;
 
+  ///Настройки пользователя в виде MAP
+  var userSettings = <String, T>{};
+
+  ///Сохранить настройку по имени. Если не существует, создаст новую запись.
+  Future<void> setSettingItem(String name, String value, {NsgDataStorageType? storageType}) async {
+    if (getSettingItem(name) == null) {
+      var item = await doCreateNewItem() as NsgUserSettings;
+      item.name = name;
+      item.settings = value;
+      (item as T).storageType = storageType ?? controllerMode.storageType;
+      userSettings[item.name] = item as T;
+      await postUserSettings(userSettings[item.name]!);
+    } else {
+      var item = getSettingItem(name) as NsgUserSettings;
+      item.settings = value;
+      (item as T).storageType = storageType ?? controllerMode.storageType;
+      userSettings[item.name] = item as T;
+      await postUserSettings(userSettings[item.name]!);
+    }
+  }
+
+  ///Получить настройку по имени. Если не существует, вернет null
+  dynamic getSettingItem(String settingName) {
+    return userSettings[settingName];
+  }
+
+  ///Удалить настройку по имени.
+  void removeSettingItem(String settingName) {}
+
   @override
   Future afterRequestItems(List<NsgDataItem> newItemsList) async {
     await super.afterRequestItems(newItemsList);
@@ -218,15 +247,14 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
     await super.requestItems(keys: keys);
     //Проверка на наличие одинаковых записей
     //В случае обнаружения, дубликаты удаляем
-    var itemsMap = <String, T>{};
     var itemsToRemove = <T>[];
     for (var item in items) {
       var nus = item as NsgUserSettings;
-      if (itemsMap.containsKey(nus.name)) {
+      if (userSettings.containsKey(nus.name)) {
         itemsToRemove.add(item);
         continue;
       }
-      itemsMap[nus.name] = item;
+      userSettings[nus.name] = item;
     }
     if (itemsToRemove.isNotEmpty) {
       await itemsRemove(itemsToRemove);

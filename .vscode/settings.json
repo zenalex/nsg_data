@@ -1,9 +1,4 @@
 {
-    "workbench.colorCustomizations": {
-        "activityBar.background": "#a503c53f",
-        "titleBar.activeBackground": "#a503c593",
-        "titleBar.activeForeground": "#FAF9FF"
-    },
     "editor.wordWrap": "wordWrapColumn",
 "editor.wordWrapColumn": 160,
 "dart.lineLength": 160,
