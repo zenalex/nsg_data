@@ -359,7 +359,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     return data[0];
   }
 
-  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference, {String tag = '', bool readTableParts = false}) async {
+  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference, {String tag = '', bool readTableParts = true}) async {
     if (items.isEmpty || loadReference == null || loadReference.isEmpty) {
       return;
     }
