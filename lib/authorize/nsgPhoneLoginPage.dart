@@ -300,7 +300,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                             hintStyle: TextStyle(color: nsgtheme.colorText.withOpacity(0.3))),
                         initialValue: phoneNumber,
                         onChanged: (value) => phoneNumber = value,
-                        validator: (value) => isPhoneValid(value!) && value.length >= 16 ? null : widget.widgetParams!.textEnterCorrectPhone,
+                        validator: (value) => isPhoneValid(value!) ? null : widget.widgetParams!.textEnterCorrectPhone,
                       ),
                   if (widget.widgetParams!.useEmailLogin)
                     if (loginType == NsgLoginType.email)
