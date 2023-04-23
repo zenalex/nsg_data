@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:nsg_controls/nsg_button.dart';
 import 'package:nsg_controls/formfields/nsg_checkbox.dart';
 import 'package:hovering/hovering.dart';
+import 'package:nsg_controls/nsg_controls.dart';
 import '../nsg_data.dart';
 
 enum NsgLoginType { phone, email }
@@ -53,6 +54,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
   Widget getRememberMeCheckbox() {
     bool initialValue = provider.saveToken;
     var checkbox = NsgCheckBox(
+      checkColor: nsgtheme.colorText,
       toggleInside: true,
       simple: true,
       margin: const EdgeInsets.only(top: 5, bottom: 5),
@@ -207,11 +209,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     return Form(
       key: _formKey,
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(3.0)),
-          boxShadow: [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.15), offset: Offset(0.0, 4.0), blurRadius: 4.0, spreadRadius: 2.0)],
-        ),
+        decoration: BoxDecoration(color: nsgtheme.colorMainDarker, borderRadius: const BorderRadius.all(Radius.circular(3.0))),
         margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
         padding: const EdgeInsets.all(15.0),
         width: widget.widgetParams!.cardSize,
@@ -229,7 +227,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           padding: const EdgeInsets.symmetric(vertical: 5.0),
                           child: Text(
                             widget.widgetParams!.headerMessage,
-                            style: widget.widgetParams!.headerMessageStyle,
+                            style: TextStyle(color: nsgtheme.colorText),
                             textAlign: TextAlign.center,
                           ),
                         )
@@ -239,7 +237,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                     padding: const EdgeInsets.only(bottom: 10),
                     child: Text(
                       widget.widgetParams!.headerMessageLogin,
-                      style: widget.widgetParams!.headerMessageStyle,
+                      style: TextStyle(color: nsgtheme.colorText),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -279,24 +277,27 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                     if (loginType == NsgLoginType.phone)
                       TextFormField(
                         key: GlobalKey(),
-                        cursorColor: Colors.black,
+                        cursorColor: nsgtheme.colorMainText,
                         keyboardType: TextInputType.phone,
                         inputFormatters: [phoneFormatter],
-                        style: widget.widgetParams!.textPhoneField,
+                        style: TextStyle(color: nsgtheme.colorText),
                         textAlign: TextAlign.center,
                         decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5.0),
-                          ),
-                          filled: true,
-                          fillColor: widget.widgetParams!.phoneFieldColor,
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.black, width: 1.0),
-                          ),
-                          errorStyle: const TextStyle(fontSize: 12),
-                          hintText: widget.widgetParams!.textEnterPhone,
-                        ),
+                            contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5.0),
+                            ),
+                            filled: true,
+                            fillColor: widget.widgetParams!.phoneFieldColor,
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: nsgtheme.colorText.withOpacity(0.5), width: 1.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: nsgtheme.colorText, width: 1.0),
+                            ),
+                            errorStyle: const TextStyle(fontSize: 12),
+                            hintText: widget.widgetParams!.textEnterPhone,
+                            hintStyle: TextStyle(color: nsgtheme.colorText.withOpacity(0.3))),
                         initialValue: phoneNumber,
                         onChanged: (value) => phoneNumber = value,
                         validator: (value) => isPhoneValid(value!) && value.length >= 16 ? null : widget.widgetParams!.textEnterCorrectPhone,
@@ -305,10 +306,10 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                     if (loginType == NsgLoginType.email)
                       TextFormField(
                         key: GlobalKey(),
-                        cursorColor: Colors.black,
+                        cursorColor: nsgtheme.colorMainText,
                         keyboardType: TextInputType.emailAddress,
                         inputFormatters: null,
-                        style: widget.widgetParams!.textPhoneField,
+                        style: TextStyle(color: nsgtheme.colorText),
                         textAlign: TextAlign.center,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
@@ -317,11 +318,12 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           ),
                           filled: true,
                           fillColor: widget.widgetParams!.phoneFieldColor,
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.black, width: 1.0),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: nsgtheme.colorText, width: 1.0),
                           ),
                           errorStyle: const TextStyle(fontSize: 12),
                           hintText: widget.widgetParams!.textEnterEmail,
+                          hintStyle: TextStyle(color: nsgtheme.colorText.withOpacity(0.3)),
                         ),
                         initialValue: email,
                         onChanged: (value) => email = value,
@@ -335,7 +337,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         cursorColor: Colors.black,
                         keyboardType: TextInputType.visiblePassword,
                         inputFormatters: null,
-                        style: widget.widgetParams!.textPhoneField,
+                        style: TextStyle(color: nsgtheme.colorText),
                         textAlign: TextAlign.center,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
@@ -344,11 +346,15 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           ),
                           filled: true,
                           fillColor: widget.widgetParams!.phoneFieldColor,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: nsgtheme.colorText.withOpacity(0.5), width: 1.0),
+                          ),
                           focusedBorder: const OutlineInputBorder(
                             borderSide: BorderSide(color: Colors.black, width: 1.0),
                           ),
                           errorStyle: const TextStyle(fontSize: 12),
                           hintText: widget.widgetParams!.textEnterPassword,
+                          hintStyle: TextStyle(color: nsgtheme.colorText.withOpacity(0.3)),
                         ),
                         onChanged: (value) {
                           password = value;
@@ -414,11 +420,15 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                             ),
                             filled: true,
                             fillColor: widget.widgetParams!.phoneFieldColor,
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: nsgtheme.colorText.withOpacity(0.5), width: 1.0),
+                            ),
                             focusedBorder: const OutlineInputBorder(
                               borderSide: BorderSide(color: Colors.black, width: 1.0),
                             ),
                             errorStyle: const TextStyle(fontSize: 12),
                             hintText: widget.widgetParams!.textEnterCaptcha,
+                            hintStyle: TextStyle(color: nsgtheme.colorText.withOpacity(0.3)),
                           ),
                           style: widget.widgetParams!.textPhoneField,
                           textCapitalization: TextCapitalization.characters,
