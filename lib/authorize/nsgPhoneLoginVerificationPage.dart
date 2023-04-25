@@ -54,8 +54,8 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
   }
 
   final callback = CallbackFunctionClass();
-  void sendData() {
-    callback.sendData();
+  void sendData(BuildContext context) {
+    callback.sendData(context);
   }
 }
 
@@ -86,7 +86,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
   @override
   void initState() {
     widget.verificationPage.callback.sendDataPressed =
-        () => doSmsRequest(loginType: widget.widgetParams!.usePhoneLogin ? NsgLoginType.phone : NsgLoginType.email);
+        (context) => doSmsRequest(context: context, loginType: widget.widgetParams!.usePhoneLogin ? NsgLoginType.phone : NsgLoginType.email);
     super.initState();
     startTimer();
   }
@@ -332,7 +332,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
     );
   }
 
-  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password}) {
+  void doSmsRequest({required BuildContext context, NsgLoginType loginType = NsgLoginType.phone, String? password}) {
     var context = Get.context;
     if (!_formKey.currentState!.validate()) return;
     setState(() {

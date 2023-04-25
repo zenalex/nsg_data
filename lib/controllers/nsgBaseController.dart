@@ -477,7 +477,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
-  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
+  void itemPageOpen(BuildContext context, NsgDataItem element, String pageName,
+      {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
     assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
@@ -489,7 +490,6 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (offPage) {
       Get.offAndToNamed(pageName);
     } else {
-      var context = Get.context!;
       NsgNavigator.instance.toPage(context, pageName);
     }
   }
@@ -513,12 +513,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Create new item and open page to view and edit it
   ///pageName -  страница, которую необходимо открыть по окончанию создания нового элемента
-  void newItemPageOpen({required String pageName, bool offPage = false}) {
+  void newItemPageOpen({required BuildContext context, required String pageName, bool offPage = false}) {
     createAndSetSelectedItem();
     if (offPage) {
       Get.offAndToNamed(pageName);
     } else {
-      var context = Get.context!;
       NsgNavigator.instance.toPage(context, pageName);
     }
   }
@@ -547,10 +546,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Copy item and open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///referenceList - список полей для дочитывания. null - перечитать все
-  void itemCopyPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+  void itemCopyPageOpen(BuildContext context, NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
     assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     copyAndSetItem(element, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList);
-    var context = Get.context!;
     NsgNavigator.instance.toPage(context, pageName);
   }
 
@@ -841,11 +839,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   /// Удаляет currentItem в БД и в items
-  Future deleteItem({bool goBack = true}) async {
+  Future deleteItem({required BuildContext context, bool goBack = true}) async {
     assert(selectedItem != null, 'При выполнении deleteItem() -> currentItem==null');
     await deleteItems([selectedItem!]);
     if (goBack) {
-      var context = Get.context!;
       NsgNavigator.instance.back(context);
     }
   }

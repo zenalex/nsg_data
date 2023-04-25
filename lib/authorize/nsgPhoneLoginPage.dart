@@ -2,13 +2,12 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:js';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:get/get.dart';
-import 'package:nsg_controls/nsg_button.dart';
-import 'package:nsg_controls/formfields/nsg_checkbox.dart';
 import 'package:hovering/hovering.dart';
 import 'package:nsg_controls/nsg_controls.dart';
 import '../nsg_data.dart';
@@ -41,7 +40,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
     return AppBar(title: const Text(''), centerTitle: true);
   }
 
-  Widget getLogo() {
+  Widget getLogo(BuildContext context) {
     var logo = const Image(
       image: AssetImage('lib/assets/logo-wfrs.png', package: 'nsg_data'),
       width: 140.0,
@@ -51,7 +50,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
     return logo;
   }
 
-  Widget getRememberMeCheckbox() {
+  Widget getRememberMeCheckbox(BuildContext context) {
     bool initialValue = provider.saveToken;
     var checkbox = NsgCheckBox(
       checkColor: nsgtheme.colorText,
@@ -76,12 +75,12 @@ class NsgPhoneLoginPage extends StatelessWidget {
     );
   }*/
 
-  Widget getBackground() {
+  Widget getBackground(BuildContext context) {
     Widget background = const SizedBox();
     return background;
   }
 
-  Widget getButtons() {
+  Widget getButtons(BuildContext context) {
     return const NsgButton(
       margin: EdgeInsets.zero,
       onPressed: null,
@@ -90,17 +89,17 @@ class NsgPhoneLoginPage extends StatelessWidget {
   }
 
   final callback = CallbackFunctionClass();
-  void sendData() {
-    callback.sendData();
+  void sendData(BuildContext context) {
+    callback.sendData(context);
   }
 }
 
 class CallbackFunctionClass {
-  void Function()? sendDataPressed;
+  void Function(BuildContext context)? sendDataPressed;
 
-  void sendData() {
+  void sendData(BuildContext context) {
     if (sendDataPressed != null) {
-      sendDataPressed!();
+      sendDataPressed!(context);
     }
   }
 }
@@ -139,7 +138,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   @override
   void initState() {
     super.initState();
-    widget.loginPage.callback.sendDataPressed = () => doSmsRequest(loginType: loginType, password: password);
+    widget.loginPage.callback.sendDataPressed = (context) => doSmsRequest(context: context, loginType: loginType, password: password);
     if (widget.widgetParams!.usePhoneLogin) {
       loginType = NsgLoginType.phone;
     } else {
@@ -165,7 +164,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     return Stack(
       children: <Widget>[
         Positioned.fill(
-          child: widget.loginPage.getBackground(),
+          child: widget.loginPage.getBackground(context),
         ),
         Align(
           alignment: Alignment.center,
@@ -176,7 +175,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  child: widget.loginPage.getLogo(),
+                  child: widget.loginPage.getLogo(context),
                 ),
                 Container(
                   child: _getContext(context),
@@ -361,7 +360,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         },
                       ),
                     ),
-                  if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) widget.loginPage.getRememberMeCheckbox(),
+                  if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) widget.loginPage.getRememberMeCheckbox(context),
                   if (widget.widgetParams!.useCaptcha)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -437,14 +436,14 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         ),
                       ),
                     ),
-                  if (widget.widgetParams!.usePasswordLogin) widget.loginPage.getButtons(),
+                  if (widget.widgetParams!.usePasswordLogin) widget.loginPage.getButtons(context),
                   if (!widget.widgetParams!.usePasswordLogin)
                     NsgButton(
                       margin: EdgeInsets.zero,
                       onPressed: () {
                         widget.widgetParams!.phoneNumber = phoneNumber;
                         widget.widgetParams!.loginType = loginType;
-                        doSmsRequest(loginType: loginType, password: password);
+                        doSmsRequest(context: context, loginType: loginType, password: password);
                       },
                       text: 'Выслать код'.toUpperCase(),
                     ),
@@ -531,8 +530,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     } else {}
   }
 
-  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password}) {
-    var context = Get.context!;
+  void doSmsRequest({required BuildContext context, NsgLoginType loginType = NsgLoginType.phone, String? password}) {
     if (!_formKey.currentState!.validate()) return;
 
     NsgMetrica.reportLoginStart('Phone');

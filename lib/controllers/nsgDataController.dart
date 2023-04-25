@@ -1,5 +1,6 @@
 // ignore_for_file: file_names
 
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 
@@ -75,9 +76,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
 
   ///Cоздает новый элемент и открывает страницу для его редактирования
   ///В зависимости от свойства объекта createOnServer создание нового объекта может происходить на сервере
-  void itemNewPageOpen(String pageName) {
+  void itemNewPageOpen(BuildContext context, String pageName) {
     createNewItemAsync();
-    var context = Get.context!;
     NsgNavigator.instance.toPage(context, pageName);
   }
 

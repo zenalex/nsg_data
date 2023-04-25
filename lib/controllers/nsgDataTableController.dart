@@ -1,5 +1,6 @@
 // ignore_for_file: file_names
 
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 
@@ -99,7 +100,8 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Open row page to view and edit data
   @override
-  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
+  void itemPageOpen(BuildContext context, NsgDataItem element, String pageName,
+      {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
     if (backupItem == null) {
       selectedItem = element.clone();
       backupItem = element;
@@ -110,7 +112,6 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (offPage) {
       Get.offAndToNamed(pageName);
     } else {
-      var context = Get.context!;
       NsgNavigator.instance.toPage(context, pageName);
     }
   }
