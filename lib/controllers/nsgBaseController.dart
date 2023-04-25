@@ -489,8 +489,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (offPage) {
       Get.offAndToNamed(pageName);
     } else {
-      var context = Get.context!;
-      NsgNavigator.instance.toPage(context, pageName);
+      NsgNavigator.instance.toPage(pageName);
     }
   }
 
@@ -518,8 +517,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (offPage) {
       Get.offAndToNamed(pageName);
     } else {
-      var context = Get.context!;
-      NsgNavigator.instance.toPage(context, pageName);
+      NsgNavigator.instance.toPage(pageName);
     }
   }
 
@@ -550,8 +548,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   void itemCopyPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
     assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     copyAndSetItem(element, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList);
-    var context = Get.context!;
-    NsgNavigator.instance.toPage(context, pageName);
+    NsgNavigator.instance.toPage(pageName);
   }
 
   ///Close item page and restore current (selectedItem) item from backup
@@ -845,8 +842,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     assert(selectedItem != null, 'При выполнении deleteItem() -> currentItem==null');
     await deleteItems([selectedItem!]);
     if (goBack) {
-      var context = Get.context!;
-      NsgNavigator.instance.back(context);
+      NsgNavigator.instance.back();
     }
   }
 

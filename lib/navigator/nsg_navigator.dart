@@ -1,23 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 
-class NsgNavigator {
+class  NsgNavigator {
   static NsgNavigator instance = NsgNavigator();
 
-  void toPage(BuildContext context, String pageName) {
-    GoRouter.of(context).go(pageName);
+  void toPage(String pageName) {
+    Get.toNamed(pageName);
   }
 
-  void offAndToPage(BuildContext context, String pageName) {
-    GoRouter.of(context).go(pageName);
-    //Get.offAndToNamed(pageName);
+  void offAndToPage(String pageName) {
+    Get.offAndToNamed(pageName);
   }
 
-  void back(BuildContext context) {
-    if (context.mounted) {
-      GoRouter.of(context).pop();
-    }
-    //Get.back();
+  void back() {
+    Get.back();
   }
 }

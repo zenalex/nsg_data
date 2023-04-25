@@ -195,7 +195,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     if (isLoginSuccessfull) {
       Future.delayed(const Duration(milliseconds: 10)).then((e) {
         if (widget.widgetParams != null) {
-          NsgNavigator.instance.offAndToPage(context, widget.widgetParams!.mainPage);
+          NsgNavigator.instance.offAndToPage(widget.widgetParams!.mainPage);
         } else {
           //if (widget.widgetParams!.needOpenPage) {
           Get.back();
@@ -498,13 +498,13 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     return image;
   }
 
-  void checkRequestSMSanswer(BuildContext context, NsgLoginResponse answerCode) {
+  void checkRequestSMSanswer(BuildContext? context, NsgLoginResponse answerCode) {
     if (updateTimer != null) {
       updateTimer!.cancel();
     }
     if (answerCode.errorCode == 0 && widget.widgetParams!.usePasswordLogin) {
       NsgMetrica.reportLoginSuccess('Phone');
-      NsgNavigator.instance.offAndToPage(context, widget.widgetParams!.mainPage);
+      NsgNavigator.instance.offAndToPage(widget.widgetParams!.mainPage);
       return;
     }
     if (answerCode.errorCode == 0 && !widget.widgetParams!.usePasswordLogin) {
@@ -532,7 +532,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password}) {
-    var context = Get.context!;
+    var context = Get.context;
     if (!_formKey.currentState!.validate()) return;
 
     NsgMetrica.reportLoginStart('Phone');
