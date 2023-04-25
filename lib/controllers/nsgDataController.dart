@@ -77,7 +77,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///В зависимости от свойства объекта createOnServer создание нового объекта может происходить на сервере
   void itemNewPageOpen(String pageName) {
     createNewItemAsync();
-    NsgNavigator.instance.toPage(pageName);
+    var context = Get.context!;
+    NsgNavigator.instance.toPage(context, pageName);
   }
 
   ///Создает новый элемент. Используется, например, при нажатии добавить в форме списка

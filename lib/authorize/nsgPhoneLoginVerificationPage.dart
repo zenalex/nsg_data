@@ -417,7 +417,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
       }
       showError(errorMessage, needEnterCaptcha);
     } else {
-      NsgNavigator.instance.offAndToPage(widget.widgetParams!.mainPage);
+      NsgNavigator.instance.offAndToPage(context, widget.widgetParams!.mainPage);
     }
   }
 

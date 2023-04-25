@@ -110,7 +110,8 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (offPage) {
       Get.offAndToNamed(pageName);
     } else {
-      NsgNavigator.instance.toPage(pageName);
+      var context = Get.context!;
+      NsgNavigator.instance.toPage(context, pageName);
     }
   }
 
