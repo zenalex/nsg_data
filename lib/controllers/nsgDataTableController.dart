@@ -61,13 +61,13 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Close row page and post current (selectedItem) item to dataTable
   @override
-  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost(BuildContext context, {bool goBack = true, bool useValidation = true}) async {
     assert(selectedItem != null);
     var validationResult = selectedItem!.validateFieldValues();
     if (!validationResult.isValid) {
       var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
       if (NsgApiException.showExceptionDefault != null) {
-        NsgApiException.showExceptionDefault!(err);
+        NsgApiException.showExceptionDefault!(context, err);
       }
       sendNotify();
       return false;
@@ -89,7 +89,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     }
     selectedItem!.state = NsgDataItemState.fill;
     if (goBack) {
-      Get.back();
+      NsgNavigator.instance.back(context);
     }
     if (masterController != null) {
       masterController!.sendNotify();
@@ -118,12 +118,12 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Close row page and restore current (selectedItem) item from backup
   @override
-  void itemPageCancel() {
+  void itemPageCancel(BuildContext context) {
     if (backupItem != null) {
       selectedItem = backupItem;
       backupItem = null;
     }
-    Get.back();
+    NsgNavigator.instance.back(context);
   }
 
   @override
@@ -157,8 +157,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Удаление текущего элемента
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
-  @override
-  Future itemRemove({bool goBack = true}) async {
+  Future itemRemove(BuildContext context, {bool goBack = true}) async {
     assert(selectedItem != null, 'itemDelete');
     assert(masterController != null && masterController!.selectedItem != null, 'itemDelete');
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
@@ -167,7 +166,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     selectedItem = null;
     backupItem = null;
     if (goBack) {
-      Get.back();
+      NsgNavigator.instance.back(context);
     }
     if (masterController != null) {
       masterController!.sendNotify();
@@ -179,8 +178,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   }
 
   ///Удаление массива строк из табличной части
-  @override
-  Future itemsRemove(List<NsgDataItem> itemsToRemove, {bool goBack = true}) async {
+  Future itemsRemove(BuildContext context, List<NsgDataItem> itemsToRemove, {bool goBack = true}) async {
     assert(masterController != null && masterController!.selectedItem != null, 'itemDelete');
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
     for (var element in itemsToRemove) {
@@ -193,7 +191,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
       masterController!.sendNotify();
     }
     if (goBack) {
-      Get.back();
+      NsgNavigator.instance.back(context);
     }
     currentStatus = GetStatus.success(NsgBaseController.emptyData);
     sendNotify();

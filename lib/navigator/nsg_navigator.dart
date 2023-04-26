@@ -5,11 +5,11 @@ class NsgNavigator {
   static NsgNavigator instance = NsgNavigator();
 
   void toPage(BuildContext context, String pageName) {
-    GoRouter.of(context).go(pageName);
+    GoRouter.of(context).push(pageName);
   }
 
   void offAndToPage(BuildContext context, String pageName) {
-    GoRouter.of(context).go(pageName);
+    GoRouter.of(context).push(pageName);
     //Get.offAndToNamed(pageName);
   }
 

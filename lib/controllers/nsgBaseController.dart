@@ -309,7 +309,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         await provider.connect(this);
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
-          await Get.to(provider.loginPage)!.then((value) => Get.back());
+          //TODO: ОБЯЗАТЕЛЬНО переход на страницу авторизации
+          //await NsgNavigator.instance.toPage(context, pageName);
         }
       }
       if (exception.error.code == 400) {
@@ -553,28 +554,28 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Close item page and restore current (selectedItem) item from backup
-  void itemPageCancel() {
+  void itemPageCancel(BuildContext context) {
     if (backupItem != null) {
       selectedItem = backupItem;
       //20.06.2022 Попытка убрать лишнее обновление
       //selectedItemChanged.broadcast(null);
       backupItem = null;
     }
-    Get.back();
+    NsgNavigator.instance.back(context);
   }
 
   ///Close item page and post current (selectedItem) item to databese (server)
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
   ///useValidation == true перед сохранением проводится валидация
   ///В случае успешного сохранения возвращает true
-  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost(BuildContext context, {bool goBack = true, bool useValidation = true}) async {
     assert(selectedItem != null);
     if (useValidation) {
       var validationResult = selectedItem!.validateFieldValues();
       if (!validationResult.isValid) {
         var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
         if (NsgApiException.showExceptionDefault != null) {
-          NsgApiException.showExceptionDefault!(err);
+          NsgApiException.showExceptionDefault!(context, err);
         }
         sendNotify();
         return false;
@@ -598,7 +599,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         sortDataItemList();
       }
       if (goBack) {
-        Get.back();
+        NsgNavigator.instance.back(context);
       } else {
         saveBackup(selectedItem!);
       }
@@ -636,23 +637,23 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return result;
   }
 
-  static Future<bool?> Function()? saveOrCancelDefaultDialog;
+  static Future<bool?> Function(BuildContext)? saveOrCancelDefaultDialog;
 
   ///Проверить были ли изменения в объекте, если нет, выполняем Back, если были, то спрашиваем пользователя сохранить изменения или отменить,
   ///а затем выполняем Back
-  Future itemPageCloseCheck() async {
+  Future itemPageCloseCheck(BuildContext context) async {
     if (selectedItem == null) return;
     if (!isModified || saveOrCancelDefaultDialog == null) {
-      itemPageCancel();
+      itemPageCancel(context);
       return;
     }
-    bool? res = await saveOrCancelDefaultDialog!();
+    bool? res = await saveOrCancelDefaultDialog!(context);
     if (res == null) {
     } else {
       if (res) {
-        await itemPagePost();
+        await itemPagePost(context);
       } else {
-        itemPageCancel();
+        itemPageCancel(context);
       }
     }
   }
@@ -780,9 +781,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Удаление массива строк из табличной части
   ///На данный момент, метод реализован только для контроллера табличной части
-  Future itemsRemove(List<NsgDataItem> itemsToRemove) async {
-    await deleteItems(itemsToRemove);
-  }
+  // Future itemsRemove(List<NsgDataItem> itemsToRemove) async {
+  //   await deleteItems(itemsToRemove);
+  // }
 
   void masterItemsRequested(EventArgs? args) {
     sendNotify();

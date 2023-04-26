@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:nsg_controls/nsg_controls.dart';
 import 'package:nsg_controls/widgets/nsg_snackbar.dart';
 import 'package:nsg_data/nsg_data.dart';
@@ -333,7 +332,6 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
   }
 
   void doSmsRequest({required BuildContext context, NsgLoginType loginType = NsgLoginType.phone, String? password}) {
-    var context = Get.context;
     if (!_formKey.currentState!.validate()) return;
     setState(() {
       isSMSRequested = true;

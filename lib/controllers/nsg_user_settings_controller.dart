@@ -83,10 +83,10 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   }
 
   @override
-  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost(BuildContext context, {bool goBack = true, bool useValidation = true}) async {
     (currentItem as NsgUserSettings).settings = jsonEncode(settingsMap);
     currentItem.storageType = controllerMode.storageType;
-    return await super.itemPagePost(goBack: goBack, useValidation: useValidation);
+    return await super.itemPagePost(context, goBack: goBack, useValidation: useValidation);
   }
 
   static const String _favoriteSettingsName = '_favorites_';
@@ -257,10 +257,7 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       userSettings[nus.name] = item;
     }
     if (itemsToRemove.isNotEmpty) {
-      await itemsRemove(itemsToRemove);
-      for (var i in itemsToRemove) {
-        items.remove(i);
-      }
+      await deleteItems(itemsToRemove);
     }
   }
 }

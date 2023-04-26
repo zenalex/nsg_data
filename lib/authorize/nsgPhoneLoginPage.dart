@@ -2,12 +2,10 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:js';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
-import 'package:get/get.dart';
 import 'package:hovering/hovering.dart';
 import 'package:nsg_controls/nsg_controls.dart';
 import '../nsg_data.dart';
@@ -197,7 +195,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
           NsgNavigator.instance.offAndToPage(context, widget.widgetParams!.mainPage);
         } else {
           //if (widget.widgetParams!.needOpenPage) {
-          Get.back();
+          NsgNavigator.instance.back(context);
           //}
         }
 

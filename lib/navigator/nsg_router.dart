@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import 'package:nsg_data/nsg_data.dart';
 
 class NsgRouter extends GoRouter {
   NsgRouter({
