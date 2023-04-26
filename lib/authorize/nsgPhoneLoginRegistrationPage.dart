@@ -27,7 +27,9 @@ class NsgPhoneLoginRegistrationPage extends StatelessWidget {
     return Scaffold(
       appBar: widgetParams!.appbar! ? getAppBar(context) : null,
       //backgroundColor: Colors.white,
-      body: NsgPhoneLoginRegistrationWidget(this, provider, widgetParams: widgetParams),
+      body: Container(
+          decoration: BoxDecoration(color: nsgtheme.colorMain.withOpacity(0.1)),
+          child: NsgPhoneLoginRegistrationWidget(this, provider, widgetParams: widgetParams)),
     );
   }
 
@@ -140,7 +142,7 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
     return Form(
       key: _formKey,
       child: Container(
-        decoration: BoxDecoration(color: nsgtheme.colorMainDarker, borderRadius: const BorderRadius.all(Radius.circular(3.0))),
+        decoration: BoxDecoration(color: nsgtheme.colorMainBack, borderRadius: const BorderRadius.all(Radius.circular(3.0))),
         margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
         padding: const EdgeInsets.all(15.0),
         width: widget.widgetParams!.cardSize,
