@@ -159,19 +159,21 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                 children: <Widget>[
                   widget.widgetParams!.headerMessageVisible == true
                       ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5.0),
+                          padding: const EdgeInsets.only(bottom: 10),
                           child: Text(
                             widget.widgetParams!.headerMessage,
-                            style: widget.widgetParams!.headerMessageStyle,
+                            style: TextStyle(color: nsgtheme.colorText),
                             textAlign: TextAlign.center,
                           ),
                         )
                       : const SizedBox(),
-                  SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
-                  Text(
-                    widget.widgetParams!.headerMessageVerification,
-                    style: widget.widgetParams!.headerMessageStyle,
-                    textAlign: TextAlign.center,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      widget.widgetParams!.headerMessageVerification,
+                      style: widget.widgetParams!.headerMessageStyle,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                   const SizedBox(height: 15.0),
                   Text(

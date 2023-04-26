@@ -225,7 +225,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                 children: <Widget>[
                   widget.widgetParams!.headerMessageVisible == true
                       ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5.0),
+                          padding: const EdgeInsets.only(bottom: 10),
                           child: Text(
                             widget.widgetParams!.headerMessage,
                             style: TextStyle(color: nsgtheme.colorText),
@@ -233,16 +233,14 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           ),
                         )
                       : const SizedBox(),
-                  SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: Text(
                       widget.widgetParams!.headerMessageLogin,
-                      style: TextStyle(color: nsgtheme.colorText),
+                      style: widget.widgetParams!.headerMessageStyle,
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(height: 5.0),
                   if (widget.widgetParams!.useEmailLogin && widget.widgetParams!.usePhoneLogin)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 5),
