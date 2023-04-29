@@ -27,7 +27,9 @@ class NsgPhoneLoginRegistrationPage extends StatelessWidget {
     return Scaffold(
       appBar: widgetParams!.appbar! ? getAppBar(context) : null,
       //backgroundColor: Colors.white,
-      body: NsgPhoneLoginRegistrationWidget(this, provider, widgetParams: widgetParams),
+      body: Container(
+          decoration: BoxDecoration(color: nsgtheme.colorMain.withOpacity(0.1)),
+          child: NsgPhoneLoginRegistrationWidget(this, provider, widgetParams: widgetParams)),
     );
   }
 
@@ -140,7 +142,7 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
     return Form(
       key: _formKey,
       child: Container(
-        decoration: BoxDecoration(color: nsgtheme.colorMainDarker, borderRadius: const BorderRadius.all(Radius.circular(3.0))),
+        decoration: BoxDecoration(color: nsgtheme.colorMainBack, borderRadius: const BorderRadius.all(Radius.circular(3.0))),
         margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
         padding: const EdgeInsets.all(15.0),
         width: widget.widgetParams!.cardSize,
@@ -155,19 +157,21 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
                 children: <Widget>[
                   widget.widgetParams!.headerMessageVisible == true
                       ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5.0),
+                          padding: const EdgeInsets.only(bottom: 10),
                           child: Text(
                             widget.widgetParams!.headerMessage,
-                            style: widget.widgetParams!.headerMessageStyle,
+                            style: TextStyle(color: nsgtheme.colorText),
                             textAlign: TextAlign.center,
                           ),
                         )
                       : const SizedBox(),
-                  SizedBox(height: widget.widgetParams!.headerMessageVisible == true ? 5.0 : 0.0),
-                  Text(
-                    widget.widgetParams!.headerMessageRegistration,
-                    style: widget.widgetParams!.headerMessageStyle,
-                    textAlign: TextAlign.center,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      widget.widgetParams!.headerMessageRegistration,
+                      style: widget.widgetParams!.headerMessageStyle,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 5, top: 5),
