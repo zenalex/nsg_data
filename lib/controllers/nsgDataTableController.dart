@@ -1,6 +1,7 @@
 // ignore_for_file: file_names
 
 import 'package:get/get.dart';
+import 'package:nsg_controls/widgets/nsg_dialog_save_or_cancel.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер объекта табличной части
@@ -116,12 +117,36 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Close row page and restore current (selectedItem) item from backup
   @override
-  void itemPageCancel() {
-    if (backupItem != null) {
-      selectedItem = backupItem;
-      backupItem = null;
+  Future<void> itemPageCancel({bool useValidation = true}) async {
+    if (useValidation) {
+      if (isModified) {
+        var result = await NsgDialogSaveOrCancel.saveOrCancel();
+        switch (result) {
+          case null:
+            break;
+          case true:
+            itemPagePost(goBack: true);
+            break;
+          case false:
+            if (backupItem != null) {
+              selectedItem = backupItem;
+              //20.06.2022 Попытка убрать лишнее обновление
+              //selectedItemChanged.broadcast(null);
+              backupItem = null;
+            }
+            Get.back();
+            break;
+        }
+      } else {
+        if (backupItem != null) {
+          selectedItem = backupItem;
+          //20.06.2022 Попытка убрать лишнее обновление
+          //selectedItemChanged.broadcast(null);
+          backupItem = null;
+        }
+        Get.back();
+      }
     }
-    Get.back();
   }
 
   @override

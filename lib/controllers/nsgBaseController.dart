@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:event/event.dart';
 import 'package:flutter/material.dart';
+import 'package:nsg_controls/widgets/nsg_dialog_save_or_cancel.dart';
 import 'package:nsg_data/controllers/nsg_controller_filter.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
@@ -552,14 +553,36 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Close item page and restore current (selectedItem) item from backup
-  void itemPageCancel() {
-    if (backupItem != null) {
-      selectedItem = backupItem;
-      //20.06.2022 Попытка убрать лишнее обновление
-      //selectedItemChanged.broadcast(null);
-      backupItem = null;
+  void itemPageCancel({bool useValidation = true}) async {
+    if (useValidation) {
+      if (isModified) {
+        var result = await NsgDialogSaveOrCancel.saveOrCancel();
+        switch (result) {
+          case null:
+            break;
+          case true:
+            itemPagePost(goBack: true);
+            break;
+          case false:
+            if (backupItem != null) {
+              selectedItem = backupItem;
+              //20.06.2022 Попытка убрать лишнее обновление
+              //selectedItemChanged.broadcast(null);
+              backupItem = null;
+            }
+            Get.back();
+            break;
+        }
+      } else {
+        if (backupItem != null) {
+          selectedItem = backupItem;
+          //20.06.2022 Попытка убрать лишнее обновление
+          //selectedItemChanged.broadcast(null);
+          backupItem = null;
+        }
+        Get.back();
+      }
     }
-    Get.back();
   }
 
   ///Close item page and post current (selectedItem) item to databese (server)
