@@ -9,12 +9,15 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   List<T> get items => dataItemList.cast<T>();
 
   ///Первый элемент из items. Если items  пустой: вернет новый пустой элемент данных  типа T
-  T get firstItem => (dataItemList.isEmpty) ? NsgDataClient.client.getNewObject(dataType) as T : items[0];
+  T get firstItem => (dataItemList.isEmpty)
+      ? NsgDataClient.client.getNewObject(dataType) as T
+      : items[0];
 
   ///Текущий элемент (например, элемент для отображения на форме элемента)
   ///Представляет из себя типизированный аналой selectedItem.
   ///Если selectedItem null, то вернет пустое значение типа T
-  T get currentItem => ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
+  T get currentItem =>
+      ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
 
   ///Установка текущего элемента для контроллера
   set currentItem(T item) => selectedItem = item;
@@ -75,8 +78,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
 
   ///Cоздает новый элемент и открывает страницу для его редактирования
   ///В зависимости от свойства объекта createOnServer создание нового объекта может происходить на сервере
-  void itemNewPageOpen(String pageName) {
-    createNewItemAsync();
+  Future itemNewPageOpen(String pageName) async {
+    await createNewItemAsync();
     NsgNavigator.instance.toPage(pageName);
   }
 
