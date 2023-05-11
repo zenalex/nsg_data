@@ -46,8 +46,11 @@ class NsgDataItem {
   ///для удаления устаревших элементов из кэша
   int loadTime = 0;
 
-  ///Текущее состаяние объекта (новый, сохранен и т.п.)
+  ///Текущее состояние редактирования объекта (новый, сохранен и т.п.)
   NsgDataItemState state = NsgDataItemState.unknown;
+
+  ///Текущее состояние жизненного цикла объекта (создан, помечен на удаление и т.п.)
+  NsgDataItemDocState docState = NsgDataItemDocState.created;
 
   NsgDataStorageType storageType = NsgDataStorageType.server;
 
@@ -62,6 +65,9 @@ class NsgDataItem {
     });
     if (json.containsKey('state')) {
       state = NsgDataItemState.values[json['state']];
+    }
+    if (json.containsKey('docState')) {
+      docState = NsgDataItemDocState.values[json['docState']];
     }
     loadTime = DateTime.now().microsecondsSinceEpoch;
   }
