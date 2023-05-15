@@ -29,9 +29,6 @@ class NsgDataRequestParams {
   ///Возвращать помеченные на удаление
   bool showDeletedObjects;
 
-  ///Сохранять табличные части по-новому (для удаления строки назначать docState = NsgDataItemDocState.marked)
-  bool newTablePost;
-
   NsgCompare _compare = NsgCompare();
 
   ///Условие на запрашиваемые данные
@@ -46,7 +43,6 @@ class NsgDataRequestParams {
     if (fieldsToRead != null) filter['FieldsToRead'] = fieldsToRead.toString();
     if (compare.isNotEmpty) filter['Compare'] = compare.toJson();
     filter['ShowDeletedObjects'] = showDeletedObjects.toString();
-    filter['NewTablePost'] = newTablePost.toString();
     if (params != null) {
       var paramDict = <String, dynamic>{};
       paramDict.addAll(params!);
@@ -67,7 +63,6 @@ class NsgDataRequestParams {
       this.sorting,
       this.readNestedField,
       this.showDeletedObjects = false,
-      this.newTablePost = false,
       NsgCompare? compare}) {
     if (compare != null) {
       _compare = compare;

@@ -55,10 +55,14 @@ class NsgDataTable<T extends NsgDataItem> {
     owner.setFieldValue(fieldName, allRows);
   }
 
-  ///Удалить строку тз табличной части
+  ///Удалить строку из табличной части
   ///dataItem - объект, в поле которого добавляем значение
   ///row - удаляемая строка
   bool removeRow(T row) {
+    if (row.newTableLogic) {
+      row.docState = NsgDataItemDocState.deleted;
+      return row.docState == NsgDataItemDocState.deleted;
+    }
     var allRows = ((owner.getFieldValue(fieldName, allowNullValue: true) as List).cast<List<T>?>());
     return allRows.remove(row);
   }
@@ -66,6 +70,18 @@ class NsgDataTable<T extends NsgDataItem> {
   ///Удалить все строки из табличной чатси
   void clear() {
     var allRows = ((owner.getFieldValue(fieldName, allowNullValue: true) as List?) ?? <T>[]).cast<List<T>?>();
+    if (allRows.any((element) => element != null && element.any((element1) => element1.newTableLogic))) {
+      for (var list in allRows) {
+        list?.forEach((element) {
+          if (element.newTableLogic) {
+            element.docState = NsgDataItemDocState.deleted;
+          } else {
+            allRows.remove(element);
+          }
+        });
+      }
+      return;
+    }
     allRows.clear();
   }
 }

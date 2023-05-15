@@ -507,6 +507,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       elem.newRecordFill();
     }
     elem.state = NsgDataItemState.create;
+    elem.docState = NsgDataItemDocState.created;
     elem.storageType = controllerMode.storageType;
     return elem;
   }

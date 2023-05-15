@@ -9,7 +9,7 @@ enum NsgDataItemState { unknown, create, edit, fill }
 enum NsgDataItemDocState {
   created,
   saved,
-  marked,
+  deleted,
   unknown3,
   template,
   unknown5,

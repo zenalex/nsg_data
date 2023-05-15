@@ -52,6 +52,8 @@ class NsgDataItem {
   ///Текущее состояние жизненного цикла объекта (создан, помечен на удаление и т.п.)
   NsgDataItemDocState docState = NsgDataItemDocState.created;
 
+  bool newTableLogic = false;
+
   NsgDataStorageType storageType = NsgDataStorageType.server;
 
   String get typeName => runtimeType.toString();
@@ -69,20 +71,29 @@ class NsgDataItem {
     if (json.containsKey('docState')) {
       docState = NsgDataItemDocState.values[json['docState']];
     }
+    if (json.containsKey('newTableLogic')) {
+      newTableLogic |= json.containsKey('newTableLogic') && json['newTableLogic'] == 'true';
+    }
     loadTime = DateTime.now().microsecondsSinceEpoch;
   }
 
   ///Запись полей объекта в JSON
   Map<String, dynamic> toJson({List<String> excludeFields = const []}) {
     var map = <String, dynamic>{};
-    for (var name in fieldList.fields.keys) {
-      if (excludeFields.contains(name)) continue;
-      var value = fieldList.fields[name];
-      if (fieldValues.fields.containsKey(name)) {
-        map[name] = value!.convertToJson(getFieldValue(name));
+    if (newTableLogic && docState == NsgDataItemDocState.deleted) {
+      map[primaryKeyField] = id;
+    } else {
+      for (var name in fieldList.fields.keys) {
+        if (excludeFields.contains(name)) continue;
+        var value = fieldList.fields[name];
+        if (fieldValues.fields.containsKey(name)) {
+          map[name] = value!.convertToJson(getFieldValue(name));
+        }
       }
     }
     map['state'] = state.index;
+    map['docState'] = docState.index;
+    map['newTableLogic'] = newTableLogic;
     return map;
   }
 
@@ -319,6 +330,8 @@ class NsgDataItem {
       if (newItem != null) {
         copyFieldValues(newItem);
         state = newItem.state;
+        docState = newItem.docState;
+        newTableLogic = newItem.newTableLogic;
       }
     } else {
       await NsgLocalDb.instance.postItems([this]);
@@ -352,7 +365,9 @@ class NsgDataItem {
     newItem.copyFieldValues(this, cloneAsCopy: cloneAsCopy);
     newItem.loadTime = loadTime;
     newItem.state = cloneAsCopy ? NsgDataItemState.create : state;
+    newItem.docState = cloneAsCopy ? NsgDataItemDocState.created : docState;
     newItem.storageType = storageType;
+    newItem.newTableLogic = newTableLogic;
     if (cloneAsCopy) {
       newItem.copyRecordFill();
     }
