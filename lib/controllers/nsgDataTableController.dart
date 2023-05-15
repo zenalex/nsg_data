@@ -180,7 +180,6 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Удаление текущего элемента
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
-  @override
   Future itemRemove({bool goBack = true}) async {
     assert(selectedItem != null, 'itemDelete');
     assert(masterController != null && masterController!.selectedItem != null, 'itemDelete');
