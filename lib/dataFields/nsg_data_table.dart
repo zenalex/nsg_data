@@ -68,20 +68,22 @@ class NsgDataTable<T extends NsgDataItem> {
   }
 
   ///Удалить все строки из табличной чатси
+  ///При этом, строки не будут удалены из БД
+  ///Для удаление строк из БД следует использовать removeRow
   void clear() {
     var allRows = ((owner.getFieldValue(fieldName, allowNullValue: true) as List?) ?? <T>[]).cast<List<T>?>();
-    if (allRows.any((element) => element != null && element.any((element1) => element1.newTableLogic))) {
-      for (var list in allRows) {
-        list?.forEach((element) {
-          if (element.newTableLogic && element.docState == NsgDataItemDocState.saved) {
-            element.docState = NsgDataItemDocState.deleted;
-          } else {
-            allRows.remove(element);
-          }
-        });
-      }
-      return;
-    }
+    // if (allRows.any((element) => element != null && element.any((element1) => element1.newTableLogic))) {
+    //   for (var list in allRows) {
+    //     list?.forEach((element) {
+    //       if (element.newTableLogic && element.docState == NsgDataItemDocState.saved) {
+    //         element.docState = NsgDataItemDocState.deleted;
+    //       } else {
+    //         allRows.remove(element);
+    //       }
+    //     });
+    //   }
+    //   return;
+    // }
     allRows.clear();
   }
 }
