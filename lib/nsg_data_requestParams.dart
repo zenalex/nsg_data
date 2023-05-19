@@ -56,7 +56,14 @@ class NsgDataRequestParams {
     _compare = newCompare;
   }
 
-  NsgDataRequestParams({this.top = 0, this.count = 0, this.params, this.sorting, this.readNestedField, this.showDeletedObjects = false, NsgCompare? compare}) {
+  NsgDataRequestParams(
+      {this.top = 0,
+      this.count = 0,
+      this.params,
+      this.sorting,
+      this.readNestedField,
+      this.showDeletedObjects = false,
+      NsgCompare? compare}) {
     if (compare != null) {
       _compare = compare;
     }

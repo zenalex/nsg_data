@@ -14,10 +14,7 @@ class NsgNavigator {
   }
 
   void back(BuildContext context) {
-    if (context.mounted) {
-      GoRouter.of(context).pop();
-    }
-    //Get.back();
+    GoRouter.of(context).pop();
   }
 
   Future toLoginPage() async {

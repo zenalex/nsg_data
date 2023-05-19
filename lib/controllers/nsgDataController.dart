@@ -76,8 +76,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
 
   ///Cоздает новый элемент и открывает страницу для его редактирования
   ///В зависимости от свойства объекта createOnServer создание нового объекта может происходить на сервере
-  void itemNewPageOpen(BuildContext context, String pageName) {
-    createNewItemAsync();
+  Future itemNewPageOpen(BuildContext context, String pageName) async {
+    await createNewItemAsync();
     NsgNavigator.instance.toPage(context, pageName);
   }
 

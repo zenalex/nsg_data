@@ -495,6 +495,7 @@ class NsgBaseController {
       elem.newRecordFill();
     }
     elem.state = NsgDataItemState.create;
+    elem.docState = NsgDataItemDocState.created;
     elem.storageType = controllerMode.storageType;
     return elem;
   }
@@ -541,14 +542,38 @@ class NsgBaseController {
   }
 
   ///Close item page and restore current (selectedItem) item from backup
-  void itemPageCancel(BuildContext context) {
-    if (backupItem != null) {
-      selectedItem = backupItem;
-      //20.06.2022 Попытка убрать лишнее обновление
-      //selectedItemChanged.broadcast(null);
-      backupItem = null;
+  void itemPageCancel(BuildContext context, {bool useValidation = true}) async {
+    if (useValidation) {
+      if (isModified) {
+        //TODO: запрос на сохранение изменений вернуть
+        bool? result = true;
+        //var result = await NsgDialogSaveOrCancel.saveOrCancel();
+        switch (result) {
+          case null:
+            break;
+          case true:
+            itemPagePost(context, goBack: true);
+            break;
+          case false:
+            if (backupItem != null) {
+              selectedItem = backupItem;
+              //20.06.2022 Попытка убрать лишнее обновление
+              //selectedItemChanged.broadcast(null);
+              backupItem = null;
+            }
+            NsgNavigator.instance.back(context);
+            break;
+        }
+      } else {
+        if (backupItem != null) {
+          selectedItem = backupItem;
+          //20.06.2022 Попытка убрать лишнее обновление
+          //selectedItemChanged.broadcast(null);
+          backupItem = null;
+        }
+        NsgNavigator.instance.back(context);
+      }
     }
-    NsgNavigator.instance.back(context);
   }
 
   ///Close item page and post current (selectedItem) item to databese (server)

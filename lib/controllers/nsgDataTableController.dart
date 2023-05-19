@@ -39,7 +39,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     row.state = NsgDataItemState.create;
     row.storageType = controllerMode.storageType;
     row.ownerId = masterController!.selectedItem!.id;
-    //dataTable.addRow(row);
+    //dataTable.addRow(row); // FIXME не работает создание нового элемента в табличном контроллере!
     return row;
   }
 
@@ -118,12 +118,38 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Close row page and restore current (selectedItem) item from backup
   @override
-  void itemPageCancel(BuildContext context) {
-    if (backupItem != null) {
-      selectedItem = backupItem;
-      backupItem = null;
+  Future<void> itemPageCancel(BuildContext context, {bool useValidation = true}) async {
+    if (useValidation) {
+      if (isModified) {
+        //TODO: Вернуть вопрос о сохранении изменений
+        //var result = await NsgDialogSaveOrCancel.saveOrCancel();
+        bool? result = true;
+        switch (result) {
+          case null:
+            break;
+          case true:
+            itemPagePost(context, goBack: true);
+            break;
+          case false:
+            if (backupItem != null) {
+              selectedItem = backupItem;
+              //20.06.2022 Попытка убрать лишнее обновление
+              //selectedItemChanged.broadcast(null);
+              backupItem = null;
+            }
+            NsgNavigator.instance.back(context);
+            break;
+        }
+      } else {
+        if (backupItem != null) {
+          selectedItem = backupItem;
+          //20.06.2022 Попытка убрать лишнее обновление
+          //selectedItemChanged.broadcast(null);
+          backupItem = null;
+        }
+        NsgNavigator.instance.back(context);
+      }
     }
-    NsgNavigator.instance.back(context);
   }
 
   @override
