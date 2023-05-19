@@ -1,7 +1,7 @@
 // ignore_for_file: file_names
 
 import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
+import 'package:nsg_data/controllers/nsg_controller_status.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
@@ -86,11 +86,11 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Для непосредственного создания нового элемента вызывает асинхронный метод doCreateNewItem, который может быть перекрыт
   ///для организации бизнес-логики запросов
   Future<T> createNewItemAsync() async {
-    currentStatus = GetStatus.loading();
+    currentStatus = NsgControillerStatus.loading;
     sendNotify();
     try {
       var elem = await doCreateNewItem();
-      currentStatus = GetStatus.success(NsgBaseController.emptyData);
+      currentStatus = NsgControillerStatus.success;
       currentItem = elem.clone() as T;
 
       backupItem = elem;
@@ -102,7 +102,8 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       if (e is NsgApiException && e.error.message != null) {
         msg = e.error.message!;
       }
-      currentStatus = GetStatus.error(msg);
+      errorDescription = msg;
+      currentStatus = NsgControillerStatus.error;
       sendNotify();
     }
     return NsgDataClient.client.getNewObject(dataType) as T;

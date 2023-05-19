@@ -4,19 +4,9 @@ import 'package:dio/adapter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:get/get.dart' as getx;
-import 'package:nsg_controls/widgets/nsg_error_widget.dart';
-import 'package:nsg_data/controllers/nsgBaseController.dart';
-import 'package:nsg_data/nsgApiException.dart';
+import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'authorize/nsgPhoneLoginPage.dart';
-import 'authorize/nsgPhoneLoginParams.dart';
-import 'authorize/nsgPhoneLoginRegistrationPage.dart';
-import 'authorize/nsgPhoneLoginVerificationPage.dart';
-import 'controllers/nsg_cancel_token.dart';
-import 'models/nsgLoginModel.dart';
-import 'nsgDataApiError.dart';
 
 class NsgDataProvider {
   ///Token saved after authorization
@@ -42,33 +32,6 @@ class NsgDataProvider {
   ///milliseconds
   int requestDuration = 120000;
   int connectDuration = 15000;
-
-  NsgPhoneLoginPage Function(NsgDataProvider provider)? getLoginWidget;
-  NsgPhoneLoginPage loginPage() {
-    if (getLoginWidget == null) {
-      return NsgPhoneLoginPage(this, widgetParams: NsgPhoneLoginParams.defaultParams);
-    } else {
-      return getLoginWidget!(this);
-    }
-  }
-
-  Function(NsgDataProvider provider)? getVerificationWidget;
-  NsgPhoneLoginVerificationPage get verificationPage {
-    if (getVerificationWidget == null) {
-      return NsgPhoneLoginVerificationPage(this, widgetParams: registrationPage.widgetParams!);
-    } else {
-      return getVerificationWidget!(this);
-    }
-  }
-
-  Function(NsgDataProvider provider)? getRegistrationWidget;
-  NsgPhoneLoginRegistrationPage get registrationPage {
-    if (getRegistrationWidget == null) {
-      return NsgPhoneLoginRegistrationPage(this, widgetParams: NsgPhoneLoginParams.defaultParams);
-    } else {
-      return getRegistrationWidget!(this);
-    }
-  }
 
   NsgDataProvider(
       {this.name,
@@ -341,104 +304,10 @@ class NsgDataProvider {
       }
     }
     if (allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
-      await getx.Get.to(loginPage)?.then((value) => controller.loadProviderData());
+      await NsgNavigator.instance.toLoginPage().then((value) => controller.loadProviderData());
     } else {
       await controller.loadProviderData();
     }
-  }
-
-  Future<Image> getCaptcha() async {
-    var response = await imageRequest(
-        debug: isDebug, function: 'GetCaptcha', url: '$serverUri/$authorizationApi/GetCaptcha', method: 'GET', headers: getAuthorizationHeader());
-
-    return response;
-  }
-
-  Future<NsgLoginResponse> phoneLoginRequestSMS({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
-    this.phoneNumber = phoneNumber;
-    var login = NsgPhoneLoginModel();
-    login.phoneNumber = phoneNumber;
-    if (loginType != null) login.loginType = loginType;
-    if (securityCode == '') {
-      login.register = true;
-    }
-    login.securityCode = securityCode == '' ? 'security' : securityCode;
-    var s = login.toJson();
-
-    var response = await (baseRequest(
-        function: 'PhoneLoginRequestSMS',
-        headers: getAuthorizationHeader(),
-        url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
-        method: 'POST',
-        params: s));
-
-    var loginResponse = NsgLoginResponse.fromJson(response);
-    if (loginResponse.errorCode == 0) {
-      smsRequestedTime = DateTime.now();
-    }
-    return loginResponse;
-  }
-
-  Future<NsgLoginResponse> phoneLoginPassword({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
-    this.phoneNumber = phoneNumber;
-    var login = NsgPhoneLoginModel();
-    login.phoneNumber = phoneNumber;
-    if (loginType != null) login.loginType = loginType;
-    login.securityCode = securityCode == '' ? 'security' : securityCode;
-    var s = login.toJson();
-
-    var response = await (baseRequest(
-        function: 'PhoneLoginRequestSMS',
-        headers: getAuthorizationHeader(),
-        url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
-        method: 'POST',
-        params: s));
-
-    var loginResponse = NsgLoginResponse.fromJson(response);
-    if (loginResponse.errorCode == 0) {
-      token = loginResponse.token;
-      isAnonymous = loginResponse.isAnonymous;
-      if (!isAnonymous && saveToken) {
-        var _prefs = await SharedPreferences.getInstance();
-        await _prefs.setString(applicationName, token!);
-      }
-    }
-    return loginResponse;
-  }
-
-  Future<NsgLoginResponse> phoneLogin({required String phoneNumber, required String securityCode, bool? register, String? newPassword}) async {
-    this.phoneNumber = phoneNumber;
-    var login = NsgPhoneLoginModel();
-    login.phoneNumber = phoneNumber;
-    login.securityCode = securityCode;
-    login.register = register ?? false;
-    login.newPassword = newPassword;
-    var s = login.toJson();
-
-    try {
-      var response = await (baseRequest(
-          function: 'PhoneLogin', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/PhoneLogin', method: 'POST', params: s));
-
-      var loginResponse = NsgLoginResponse.fromJson(response);
-      if (loginResponse.errorCode == 0) {
-        token = loginResponse.token;
-        isAnonymous = loginResponse.isAnonymous;
-      }
-      if (!isAnonymous && saveToken) {
-        var _prefs = await SharedPreferences.getInstance();
-        await _prefs.setString(applicationName, token!);
-      }
-
-      return loginResponse;
-    } catch (e) {
-      getx.Get.snackbar('ОШИБКА', 'Произошла ошибка. Попробуйте еще раз.',
-          isDismissible: true,
-          duration: const Duration(seconds: 5),
-          backgroundColor: Colors.red[200],
-          colorText: Colors.black,
-          snackPosition: getx.SnackPosition.bottom);
-    }
-    return NsgLoginResponse(isError: true, errorCode: 500);
   }
 
   Future<bool> logout() async {

@@ -19,4 +19,8 @@ class NsgNavigator {
     }
     //Get.back();
   }
+
+  Future toLoginPage() async {
+    throw Exception('toLoginPage is NOT IMPLEMENTED');
+  }
 }

@@ -1,7 +1,7 @@
 // ignore_for_file: file_names
 
 import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
+import 'package:nsg_data/controllers/nsg_controller_status.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер объекта табличной части
@@ -110,7 +110,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     }
     selectedItem!.state = NsgDataItemState.fill;
     if (offPage) {
-      Get.offAndToNamed(pageName);
+      NsgNavigator.instance.offAndToPage(context, pageName);
     } else {
       NsgNavigator.instance.toPage(context, pageName);
     }
@@ -141,7 +141,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     }
     await filterData();
     sortDataItemList();
-    currentStatus = GetStatus.success(NsgBaseController.emptyData);
+    currentStatus = NsgControillerStatus.success;
     sendNotify(keys: keys);
   }
 
@@ -171,7 +171,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (masterController != null) {
       masterController!.sendNotify();
     }
-    currentStatus = GetStatus.success(NsgBaseController.emptyData);
+    currentStatus = NsgControillerStatus.success;
     if (!goBack) {
       sendNotify();
     }
@@ -193,7 +193,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     if (goBack) {
       NsgNavigator.instance.back(context);
     }
-    currentStatus = GetStatus.success(NsgBaseController.emptyData);
+    currentStatus = NsgControillerStatus.success;
     sendNotify();
   }
 
