@@ -52,7 +52,7 @@ class NsgDataClient {
   }
 
   NsgDataItem getNewObjectByTypeName(String typeName) {
-    assert(_registeredItems.containsKey(typeName), '$typeName');
+    assert(_registeredItems.containsKey(typeName), typeName);
     return _registeredItems[typeName]!.getNewObject();
   }
 
