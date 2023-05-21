@@ -58,3 +58,4 @@ export 'navigator/nsg_route.dart';
 export 'navigator/nsg_router.dart';
 export 'helpers/list_extensions.dart';
 export 'models/nsg_login_response.dart';
+export 'helpers/log_extension.dart';

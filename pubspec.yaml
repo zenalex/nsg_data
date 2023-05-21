@@ -21,6 +21,7 @@ dependencies:
   flutter_multi_formatter: ^2.10.2
   dio: ^4.0.6
   get_it: ^7.6.0
+  get_it_mixin: ^4.1.1
   # get: ^5.0.0-beta.52
   # get:
   #   path: 
