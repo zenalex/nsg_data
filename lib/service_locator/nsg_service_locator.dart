@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:get_it/get_it.dart';
 
+import '../controllers/nsgBaseController.dart';
+
 class NsgGet {
   NsgGet();
 
@@ -15,11 +17,12 @@ class NsgGet {
     String? instanceName,
     NsgGetDisposingFunc<T>? disposeFunc,
   }) {
-    instance.register(factoryFunc, instanceName: instanceName, disposeFunc: disposeFunc);
+    instance.register<T>(factoryFunc,
+        instanceName: instanceName, disposeFunc: disposeFunc);
   }
 
-  static find<T extends Object>({String? instanceName}) {
-    instance.get(instanceName: instanceName);
+  static T find<T extends Object>({String? instanceName}) {
+    return instance.get<T>(instanceName: instanceName);
   }
 
   void register<T extends Object>(
@@ -30,10 +33,15 @@ class NsgGet {
     if (GetIt.instance.isRegistered<T>()) {
       return;
     }
-    GetIt.instance.registerLazySingleton<T>(factoryFunc, instanceName: instanceName, dispose: disposeFunc);
+    var obj = factoryFunc();
+    GetIt.instance.registerSingleton(obj,
+        instanceName: instanceName, dispose: disposeFunc);
+    if (obj is NsgBaseController) {
+      obj.onInit();
+    }
   }
 
-  T get<T>({String? instanceName}) {
+  T get<T extends Object>({String? instanceName}) {
     return GetIt.instance<T>(instanceName: instanceName);
   }
 }
