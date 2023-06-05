@@ -9,7 +9,7 @@ class NsgNavigator {
   }
 
   void offAndToPage(BuildContext context, String pageName) {
-    GoRouter.of(context).push(pageName);
+    GoRouter.of(context).go(pageName);
     //Get.offAndToNamed(pageName);
   }
 

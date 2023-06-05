@@ -121,9 +121,11 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   Future<void> itemPageCancel(BuildContext context, {bool useValidation = true}) async {
     if (useValidation) {
       if (isModified) {
-        //TODO: Вернуть вопрос о сохранении изменений
         //var result = await NsgDialogSaveOrCancel.saveOrCancel();
-        bool? result = true;
+        bool? result = false;
+        if (NsgBaseController.saveOrCancelDefaultDialog != null) {
+          result = await NsgBaseController.saveOrCancelDefaultDialog!(context);
+        }
         switch (result) {
           case null:
             break;
