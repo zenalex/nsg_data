@@ -283,7 +283,6 @@ class NsgDataProvider {
         //TODO: ОБЯЗАТЕЛЬНО диалог
         //NsgErrorWidget.showErrorByString('Требуется обновление программы');
         //TODO: сменить на диалог и запретить работу при наличии обязательного обновления
-        await Future.delayed(const Duration(seconds: 60));
       } else if (checkResult == 1) {
         //TODO: ОБЯЗАТЕЛЬНО диалог
         //NsgErrorWidget.showErrorByString('Есть более новая версия. Рекомендуется обновление программы');
