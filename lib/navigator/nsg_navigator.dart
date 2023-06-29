@@ -11,7 +11,7 @@ class NsgNavigator {
     instance.toPage(pageName);
   }
 
-  static void pop(String pageName) {
+  static void pop() {
     instance.back();
   }
 
