@@ -287,9 +287,11 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                             filled: true,
                             fillColor: widget.widgetParams!.phoneFieldColor,
                             enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                               borderSide: BorderSide(color: nsgtheme.colorText.withOpacity(0.5), width: 1.0),
                             ),
                             focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                               borderSide: BorderSide(color: nsgtheme.colorText, width: 1.0),
                             ),
                             errorStyle: const TextStyle(fontSize: 12),
@@ -311,11 +313,12 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5.0),
+                            borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                           ),
                           filled: true,
                           fillColor: widget.widgetParams!.phoneFieldColor,
                           focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                             borderSide: BorderSide(color: nsgtheme.colorText, width: 1.0),
                           ),
                           errorStyle: const TextStyle(fontSize: 12),
@@ -344,9 +347,11 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           filled: true,
                           fillColor: widget.widgetParams!.phoneFieldColor,
                           enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                             borderSide: BorderSide(color: nsgtheme.colorText.withOpacity(0.5), width: 1.0),
                           ),
-                          focusedBorder: const OutlineInputBorder(
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                             borderSide: BorderSide(color: Colors.black, width: 1.0),
                           ),
                           errorStyle: const TextStyle(fontSize: 12),
@@ -418,9 +423,11 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                             filled: true,
                             fillColor: widget.widgetParams!.phoneFieldColor,
                             enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                               borderSide: BorderSide(color: nsgtheme.colorText.withOpacity(0.5), width: 1.0),
                             ),
-                            focusedBorder: const OutlineInputBorder(
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                               borderSide: BorderSide(color: Colors.black, width: 1.0),
                             ),
                             errorStyle: const TextStyle(fontSize: 12),

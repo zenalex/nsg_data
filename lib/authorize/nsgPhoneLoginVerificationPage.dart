@@ -46,13 +46,31 @@ class NsgPhoneLoginVerificationPage extends StatelessWidget {
   }
 
   Widget getButtons() {
-    return NsgButton(
-      backColor: ControlOptions.instance.colorGrey,
-      color: ControlOptions.instance.colorText,
-      margin: EdgeInsets.zero,
-      onPressed: null,
-      text: 'Повторить'.toUpperCase(),
+    return InkWell(
+      onTap: sendData,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 10),
+        child: HoverWidget(
+          hoverChild: const Text(
+            'Выслать код повторно',
+            style: TextStyle(),
+          ),
+          onHover: (PointerEnterEvent event) {},
+          child: const Text(
+            'Выслать код повторно',
+            style: TextStyle(decoration: TextDecoration.underline),
+          ),
+        ),
+      ),
     );
+
+    // return NsgButton(
+    //   backColor: ControlOptions.instance.colorGrey,
+    //   color: ControlOptions.instance.colorText,
+    //   margin: EdgeInsets.zero,
+    //   onPressed: null,
+    //   text: 'Выслать код повторно'.toUpperCase(),
+    // );
   }
 
   final callback = CallbackFunctionClass();
@@ -188,7 +206,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                   const SizedBox(height: 15.0),
                   TextFormField(
                     keyboardType: TextInputType.number,
-                    style: TextStyle(color: nsgtheme.colorText),
+                    style: TextStyle(color: nsgtheme.colorText, fontSize: nsgtheme.sizeXL),
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.only(left: 10, top: 10, right: 10),
@@ -199,9 +217,11 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                       hintText: widget.widgetParams!.textEnterCode,
                       hintStyle: TextStyle(color: nsgtheme.colorText.withOpacity(0.3)),
                       enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                         borderSide: BorderSide(color: nsgtheme.colorText.withOpacity(0.5), width: 1.0),
                       ),
                       focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
                         borderSide: BorderSide(color: nsgtheme.colorText, width: 1.0),
                       ),
                     ),
@@ -210,7 +230,6 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                     },
                   ),
                   const SizedBox(height: 15.0),
-                  widget.verificationPage.getButtons(),
                   if (widget.widgetParams!.usePasswordLogin)
                     Padding(
                       padding: const EdgeInsets.only(top: 15),
@@ -290,7 +309,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                     ),
                   if (!widget.widgetParams!.usePasswordLogin)
                     Padding(
-                      padding: const EdgeInsets.only(top: 15),
+                      padding: const EdgeInsets.only(top: 0),
                       child: NsgButton(
                         margin: EdgeInsets.zero,
                         onPressed: () {
@@ -305,24 +324,23 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                         text: 'Войти'.toUpperCase(),
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: InkWell(
-                      onTap: () {
-                        gotoLoginPage(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 10, bottom: 10),
-                        child: HoverWidget(
-                          hoverChild: const Text(
-                            'Вернуться на страницу входа',
-                            style: TextStyle(),
-                          ),
-                          onHover: (PointerEnterEvent event) {},
-                          child: const Text(
-                            'Вернуться на страницу входа',
-                            style: TextStyle(decoration: TextDecoration.underline),
-                          ),
+                  const SizedBox(height: 15),
+                  //widget.verificationPage.getButtons(), FIXME повторная отправка кода
+                  InkWell(
+                    onTap: () {
+                      gotoLoginPage(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10, bottom: 10),
+                      child: HoverWidget(
+                        hoverChild: const Text(
+                          'Вернуться на страницу входа',
+                          style: TextStyle(),
+                        ),
+                        onHover: (PointerEnterEvent event) {},
+                        child: const Text(
+                          'Вернуться на страницу входа',
+                          style: TextStyle(decoration: TextDecoration.underline),
                         ),
                       ),
                     ),
