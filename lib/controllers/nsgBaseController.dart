@@ -227,23 +227,23 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Request Items
-  Future requestItems({List<NsgUpdateKey>? keys}) async {
+  Future requestItems({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
     lateInit = false;
     itemsRequested.broadcast();
-    await _requestItems();
+    await _requestItems(filter: filter);
     await getFavorites();
     itemsRequested.broadcast();
     sendNotify(keys: keys);
   }
 
   ///Обновление данных
-  Future refreshData({List<NsgUpdateKey>? keys}) async {
+  Future refreshData({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
     currentStatus = GetStatus.loading();
     sendNotify(keys: keys);
-    await requestItems(keys: keys);
+    await requestItems(keys: keys, filter: filter);
   }
 
-  Future _requestItems() async {
+  Future _requestItems({NsgDataRequestParams? filter}) async {
     try {
       if (masterController != null && selectedMasterRequired && masterController!.selectedItem == null) {
         if (dataItemList.isNotEmpty) {
@@ -256,7 +256,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         newItemsList = dataCache;
         currentStatus = GetStatus.success(emptyData);
       } else {
-        newItemsList = await doRequestItems();
+        newItemsList = await doRequestItems(filter: filter);
 
         //service method for descendants
         currentStatus = GetStatus.success(emptyData);
@@ -323,10 +323,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return !status.isEmpty;
   }
 
-  Future<List<NsgDataItem>> doRequestItems() async {
+  Future<List<NsgDataItem>> doRequestItems({NsgDataRequestParams? filter}) async {
     var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     var newItems = await request.requestItems(
-        filter: getRequestFilter,
+        filter: filter ?? getRequestFilter,
         loadReference: referenceList,
         autoRepeate: autoRepeate,
         autoRepeateCount: autoRepeateCount,

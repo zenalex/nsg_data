@@ -157,12 +157,12 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Request Items
   @override
-  Future requestItems({List<NsgUpdateKey>? keys}) async {
+  Future requestItems({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
     lateInit = false;
     if (masterController == null || masterController!.selectedItem == null) {
       return;
     }
-    await filterData();
+    await filterData(filterParam: filter);
     sortDataItemList();
     currentStatus = GetStatus.success(NsgBaseController.emptyData);
     sendNotify(keys: keys);
@@ -222,9 +222,9 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   }
 
   ///Фильтрует строки из мастер и удовлетворяющие фильтру добавляет в контроллер
-  Future filterData() async {
+  Future filterData({NsgDataRequestParams? filterParam}) async {
     var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
-    var filter = getRequestFilter;
+    var filter = filterParam ?? getRequestFilter;
     dataItemList = [];
     for (var row in dataTable.rows) {
       if (filter.compare.isValid(row)) {
