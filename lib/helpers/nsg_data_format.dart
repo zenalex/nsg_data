@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'nsg_data_options.dart';
 
 abstract class NsgDateFormat {
-  static dateFormat(DateTime datetime, {String? format}) {
-    if (datetime.year <= 1754) {
+  static dateFormat(DateTime datetime, {String? format, bool ignoreYear = false}) {
+    if (!ignoreYear && datetime.year <= 1754) {
       return "";
     }
     return DateFormat(format ?? NsgDataOptions.instance.dateformat, 'ru_RU').format(datetime);
