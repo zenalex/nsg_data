@@ -642,17 +642,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Возвращает была ли модифицирована текущая строка контроллера после открытии страницы на редактирование
   ///По сути, сравнивает selectedItem и backupItem
   bool get isModified {
-    bool result = false;
     if (backupItem == null || selectedItem == null) {
       return false;
     }
-    for (var fieldName in selectedItem!.fieldList.fields.keys) {
-      var field = selectedItem!.fieldList.fields[fieldName];
-      result = (field!.compareTo(selectedItem!, backupItem!) != 0);
-      if (result) break;
-    }
 
-    return result;
+    return selectedItem!.isEqual(backupItem!);
   }
 
   static Future<bool?> Function()? saveOrCancelDefaultDialog;

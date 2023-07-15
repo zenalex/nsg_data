@@ -56,6 +56,8 @@ class NsgDataItem {
 
   NsgDataStorageType storageType = NsgDataStorageType.server;
 
+  bool isModified = false;
+
   String get typeName => runtimeType.toString();
 
   ///Чтение полей объекта из JSON
@@ -514,5 +516,20 @@ class NsgDataItem {
     } else {
       return null;
     }
+  }
+
+  ///Сравнивает равенство значений всех полей текущего с other
+  ///Используется, например, при проверке изменился лит объект в процессе редактирования.
+  ///Для этого, перед началом редактирования, можно сделать копию объекта с помощью метода Clone
+  bool isEqual(NsgDataItem other) {
+    bool result = false;
+
+    for (var fieldName in fieldList.fields.keys) {
+      var field = fieldList.fields[fieldName];
+      result = (field!.compareTo(this, other) != 0);
+      if (result) break;
+    }
+
+    return result;
   }
 }
