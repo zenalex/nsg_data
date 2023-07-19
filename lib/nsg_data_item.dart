@@ -22,6 +22,9 @@ class NsgDataItem {
   ///Если не задано, то считается, что фильтрация по периоду запрещена
   String get periodFieldName => '';
 
+  ///Это распределенный объект
+  bool get isDistributed => false;
+
   ///Возвращает уникальный идентификатор владельца
   String get id => '';
 
