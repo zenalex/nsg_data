@@ -17,8 +17,7 @@ class NsgGet {
     String? instanceName,
     NsgGetDisposingFunc<T>? disposeFunc,
   }) {
-    instance.register<T>(factoryFunc,
-        instanceName: instanceName, disposeFunc: disposeFunc);
+    instance.register<T>(factoryFunc, instanceName: instanceName, disposeFunc: disposeFunc);
   }
 
   static T find<T extends Object>({String? instanceName}) {
@@ -34,10 +33,20 @@ class NsgGet {
       return;
     }
     var obj = factoryFunc();
-    GetIt.instance.registerSingleton(obj,
-        instanceName: instanceName, dispose: disposeFunc);
+    GetIt.instance.registerSingleton(obj, instanceName: instanceName, dispose: disposeFunc);
     if (obj is NsgBaseController) {
       obj.onInit();
+    }
+  }
+
+  void unRegister<T extends Object>({String? instanceName, FutureOr<dynamic> Function(T)? disposingFunction}) {
+    if (!GetIt.instance.isRegistered<T>()) {
+      return;
+    }
+    var obj = get<T>(instanceName: instanceName);
+    GetIt.instance.unregister(instance: obj, instanceName: instanceName, disposingFunction: disposingFunction);
+    if (obj is NsgBaseController) {
+      obj.dispose();
     }
   }
 

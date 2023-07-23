@@ -6,10 +6,7 @@ homepage: https://github.com/zenalex/nsg_data
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
-<<<<<<< HEAD
   flutter: ">=1.17.0"
-=======
->>>>>>> master
 
 dependencies:
   flutter:

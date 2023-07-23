@@ -28,6 +28,9 @@ class NsgRoute extends GoRoute {
     return pb;
   }
 
+  // @override
+  // didPush
+
   static Widget buildPage(BuildContext context, GoRouterState state, NsgRoute route) {
     return route.page(context, state);
   }

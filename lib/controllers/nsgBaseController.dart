@@ -45,13 +45,10 @@ class NsgBaseController {
   ///Binding rule
   NsgDataBinding? dataBinding;
 
-  NsgDataControllerMode controllerMode =
-      NsgDataControllerMode.defaultDataControllerMode;
+  NsgDataControllerMode controllerMode = NsgDataControllerMode.defaultDataControllerMode;
 
-  final ValueNotifier<NsgControillerStatus> _currentStatus =
-      ValueNotifier<NsgControillerStatus>(NsgControillerStatus.loading);
-  ValueListenable<NsgControillerStatus> get currentStautsListenable =>
-      _currentStatus;
+  final ValueNotifier<NsgControillerStatus> _currentStatus = ValueNotifier<NsgControillerStatus>(NsgControillerStatus.loading);
+  ValueListenable<NsgControillerStatus> get currentStautsListenable => _currentStatus;
 
   //Переменные, отвечающие за очередь сохранения данных
   //Слишком частое сохранение может приводить к ошибкам и создавать излишнюю нагрузку на сервер
@@ -68,8 +65,7 @@ class NsgBaseController {
   ///Status of last data request operation
   NsgControillerStatus get currentStatus {
     if (_currentStatus.value == NsgControillerStatus.success) {
-      if (masterController != null &&
-          masterController!.currentStatus != NsgControillerStatus.success) {
+      if (masterController != null && masterController!.currentStatus != NsgControillerStatus.success) {
         return masterController!.currentStatus;
       }
     }
@@ -172,8 +168,7 @@ class NsgBaseController {
       NsgDataControllerMode? controllerMode})
       : super() {
     onRetry ??= _updateStatusError;
-    this.controllerMode =
-        controllerMode ?? NsgDataControllerMode.defaultDataControllerMode;
+    this.controllerMode = controllerMode ?? NsgDataControllerMode.defaultDataControllerMode;
     if (requestOnInit) {
       onInit();
     }
@@ -253,9 +248,7 @@ class NsgBaseController {
 
   Future _requestItems() async {
     try {
-      if (masterController != null &&
-          selectedMasterRequired &&
-          masterController!.selectedItem == null) {
+      if (masterController != null && selectedMasterRequired && masterController!.selectedItem == null) {
         if (dataItemList.isNotEmpty) {
           dataItemList.clear();
         }
@@ -321,8 +314,7 @@ class NsgBaseController {
   FutureOr<bool> retryRequestIf(Exception exception) async {
     if (exception is NsgApiException) {
       if (exception.error.code == 401) {
-        var provider =
-            NsgDataClient.client.getNewObject(dataType).remoteProvider;
+        var provider = NsgDataClient.client.getNewObject(dataType).remoteProvider;
         await provider.connect(this);
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
@@ -341,8 +333,7 @@ class NsgBaseController {
   }
 
   Future<List<NsgDataItem>> doRequestItems() async {
-    var request = NsgDataRequest(
-        dataItemType: dataType, storageType: controllerMode.storageType);
+    var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     var newItems = await request.requestItems(
         filter: getRequestFilter,
         loadReference: referenceList,
@@ -361,18 +352,14 @@ class NsgBaseController {
 
   List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
-    if (masterController!.selectedItem == null ||
-        !masterController!.selectedItem!.fieldList.fields
-            .containsKey(dataBinding!.masterFieldName)) {
+    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
       return newItemsList;
     }
-    var masterValue = masterController!
-        .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+    var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
 
     var list = <NsgDataItem>[];
     for (var element in newItemsList) {
-      if (element.fieldValues.fields[dataBinding!.slaveFieldName] ==
-          masterValue) {
+      if (element.fieldValues.fields[dataBinding!.slaveFieldName] == masterValue) {
         list.add(element);
       }
     }
@@ -380,9 +367,7 @@ class NsgBaseController {
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed ||
-        !controllerFilter.isOpen ||
-        controllerFilter.searchString == '') return newItemsList;
+    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') return newItemsList;
     return newItemsList.where((element) {
       for (var fieldName in element.fieldList.fields.keys) {
         var field = element.getField(fieldName);
@@ -392,10 +377,7 @@ class NsgBaseController {
         } else {
           s = element.getFieldValue(fieldName).toString();
         }
-        if (s
-            .toString()
-            .toUpperCase()
-            .contains(controllerFilter.searchString.toUpperCase())) {
+        if (s.toString().toUpperCase().contains(controllerFilter.searchString.toUpperCase())) {
           return true;
         }
       }
@@ -413,29 +395,17 @@ class NsgBaseController {
     //Добавление условия на мастер-деталь
     if (masterController != null &&
         masterController!.selectedItem != null &&
-        masterController!.selectedItem!.fieldList.fields
-            .containsKey(dataBinding!.masterFieldName)) {
-      var masterValue = masterController!
-          .selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+        masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
+      var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
       cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
     }
     //Учитываем пользовательский фильтр на дату
-    if (controllerFilter.isOpen &&
-        controllerFilter.isPeriodAllowed &&
-        controllerFilter.periodFieldName.isNotEmpty) {
-      cmp.add(
-          name: controllerFilter.periodFieldName,
-          value: controllerFilter.nsgPeriod.beginDate,
-          comparisonOperator: NsgComparisonOperator.greaterOrEqual);
-      cmp.add(
-          name: controllerFilter.periodFieldName,
-          value: controllerFilter.nsgPeriod.endDate,
-          comparisonOperator: NsgComparisonOperator.less);
+    if (controllerFilter.isOpen && controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.beginDate, comparisonOperator: NsgComparisonOperator.greaterOrEqual);
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
     }
     //Добавляем условие по строке поиска если фильтр разрешен и открыт
-    if (controllerFilter.isOpen &&
-        controllerFilter.isAllowed &&
-        controllerFilter.searchString.isNotEmpty) {
+    if (controllerFilter.isOpen && controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
       var dataItem = NsgDataClient.client.getNewObject(dataType);
       var fieldNames = dataItem.searchFieldList;
 
@@ -444,12 +414,8 @@ class NsgBaseController {
         searchCmp.logicalOperator = NsgLogicalOperator.or;
         for (var fieldName in fieldNames) {
           var field = dataItem.fieldList.fields[fieldName];
-          if ((field is NsgDataStringField || field is NsgDataReferenceField) &&
-              field is! NsgDataEnumReferenceField) {
-            searchCmp.add(
-                name: fieldName,
-                value: controllerFilter.searchString,
-                comparisonOperator: NsgComparisonOperator.containWords);
+          if ((field is NsgDataStringField || field is NsgDataReferenceField) && field is! NsgDataEnumReferenceField) {
+            searchCmp.add(name: fieldName, value: controllerFilter.searchString, comparisonOperator: NsgComparisonOperator.containWords);
           }
         }
         cmp.add(name: "SearchStringComparison", value: searchCmp);
@@ -478,17 +444,12 @@ class NsgBaseController {
     }
   }
 
-  static Widget Function() getDefaultProgressIndicator =
-      _defaultProgressIndicator;
+  static Widget Function() getDefaultProgressIndicator = _defaultProgressIndicator;
   static Widget _defaultProgressIndicator() {
     return const Center(child: CircularProgressIndicator());
   }
 
-  NsgControllerWidget obx(NsgWidgetBuilder widget,
-      {Widget Function(String? error)? onError,
-      Widget? onLoading,
-      Widget? onEmpty,
-      List<NsgUpdateKey>? keys}) {
+  NsgControllerWidget obx(NsgWidgetBuilder widget, {Widget Function(String? error)? onError, Widget? onLoading, Widget? onEmpty, List<NsgUpdateKey>? keys}) {
     return NsgControllerWidget(
       widget,
       controller: this,
@@ -512,11 +473,8 @@ class NsgBaseController {
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
   void itemPageOpen(BuildContext context, NsgDataItem element, String pageName,
-      {bool needRefreshSelectedItem = false,
-      List<String>? referenceList,
-      bool offPage = false}) {
-    assert(element.runtimeType == dataType,
-        'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
+      {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
+    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
     } else {
@@ -539,8 +497,7 @@ class NsgBaseController {
     //Если выставлен признак создавать на сервере, создаем запрос на сервер
     if (elem.createOnServer) {
       var request = NsgDataRequest(dataItemType: dataType);
-      elem = await request.requestItem(
-          method: 'POST', function: elem.apiRequestItems + '/Create');
+      elem = await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
     } else {
       elem.newRecordFill();
     }
@@ -552,10 +509,7 @@ class NsgBaseController {
 
   ///Create new item and open page to view and edit it
   ///pageName -  страница, которую необходимо открыть по окончанию создания нового элемента
-  void newItemPageOpen(
-      {required BuildContext context,
-      required String pageName,
-      bool offPage = false}) {
+  void newItemPageOpen({required BuildContext context, required String pageName, bool offPage = false}) {
     createAndSetSelectedItem();
     if (offPage) {
       NsgNavigator.instance.offAndToPage(context, pageName);
@@ -588,14 +542,9 @@ class NsgBaseController {
   ///Copy item and open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///referenceList - список полей для дочитывания. null - перечитать все
-  void itemCopyPageOpen(
-      BuildContext context, NsgDataItem element, String pageName,
-      {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
-    assert(element.runtimeType == dataType,
-        'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
-    copyAndSetItem(element,
-        needRefreshSelectedItem: needRefreshSelectedItem,
-        referenceList: referenceList);
+  void itemCopyPageOpen(BuildContext context, NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
+    copyAndSetItem(element, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList);
     NsgNavigator.instance.toPage(context, pageName);
   }
 
@@ -639,14 +588,12 @@ class NsgBaseController {
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
   ///useValidation == true перед сохранением проводится валидация
   ///В случае успешного сохранения возвращает true
-  Future<bool> itemPagePost(BuildContext context,
-      {bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost(BuildContext context, {bool goBack = true, bool useValidation = true}) async {
     assert(selectedItem != null);
     if (useValidation) {
       var validationResult = selectedItem!.validateFieldValues();
       if (!validationResult.isValid) {
-        var err = NsgApiException(NsgApiError(
-            code: 999, message: validationResult.errorMessageWithFields()));
+        var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
         if (NsgApiException.showExceptionDefault != null) {
           NsgApiException.showExceptionDefault!(context, err);
         }
@@ -735,38 +682,27 @@ class NsgBaseController {
   ///item - перечитываемый объект
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future<NsgDataItem> refreshItem(
-      NsgDataItem item, List<String>? referenceList) async {
+  Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList) async {
     var cmp = NsgCompare();
-    cmp.add(
-        name: item.primaryKeyField,
-        value: item.getFieldValue(item.primaryKeyField));
+    cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
     var filterParam = NsgDataRequestParams(compare: cmp);
-    var request = NsgDataRequest(
-        dataItemType: dataType, storageType: controllerMode.storageType);
+    var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     var answer = await request.requestItem(
-        filter: filterParam,
-        loadReference: referenceList,
-        autoRepeate: autoRepeate,
-        autoRepeateCount: autoRepeateCount,
-        retryIf: (e) => retryRequestIf(e));
+        filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
 
     return answer;
   }
 
   ///Вызывается после метода refreshItem.
   ///Можно использовать, например, для обновления связанных контроллеров
-  Future afterRefreshItem(
-      NsgDataItem item, List<String>? referenceList) async {}
+  Future afterRefreshItem(NsgDataItem item, List<String>? referenceList) async {}
 
   ///Перечитать из базы данных текущий объект (selectedItem)
   ///На время чтерния статус контроллера будет loading
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future setAndRefreshSelectedItem(
-      NsgDataItem item, List<String>? referenceList) async {
-    assert(item.isNotEmpty,
-        'Попытка перечитать с сервера объект с пустым guid (например, новый)');
+  Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
+    assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     selectedItem = item;
     currentStatus = NsgControillerStatus.loading;
     //11.02.2023 Зенков. Заменил на refresh, потому что иногда происходил конфликт обновления в процессе перерисовки
@@ -803,18 +739,13 @@ class NsgBaseController {
   ///На время чтерния статус контроллера будет loading
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future copyAndSetItem(NsgDataItem item,
-      {bool needRefreshSelectedItem = false,
-      List<String>? referenceList}) async {
-    assert(item.isNotEmpty,
-        'Попытка перечитать с сервера объект с пустым guid (например, новый)');
+  Future copyAndSetItem(NsgDataItem item, {bool needRefreshSelectedItem = false, List<String>? referenceList}) async {
+    assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     currentStatus = NsgControillerStatus.loading;
     sendNotify();
     itemsRequested.broadcast();
     try {
-      var newItem = needRefreshSelectedItem
-          ? await refreshItem(item, referenceList)
-          : item;
+      var newItem = needRefreshSelectedItem ? await refreshItem(item, referenceList) : item;
       var index = dataItemList.indexOf(item);
       if (index >= 0) {
         dataItemList.replaceRange(index, index + 1, [newItem]);
@@ -908,13 +839,11 @@ class NsgBaseController {
     }
   }
 
-  Future postItems(List<NsgDataItem> itemsToPost,
-      {bool showProgress = false}) async {
+  Future postItems(List<NsgDataItem> itemsToPost, {bool showProgress = false}) async {
     if (controllerMode.storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: dataType);
       p.itemsToPost = itemsToPost;
-      var newItems = await p.postItems(
-          loadReference: NsgDataRequest.addAllReferences(dataType));
+      var newItems = await p.postItems(loadReference: NsgDataRequest.addAllReferences(dataType));
       for (var item in newItems) {
         var old = itemsToPost.firstWhereOrNull((e) => e.id == item.id);
         if (old != null) {
@@ -934,8 +863,7 @@ class NsgBaseController {
 
   /// Удаляет currentItem в БД и в items
   Future deleteItem({required BuildContext context, bool goBack = true}) async {
-    assert(selectedItem != null,
-        'При выполнении deleteItem() -> currentItem==null');
+    assert(selectedItem != null, 'При выполнении deleteItem() -> currentItem==null');
     await deleteItems([selectedItem!]);
     if (goBack) {
       NsgNavigator.instance.back(context);
@@ -946,9 +874,7 @@ class NsgBaseController {
   Future deleteItems(List<NsgDataItem> itemsToDelete) async {
     if (controllerMode.storageType == NsgDataStorageType.server) {
       if (itemsToDelete.isEmpty) return;
-      var p = NsgDataDelete(
-          dataItemType: itemsToDelete[0].runtimeType,
-          itemsToDelete: itemsToDelete);
+      var p = NsgDataDelete(dataItemType: itemsToDelete[0].runtimeType, itemsToDelete: itemsToDelete);
       await p.deleteItems();
     } else {
       await NsgLocalDb.instance.deleteItems(itemsToDelete);
@@ -966,8 +892,7 @@ class NsgBaseController {
   ///Метод, вызываемый при инициализации provider (загрузка приложения)
   Future loadProviderData() async {}
 
-  List<String> get objectFieldsNames =>
-      NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
+  List<String> get objectFieldsNames => NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
 
   ///Поставить в очередь на сохранение, чтобы избезать параллельного сохранения
   ///Уменьшив таким образом нагрузку на сервер и избежать коллизий
@@ -1027,9 +952,7 @@ class NsgBaseController {
     }
   }
 
-  Future<List<NsgDataItem>> loadFavorites(
-      NsgUserSettingsController userSetiingsController,
-      List<String> ids) async {
+  Future<List<NsgDataItem>> loadFavorites(NsgUserSettingsController userSetiingsController, List<String> ids) async {
     var cmp = NsgCompare();
     var dataItem = NsgDataClient.client.getNewObject(dataType);
     var answerList = <NsgDataItem>[];
@@ -1046,23 +969,16 @@ class NsgBaseController {
     }
     //Дочитываем недостающие элементы
     if (listToRequest.isNotEmpty) {
-      cmp.add(
-          name: dataItem.primaryKeyField,
-          value: listToRequest,
-          comparisonOperator: NsgComparisonOperator.inList);
-      var params = NsgDataRequestParams(
-          compare: cmp, readNestedField: referenceList?.join(','));
-      var request = NsgDataRequest<NsgDataItem>(
-          storageType: controllerMode.storageType, dataItemType: dataType);
+      cmp.add(name: dataItem.primaryKeyField, value: listToRequest, comparisonOperator: NsgComparisonOperator.inList);
+      var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
+      var request = NsgDataRequest<NsgDataItem>(storageType: controllerMode.storageType, dataItemType: dataType);
       answerList.addAll(await request.requestItems(filter: params));
 
       var newIds = answerList.map((e) => e.id).join(',');
       if (newIds != ids.join(',')) {
-        var objFavorite =
-            userSetiingsController.getFavoriteObject(dataItem.typeName);
+        var objFavorite = userSetiingsController.getFavoriteObject(dataItem.typeName);
         objFavorite.settings = newIds;
-        await userSettingsController!
-            .postUserSettings(objFavorite as NsgDataItem);
+        await userSettingsController!.postUserSettings(objFavorite as NsgDataItem);
       }
     }
     return answerList;
@@ -1096,4 +1012,12 @@ class NsgBaseController {
   static NsgBaseControllerData emptyData = NsgBaseControllerData();
 
   void update([List<NsgUpdateKey>? keys]) {}
+
+  ///Вызывается при unRegister контроллера в NsgServiceLocator при навигации или прямом вызове
+  ///Можно использовать для освобождения ресурсов
+  ///Возможно, надо блокировать все методы запроса данных после этого для невозможности дальнейшего использования контроллера
+  @mustCallSuper
+  void dispose() {
+    //TODO: в debugPrint написать собщение об удалении контроллера
+  }
 }
