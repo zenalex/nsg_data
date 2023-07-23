@@ -243,8 +243,8 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   }
 
   @override
-  Future requestItems({List<NsgUpdateKey>? keys}) async {
-    await super.requestItems(keys: keys);
+  Future requestItems({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
+    await super.requestItems(keys: keys, filter: filter);
     //Проверка на наличие одинаковых записей
     //В случае обнаружения, дубликаты удаляем
     var itemsToRemove = <T>[];

@@ -371,7 +371,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         var refItems = <NsgDataItem>[];
         var checkItems = <NsgDataItem>[];
 
-        if (field is NsgDataReferenceField) {
+        if (field is NsgDataReferenceField && field is! NsgDataUntypedReferenceField) {
           for (var item in items) {
             var checkedItem = field.getReferent(item, allowNull: true);
             if (checkedItem == null) {
@@ -398,6 +398,43 @@ class NsgDataRequest<T extends NsgDataItem> {
               refItems = await NsgLocalDb.instance.requestItems(NsgDataClient.client.getNewObject(field.referentElementType), filter);
             }
             checkItems.addAll(refItems);
+          }
+        } else if (field is NsgDataUntypedReferenceField) {
+          var sortedFields = <String, List<String>>{};
+          for (var item in items) {
+            var checkedItem = field.getReferent(item, allowNull: true);
+            if (checkedItem == null) {
+              var splittedFieldValue = item.getFieldValue(splitedName[0]).toString().split('.');
+
+              if (splittedFieldValue.length == 2 && !splittedFieldValue[0].contains(Guid.Empty)) {
+                if (!sortedFields.containsKey(splittedFieldValue[1])) {
+                  sortedFields[splittedFieldValue[1]] = <String>[];
+                }
+                var refList = sortedFields[splittedFieldValue[1]];
+                if (!refList!.contains(splittedFieldValue[0])) {
+                  refList.add(splittedFieldValue[0]);
+                }
+              }
+            } else {
+              checkItems.add(checkedItem);
+            }
+          }
+
+          if (sortedFields.isNotEmpty) {
+            for (var typeName in sortedFields.keys) {
+              var refList = sortedFields[typeName];
+              var refType = NsgDataClient.client.getTypeByServerName(typeName);
+              var request = NsgDataRequest(dataItemType: refType);
+              var cmp = NsgCompare();
+              cmp.add(name: NsgDataClient.client.getNewObject(refType).primaryKeyField, value: refList, comparisonOperator: NsgComparisonOperator.inList);
+              var filter = NsgDataRequestParams(compare: cmp);
+              if (storageType == NsgDataStorageType.server) {
+                refItems = await request.requestItems(filter: filter, loadReference: []);
+              } else {
+                refItems = await NsgLocalDb.instance.requestItems(NsgDataClient.client.getNewObject(refType), filter);
+              }
+              checkItems.addAll(refItems);
+            }
           }
         } else if (field is NsgDataReferenceListField) {
           for (var item in items) {

@@ -309,7 +309,7 @@ class NsgDataProvider {
     }
   }
 
-  Future<bool> logout() async {
+  Future<bool> logout(NsgBaseController controller) async {
     try {
       await baseRequest(function: 'Logout', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/Logout', method: 'GET');
     } catch (ex) {
@@ -321,6 +321,7 @@ class NsgDataProvider {
       isAnonymous = true;
       token = '';
     }
+    await _anonymousLogin(controller.onRetry);
     return true;
   }
 

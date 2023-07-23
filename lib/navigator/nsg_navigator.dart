@@ -8,6 +8,18 @@ class NsgNavigator {
     GoRouter.of(context).push(pageName);
   }
 
+  static void go(BuildContext context, String pageName) {
+    GoRouter.of(context).go(pageName);
+  }
+
+  static void push(BuildContext context, String pageName) {
+    GoRouter.of(context).push(pageName);
+  }
+
+  static void pop(BuildContext context) {
+    GoRouter.of(context).pop();
+  }
+
   void offAndToPage(BuildContext context, String pageName) {
     GoRouter.of(context).go(pageName);
     //Get.offAndToNamed(pageName);

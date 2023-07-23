@@ -230,23 +230,23 @@ class NsgBaseController {
   }
 
   ///Request Items
-  Future requestItems({List<NsgUpdateKey>? keys}) async {
+  Future requestItems({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
     lateInit = false;
     itemsRequested.broadcast();
-    await _requestItems();
+    await _requestItems(filter: filter);
     await getFavorites();
     itemsRequested.broadcast();
     sendNotify(keys: keys);
   }
 
   ///Обновление данных
-  Future refreshData({List<NsgUpdateKey>? keys}) async {
+  Future refreshData({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
     currentStatus = NsgControillerStatus.loading;
     sendNotify(keys: keys);
-    await requestItems(keys: keys);
+    await requestItems(keys: keys, filter: filter);
   }
 
-  Future _requestItems() async {
+  Future _requestItems({NsgDataRequestParams? filter}) async {
     try {
       if (masterController != null && selectedMasterRequired && masterController!.selectedItem == null) {
         if (dataItemList.isNotEmpty) {
@@ -259,7 +259,7 @@ class NsgBaseController {
         newItemsList = dataCache;
         currentStatus = NsgControillerStatus.success;
       } else {
-        newItemsList = await doRequestItems();
+        newItemsList = await doRequestItems(filter: filter);
 
         //service method for descendants
         currentStatus = NsgControillerStatus.success;
@@ -332,10 +332,10 @@ class NsgBaseController {
     return currentStatus != NsgControillerStatus.empty;
   }
 
-  Future<List<NsgDataItem>> doRequestItems() async {
+  Future<List<NsgDataItem>> doRequestItems({NsgDataRequestParams? filter}) async {
     var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     var newItems = await request.requestItems(
-        filter: getRequestFilter,
+        filter: filter ?? getRequestFilter,
         loadReference: referenceList,
         autoRepeate: autoRepeate,
         autoRepeateCount: autoRepeateCount,
@@ -644,17 +644,11 @@ class NsgBaseController {
   ///Возвращает была ли модифицирована текущая строка контроллера после открытии страницы на редактирование
   ///По сути, сравнивает selectedItem и backupItem
   bool get isModified {
-    bool result = false;
     if (backupItem == null || selectedItem == null) {
       return false;
     }
-    for (var fieldName in selectedItem!.fieldList.fields.keys) {
-      var field = selectedItem!.fieldList.fields[fieldName];
-      result = (field!.compareTo(selectedItem!, backupItem!) != 0);
-      if (result) break;
-    }
 
-    return result;
+    return selectedItem!.isEqual(backupItem!);
   }
 
   static Future<bool?> Function(BuildContext)? saveOrCancelDefaultDialog;

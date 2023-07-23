@@ -51,10 +51,10 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
   }
 
   @override
-  Future<List<NsgDataItem>> doRequestItems() async {
+  Future<List<NsgDataItem>> doRequestItems({NsgDataRequestParams? filter}) async {
     var request = NsgDataRequest(dataItemType: dataType);
     var list = await request.requestItems(
-      filter: getRequestFilter,
+      filter: filter ?? getRequestFilter,
       loadReference: referenceList,
       autoRepeate: autoRepeate,
       autoRepeateCount: autoRepeateCount,
@@ -62,7 +62,6 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
     );
     if (lateImageRead) {
       //В случае отложенного чтения проверяем не была ли картинка уже загружена и проставляем статус в объект
-
     }
     return list;
   }
