@@ -52,15 +52,15 @@ class NsgControllerFilter {
 
   ///Обновить данные в контроллере c задержкой по времени
   ///Каждый новый вызов этого метода отменяет предыдущий и сбрасывает время ожидание на ноль
-  void refreshControllerWithDelay() {
+  void refreshControllerWithDelay({NsgDataRequestParams? filter}) {
     if (_updateTimer != null) {
       _updateTimer!.cancel();
     }
-    _updateTimer = Timer(updateDelay, _updateTick);
+    _updateTimer = Timer(updateDelay, () => _updateTick(filter: filter));
     //_updateTimer.isActive = true;
   }
 
-  void _updateTick() {
-    controller?.refreshData();
+  void _updateTick({NsgDataRequestParams? filter}) {
+    controller?.refreshData(filter: filter);
   }
 }
