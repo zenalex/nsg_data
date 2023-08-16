@@ -533,7 +533,7 @@ class NsgDataItem {
       if (excludeFields == null || !excludeFields.contains(fieldName)) {
         var field = fieldList.fields[fieldName];
 
-        result = (field!.compareTo(this, other) != 0);
+        result = (field!.compareTo(this, other) == 0);
       }
 
       if (result) break;
