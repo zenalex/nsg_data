@@ -344,30 +344,32 @@ class NsgDataItem {
   }
 
   ///Copy all fields values from oldItem to this
-  void copyFieldValues(NsgDataItem oldItem, {bool cloneAsCopy = false}) {
+  void copyFieldValues(NsgDataItem oldItem, {bool cloneAsCopy = false, List<String>? excludeFields}) {
     fieldList.fields.forEach((key, value) {
-      if (fieldList.fields[key] is NsgDataReferenceListField) {
-        var newTable = NsgDataTable(owner: this, fieldName: key);
-        var curTable = NsgDataTable(owner: oldItem, fieldName: key);
-        newTable.clear();
-        for (var row in curTable.rows) {
-          var newRow = row.clone(cloneAsCopy: cloneAsCopy);
-          if (cloneAsCopy) {
-            newRow.copyRecordFill();
+      if ((excludeFields == null || !excludeFields.contains(key))) {
+        if (fieldList.fields[key] is NsgDataReferenceListField) {
+          var newTable = NsgDataTable(owner: this, fieldName: key);
+          var curTable = NsgDataTable(owner: oldItem, fieldName: key);
+          newTable.clear();
+          for (var row in curTable.rows) {
+            var newRow = row.clone(cloneAsCopy: cloneAsCopy);
+            if (cloneAsCopy) {
+              newRow.copyRecordFill();
+            }
+            newTable.addRow(newRow);
           }
-          newTable.addRow(newRow);
+        } else {
+          setFieldValue(key, oldItem.getFieldValue(key));
         }
-      } else {
-        setFieldValue(key, oldItem.getFieldValue(key));
       }
     });
   }
 
   ///Create new object with same filelds values
   ///cloneAsCopy - после копирования подменить id объектов и вызвать метод заполнения после копирования
-  NsgDataItem clone({bool cloneAsCopy = false}) {
+  NsgDataItem clone({bool cloneAsCopy = false, List<String>? excludeFields}) {
     var newItem = getNewObject();
-    newItem.copyFieldValues(this, cloneAsCopy: cloneAsCopy);
+    newItem.copyFieldValues(this, cloneAsCopy: cloneAsCopy, excludeFields: excludeFields);
     newItem.loadTime = loadTime;
     newItem.state = cloneAsCopy ? NsgDataItemState.create : state;
     newItem.docState = cloneAsCopy ? NsgDataItemDocState.created : docState;
@@ -524,12 +526,16 @@ class NsgDataItem {
   ///Сравнивает равенство значений всех полей текущего с other
   ///Используется, например, при проверке изменился лит объект в процессе редактирования.
   ///Для этого, перед началом редактирования, можно сделать копию объекта с помощью метода Clone
-  bool isEqual(NsgDataItem other) {
+  bool isEqual(NsgDataItem other, {List<String>? excludeFields}) {
     bool result = false;
 
     for (var fieldName in fieldList.fields.keys) {
-      var field = fieldList.fields[fieldName];
-      result = (field!.compareTo(this, other) != 0);
+      if (excludeFields == null || !excludeFields.contains(fieldName)) {
+        var field = fieldList.fields[fieldName];
+
+        result = (field!.compareTo(this, other) != 0);
+      }
+
       if (result) break;
     }
 
