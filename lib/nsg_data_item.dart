@@ -388,6 +388,7 @@ class NsgDataItem {
     assert(id.isEmpty || id == Guid.Empty);
     setFieldValue(primaryKeyField, Guid.newGuid());
     state = NsgDataItemState.create;
+    NsgDataClient.client.addItemsToCache(items: [this]);
   }
 
   ///Заполнение полей объекта при создании нового
