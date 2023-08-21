@@ -685,6 +685,18 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return answer;
   }
 
+  Future<NsgDataItem> refreshCurrentItem({List<String>? referenceList}) async {
+    if (selectedItem == null) {
+      return NsgDataClient.client.getNewObject(dataType);
+    }
+    currentStatus = GetStatus.loading();
+    sendNotify();
+    selectedItem = await refreshItem(selectedItem!, referenceList);
+    currentStatus = GetStatus.success(NsgBaseController.emptyData);
+    sendNotify();
+    return selectedItem!;
+  }
+
   ///Вызывается после метода refreshItem.
   ///Можно использовать, например, для обновления связанных контроллеров
   Future afterRefreshItem(NsgDataItem item, List<String>? referenceList) async {}
