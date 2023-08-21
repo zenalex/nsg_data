@@ -80,12 +80,8 @@ class NsgPhoneLoginPage extends StatelessWidget {
     return background;
   }
 
-  Widget getButtons() {
-    return const NsgButton(
-      margin: EdgeInsets.zero,
-      onPressed: null,
-      text: 'you need to override getButtons',
-    );
+  Widget? getButtons() {
+    return null;
   }
 
   final callback = CallbackFunctionClass();
@@ -445,17 +441,16 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                               ),
                             ),
                           ),
-                        if (widget.widgetParams!.usePasswordLogin) widget.loginPage.getButtons(),
-                        if (!widget.widgetParams!.usePasswordLogin)
-                          NsgButton(
-                            margin: EdgeInsets.zero,
-                            onPressed: () {
-                              widget.widgetParams!.phoneNumber = phoneNumber;
-                              widget.widgetParams!.loginType = loginType;
-                              doSmsRequest(loginType: loginType, password: password);
-                            },
-                            text: 'Выслать код'.toUpperCase(),
-                          ),
+                        widget.loginPage.getButtons() ??
+                            NsgButton(
+                              margin: const EdgeInsets.only(top: 10),
+                              onPressed: () {
+                                widget.widgetParams!.phoneNumber = phoneNumber;
+                                widget.widgetParams!.loginType = loginType;
+                                doSmsRequest(loginType: loginType, password: password);
+                              },
+                              text: 'Выслать код'.toUpperCase(),
+                            ),
                         if (widget.widgetParams!.usePasswordLogin)
                           Padding(
                             padding: const EdgeInsets.only(top: 10),

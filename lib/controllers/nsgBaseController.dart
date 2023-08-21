@@ -646,7 +646,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       return false;
     }
 
-    return selectedItem!.isEqual(backupItem!);
+    return !selectedItem!.isEqual(backupItem!);
   }
 
   static Future<bool?> Function()? saveOrCancelDefaultDialog;
