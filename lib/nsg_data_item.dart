@@ -377,6 +377,7 @@ class NsgDataItem {
     newItem.newTableLogic = newTableLogic;
     if (cloneAsCopy) {
       newItem.copyRecordFill();
+      newItem.id = Guid.newGuid();
     }
     return newItem;
   }
