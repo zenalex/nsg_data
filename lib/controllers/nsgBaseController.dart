@@ -559,27 +559,19 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
             break;
           case true:
             itemPagePost(goBack: true);
-            break;
+            return;
           case false:
-            if (backupItem != null) {
-              selectedItem = backupItem;
-              //20.06.2022 Попытка убрать лишнее обновление
-              //selectedItemChanged.broadcast(null);
-              backupItem = null;
-            }
-            Get.back();
             break;
         }
-      } else {
-        if (backupItem != null) {
-          selectedItem = backupItem;
-          //20.06.2022 Попытка убрать лишнее обновление
-          //selectedItemChanged.broadcast(null);
-          backupItem = null;
-        }
-        Get.back();
       }
     }
+    if (backupItem != null) {
+      selectedItem = backupItem;
+      //20.06.2022 Попытка убрать лишнее обновление
+      //selectedItemChanged.broadcast(null);
+      backupItem = null;
+    }
+    Get.back();
   }
 
   ///Close item page and post current (selectedItem) item to databese (server)
@@ -665,7 +657,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (res) {
         await itemPagePost();
       } else {
-        itemPageCancel();
+        itemPageCancel(useValidation: false);
       }
     }
   }
