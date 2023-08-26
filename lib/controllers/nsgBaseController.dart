@@ -253,7 +253,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       }
       List<NsgDataItem> newItemsList;
       if (useDataCache && dataCache.isNotEmpty) {
-        newItemsList = dataCache;
+        newItemsList = _filter(dataCache);
         currentStatus = GetStatus.success(emptyData);
       } else {
         newItemsList = await doRequestItems(filter: filter);
@@ -341,7 +341,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///is calling after new items are got from API before they are placed to ItemList
   Future afterRequestItems(List<NsgDataItem> newItemsList) async {}
 
-  List<NsgDataItem> filter(List<NsgDataItem> newItemsList) {
+  List<NsgDataItem> _filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
     if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
       return newItemsList;
@@ -378,7 +378,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   bool matchFilter(NsgDataItem item) {
     var list = [item];
-    return filter(list).isNotEmpty;
+    return _filter(list).isNotEmpty;
   }
 
   NsgDataRequestParams get getRequestFilter {
