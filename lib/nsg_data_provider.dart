@@ -87,6 +87,7 @@ class NsgDataProvider {
       var _prefs = await SharedPreferences.getInstance();
       if (_prefs.containsKey(applicationName)) {
         token = _prefs.getString(applicationName);
+        isAnonymous = false;
       }
       if (kIsWeb) {
         // || (!Platform.isAndroid && !Platform.isIOS)) {
@@ -326,7 +327,11 @@ class NsgDataProvider {
         await _anonymousLogin(onRetry);
       } else {
         try {
-          await _checkToken(onRetry);
+          var result = await _checkToken(onRetry);
+          if (!result) {
+            debugPrint('CheckToken - Сервер отверг токен');
+            await _anonymousLogin(onRetry);
+          }
         } on NsgApiException catch (e) {
           if (e.error.errorType == null) {
           } else {
@@ -492,8 +497,10 @@ class NsgDataProvider {
 
     var loginResponse = NsgLoginResponse.fromJson(response);
     if (loginResponse.errorCode == 0 || loginResponse.errorCode == 402) {
-      token = loginResponse.token;
-      isAnonymous = loginResponse.isAnonymous;
+      if (!isAnonymous) {
+        token = loginResponse.token;
+        isAnonymous = loginResponse.isAnonymous;
+      }
       return true;
     }
     throw NsgApiException(NsgApiError(code: loginResponse.errorCode));
