@@ -343,23 +343,53 @@ class NsgDataItem {
     }
   }
 
-  ///Copy all fields values from oldItem to this
-  void copyFieldValues(NsgDataItem oldItem, {bool cloneAsCopy = false, List<String>? excludeFields}) {
+  ///Copy fields values from oldItem to this.
+  ///
+  /// ```dart
+  /// NsgDataItem thisItem = NsgDataItem(); //Объект в который копируем
+  /// NsgDataItem oldItem = NsgDataItem(); //Объект чьи поля копируем
+  ///
+  /// thisItem.copyFieldValues(oldItem); //Clone all item fields as is
+  /// thisItem.copyFieldValues(oldItem, copyEmptyFields: false); //Clone all not empty item fields
+  /// thisItem.copyFieldValues(oldItem, includeFields: [NsgDataItemGenerated.fieldNameId]); //Clone only selected fields
+  /// thisItem.copyFieldValues(oldItem, excludeFields: [NsgDataItemGenerated.fieldNameId]); //Clone all fields exclude selected fields
+  /// thisItem.copyFieldValues(oldItem, translateMap: {OldNsgDataItemGenerated.fieldNameId: ThisNsgDataItemGenerated.fieldNameId}); //Clone all fields, using fields map dependencies.
+  ///
+  /// ```
+  ///For copy `only specials fields`, use `includeFields`.
+  ///For `exclude` one or more fields, use `excludeFields`.
+  ///If you want copy `only not empty fields`, use `copyEmptyFields` parametr.
+  ///For copy fields values in other NsgDataItem type obj, use `translateMap` for set fields dependensies:
+  ///{oldObjKey: thisObjKey}.
+  void copyFieldValues(NsgDataItem oldItem,
+      {bool cloneAsCopy = false, List<String>? excludeFields, List<String>? includeFields, Map<String, String>? translateMap, bool copyEmptyFields = true}) {
     fieldList.fields.forEach((key, value) {
-      if ((excludeFields == null || !excludeFields.contains(key))) {
-        if (fieldList.fields[key] is NsgDataReferenceListField) {
-          var newTable = NsgDataTable(owner: this, fieldName: key);
-          var curTable = NsgDataTable(owner: oldItem, fieldName: key);
-          newTable.clear();
-          for (var row in curTable.rows) {
-            var newRow = row.clone(cloneAsCopy: cloneAsCopy);
-            if (cloneAsCopy) {
-              newRow.copyRecordFill();
+      if (includeFields == null || includeFields.contains(key)) {
+        if ((excludeFields == null || !excludeFields.contains(key))) {
+          String translateKey = key;
+
+          if (translateMap != null) {
+            var k = translateMap[key];
+            if (k != null) {
+              translateKey = k;
             }
-            newTable.addRow(newRow);
           }
-        } else {
-          setFieldValue(key, oldItem.getFieldValue(key));
+          if (fieldList.fields[key] is NsgDataReferenceListField) {
+            var newTable = NsgDataTable(owner: this, fieldName: translateKey);
+            var curTable = NsgDataTable(owner: oldItem, fieldName: key);
+            newTable.clear();
+            for (var row in curTable.rows) {
+              var newRow = row.clone(cloneAsCopy: cloneAsCopy);
+              if (cloneAsCopy) {
+                newRow.copyRecordFill();
+              }
+              newTable.addRow(newRow);
+            }
+          } else {
+            if (copyEmptyFields || !oldItem.fieldValues.emptyFields.contains(key)) {
+              setFieldValue(translateKey, oldItem.getFieldValue(key));
+            }
+          }
         }
       }
     });
