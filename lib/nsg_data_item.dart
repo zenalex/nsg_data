@@ -362,7 +362,18 @@ class NsgDataItem {
   ///For copy fields values in other NsgDataItem type obj, use `translateMap` for set fields dependensies:
   ///{oldObjKey: thisObjKey}.
   void copyFieldValues(NsgDataItem oldItem,
-      {bool cloneAsCopy = false, List<String>? excludeFields, List<String>? includeFields, Map<String, String>? translateMap, bool copyEmptyFields = true}) {
+      {bool cloneAsCopy = false,
+      List<String>? excludeFields,
+      List<String>? includeFields,
+      Map<String, String>? translateMap,
+      bool copyEmptyFields = true,
+      bool onlyMapFields = false}) {
+    if (onlyMapFields && translateMap != null) {
+      includeFields = [];
+      for (var element in translateMap.keys) {
+        includeFields.add(element);
+      }
+    }
     fieldList.fields.forEach((key, value) {
       if (includeFields == null || includeFields.contains(key)) {
         if ((excludeFields == null || !excludeFields.contains(key))) {
