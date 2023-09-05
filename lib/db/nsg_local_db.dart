@@ -101,6 +101,8 @@ class NsgLocalDb {
       if (item.id.isEmpty) {
         item.id = Guid.newGuid();
       }
+      //FIXME: !!!!!!!!!!!!!!!!!!!!!!!!!!
+      item.state = NsgDataItemState.fill;
       //var map = item.toJson(excludeFields: tableFields);
       Map<dynamic, dynamic>? oldObject;
       if (tableFields.isNotEmpty) {
