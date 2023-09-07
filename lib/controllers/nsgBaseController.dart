@@ -1093,4 +1093,43 @@ class NsgBaseController extends GetxController
   }
 
   static NsgBaseControllerData emptyData = NsgBaseControllerData();
+
+  Future<String?> beginTransaction(NsgDataProvider provider, {int lifespan = 0, NsgCancelToken? cancelToken}) async {
+    var request = NsgSimpleRequest<String>();
+    var newItem = await request.requestItem(
+        provider: provider,
+        function: '/Api/Transaction/Begin' + (lifespan > 0 ? '?lifespan=$lifespan' : ''),
+        method: 'POST',
+        autoRepeate: true,
+        autoRepeateCount: 3,
+        cancelToken: cancelToken,
+        retryIf: (e) => retryRequestIf(e));
+    return newItem;
+  }
+
+  Future<bool?> commitTransaction(NsgDataProvider provider, String transactionId, {NsgCancelToken? cancelToken}) async {
+    var request = NsgSimpleRequest<bool>();
+    var newItem = await request.requestItem(
+        provider: provider,
+        function: '/Api/Transaction/Commit?id=$transactionId',
+        method: 'POST',
+        autoRepeate: true,
+        autoRepeateCount: 3,
+        cancelToken: cancelToken,
+        retryIf: (e) => retryRequestIf(e));
+    return newItem;
+  }
+
+  Future<bool?> rollbackTransaction(NsgDataProvider provider, String transactionId, {NsgCancelToken? cancelToken}) async {
+    var request = NsgSimpleRequest<bool>();
+    var newItem = await request.requestItem(
+        provider: provider,
+        function: '/Api/Transaction/Rollback?id=$transactionId',
+        method: 'POST',
+        autoRepeate: true,
+        autoRepeateCount: 3,
+        cancelToken: cancelToken,
+        retryIf: (e) => retryRequestIf(e));
+    return newItem;
+  }
 }
