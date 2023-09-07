@@ -1,11 +1,11 @@
 {
     "editor.wordWrap": "wordWrapColumn",
-"editor.wordWrapColumn": 160,
-"dart.lineLength": 160,
-"[dart]": {
-    "editor.rulers": [
-        160
-    ],
-},
-"window.title": "NSG DATA",
+    "editor.wordWrapColumn": 160,
+    "dart.lineLength": 160,
+    "[dart]": {
+        "editor.rulers": [
+            160
+        ]
+    },
+    "window.title": "NSG DATA"
 }

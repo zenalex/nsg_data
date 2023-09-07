@@ -136,7 +136,9 @@ class NsgSimpleRequest<T extends Object> {
       bool autoRepeate = false,
       int autoRepeateCount = 1000,
       FutureOr<bool> Function(Exception)? retryIf,
-      FutureOr<void> Function(Exception)? onRetry}) async {
+      FutureOr<void> Function(Exception)? onRetry,
+      NsgCancelToken? cancelToken,
+  }) async {
     NsgDataRequestParams? newFilter;
     if (addCount) {
       if (filter == null) {
@@ -158,6 +160,7 @@ class NsgSimpleRequest<T extends Object> {
       autoRepeateCount: autoRepeateCount,
       retryIf: retryIf,
       onRetry: onRetry,
+      cancelToken: cancelToken,
     );
     if (data.isEmpty) {
       return null;
