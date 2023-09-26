@@ -479,7 +479,7 @@ class NsgDataItem {
   ///Метод проверки правильности запорлненности всех полей объекта перед его сохранением
   ///Если не перекрыт, проверяет заполненнойсть полей, помеченных как обязательные.
   ///Поле считается пустым, если его значение равно значению по умолчанию для этого поля
-  NsgValidateResult validateFieldValues() {
+  NsgValidateResult validateFieldValues({NsgBaseController? controller}) {
     var answer = NsgValidateResult();
     for (var fieldName in fieldList.fields.keys) {
       if (isFieldRequired(fieldName)) {
@@ -490,6 +490,9 @@ class NsgDataItem {
           }
           answer.isValid = false;
           answer.fieldsWithError[fieldName] = 'Не заполнено обязательное поле $fieldPresentation';
+          if (controller != null) {
+            controller.fieldsWithError = answer.fieldsWithError;
+          }
         }
       }
     }
