@@ -484,6 +484,7 @@ class NsgDataItem {
     for (var fieldName in fieldList.fields.keys) {
       if (isFieldRequired(fieldName)) {
         if (fieldValues.fields[fieldName] == fieldList.fields[fieldName]!.defaultValue) {
+          //&& fieldList.fields[fieldName]!.defaultValue! != 0
           var fieldPresentation = fieldList.fields[fieldName]!.presentation;
           if (fieldPresentation.isEmpty) {
             fieldPresentation = fieldName;
