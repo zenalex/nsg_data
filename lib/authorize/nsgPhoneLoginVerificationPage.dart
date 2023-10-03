@@ -321,7 +321,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                                 .then((result) => checkLoginResult(context, result));
                           }
                         },
-                        text: 'Войти'.toUpperCase(),
+                        text: widget.widgetParams!.textEnter.toUpperCase(),
                       ),
                     ),
                   const SizedBox(height: 15),
@@ -333,14 +333,14 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                     child: Padding(
                       padding: const EdgeInsets.only(top: 10, bottom: 10),
                       child: HoverWidget(
-                        hoverChild: const Text(
-                          'Вернуться на страницу входа',
-                          style: TextStyle(),
+                        hoverChild: Text(
+                          widget.widgetParams!.textBackToEnterPage,
+                          style: const TextStyle(),
                         ),
                         onHover: (PointerEnterEvent event) {},
-                        child: const Text(
-                          'Вернуться на страницу входа',
-                          style: TextStyle(decoration: TextDecoration.underline),
+                        child: Text(
+                          widget.widgetParams!.textBackToEnterPage,
+                          style: const TextStyle(decoration: TextDecoration.underline),
                         ),
                       ),
                     ),
@@ -431,13 +431,15 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
 
   void checkLoginResult(BuildContext context, NsgLoginResponse answer) {
     var answerCode = answer.errorCode;
+
     if (answerCode != 0) {
-      var needEnterCaptcha = (answerCode > 40100 && answerCode < 40400);
-      var errorMessage = answer.errorMessage;
-      if (errorMessage == '') {
-        widget.widgetParams!.errorMessageByStatusCode!(answerCode);
-      }
-      showError(errorMessage, needEnterCaptcha);
+      // var needEnterCaptcha = (answerCode > 40100 && answerCode < 40400);
+      // var errorMessage = answer.errorMessage;
+
+      // if (errorMessage != '') { //}
+      var errorMessage = widget.widgetParams!.errorMessageByStatusCode!(answerCode);
+      print(errorMessage);
+      showError(errorMessage, false);
     } else {
       NsgNavigator.instance.offAndToPage(widget.widgetParams!.mainPage);
     }

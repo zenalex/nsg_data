@@ -57,7 +57,7 @@ class NsgPhoneLoginPage extends StatelessWidget {
       toggleInside: true,
       simple: true,
       margin: const EdgeInsets.only(top: 5, bottom: 5),
-      label: 'Запомнить пользователя',
+      label: widgetParams.textRememberUser,
       onPressed: (currentValue) {
         provider.saveToken = currentValue;
       },
@@ -363,7 +363,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                               },
                             ),
                           ),
-                        if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) widget.loginPage.getRememberMeCheckbox(),
+                        if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) widget.loginPage.getRememberMeCheckbox() else SizedBox(height: 10),
                         if (widget.widgetParams!.useCaptcha)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,

@@ -14,6 +14,8 @@ class NsgPhoneLoginParams {
   double cardSize;
   double iconSize;
   double buttonSize;
+  String textEnter;
+  String textBackToEnterPage;
   String headerMessage;
   String headerMessageVerification;
   String headerMessageLogin;
@@ -33,6 +35,7 @@ class NsgPhoneLoginParams {
   String textEnterPassword;
   String textEnterNewPassword;
   String textEnterPasswordAgain;
+  String textRememberUser;
   TextStyle? descriptionStyle;
   TextStyle? textPhoneField;
   Color? cardColor;
@@ -58,6 +61,8 @@ class NsgPhoneLoginParams {
   NsgPhoneLoginParams(
       {this.loginType,
       this.email = '',
+      this.textEnter = 'Войти',
+      this.textBackToEnterPage = 'Вернуться на страницу входа',
       this.phoneNumber = '',
       this.usePasswordLogin = false,
       this.usePhoneLogin = true,
@@ -65,6 +70,7 @@ class NsgPhoneLoginParams {
       this.cardSize = 345.0,
       this.iconSize = 28.0,
       this.buttonSize = 42.0,
+      this.textRememberUser = 'Запомнить пользователя',
       this.headerMessage = 'NSG Application',
       this.headerMessageLogin = 'Вход', // 'Enter',
       this.headerMessageRegistration = 'Регистрация', // 'Registration',
