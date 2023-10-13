@@ -35,12 +35,20 @@ class NsgPhoneLoginModel extends NsgLoginModel {
   String? securityCode;
   String? newPassword;
   NsgLoginType? loginType;
+  String? firebaseToken;
   bool register = false;
   @override
   Map<String, dynamic> toJson() {
     String loginTypeString = '';
     if (loginType == NsgLoginType.email) loginTypeString = 'email';
     if (loginType == NsgLoginType.phone) loginTypeString = 'phone';
-    return {'phoneNumber': phoneNumber, 'securityCode': securityCode, 'loginType': loginTypeString, 'register': register, 'newPassword': newPassword};
+    return {
+      'phoneNumber': phoneNumber,
+      'securityCode': securityCode,
+      'loginType': loginTypeString,
+      'register': register,
+      'newPassword': newPassword,
+      'firebaseToken': firebaseToken
+    };
   }
 }
