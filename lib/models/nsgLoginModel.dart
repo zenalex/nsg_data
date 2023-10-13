@@ -35,7 +35,6 @@ class NsgPhoneLoginModel extends NsgLoginModel {
   String? securityCode;
   String? newPassword;
   NsgLoginType? loginType;
-  String? firebaseToken;
   bool register = false;
   @override
   Map<String, dynamic> toJson() {
@@ -48,7 +47,6 @@ class NsgPhoneLoginModel extends NsgLoginModel {
       'loginType': loginTypeString,
       'register': register,
       'newPassword': newPassword,
-      'firebaseToken': firebaseToken
     };
   }
 }
