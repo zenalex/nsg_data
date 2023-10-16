@@ -223,7 +223,7 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
                           fillColor: widget.widgetParams!.phoneFieldColor,
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
-                            borderSide: BorderSide(color: Colors.black, width: 1.0),
+                            borderSide: const BorderSide(color: Colors.black, width: 1.0),
                           ),
                           errorStyle: const TextStyle(fontSize: 12),
                           hintText: widget.widgetParams!.textEnterPhone,
@@ -250,7 +250,7 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
                           fillColor: widget.widgetParams!.phoneFieldColor,
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
-                            borderSide: BorderSide(color: Colors.black, width: 1.0),
+                            borderSide: const BorderSide(color: Colors.black, width: 1.0),
                           ),
                           errorStyle: const TextStyle(fontSize: 12),
                           hintText: widget.widgetParams!.textEnterEmail,

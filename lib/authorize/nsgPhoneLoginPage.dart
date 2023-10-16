@@ -355,7 +355,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
-                                  borderSide: BorderSide(color: Colors.black, width: 1.0),
+                                  borderSide: const BorderSide(color: Colors.black, width: 1.0),
                                 ),
                                 errorStyle: const TextStyle(fontSize: 12),
                                 hintText: widget.widgetParams!.textEnterPassword,
@@ -366,7 +366,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                               },
                             ),
                           ),
-                        if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) widget.loginPage.getRememberMeCheckbox() else SizedBox(height: 10),
+                        if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) widget.loginPage.getRememberMeCheckbox() else const SizedBox(height: 10),
                         if (widget.widgetParams!.useCaptcha)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -431,7 +431,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(nsgtheme.borderRadius),
-                                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                                    borderSide: const BorderSide(color: Colors.black, width: 1.0),
                                   ),
                                   errorStyle: const TextStyle(fontSize: 12),
                                   hintText: widget.widgetParams!.textEnterCaptcha,
