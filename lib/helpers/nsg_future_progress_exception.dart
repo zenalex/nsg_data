@@ -17,11 +17,6 @@ Future nsgFutureProgressAndException({required Function() func, String? text, Bu
     if (showProgress) {
       progress.hide();
     }
-    if (ex is Exception) {
-      await NsgErrorWidget.showError(ex as Exception);
-    } else {
-      print(ex);
-      await NsgErrorWidget.showError(ex as Exception);
-    }
+    await NsgErrorWidget.showError(ex);
   }
 }

@@ -97,6 +97,8 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
   bool isBusy = false;
   int secondsRepeateLeft = 120;
   String captchaCode = '';
+  //Заполнять токен
+  String firebaseToken = '';
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +108,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
   @override
   void initState() {
     widget.verificationPage.callback.sendDataPressed =
-        () => doSmsRequest(loginType: widget.widgetParams!.usePhoneLogin ? NsgLoginType.phone : NsgLoginType.email);
+        () => doSmsRequest(loginType: widget.widgetParams!.usePhoneLogin ? NsgLoginType.phone : NsgLoginType.email, firebaseToken: firebaseToken);
     super.initState();
     startTimer();
   }
@@ -354,7 +356,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
     );
   }
 
-  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password}) {
+  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password, required String firebaseToken}) {
     var context = Get.context;
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -371,7 +373,8 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
         .phoneLoginRequestSMS(
             phoneNumber: widget.widgetParams!.usePhoneLogin ? widget.widgetParams!.phoneNumber : widget.widgetParams!.email,
             securityCode: captchaCode,
-            loginType: widget.widgetParams!.usePhoneLogin ? NsgLoginType.phone : NsgLoginType.email)
+            loginType: widget.widgetParams!.usePhoneLogin ? NsgLoginType.phone : NsgLoginType.email,
+            firebaseToken: firebaseToken)
         .then((value) => checkRequestSMSanswer(context, value))
         .catchError((e) {
       widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);

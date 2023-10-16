@@ -36,6 +36,7 @@ class NsgPhoneLoginModel extends NsgLoginModel {
   String? newPassword;
   NsgLoginType? loginType;
   bool register = false;
+  String firebaseToken = '';
   @override
   Map<String, dynamic> toJson() {
     String loginTypeString = '';

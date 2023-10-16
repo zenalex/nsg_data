@@ -127,6 +127,9 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   //таймер, запускаемый по факту получения капчи. С автообновлением капчи через 2 минуты
   Timer? updateTimer;
 
+  //TODO: заполнять токен!!!
+  String firebaseToken = '';
+
   ///Get captcha and send request for SMS
   ///This is first stage of authorization
   static int stagePreLogin = 1;
@@ -134,7 +137,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   @override
   void initState() {
     super.initState();
-    widget.loginPage.callback.sendDataPressed = () => doSmsRequest(loginType: loginType, password: password);
+    widget.loginPage.callback.sendDataPressed = () => doSmsRequest(loginType: loginType, password: password, firebaseToken: firebaseToken);
     if (widget.widgetParams!.usePhoneLogin) {
       loginType = NsgLoginType.phone;
     } else {
@@ -447,7 +450,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                               onPressed: () {
                                 widget.widgetParams!.phoneNumber = phoneNumber;
                                 widget.widgetParams!.loginType = loginType;
-                                doSmsRequest(loginType: loginType, password: password);
+                                doSmsRequest(loginType: loginType, password: password, firebaseToken: firebaseToken);
                               },
                               text: 'Выслать код'.toUpperCase(),
                             ),
@@ -550,7 +553,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
     } else {}
   }
 
-  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password}) {
+  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password, required String firebaseToken}) {
     var context = Get.context;
     if (!_formKey.currentState!.validate()) return;
 
@@ -570,7 +573,8 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
       });
     } else {
       widget.provider
-          .phoneLoginRequestSMS(phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType)
+          .phoneLoginRequestSMS(
+              phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType, firebaseToken: firebaseToken)
           .then((value) => checkRequestSMSanswer(context, value))
           .catchError((e) {
         widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);

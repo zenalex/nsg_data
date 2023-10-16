@@ -355,7 +355,8 @@ class NsgDataProvider {
     return response;
   }
 
-  Future<NsgLoginResponse> phoneLoginRequestSMS({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
+  Future<NsgLoginResponse> phoneLoginRequestSMS(
+      {required String phoneNumber, required String securityCode, NsgLoginType? loginType, required String firebaseToken}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgPhoneLoginModel();
     login.phoneNumber = phoneNumber;
@@ -364,6 +365,7 @@ class NsgDataProvider {
       login.register = true;
     }
     login.securityCode = securityCode == '' ? 'security' : securityCode;
+    login.firebaseToken = firebaseToken;
     var s = login.toJson();
 
     var response = await (baseRequest(

@@ -84,6 +84,8 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
   bool isLoginSuccessfull = false;
   bool isSMSRequested = false;
   String captchaCode = '';
+  //TODO: заполнять токен!!!!!
+  String firebaseToken = '';
   late NsgLoginType loginType;
 
   @override
@@ -93,7 +95,7 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
 
   @override
   void initState() {
-    widget.registrationPage.callback.sendDataPressed = () => doSmsRequest(loginType: loginType);
+    widget.registrationPage.callback.sendDataPressed = () => doSmsRequest(loginType: loginType, firebaseToken: firebaseToken);
     if (widget.widgetParams!.usePhoneLogin) {
       loginType = NsgLoginType.phone;
     } else {
@@ -290,7 +292,7 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
     );
   }
 
-  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password}) {
+  void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password, required firebaseToken}) {
     var context = Get.context;
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -308,7 +310,8 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
       widget.widgetParams!.email = email;
     }
     widget.provider
-        .phoneLoginRequestSMS(phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType)
+        .phoneLoginRequestSMS(
+            phoneNumber: loginType == NsgLoginType.phone ? phoneNumber : email, securityCode: captchaCode, loginType: loginType, firebaseToken: firebaseToken)
         .then((value) => checkRequestSMSanswer(context, value))
         .catchError((e) {
       widget.widgetParams!.showError(context, widget.widgetParams!.textCheckInternet);
