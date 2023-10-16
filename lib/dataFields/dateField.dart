@@ -17,7 +17,7 @@ class NsgDataDateField extends NsgDataField {
   @override
   dynamic convertToJson(dynamic jsonValue) {
     //TODO: проверить время
-    return (jsonValue as DateTime).toUtc().toIso8601String();
+    return (jsonValue as DateTime).toIso8601String();
     //(jsonValue as DateTime).microsecondsSinceEpoch;
   }
 
