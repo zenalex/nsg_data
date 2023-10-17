@@ -33,5 +33,4 @@ export 'package:nsg_data/controllers/nsgBaseController.dart';
 export 'package:nsg_data/controllers/nsgBaseControllerData.dart';
 export 'package:nsg_data/controllers/nsgDataBinding.dart';
 export 'package:nsg_data/nsg_data_post.dart';
-export 'package:nsg_data/nsg_data_requestParams.dart';
 export 'package:nsg_data/nsgDataFreeRequest.dart';

@@ -6,7 +6,6 @@ import 'package:nsg_data/controllers/nsg_controller_filter.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'package:retry/retry.dart';
-import 'nsg_controller_filter.dart';
 
 class NsgBaseController extends GetxController
     with StateMixin<NsgBaseControllerData> {
