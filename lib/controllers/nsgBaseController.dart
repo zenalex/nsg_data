@@ -379,6 +379,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }).toList();
   }
 
+  ///Проверяем, удовлетворяет ли заданный элемент фильтру контроллера
   bool matchFilter(NsgDataItem item) {
     var list = [item];
     return _filter(list).isNotEmpty;
