@@ -385,6 +385,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Фильтрует строки из по фильтру добавляет в контроллер
+  ///Отфильтрованные данные заменяют собой данные в контроллере
   Future<List<NsgDataItem>> filterItems({required List<NsgDataItem> newItemsList, NsgDataRequestParams? filterParam}) async {
     var filter = filterParam ?? getRequestFilter;
     dataItemList = <NsgDataItem>[];
@@ -393,6 +394,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         dataItemList.add(row);
       }
     }
+    sortDataItemList();
     return dataItemList;
   }
 
@@ -775,9 +777,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
-  void sortDataItemList() {
+  ///Сортирует данные в массиве элементов, если массив н передан, сортирует данные в массиве самого контроллера
+  void sortDataItemList({List<NsgDataItem>? newItemsList}) {
     if (sorting.isEmpty) return;
-    dataItemList.sort(((a, b) {
+    var sortingData = newItemsList ?? dataItemList;
+    sortingData.sort(((a, b) {
       for (var param in sorting.paramList) {
         var fieldA = a.getField(param.parameterName);
         //var fieldB = b.getField(param.parameterName);
