@@ -384,6 +384,18 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return _filter(list).isNotEmpty;
   }
 
+  ///Фильтрует строки из по фильтру добавляет в контроллер
+  Future<List<NsgDataItem>> filterItems({required List<NsgDataItem> newItemsList, NsgDataRequestParams? filterParam}) async {
+    var filter = filterParam ?? getRequestFilter;
+    dataItemList = <NsgDataItem>[];
+    for (var row in newItemsList) {
+      if (filter.compare.isValid(row)) {
+        dataItemList.add(row);
+      }
+    }
+    return dataItemList;
+  }
+
   NsgDataRequestParams get getRequestFilter {
     var cmp = NsgCompare();
     //Добавление условия на мастер-деталь
