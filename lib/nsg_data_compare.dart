@@ -163,10 +163,28 @@ class NsgCompareParam {
         pv = (parameterValue as NsgDataItem).id;
       }
       return (value == pv);
+    } else if (comparisonOperator == NsgComparisonOperator.notEqual) {
+      var pv = parameterValue;
+      if (parameterValue is NsgDataItem) {
+        pv = (parameterValue as NsgDataItem).id;
+      }
+      return (value != pv);
     } else if (comparisonOperator == NsgComparisonOperator.inList) {
       return ((parameterValue as List).contains(value));
     } else if (comparisonOperator == NsgComparisonOperator.typeEqual) {
       return value.runtimeType == item.runtimeType;
+    } else if (comparisonOperator == NsgComparisonOperator.greaterOrEqual) {
+      var pv = parameterValue;
+      return (value >= pv);
+    } else if (comparisonOperator == NsgComparisonOperator.lessOrEqual) {
+      var pv = parameterValue;
+      return (value <= pv);
+    } else if (comparisonOperator == NsgComparisonOperator.greater) {
+      var pv = parameterValue;
+      return (value > pv);
+    } else if (comparisonOperator == NsgComparisonOperator.less) {
+      var pv = parameterValue;
+      return (value < pv);
     } else {
       return false;
     }
