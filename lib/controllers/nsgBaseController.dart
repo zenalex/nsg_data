@@ -503,6 +503,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     } else {
       selectedItem = element.clone();
       backupItem = element;
+      sendNotify();
     }
 
     if (offPage) {
