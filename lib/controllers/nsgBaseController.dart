@@ -136,6 +136,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///об избранных элементах и последних используемых
   NsgUserSettingsController? userSettingsController;
 
+  ///Показывать диалоговое окно при ошибке, возникшей при itemPagePost
+  bool showExceptionDialog = true;
+
   List<NsgUpdateKey> updateKeys = [];
 
   set selectedItem(NsgDataItem? newItem) {
@@ -639,7 +642,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //если это NsgApiExceptuion, то отображаем ошибку пользователю
       if (ex is NsgApiException) {
         var func = showException ?? NsgApiException.showExceptionDefault;
-        if (func != null) func(ex);
+
+        if (func != null && showExceptionDialog) func(ex);
       }
       rethrow;
     } finally {
