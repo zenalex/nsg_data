@@ -579,7 +579,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         var result = await NsgDialogSaveOrCancel.saveOrCancel();
         switch (result) {
           case null:
-            break;
+            return;
           case true:
             itemPagePost(goBack: true);
             return;
