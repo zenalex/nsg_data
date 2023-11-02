@@ -507,7 +507,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
 
     if (offPage) {
-      Get.offAndToNamed(pageName);
+      NsgNavigator.go(pageName);
     } else {
       NsgNavigator.push(pageName);
     }
