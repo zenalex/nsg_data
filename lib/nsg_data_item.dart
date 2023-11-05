@@ -535,36 +535,47 @@ class NsgDataItem {
     }
   }
 
+  ///Получить значение поля объекта в том числе, можно обращаться к полям вложенных объектов через точку
+  ///Например. playerId.clubId.name
+  ///Возвращает значение поля, если оно существует, если нет - возвращает null
+  ///В случае, если в чепочке полей не последнее поле будет отличаться от типа NsgDataReferenceField, будет возвращен null
   dynamic getFieldValueByFullPath(String fullPath) {
     var splitedPath = fullPath.split('.');
-    var fieldFound = false;
-    NsgDataField? foundField;
-    Type type = runtimeType;
+    dynamic curObject = this;
+    NsgDataField? curField;
+    var foundFieldName = '';
+    var foundFullPath = '';
     for (var i = 0; i < splitedPath.length; i++) {
-      fieldFound = false;
-      if (type == NsgDataItem) {
-        break;
+      if (foundFullPath.isEmpty) {
+        foundFullPath = splitedPath[i];
+      } else {
+        foundFullPath += '.' + splitedPath[i];
       }
-      var fieldList = NsgDataClient.client.getFieldList(type);
-      if (fieldList.fields.containsKey(splitedPath[i])) {
-        var field = fieldList.fields[splitedPath[i]];
-        if (field is NsgDataReferenceField) {
-          type = field.referentType;
-          foundField = field;
-          fieldFound = true;
-        } else if (field is NsgDataReferenceListField) {
-          type = field.referentElementType;
-          fieldFound = true;
-          foundField = field;
+      if (curField == null) {
+        curObject = this;
+      } else {
+        //getReferent вернет либо объект, либо Exception по умолчанию
+        if (curField is NsgDataReferenceField) {
+          curObject = curField.getReferent(curObject)!;
+        } else if (curField is NsgDataReferenceListField) {
+          //curObject = curField.getReferent(curObject)!;
+          foundFieldName = splitedPath[i];
+          //Если это табличная часть, то она должна быть последняя в списке. Иначе, придется перебирать все элементы, удовлетворяющие условию
+          //Возможно, можно и для этого случая собрать все вложенные элементы, но мне кажется это излишним, лучше правильно писать запросы
+          assert(i == splitedPath.length - 1, 'NsgDataReferenceListField type field can be last only');
+          break;
         } else {
-          type = NsgDataItem;
-          fieldFound = true;
-          foundField = field;
+          throw Exception('Field $foundFullPath not found in object $this');
         }
       }
+      var fieldList = curObject.fieldList;
+      if (fieldList.fields.containsKey(splitedPath[i])) {
+        foundFieldName = splitedPath[i];
+        curField = curObject.fieldList.fields[foundFieldName];
+      }
     }
-    if (fieldFound) {
-      return this[foundField!.name];
+    if (curField != null) {
+      return curObject[foundFieldName];
     } else {
       return null;
     }

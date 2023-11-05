@@ -175,15 +175,27 @@ class NsgCompareParam {
       return value.runtimeType == item.runtimeType;
     } else if (comparisonOperator == NsgComparisonOperator.greaterOrEqual) {
       var pv = parameterValue;
+      if (value is DateTime) {
+        return value.compareTo(pv) >= 0;
+      }
       return (value >= pv);
     } else if (comparisonOperator == NsgComparisonOperator.lessOrEqual) {
       var pv = parameterValue;
+      if (value is DateTime) {
+        return value.compareTo(pv) <= 0;
+      }
       return (value <= pv);
     } else if (comparisonOperator == NsgComparisonOperator.greater) {
       var pv = parameterValue;
+      if (value is DateTime) {
+        return value.compareTo(pv) == 1;
+      }
       return (value > pv);
     } else if (comparisonOperator == NsgComparisonOperator.less) {
       var pv = parameterValue;
+      if (value is DateTime) {
+        return value.compareTo(pv) == -1;
+      }
       return (value < pv);
     } else {
       return false;
