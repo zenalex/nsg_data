@@ -284,6 +284,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       // sendNotify();
     } on Exception catch (e) {
       _updateStatusError(e);
+      rethrow;
     }
   }
 
