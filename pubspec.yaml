@@ -28,7 +28,7 @@ dependencies:
   pedantic: ^1.11.1
   intl: ^0.18.0
   jiffy: ^5.0.0 
-  uuid: ^3.0.6
+  uuid: ^4.2.1
   timeago: ^3.5.0
 
   hive: ^2.2.3
