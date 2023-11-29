@@ -277,7 +277,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           if (loginType == NsgLoginType.phone)
                             TextFormField(
                               key: GlobalKey(),
-                              cursorColor: nsgtheme.colorMainText,
+                              cursorColor: Theme.of(context).primaryColor,
                               keyboardType: TextInputType.phone,
                               inputFormatters: [phoneFormatter],
                               style: TextStyle(color: nsgtheme.colorText),
@@ -308,7 +308,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                           if (loginType == NsgLoginType.email)
                             TextFormField(
                               key: GlobalKey(),
-                              cursorColor: nsgtheme.colorMainText,
+                              cursorColor: Theme.of(context).primaryColor,
                               keyboardType: TextInputType.emailAddress,
                               inputFormatters: null,
                               style: TextStyle(color: nsgtheme.colorText),
@@ -337,7 +337,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                             padding: const EdgeInsets.only(top: 10),
                             child: TextFormField(
                               obscureText: true,
-                              cursorColor: Colors.black,
+                              cursorColor: Theme.of(context).primaryColor,
                               keyboardType: TextInputType.visiblePassword,
                               inputFormatters: null,
                               style: TextStyle(color: nsgtheme.colorText),
@@ -416,6 +416,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
                               child: TextFormField(
+                                cursorColor: Theme.of(context).primaryColor,
                                 controller: _captchaController,
                                 textAlign: TextAlign.center,
                                 decoration: InputDecoration(

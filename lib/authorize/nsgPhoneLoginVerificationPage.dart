@@ -207,6 +207,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                   ),
                   const SizedBox(height: 15.0),
                   TextFormField(
+                    cursorColor: Theme.of(context).primaryColor,
                     keyboardType: TextInputType.number,
                     style: TextStyle(color: nsgtheme.colorText, fontSize: nsgtheme.sizeXL),
                     textAlign: TextAlign.center,
@@ -238,6 +239,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                       child: Column(
                         children: [
                           TextFormField(
+                            cursorColor: Theme.of(context).primaryColor,
                             keyboardType: TextInputType.number,
                             style: TextStyle(color: nsgtheme.colorText),
                             textAlign: TextAlign.center,
@@ -264,6 +266,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                           Padding(
                             padding: const EdgeInsets.only(top: 15),
                             child: TextFormField(
+                              cursorColor: Theme.of(context).primaryColor,
                               keyboardType: TextInputType.number,
                               style: TextStyle(color: nsgtheme.colorText),
                               textAlign: TextAlign.center,
