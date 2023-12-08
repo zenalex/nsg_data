@@ -787,9 +787,17 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Сортирует данные в массиве самого контроллера
   void sortDataItemList() {
+    var currentSorting = sorting;
+    if (currentSorting.isEmpty) {
+      var sortingString = getRequestFilter.sorting ?? '';
+      if (sortingString.isEmpty) return;
+      currentSorting = NsgSorting();
+      currentSorting.addStringParams(sortingString);
+    }
+
     if (sorting.isEmpty) return;
     dataItemList.sort(((a, b) {
-      for (var param in sorting.paramList) {
+      for (var param in currentSorting.paramList) {
         var fieldA = a.getField(param.parameterName);
         //var fieldB = b.getField(param.parameterName);
         int result = fieldA.compareTo(a, b);
@@ -811,7 +819,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       currentSorting = NsgSorting();
       currentSorting.addStringParams(sortingString);
     }
-    ;
+
     newItemsList.sort(((a, b) {
       for (var param in currentSorting.paramList) {
         var fieldA = a.getField(param.parameterName);
