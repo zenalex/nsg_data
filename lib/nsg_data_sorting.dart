@@ -1,3 +1,5 @@
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+
 enum NsgSortingDirection { ascending, descending }
 
 class NsgSorting {
@@ -33,6 +35,25 @@ class NsgSorting {
     }
 
     return s;
+  }
+
+  ///Добавить параметры сортировки из строки. Параметры в строке разделяются запятыми без пробелов
+  ///Могут содержать имя поля (обязательно) и направление сортировки (опционально)
+  ///Если направление сортировки не задано, она будет по возрастанию
+  ///Например, ИмяПоля1-,ИмяПоля2,ИмяПоля3+
+  void addStringParams(String sortingString) {
+    for (var stringParam in sortingString.split(',')) {
+      var paramDirection = NsgSortingDirection.ascending;
+      if (stringParam.isEmpty) continue;
+      var lastChar = stringParam[stringParam.length - 1];
+      if (lastChar == '+' || lastChar == '-') {
+        stringParam.removeLast();
+        if (lastChar == '-') {
+          paramDirection = NsgSortingDirection.descending;
+        }
+      }
+      add(name: stringParam, direction: paramDirection);
+    }
   }
 }
 
