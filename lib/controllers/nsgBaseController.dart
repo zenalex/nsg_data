@@ -425,12 +425,19 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
       if (fieldNames.isNotEmpty) {
         var searchCmp = NsgCompare();
-        searchCmp.logicalOperator = NsgLogicalOperator.or;
-        for (var fieldName in fieldNames) {
-          var field = dataItem.fieldList.fields[fieldName];
-          if ((field is NsgDataStringField || field is NsgDataReferenceField) && field is! NsgDataEnumReferenceField) {
-            searchCmp.add(name: fieldName, value: controllerFilter.searchString, comparisonOperator: NsgComparisonOperator.containWords);
+        searchCmp.logicalOperator = NsgLogicalOperator.and;
+        var searchArray = controllerFilter.searchString.split(' ');
+
+        for (var searchString in searchArray) {
+          var searchArrayCmp = NsgCompare();
+          searchArrayCmp.logicalOperator = NsgLogicalOperator.or;
+          for (var fieldName in fieldNames) {
+            var field = dataItem.fieldList.fields[fieldName];
+            if ((field is NsgDataStringField || field is NsgDataReferenceField) && field is! NsgDataEnumReferenceField) {
+              searchArrayCmp.add(name: fieldName, value: searchString, comparisonOperator: NsgComparisonOperator.contain);
+            }
           }
+          searchCmp.add(name: "SearchStringComparisonAllWords", value: searchArrayCmp);
         }
         cmp.add(name: "SearchStringComparison", value: searchCmp);
       }
