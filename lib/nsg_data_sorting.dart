@@ -47,7 +47,7 @@ class NsgSorting {
       if (stringParam.isEmpty) continue;
       var lastChar = stringParam[stringParam.length - 1];
       if (lastChar == '+' || lastChar == '-') {
-        stringParam.removeLast();
+        stringParam = stringParam.removeLast();
         if (lastChar == '-') {
           paramDirection = NsgSortingDirection.descending;
         }
