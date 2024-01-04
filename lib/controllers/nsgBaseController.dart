@@ -521,6 +521,21 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
+  ///Open list page to view data in controller.items
+  void listPageOpen(String pageName, {bool needRefreshItems = false, bool offPage = false}) {
+    if (needRefreshItems) {
+      refreshData();
+    } else {
+      sendNotify();
+    }
+
+    if (offPage) {
+      NsgNavigator.go(pageName);
+    } else {
+      NsgNavigator.push(pageName);
+    }
+  }
+
   ///Создает новый элемент. Вызывается из createNewItem
   ///Может быть перекрыт для организации бизнес-логики запросов, например, заполнения нового элемента на сервере
   ///или проверки возможности создания нового элемента
