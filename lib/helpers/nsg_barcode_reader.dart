@@ -100,7 +100,10 @@ class NsgBarcodeListenerState extends State<NsgBarcodeListener> {
     checkPendingCharCodesToClear();
     _lastScannedCharCodeTime = DateTime.now();
     if (char == lineFeed) {
-      _onBarcodeScannedCallback.call(_scannedChars.join());
+      //Чтобы избежать случайного срабатывания по нажатию enter вручную
+      if (_scannedChars.length >= 8) {
+        _onBarcodeScannedCallback.call(_scannedChars.join());
+      }
       resetScannedCharCodes();
     } else {
       //add character to list of scanned characters;
