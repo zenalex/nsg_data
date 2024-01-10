@@ -145,6 +145,7 @@ class NsgBarcodeListenerState extends State<NsgBarcodeListener> {
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_keyBoardCallback);
     _keyboardSubscription.cancel();
     _controller.close();
     super.dispose();
