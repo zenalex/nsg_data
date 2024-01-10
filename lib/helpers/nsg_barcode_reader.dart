@@ -100,7 +100,7 @@ class NsgBarcodeListenerState extends State<NsgBarcodeListener> {
     //remove any pending characters older than bufferDuration value
     checkPendingCharCodesToClear();
     _lastScannedCharCodeTime = DateTime.now();
-    if (char == lineFeed || (kReleaseMode && char == '/')) {
+    if (char == lineFeed || (!kReleaseMode && char == '/')) {
       //Чтобы избежать случайного срабатывания по нажатию enter вручную
       if (_scannedChars.length >= 8) {
         _onBarcodeScannedCallback.call(_scannedChars.join());
