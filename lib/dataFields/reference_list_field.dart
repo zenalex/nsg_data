@@ -63,7 +63,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
       var dublicate = false;
       for (var item in items) {
         if (item.isNotEmpty && item.id == elem.id) {
-          debugPrint('ОШИБКА RLF-62: дубликат стртоки в таб. части');
+          debugPrint('ОШИБКА RLF-62: дубликат строки в таб. части');
           dublicate = true;
           break;
         }
