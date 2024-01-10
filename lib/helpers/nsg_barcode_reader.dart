@@ -102,7 +102,7 @@ class NsgBarcodeListenerState extends State<NsgBarcodeListener> {
     _lastScannedCharCodeTime = DateTime.now();
     if (char == lineFeed || (!kReleaseMode && char == '/')) {
       //Чтобы избежать случайного срабатывания по нажатию enter вручную
-      if (_scannedChars.length >= 8) {
+      if (_scannedChars.length >= 8 || (!kReleaseMode && char == '/')) {
         _onBarcodeScannedCallback.call(_scannedChars.join());
       }
       resetScannedCharCodes();
