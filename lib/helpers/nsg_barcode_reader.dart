@@ -115,7 +115,7 @@ class NsgBarcodeListenerState extends State<NsgBarcodeListener> {
   }
 
   void checkPendingCharCodesToClear() {
-    if (_lastScannedCharCodeTime != null && !kReleaseMode) {
+    if (_lastScannedCharCodeTime != null && kReleaseMode) {
       if (_lastScannedCharCodeTime!.isBefore(DateTime.now().subtract(_bufferDuration))) {
         resetScannedCharCodes();
       }
