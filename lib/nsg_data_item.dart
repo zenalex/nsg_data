@@ -63,6 +63,12 @@ class NsgDataItem {
 
   String get typeName => runtimeType.toString();
 
+  ///Возможно ли наследование от данного класса
+  bool get allowExtend => false;
+
+  ///Имя поля для хранения значений дополнительных полейrride
+  String get additionalDataField => '';
+
   ///Чтение полей объекта из JSON
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
