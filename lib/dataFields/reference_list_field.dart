@@ -53,6 +53,13 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
       var elem = NsgDataClient.client.getNewObject(referentElementType);
       if (m is Map<String, dynamic>) {
         elem.fromJson(m);
+        if (elem.allowExtend) {
+          var extTypeName = elem[elem.extensionTypeField].toString();
+          if (extTypeName != elem.typeName) {
+            elem = NsgDataClient.client.getNewObjectByTypeName(extTypeName);
+            elem.fromJson(m);
+          }
+        }
       } else if (m.runtimeType == referentElementType) {
         elem.copyFieldValues(m);
       } else if (m is String) {

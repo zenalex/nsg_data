@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:nsg_data/nsg_data.dart';
 import 'nsg_data_paramList.dart';
 
@@ -63,6 +65,21 @@ class NsgDataItem {
 
   String get typeName => runtimeType.toString();
 
+  ///------------------------------------
+  ///Методы для наследования классов БД
+  ///------------------------------------
+  ///Возможно ли наследование от данного класса
+  bool get allowExtend => false;
+
+  ///Имя поля для хранения значений дополнительных полейrride
+  String get additionalDataField => '';
+
+  ///Имя поля, содержащего реальный тип данных
+  String get extensionTypeField => '';
+
+  ///------------------------------------
+  ///Методы сериализации и десериализации
+  ///------------------------------------
   ///Чтение полей объекта из JSON
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {
@@ -79,12 +96,25 @@ class NsgDataItem {
     if (json.containsKey('newTableLogic')) {
       newTableLogic |= json.containsKey('newTableLogic') && json['newTableLogic'] == 'true';
     }
+    //Чтение дополнительных полей
+    if (allowExtend && json.containsKey(additionalDataField)) {
+      (jsonDecode(json[additionalDataField])).forEach((name, jsonValue) {
+        if (fieldList.fields.containsKey(name)) {
+          setFieldValue(name, jsonValue);
+        }
+      });
+    }
+    //Проставляем время чтения объекта для определения версии и срока жизни
     loadTime = DateTime.now().microsecondsSinceEpoch;
   }
 
   ///Запись полей объекта в JSON
   Map<String, dynamic> toJson({List<String> excludeFields = const []}) {
     var map = <String, dynamic>{};
+    //запись типа для наследуемых типов
+    if (allowExtend) {
+      map[extensionTypeField] = typeName;
+    }
     if (newTableLogic && docState == NsgDataItemDocState.deleted) {
       map[primaryKeyField] = id;
     } else {
@@ -99,6 +129,9 @@ class NsgDataItem {
     map['state'] = state.index;
     map['docState'] = docState.index;
     map['newTableLogic'] = newTableLogic;
+    //сериализация дополнительных полей
+    //TODO: или сделать на сервере или надо знать какие поля являются дополнительными
+    if (allowExtend) {}
     return map;
   }
 
