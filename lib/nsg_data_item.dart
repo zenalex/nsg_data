@@ -63,12 +63,21 @@ class NsgDataItem {
 
   String get typeName => runtimeType.toString();
 
+  ///------------------------------------
+  ///Методы для наследования классов БД
+  ///------------------------------------
   ///Возможно ли наследование от данного класса
   bool get allowExtend => false;
 
   ///Имя поля для хранения значений дополнительных полейrride
   String get additionalDataField => '';
 
+  ///Имя поля, содержащего реальный тип данных
+  String get extensionTypeField => '';
+
+  ///------------------------------------
+  ///Методы сериализации и десериализации
+  ///------------------------------------
   ///Чтение полей объекта из JSON
   void fromJson(Map<String, dynamic> json) {
     json.forEach((name, jsonValue) {

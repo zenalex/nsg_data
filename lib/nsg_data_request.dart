@@ -23,6 +23,13 @@ class NsgDataRequest<T extends NsgDataItem> {
     for (var m in maps) {
       var elem = NsgDataClient.client.getNewObject(dataItemType);
       elem.fromJson(m as Map<String, dynamic>);
+      if (elem.allowExtend) {
+        var extTypeName = elem[elem.extensionTypeField].toString();
+        if (extTypeName != elem.typeName) {
+          elem = NsgDataClient.client.getNewObject(dataItemType);
+          elem.fromJson(m);
+        }
+      }
       // elem.state = NsgDataItemState.fill;
       items.add(elem as T);
     }
