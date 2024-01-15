@@ -94,12 +94,26 @@ class NsgDataItem {
     if (json.containsKey('newTableLogic')) {
       newTableLogic |= json.containsKey('newTableLogic') && json['newTableLogic'] == 'true';
     }
+    //Чтение дополнительных полей
+    if (allowExtend && json.containsKey(additionalDataField)) {
+      assert(json[additionalDataField] is Map<String, dynamic>, 'additionalDataField must has json format');
+      (json[additionalDataField] as Map<String, dynamic>).forEach((name, jsonValue) {
+        if (fieldList.fields.containsKey(name)) {
+          setFieldValue(name, jsonValue);
+        }
+      });
+    }
+    //Проставляем время чтения объекта для определения версии и срока жизни
     loadTime = DateTime.now().microsecondsSinceEpoch;
   }
 
   ///Запись полей объекта в JSON
   Map<String, dynamic> toJson({List<String> excludeFields = const []}) {
     var map = <String, dynamic>{};
+    //запись типа для наследуемых типов
+    if (allowExtend) {
+      map[extensionTypeField] = typeName;
+    }
     if (newTableLogic && docState == NsgDataItemDocState.deleted) {
       map[primaryKeyField] = id;
     } else {
@@ -114,6 +128,9 @@ class NsgDataItem {
     map['state'] = state.index;
     map['docState'] = docState.index;
     map['newTableLogic'] = newTableLogic;
+    //сериализация дополнительных полей
+    //TODO: или сделать на сервере или надо знать какие поля являются дополнительными
+    if (allowExtend) {}
     return map;
   }
 
