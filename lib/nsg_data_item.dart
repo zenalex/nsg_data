@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:nsg_data/nsg_data.dart';
 import 'nsg_data_paramList.dart';
 
@@ -96,8 +98,7 @@ class NsgDataItem {
     }
     //Чтение дополнительных полей
     if (allowExtend && json.containsKey(additionalDataField)) {
-      assert(json[additionalDataField] is Map<String, dynamic>, 'additionalDataField must has json format');
-      (json[additionalDataField] as Map<String, dynamic>).forEach((name, jsonValue) {
+      (jsonDecode(json[additionalDataField])).forEach((name, jsonValue) {
         if (fieldList.fields.containsKey(name)) {
           setFieldValue(name, jsonValue);
         }
