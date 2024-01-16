@@ -25,7 +25,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       elem.fromJson(m as Map<String, dynamic>);
       if (elem.allowExtend) {
         var extTypeName = elem[elem.extensionTypeField].toString();
-        if (extTypeName != '' && extTypeName != elem.typeName) {
+        if (extTypeName.isNotEmpty && extTypeName != elem.typeName) {
           elem = NsgDataClient.client.getNewObjectByTypeName(extTypeName);
           elem.fromJson(m);
         }
