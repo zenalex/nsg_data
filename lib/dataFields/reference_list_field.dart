@@ -56,8 +56,15 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
         if (elem.allowExtend) {
           var extTypeName = elem[elem.extensionTypeField].toString();
           if (extTypeName.isNotEmpty && extTypeName != elem.typeName) {
-            elem = NsgDataClient.client.getNewObjectByTypeName(extTypeName);
-            elem.fromJson(m);
+            try {
+              elem = NsgDataClient.client.getNewObjectByTypeName(extTypeName);
+              elem.fromJson(m);
+            } on AssertionError catch (ex) {
+              if (ex.message == extTypeName)
+                debugPrint('Unknown type $extTypeName');
+              else
+                rethrow;
+            }
           }
         }
       } else if (m.runtimeType == referentElementType) {
