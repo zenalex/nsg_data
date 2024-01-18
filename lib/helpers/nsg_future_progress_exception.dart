@@ -18,5 +18,6 @@ Future nsgFutureProgressAndException({required Function() func, String? text, Bu
       progress.hide();
     }
     await NsgErrorWidget.showError(ex);
+    rethrow;
   }
 }
