@@ -642,7 +642,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     try {
       await _postSelectedItem();
       var oldIndex = dataItemList.length;
-      if (backupItem != null && dataItemList.contains(backupItem)) {
+      if (backupItem != null && backupItem == selectedItem && dataItemList.contains(backupItem)) {
         oldIndex = dataItemList.indexOf(backupItem!);
         dataItemList.remove(backupItem!);
       }
