@@ -111,10 +111,7 @@ class NsgDataItem {
   ///Запись полей объекта в JSON
   Map<String, dynamic> toJson({List<String> excludeFields = const []}) {
     var map = <String, dynamic>{};
-    //запись типа для наследуемых типов
-    if (allowExtend) {
-      map[extensionTypeField] = typeName;
-    }
+
     if (newTableLogic && docState == NsgDataItemDocState.deleted) {
       map[primaryKeyField] = id;
     } else {
@@ -125,6 +122,10 @@ class NsgDataItem {
           map[name] = value!.convertToJson(getFieldValue(name));
         }
       }
+    }
+    //запись типа для наследуемых типов
+    if (allowExtend) {
+      map[extensionTypeField] = typeName;
     }
     map['state'] = state.index;
     map['docState'] = docState.index;
