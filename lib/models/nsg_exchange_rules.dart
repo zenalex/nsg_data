@@ -3,6 +3,8 @@ import '../dataFields/nsg_data_table.dart';
 mixin NsgExchangeRules {
   String get objectType;
   set objectType(String value);
+  DateTime get lastExchangeDate;
+  set lastExchangeDate(DateTime value);
   int get periodicity;
   set periodicity(int value);
   bool get priorityForClient;
