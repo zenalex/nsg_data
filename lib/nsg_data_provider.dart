@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart' as getx;
 import 'package:nsg_controls/widgets/nsg_error_widget.dart';
 import 'package:nsg_data/controllers/nsgBaseController.dart';
+import 'package:nsg_data/helpers/nsg_future_progress_exception.dart';
 import 'package:nsg_data/nsgApiException.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -367,13 +368,15 @@ class NsgDataProvider {
     login.securityCode = securityCode == '' ? 'security' : securityCode;
     login.firebaseToken = firebaseToken;
     var s = login.toJson();
-
-    var response = await (baseRequest(
-        function: 'PhoneLoginRequestSMS',
-        headers: getAuthorizationHeader(),
-        url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
-        method: 'POST',
-        params: s));
+    Map<String, dynamic>? response;
+    await nsgFutureProgressAndException(func: () async {
+      response = await (baseRequest(
+          function: 'PhoneLoginRequestSMS',
+          headers: getAuthorizationHeader(),
+          url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
+          method: 'POST',
+          params: s));
+    });
 
     var loginResponse = NsgLoginResponse.fromJson(response);
     if (loginResponse.errorCode == 0) {
