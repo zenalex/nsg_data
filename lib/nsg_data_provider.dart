@@ -31,11 +31,12 @@ class NsgDataProvider {
   bool allowConnect;
   bool _initialized = false;
   bool isAnonymous = true;
-  bool saveToken = true;
   String? phoneNumber;
+  bool saveToken = true;
   DateTime? smsRequestedTime;
   bool isDebug = kDebugMode;
   bool loginRequired = true;
+  bool saveTokenWebDefaultTrue = false;
 
   ///Firebase token for this device
   String firebaseToken;
@@ -90,7 +91,7 @@ class NsgDataProvider {
         token = _prefs.getString(applicationName);
         isAnonymous = false;
       }
-      if (kIsWeb) {
+      if (kIsWeb && !saveTokenWebDefaultTrue) {
         // || (!Platform.isAndroid && !Platform.isIOS)) {
         saveToken = false;
       } else {
