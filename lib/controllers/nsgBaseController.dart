@@ -969,7 +969,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Поставить в очередь на сохранение, чтобы избезать параллельного сохранения
   ///Уменьшив таким образом нагрузку на сервер и избежать коллизий
-  Future postItemQueue(NsgDataItem obj) async {
+  Future postItemQueue(NsgDataItem obj,
+      {Function(List<NsgDataItem> errorObjects)? errorObjects, Function(List<NsgDataItem> postedObjects)? postedObjects}) async {
     if (_postQueue.contains(obj)) {
       return;
     }
@@ -977,11 +978,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (_isPosting) {
       return;
     }
-    _postingItemQueue();
+    _postingItemQueue(errorObjects: errorObjects, postedObjects: postedObjects);
   }
 
   int _errorsPostQueue = 0;
-  Future _postingItemQueue() async {
+  Future _postingItemQueue({required Function(List<NsgDataItem>)? errorObjects, required Function(List<NsgDataItem>)? postedObjects}) async {
     if (_isPosting) {
       return true;
     }
@@ -998,6 +999,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       _postQueue.clear();
       //Непосредственно сохранение
       await postItems(_postingItems);
+      if (postedObjects != null) {
+        postedObjects(_postingItems);
+      }
       _postingItems.clear();
     } catch (e) {
       error = true;
@@ -1005,11 +1009,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       _isPosting = false;
     }
     if (error) {
-      _errorsPostQueue++;
-      if (_errorsPostQueue < autoRepeateCount) {
-        Timer(const Duration(seconds: 1), () => _postingItemQueue);
+      if (errorObjects != null) {
+        errorObjects(_postingItems);
       }
-    } else {
       //Если во время сохранения произошла ошибка, возвращаем несохраненные элементы в очередь
       //Но так как там уже могут быть эти же элементы, делаем это через проверку
       for (var item in _postingItems) {
@@ -1019,9 +1021,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         _postQueue.add(item);
       }
       _postingItems.clear();
+      _errorsPostQueue++;
+      if (_errorsPostQueue < autoRepeateCount) {
+        Timer(const Duration(seconds: 1), () => _postingItemQueue);
+      }
+    } else {
       _isPosting = false;
       _errorsPostQueue = 0;
-      _postingItemQueue();
+      _postingItemQueue(errorObjects: errorObjects, postedObjects: postedObjects);
     }
   }
 
