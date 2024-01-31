@@ -5,8 +5,16 @@ import 'package:flutter/foundation.dart';
 
 class NsgMetrica {
   static bool useYandexMetrica = false;
+  static bool useGoogleAnalitics = false;
 
-  static void activate() {
+  ///Активировать использование метрики
+  ///useYandex - используем Яндекс.Метрику
+  ///useGoodle - используем Гугул.Аналитику
+  ///
+  ///ВНИМАНИЕ!
+  ///В настоящее время использование яндекс метрики отключено
+  ///В будущем, подключение различных модулей аналитики должно быть выделено в отделтные пакеты для уменбшения размера сборок
+  static void activate({bool useYandex = false, useGoodle = false}) {
     if (kReleaseMode && NsgMetricaOptions.yandexMetricaId.isNotEmpty && !kIsWeb && (io.Platform.isAndroid || io.Platform.isIOS)) {
       useYandexMetrica = true;
       // AppMetrica.activate(AppMetricaConfig(NsgMetricaOptions.yandexMetricaId));
