@@ -399,7 +399,7 @@ class NsgDataRequest<T extends NsgDataItem> {
             }
           }
 
-          if (refList.isNotEmpty && field is! NsgDataUntypedReferenceField) {
+          if (refList.isNotEmpty) {
             var request = NsgDataRequest(dataItemType: field.referentElementType);
             var cmp = NsgCompare();
             cmp.add(
@@ -407,6 +407,7 @@ class NsgDataRequest<T extends NsgDataItem> {
                 value: refList,
                 comparisonOperator: NsgComparisonOperator.inList);
             var filter = NsgDataRequestParams(compare: cmp);
+            print('field.referentElementType ${field.referentElementType}');
             if (storageType == NsgDataStorageType.server) {
               refItems = await request.requestItems(filter: filter, loadReference: []);
             } else {
@@ -454,7 +455,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         } else if (field is NsgDataReferenceListField) {
           for (var item in items) {
             var fieldValue = item.getFieldValue(splitedName[0]) as List<NsgDataItem>;
-            if (readTableParts) {
+            if (readTableParts && storageType == NsgDataStorageType.local) {
               if (fieldValue.isNotEmpty) {
                 var cmp = NsgCompare();
                 var ids = <String>[];
