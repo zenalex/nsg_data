@@ -407,7 +407,7 @@ class NsgDataRequest<T extends NsgDataItem> {
                 value: refList,
                 comparisonOperator: NsgComparisonOperator.inList);
             var filter = NsgDataRequestParams(compare: cmp);
-            print('field.referentElementType ${field.referentElementType}');
+            //print('field.referentElementType ${field.referentElementType}');
             if (storageType == NsgDataStorageType.server) {
               refItems = await request.requestItems(filter: filter, loadReference: []);
             } else {
