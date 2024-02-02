@@ -719,7 +719,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     var answer = await request.requestItem(
         filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
-
+    assert(answer.isNotEmpty, 'Элемент не найден (возможно помечен на удаление)');
     return answer;
   }
 

@@ -13,11 +13,15 @@ Future nsgFutureProgressAndException({required Function() func, String? text, Bu
     if (showProgress) {
       progress.hide();
     }
-  } on Exception catch (ex) {
+  } catch (ex) {
     if (showProgress) {
       progress.hide();
     }
-    await NsgErrorWidget.showError(ex);
+    if (ex is Exception) {
+      await NsgErrorWidget.showError(ex);
+    } else {
+      NsgErrorWidget.showErrorByString(ex.toString());
+    }
     rethrow;
   }
 }
