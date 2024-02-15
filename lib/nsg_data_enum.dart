@@ -28,8 +28,8 @@ class NsgEnum extends NsgDataItem {
   static NsgEnum fromValue(Type type, int v) {
     var map = _getAll(type);
     if (!map.containsKey(v)) {
-      // v = 0;
-      // return map[v]!;
+      v = 0;
+      return map[v]!;
       throw Exception('Wrong value $v');
     }
     return map[v]!;
