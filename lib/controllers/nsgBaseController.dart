@@ -724,6 +724,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     var answer = await request.requestItem(
         filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
     assert(answer.isNotEmpty, 'Элемент не найден (возможно помечен на удаление)');
+    //Если в items (он же dataItemList) данный элемент уже присутствует, обновляем его новой версией
+    if (dataItemList.contains(answer)) {
+      var index = dataItemList.indexOf(answer);
+      dataItemList.replaceRange(index, index, [answer]);
+    }
     return answer;
   }
 
