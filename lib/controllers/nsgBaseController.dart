@@ -727,7 +727,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //Если в items (он же dataItemList) данный элемент уже присутствует, обновляем его новой версией
     if (dataItemList.contains(answer)) {
       var index = dataItemList.indexOf(answer);
-      dataItemList.replaceRange(index, index, [answer]);
+      dataItemList.replaceRange(index, index + 1, [answer]);
     }
     return answer;
   }
