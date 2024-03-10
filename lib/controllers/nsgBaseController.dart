@@ -713,10 +713,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList) async {
+    assert(item.runtimeType == this.dataType, '${this.dataType}.refreshItem. item is ${item.runtimeType}');
     //Если у элемента нет ID, то читать его из БД нет смысла
     //Возможно, лучше выдавть ошибку, но пока просто проигнорируем
     //Ошибка стабильно проявлялась при нажатии назад в матче приложения футболист
-    if (item.id.isEmpty) return item;
+    if (item.id.isEmpty || item.state == NsgDataItemState.create) return item;
     var cmp = NsgCompare();
     cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
     var filterParam = NsgDataRequestParams(compare: cmp);
