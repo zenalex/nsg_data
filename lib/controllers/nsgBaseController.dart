@@ -991,7 +991,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     _postingItemQueue(errorObjects: errorObjects, postedObjects: postedObjects);
   }
 
-  int _errorsPostQueue = 0;
+  Map<NsgDataItem, int> _postingItemErrorCount = {};
   Future _postingItemQueue({required Function(List<NsgDataItem>)? errorObjects, required Function(List<NsgDataItem>)? postedObjects}) async {
     if (_isPosting) {
       return true;
@@ -1025,19 +1025,29 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //Если во время сохранения произошла ошибка, возвращаем несохраненные элементы в очередь
       //Но так как там уже могут быть эти же элементы, делаем это через проверку
       for (var item in _postingItems) {
+        if (_postingItemErrorCount.containsKey(item)) {
+          _postingItemErrorCount[item] = _postingItemErrorCount[item]! + 1;
+          if (_postingItemErrorCount[item]! >= autoRepeateCount) {
+            _postingItemErrorCount.remove(item);
+            continue;
+          }
+        } else {
+          _postingItemErrorCount[item] = 1;
+        }
         if (_postQueue.contains(item)) {
           continue;
         }
         _postQueue.add(item);
       }
       _postingItems.clear();
-      _errorsPostQueue++;
-      if (_errorsPostQueue < autoRepeateCount) {
-        Timer(const Duration(seconds: 1), () => _postingItemQueue);
+
+      if (_postQueue.isNotEmpty) {
+        Timer(const Duration(seconds: 1), () {
+          _postingItemQueue(errorObjects: errorObjects, postedObjects: postedObjects);
+        });
       }
     } else {
       _isPosting = false;
-      _errorsPostQueue = 0;
       _postingItemQueue(errorObjects: errorObjects, postedObjects: postedObjects);
     }
   }
