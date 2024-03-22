@@ -378,7 +378,7 @@ class NsgDataItem {
     }
   }
 
-  Future remove() async {
+  Future removeItem() async {
     var p = NsgDataDelete(dataItemType: runtimeType, itemsToDelete: [this]);
     await p.deleteItems();
   }
