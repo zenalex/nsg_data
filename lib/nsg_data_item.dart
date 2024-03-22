@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:nsg_data/nsg_data.dart';
+import 'nsg_data_delete.dart';
 import 'nsg_data_paramList.dart';
 
 class NsgDataItem {
@@ -375,6 +376,11 @@ class NsgDataItem {
     } else {
       await NsgLocalDb.instance.postItems([this]);
     }
+  }
+
+  Future remove() async {
+    var p = NsgDataDelete(dataItemType: runtimeType, itemsToDelete: [this]);
+    await p.deleteItems();
   }
 
   ///Copy fields values from oldItem to this.
