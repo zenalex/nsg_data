@@ -30,7 +30,7 @@ class NsgEnum extends NsgDataItem {
     if (!map.containsKey(v)) {
       v = 0;
       return map[v]!;
-      throw Exception('Wrong value $v');
+      //throw Exception('Wrong value $v');
     }
     return map[v]!;
   }

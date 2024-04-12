@@ -36,6 +36,8 @@ class NsgPhoneLoginParams {
   String textEnterNewPassword;
   String textEnterPasswordAgain;
   String textRememberUser;
+  String textRegistration;
+  String textReturnToLogin;
   TextStyle? descriptionStyle;
   TextStyle? textPhoneField;
   Color? cardColor;
@@ -94,6 +96,8 @@ class NsgPhoneLoginParams {
       this.textEnterCorrectPhone = 'Введите корректный номер', // 'Enter correct phone',
       this.textCheckInternet =
           'Невозможно выполнить запрос. Проверьте соединение с интернетом.', //'Cannot compleate request. Check internet connection and repeat.',
+      this.textRegistration = 'Регистрация / Забыл пароль', // 'Enter correct phone',
+      this.textReturnToLogin = 'Уже зарегистрирован / Войти по паролю',
       this.textPhoneField,
       this.cardColor,
       this.textColor = Colors.black,

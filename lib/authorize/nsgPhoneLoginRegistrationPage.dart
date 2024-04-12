@@ -175,36 +175,37 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5, top: 5),
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: NsgCheckBox(
-                          key: GlobalKey(),
-                          radio: true,
-                          label: widget.widgetParams!.textEnterPhone,
-                          onPressed: (bool currentValue) {
-                            setState(() {
-                              loginType = NsgLoginType.phone;
-                            });
-                          },
-                          value: loginType == NsgLoginType.phone,
-                        )),
-                        Expanded(
-                            child: NsgCheckBox(
-                                key: GlobalKey(),
-                                radio: true,
-                                label: widget.widgetParams!.textEnterEmail,
-                                onPressed: (bool currentValue) {
-                                  setState(() {
-                                    loginType = NsgLoginType.email;
-                                  });
-                                },
-                                value: loginType == NsgLoginType.email)),
-                      ],
+                  if (widget.widgetParams!.usePhoneLogin && widget.widgetParams!.useEmailLogin)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5, top: 5),
+                      child: Row(
+                        children: [
+                          Expanded(
+                              child: NsgCheckBox(
+                            key: GlobalKey(),
+                            radio: true,
+                            label: widget.widgetParams!.textEnterPhone,
+                            onPressed: (bool currentValue) {
+                              setState(() {
+                                loginType = NsgLoginType.phone;
+                              });
+                            },
+                            value: loginType == NsgLoginType.phone,
+                          )),
+                          Expanded(
+                              child: NsgCheckBox(
+                                  key: GlobalKey(),
+                                  radio: true,
+                                  label: widget.widgetParams!.textEnterEmail,
+                                  onPressed: (bool currentValue) {
+                                    setState(() {
+                                      loginType = NsgLoginType.email;
+                                    });
+                                  },
+                                  value: loginType == NsgLoginType.email)),
+                        ],
+                      ),
                     ),
-                  ),
                   if (widget.widgetParams!.usePhoneLogin)
                     if (loginType == NsgLoginType.phone)
                       TextFormField(
@@ -273,14 +274,14 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
                       child: Padding(
                         padding: const EdgeInsets.only(top: 10, bottom: 10),
                         child: HoverWidget(
-                          hoverChild: const Text(
-                            'Уже регистрировался / Войти по паролю',
-                            style: TextStyle(),
+                          hoverChild: Text(
+                            widget.widgetParams!.textReturnToLogin,
+                            style: const TextStyle(),
                           ),
                           onHover: (PointerEnterEvent event) {},
-                          child: const Text(
-                            'Уже регистрировался / Войти по паролю',
-                            style: TextStyle(decoration: TextDecoration.underline),
+                          child: Text(
+                            widget.widgetParams!.textReturnToLogin,
+                            style: const TextStyle(decoration: TextDecoration.underline),
                           ),
                         ),
                       ),
