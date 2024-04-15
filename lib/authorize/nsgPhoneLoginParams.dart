@@ -179,6 +179,9 @@ class NsgPhoneLoginParams {
       case 40303:
         message = 'You have to enter captcha first';
         break;
+      case 40304:
+        message = 'Wrong user name or password';
+        break;
       default:
         message = statusCode == 0 ? '' : 'Error $statusCode is occured';
     }
