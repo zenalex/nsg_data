@@ -1,5 +1,5 @@
 // ignore_for_file: file_names
-
+/*
 import 'dart:async';
 
 import 'package:flutter/gestures.dart';
@@ -429,3 +429,4 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
     }
   }
 }
+*/

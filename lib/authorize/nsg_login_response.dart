@@ -1,11 +1,3 @@
-// ignore_for_file: file_names
-/*
-import 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
-
-class NsgLoginModel {
-  Map<String, dynamic> toJson() => {};
-}
-
 class NsgLoginResponse {
   String token = '';
   bool isError = false;
@@ -29,26 +21,3 @@ class NsgLoginResponse {
     }
   }
 }
-
-class NsgPhoneLoginModel extends NsgLoginModel {
-  String? phoneNumber;
-  String? securityCode;
-  String? newPassword;
-  NsgLoginType? loginType;
-  bool register = false;
-  String firebaseToken = '';
-  @override
-  Map<String, dynamic> toJson() {
-    String loginTypeString = '';
-    if (loginType == NsgLoginType.email) loginTypeString = 'email';
-    if (loginType == NsgLoginType.phone) loginTypeString = 'phone';
-    return {
-      'phoneNumber': phoneNumber,
-      'securityCode': securityCode,
-      'loginType': loginTypeString,
-      'register': register,
-      'newPassword': newPassword,
-    };
-  }
-}
--*/

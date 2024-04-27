@@ -60,10 +60,11 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
               elem = NsgDataClient.client.getNewObjectByTypeName(extTypeName);
               elem.fromJson(m);
             } on AssertionError catch (ex) {
-              if (ex.message == extTypeName)
+              if (ex.message == extTypeName) {
                 debugPrint('Unknown type $extTypeName');
-              else
+              } else {
                 rethrow;
+              }
             }
           }
         }

@@ -3,24 +3,24 @@ import 'package:get/get.dart';
 class NsgNavigator {
   static NsgNavigator instance = NsgNavigator();
 
-  static void go(String pageName) {
-    instance.offAndToPage(pageName);
+  static Future go(String pageName) async {
+    await instance.offAndToPage(pageName);
   }
 
-  static void push(String pageName) {
-    instance.toPage(pageName);
+  static Future push(String pageName) async {
+    await instance.toPage(pageName);
   }
 
   static void pop() {
     instance.back();
   }
 
-  void toPage(String pageName) {
-    Get.toNamed(pageName);
+  Future toPage(String pageName) async {
+    await Get.toNamed(pageName);
   }
 
-  void offAndToPage(String pageName) {
-    Get.offAndToNamed(pageName);
+  Future offAndToPage(String pageName) async {
+    await Get.offAndToNamed(pageName);
   }
 
   void back() {

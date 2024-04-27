@@ -1,7 +1,6 @@
 import 'package:nsg_data/nsg_data.dart';
 
 mixin NsgUserSession on NsgDataItem {
-  String get id;
   String get device;
   set device(String value);
   DateTime get dateCreated;

@@ -317,7 +317,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         await provider.connect(this);
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
-          await Get.to(provider.loginPage)!.then((value) => Get.back());
+          await provider.openLoginPage();
         }
       }
       if (exception.error.code == 400) {
@@ -713,7 +713,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList) async {
-    assert(item.runtimeType == this.dataType, '${this.dataType}.refreshItem. item is ${item.runtimeType}');
+    assert(item.runtimeType == dataType, '$dataType.refreshItem. item is ${item.runtimeType}');
     //Если у элемента нет ID, то читать его из БД нет смысла
     //Возможно, лучше выдавть ошибку, но пока просто проигнорируем
     //Ошибка стабильно проявлялась при нажатии назад в матче приложения футболист
@@ -991,7 +991,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     _postingItemQueue(errorObjects: errorObjects, postedObjects: postedObjects);
   }
 
-  Map<NsgDataItem, int> _postingItemErrorCount = {};
+  final Map<NsgDataItem, int> _postingItemErrorCount = {};
   Future _postingItemQueue({required Function(List<NsgDataItem>)? errorObjects, required Function(List<NsgDataItem>)? postedObjects}) async {
     if (_isPosting) {
       return true;

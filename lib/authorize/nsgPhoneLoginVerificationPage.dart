@@ -1,5 +1,5 @@
 // ignore_for_file: file_names
-
+/*
 import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -473,3 +473,4 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
     });
   }
 }
+*/

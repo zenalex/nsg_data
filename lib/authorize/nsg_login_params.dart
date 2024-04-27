@@ -1,11 +1,9 @@
-// ignore_for_file: file_names
-/*
 import 'package:flutter/material.dart';
 import 'package:nsg_controls/nsg_controls.dart';
 import 'package:nsg_controls/widgets/nsg_snackbar.dart';
-import 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
+import 'nsg_login_model.dart';
 
-class NsgPhoneLoginParams {
+class NsgLoginParams {
   String phoneNumber;
   String email;
   bool usePasswordLogin;
@@ -56,62 +54,74 @@ class NsgPhoneLoginParams {
   void Function()? loginFailed;
   String mainPage;
 
-  static NsgPhoneLoginParams defaultParams = NsgPhoneLoginParams();
+  ///callback функция, вызываемая при закрытии окна авторизации
+  ///Вызывается в трех случаях:
+  ///логин успешен
+  ///пользователь отказался от логина
+  ///произошла какая-то ошибка
+  ///isLoginSuccessfull - результат отработки логина. Пользователь авторизован или нет
+  final void Function(bool isLoginSuccessfull)? eventLoginWidgweClosed;
+
   bool? appbar;
   bool? headerMessageVisible;
 
-  NsgPhoneLoginParams(
-      {this.loginType,
-      this.email = '',
-      this.textEnter = 'Войти',
-      this.textBackToEnterPage = 'Вернуться на страницу входа',
-      this.phoneNumber = '',
-      this.usePasswordLogin = false,
-      this.usePhoneLogin = true,
-      this.useEmailLogin = false,
-      this.cardSize = 345.0,
-      this.iconSize = 28.0,
-      this.buttonSize = 42.0,
-      this.textRememberUser = 'Запомнить пользователя',
-      this.headerMessage = 'NSG Application',
-      this.headerMessageLogin = 'Вход', // 'Enter',
-      this.headerMessageRegistration = 'Регистрация', // 'Registration',
-      this.headerMessageVerification = 'Введите код', // 'Enter security code',
-      this.descriptionMessegeVerificationPhone =
-          'Мы отправили вам код в СМС\nна номер телефона: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
-      this.descriptionMessegeVerificationEmail =
-          'Мы отправили вам код в сообщении\nна e-mail: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
-      this.headerMessageStyle,
-      this.textEnterCode = 'Код', //'Code',
-      this.textEnterPhone = 'Введите номер телефона', //'Enter your phone',
-      this.textEnterEmail = 'Введите ваш e-mail', //'Enter your email',
-      this.textEnterPassword = 'Введите ваш пароль', // 'Enter you password',
-      this.textEnterNewPassword = 'Введите новый пароль', //'Enter new password',
-      this.textEnterPasswordAgain = 'Введите второй раз ваш пароль', // 'Enter password again',
-      this.textResendSms = 'Отправить СМС заново', //'Send SMS again',
-      this.descriptionStyle,
-      this.textSendSms = 'Отправить СМС', // 'Send SMS',
-      this.textEnterCaptcha = 'Введите текст Капчи', // 'Enter captcha text',
-      this.textLoginSuccessful = 'Успешный логин', //'Login successful',
-      this.textEnterCorrectPhone = 'Введите корректный номер', // 'Enter correct phone',
-      this.textCheckInternet =
-          'Невозможно выполнить запрос. Проверьте соединение с интернетом.', //'Cannot compleate request. Check internet connection and repeat.',
-      this.textRegistration = 'Регистрация / Забыл пароль', // 'Enter correct phone',
-      this.textReturnToLogin = 'Уже зарегистрирован / Войти по паролю',
-      this.textPhoneField,
-      this.cardColor,
-      this.textColor = Colors.black,
-      this.fillColor = Colors.black,
-      this.disableButtonColor = Colors.blueGrey,
-      this.sendSmsButtonColor,
-      this.sendSmsBorderColor,
-      this.phoneIconColor,
-      this.phoneFieldColor,
-      this.errorMessageByStatusCode,
-      this.appbar,
-      this.headerMessageVisible = false,
-      this.useCaptcha = true,
-      this.mainPage = ''}) {
+  NsgLoginParams({
+    this.loginType,
+    this.email = '',
+    this.textEnter = 'Войти',
+    this.textBackToEnterPage = 'Вернуться на страницу входа',
+    this.phoneNumber = '',
+    this.usePasswordLogin = false,
+    this.usePhoneLogin = true,
+    this.useEmailLogin = false,
+    this.cardSize = 345.0,
+    this.iconSize = 28.0,
+    this.buttonSize = 42.0,
+    this.textRememberUser = 'Запомнить пользователя',
+    this.headerMessage = 'NSG Application',
+    this.headerMessageLogin = 'Вход', // 'Enter',
+    this.headerMessageRegistration = 'Регистрация', // 'Registration',
+    this.headerMessageVerification = 'Введите код', // 'Enter security code',
+    this.descriptionMessegeVerificationPhone =
+        'Мы отправили вам код в СМС\nна номер телефона: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
+    this.descriptionMessegeVerificationEmail =
+        'Мы отправили вам код в сообщении\nна e-mail: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
+    this.headerMessageStyle,
+    this.textEnterCode = 'Код', //'Code',
+    this.textEnterPhone = 'Введите номер телефона', //'Enter your phone',
+    this.textEnterEmail = 'Введите ваш e-mail', //'Enter your email',
+    this.textEnterPassword = 'Введите ваш пароль', // 'Enter you password',
+    this.textEnterNewPassword = 'Введите новый пароль', //'Enter new password',
+    this.textEnterPasswordAgain =
+        'Введите второй раз ваш пароль', // 'Confirm password',
+    this.textResendSms = 'Отправить СМС заново', //'Send SMS again',
+    this.descriptionStyle,
+    this.textSendSms = 'Отправить СМС', // 'Send SMS',
+    this.textEnterCaptcha = 'Введите текст Капчи', // 'Enter captcha text',
+    this.textLoginSuccessful = 'Успешный логин', //'Login successful',
+    this.textEnterCorrectPhone =
+        'Введите корректный номер', // 'Enter correct phone',
+    this.textCheckInternet =
+        'Невозможно выполнить запрос. Проверьте соединение с интернетом.', //'Cannot compleate request. Check internet connection and repeat.',
+    this.textRegistration =
+        'Регистрация / Забыл пароль', // 'Enter correct phone',
+    this.textReturnToLogin = 'Уже зарегистрирован / Войти по паролю',
+    this.textPhoneField,
+    this.cardColor,
+    this.textColor = Colors.black,
+    this.fillColor = Colors.black,
+    this.disableButtonColor = Colors.blueGrey,
+    this.sendSmsButtonColor,
+    this.sendSmsBorderColor,
+    this.phoneIconColor,
+    this.phoneFieldColor,
+    this.errorMessageByStatusCode,
+    this.appbar,
+    this.headerMessageVisible = false,
+    this.useCaptcha = true,
+    this.mainPage = '',
+    this.eventLoginWidgweClosed,
+  }) {
     headerMessageStyle ??= TextStyle(
       fontFamily: 'Roboto',
       fontSize: 20.0,
@@ -188,13 +198,12 @@ class NsgPhoneLoginParams {
     return message;
   }
 
-  void showError(BuildContext? context, String message) {
+  void showError(BuildContext? context, String message, {int delayed = 5}) {
     if (message == '') return;
     nsgSnackbar(
       type: NsgSnarkBarType.error,
       text: message,
-      duration: const Duration(seconds: 5),
+      duration: Duration(seconds: delayed),
     );
   }
 }
-*/
