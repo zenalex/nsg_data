@@ -4,11 +4,22 @@ import 'package:nsg_controls/widgets/nsg_snackbar.dart';
 import 'nsg_login_model.dart';
 
 class NsgLoginParams {
+  ///Введенный пользователем телефон для авторизации
   String phoneNumber;
+
+  ///Введенный пользователем email для авторизации
   String email;
+
+  ///Режим авторизации по паролю
   bool usePasswordLogin;
+
+  ///Разрешить авторизацию по телефону
   bool usePhoneLogin;
+
+  ///Разрешить авторизацию по email
   bool useEmailLogin;
+
+  ///Разрешить сохранять токен на устройстве для автоматической авторизации при следующем входе
   double cardSize;
   double iconSize;
   double buttonSize;
@@ -84,27 +95,23 @@ class NsgLoginParams {
     this.headerMessageVerification = 'Введите код', // 'Enter security code',
     this.descriptionMessegeVerificationPhone =
         'Мы отправили вам код в СМС\nна номер телефона: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
-    this.descriptionMessegeVerificationEmail =
-        'Мы отправили вам код в сообщении\nна e-mail: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
+    this.descriptionMessegeVerificationEmail = 'Мы отправили вам код в сообщении\nна e-mail: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
     this.headerMessageStyle,
     this.textEnterCode = 'Код', //'Code',
     this.textEnterPhone = 'Введите номер телефона', //'Enter your phone',
     this.textEnterEmail = 'Введите ваш e-mail', //'Enter your email',
     this.textEnterPassword = 'Введите ваш пароль', // 'Enter you password',
     this.textEnterNewPassword = 'Введите новый пароль', //'Enter new password',
-    this.textEnterPasswordAgain =
-        'Введите второй раз ваш пароль', // 'Confirm password',
+    this.textEnterPasswordAgain = 'Введите второй раз ваш пароль', // 'Confirm password',
     this.textResendSms = 'Отправить СМС заново', //'Send SMS again',
     this.descriptionStyle,
     this.textSendSms = 'Отправить СМС', // 'Send SMS',
     this.textEnterCaptcha = 'Введите текст Капчи', // 'Enter captcha text',
     this.textLoginSuccessful = 'Успешный логин', //'Login successful',
-    this.textEnterCorrectPhone =
-        'Введите корректный номер', // 'Enter correct phone',
+    this.textEnterCorrectPhone = 'Введите корректный номер', // 'Enter correct phone',
     this.textCheckInternet =
         'Невозможно выполнить запрос. Проверьте соединение с интернетом.', //'Cannot compleate request. Check internet connection and repeat.',
-    this.textRegistration =
-        'Регистрация / Забыл пароль', // 'Enter correct phone',
+    this.textRegistration = 'Регистрация / Забыл пароль', // 'Enter correct phone',
     this.textReturnToLogin = 'Уже зарегистрирован / Войти по паролю',
     this.textPhoneField,
     this.cardColor,
