@@ -26,6 +26,9 @@ class NsgLoginParams {
   String textEnter;
   String textBackToEnterPage;
   String headerMessage;
+
+  /// Текст "Подтвердить"
+  String textConfirm;
   String headerMessageVerification;
   String headerMessageLogin;
   String headerMessageRegistration;
@@ -90,12 +93,14 @@ class NsgLoginParams {
     this.buttonSize = 42.0,
     this.textRememberUser = 'Запомнить пользователя',
     this.headerMessage = 'NSG Application',
+    this.textConfirm = 'Подтвердить', // 'Confirm',
     this.headerMessageLogin = 'Вход', // 'Enter',
     this.headerMessageRegistration = 'Регистрация', // 'Registration',
     this.headerMessageVerification = 'Введите код', // 'Enter security code',
     this.descriptionMessegeVerificationPhone =
         'Мы отправили вам код в СМС\nна номер телефона: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
-    this.descriptionMessegeVerificationEmail = 'Мы отправили вам код в сообщении\nна e-mail: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
+    this.descriptionMessegeVerificationEmail =
+        'Мы отправили вам код в сообщении\nна e-mail: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
     this.headerMessageStyle,
     this.textEnterCode = 'Код', //'Code',
     this.textEnterPhone = 'Введите номер телефона', //'Enter your phone',
