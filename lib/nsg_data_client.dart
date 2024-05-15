@@ -92,6 +92,11 @@ class NsgDataClient {
   NsgDataItem? getItemsFromCache(Type type, String id, {bool allowNull = false}) {
     var cache = _getItemsCacheByType(type)!;
     var item = cache.getItem(id);
+    // if (!allowNull && item == null) {
+    //   //TODO: для отладки
+    //   print('STOP!!!');
+    // }
+    // assert(allowNull || item != null, 'type=$type, id = $id');
     return item == null ? (allowNull ? null : NsgDataClient.client.getNewObject(type)) : item.dataItem;
   }
 

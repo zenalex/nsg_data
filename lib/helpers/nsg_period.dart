@@ -18,10 +18,10 @@ enum NsgPeriodType {
 ///Класс для задания фиолтра по периоду. Используется, например, в фильтре контроллера данных
 class NsgPeriod {
   ///дата начала периода
-  DateTime beginDate = Jiffy(DateTime.now()).startOf(Units.MONTH).dateTime;
+  DateTime beginDate = Jiffy.parseFromDateTime(DateTime.now()).startOf(Unit.month).dateTime;
 
   ///Дата окончания периода
-  DateTime endDate = Jiffy(DateTime.now()).endOf(Units.MONTH).dateTime;
+  DateTime endDate = Jiffy.parseFromDateTime(DateTime.now()).endOf(Unit.month).dateTime;
 
   ///Текстовое представление периода. В случае учета веремен, время в отображении не указыватеся
   String get dateTextWithoutTime => getDateText(false);
@@ -37,27 +37,27 @@ class NsgPeriod {
   void plus() {
     switch (type) {
       case NsgPeriodType.year:
-        setToYear(Jiffy(beginDate).add(years: 1).dateTime);
+        setToYear(Jiffy.parseFromDateTime(beginDate).add(years: 1).dateTime);
         break;
       case NsgPeriodType.quarter:
-        setToQuarter(Jiffy(beginDate).add(months: 3).dateTime);
+        setToQuarter(Jiffy.parseFromDateTime(beginDate).add(months: 3).dateTime);
         break;
       case NsgPeriodType.month:
-        setToMonth(Jiffy(beginDate).add(months: 1).dateTime);
+        setToMonth(Jiffy.parseFromDateTime(beginDate).add(months: 1).dateTime);
         break;
       case NsgPeriodType.week:
-        setToWeek(Jiffy(beginDate).add(days: 7).dateTime);
+        setToWeek(Jiffy.parseFromDateTime(beginDate).add(days: 7).dateTime);
         break;
       case NsgPeriodType.day:
-        setToDay(Jiffy(beginDate).add(days: 1).dateTime);
+        setToDay(Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime);
         break;
       case NsgPeriodType.period:
-        beginDate = Jiffy(beginDate).add(days: 1).dateTime;
-        endDate = Jiffy(beginDate).add(days: 1).dateTime;
+        beginDate = Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime;
+        endDate = Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime;
         break;
       case NsgPeriodType.periodWidthTime:
-        beginDate = Jiffy(beginDate).add(days: 1).dateTime;
-        endDate = Jiffy(beginDate).add(days: 1).dateTime;
+        beginDate = Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime;
+        endDate = Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime;
         break;
 
       default:
@@ -70,27 +70,27 @@ class NsgPeriod {
   void minus() {
     switch (type) {
       case NsgPeriodType.year:
-        setToYear(Jiffy(beginDate).subtract(years: 1).dateTime);
+        setToYear(Jiffy.parseFromDateTime(beginDate).subtract(years: 1).dateTime);
         break;
       case NsgPeriodType.quarter:
-        setToQuarter(Jiffy(beginDate).subtract(months: 3).dateTime);
+        setToQuarter(Jiffy.parseFromDateTime(beginDate).subtract(months: 3).dateTime);
         break;
       case NsgPeriodType.month:
-        setToMonth(Jiffy(beginDate).subtract(months: 1).dateTime);
+        setToMonth(Jiffy.parseFromDateTime(beginDate).subtract(months: 1).dateTime);
         break;
       case NsgPeriodType.week:
-        setToWeek(Jiffy(beginDate).subtract(days: 7).dateTime);
+        setToWeek(Jiffy.parseFromDateTime(beginDate).subtract(days: 7).dateTime);
         break;
       case NsgPeriodType.day:
-        setToDay(Jiffy(beginDate).subtract(days: 1).dateTime);
+        setToDay(Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime);
         break;
       case NsgPeriodType.period:
-        beginDate = Jiffy(beginDate).subtract(days: 1).dateTime;
-        endDate = Jiffy(beginDate).subtract(days: 1).dateTime;
+        beginDate = Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime;
+        endDate = Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime;
         break;
       case NsgPeriodType.periodWidthTime:
-        beginDate = Jiffy(beginDate).subtract(days: 1).dateTime;
-        endDate = Jiffy(beginDate).subtract(days: 1).dateTime;
+        beginDate = Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime;
+        endDate = Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime;
         break;
 
       default:
@@ -130,43 +130,43 @@ class NsgPeriod {
   ///Установить тип периода год
   ///Будет установлен интервал с первого до последнего дня года. Год будет взят из переденной даты
   void setToYear(DateTime date) {
-    beginDate = Jiffy(date).startOf(Units.YEAR).dateTime;
-    endDate = Jiffy(beginDate).endOf(Units.YEAR).dateTime;
+    beginDate = Jiffy.parseFromDateTime(date).startOf(Unit.year).dateTime;
+    endDate = Jiffy.parseFromDateTime(beginDate).endOf(Unit.year).dateTime;
   }
 
   ///Установить тип периода квартал
   ///Будет установлен интервал с первого до последнего дня квартала. Квартал будет взят из переденной даты
   void setToQuarter(DateTime date) {
-    beginDate = Jiffy(DateTime(date.year)).add(months: (getQuarter(date) - 1) * 3).dateTime;
-    endDate = Jiffy(beginDate).add(months: 3).endOf(Units.MONTH).dateTime;
+    beginDate = Jiffy.parseFromDateTime(DateTime(date.year)).add(months: (getQuarter(date) - 1) * 3).dateTime;
+    endDate = Jiffy.parseFromDateTime(beginDate).add(months: 3).endOf(Unit.month).dateTime;
   }
 
   ///Установить тип периода месяц
   ///Будет установлен интервал с первого до последнего дня месяца. Месяц будет взят из переденной даты
   void setToMonth(DateTime date) {
-    beginDate = Jiffy(date).startOf(Units.MONTH).dateTime;
-    endDate = Jiffy(beginDate).endOf(Units.MONTH).dateTime;
+    beginDate = Jiffy.parseFromDateTime(date).startOf(Unit.month).dateTime;
+    endDate = Jiffy.parseFromDateTime(beginDate).endOf(Unit.month).dateTime;
   }
 
   ///Установить тип периода неделя
   ///Будет установлен интервал с первого до последнего дня недели. Неделя будет взят из переденной даты
   void setToWeek(DateTime date) {
-    beginDate = Jiffy(date).startOf(Units.WEEK).dateTime;
-    endDate = Jiffy(beginDate).endOf(Units.WEEK).dateTime;
+    beginDate = Jiffy.parseFromDateTime(date).startOf(Unit.week).dateTime;
+    endDate = Jiffy.parseFromDateTime(beginDate).endOf(Unit.week).dateTime;
   }
 
   ///Установить тип периода год
   ///Будет установлен интервал с начала по конец суток, взятых из переденной даты
   void setToDay(DateTime date) {
-    beginDate = Jiffy(date).startOf(Units.DAY).dateTime;
-    endDate = Jiffy(beginDate).endOf(Units.DAY).dateTime;
+    beginDate = Jiffy.parseFromDateTime(date).startOf(Unit.day).dateTime;
+    endDate = Jiffy.parseFromDateTime(beginDate).endOf(Unit.day).dateTime;
   }
 
   ///Установить произвольный период
   ///Период будет задан от начала дня первой даты до конца дня последней
   void setToPeriod(NsgPeriod p) {
-    beginDate = Jiffy(p.beginDate).startOf(Units.DAY).dateTime;
-    endDate = Jiffy(p.endDate).endOf(Units.DAY).dateTime;
+    beginDate = Jiffy.parseFromDateTime(p.beginDate).startOf(Unit.day).dateTime;
+    endDate = Jiffy.parseFromDateTime(p.endDate).endOf(Unit.day).dateTime;
   }
 
   ///Установить произвольный период с учетов времени
@@ -184,24 +184,29 @@ class NsgPeriod {
   ///Определить тип периода по начальной и конечной дате
   NsgPeriodType _detectPeriodType() {
     //Проверка на год
-    if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.YEAR)) && Jiffy(endDate).isSame(Jiffy(beginDate).endOf(Units.YEAR))) return NsgPeriodType.year;
-    var qb = Jiffy(DateTime(beginDate.year)).add(months: (getQuarter(beginDate) - 1) * 3);
-    var qe = qb.add(months: 3).endOf(Units.MONTH);
-    if (Jiffy(beginDate).isSame(qb) && Jiffy(endDate).isSame(qe)) return NsgPeriodType.quarter;
+    if (Jiffy.parseFromDateTime(beginDate).isSame(Jiffy.parseFromDateTime(beginDate).startOf(Unit.year)) &&
+        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.year))) return NsgPeriodType.year;
+    var qb = Jiffy.parseFromDateTime(DateTime(beginDate.year)).add(months: (getQuarter(beginDate) - 1) * 3);
+    var qe = qb.add(months: 3).endOf(Unit.month);
+    if (Jiffy.parseFromDateTime(beginDate).isSame(qb) && Jiffy.parseFromDateTime(endDate).isSame(qe)) return NsgPeriodType.quarter;
     //Проверка на месяц
-    if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.MONTH)) && Jiffy(endDate).isSame(Jiffy(beginDate).endOf(Units.MONTH))) {
+    if (Jiffy.parseFromDateTime(beginDate).isSame(Jiffy.parseFromDateTime(beginDate).startOf(Unit.month)) &&
+        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.month))) {
       return NsgPeriodType.month;
     }
     //Проверка на неделю
-    if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.WEEK)) && Jiffy(endDate).isSame(Jiffy(beginDate).endOf(Units.WEEK))) return NsgPeriodType.week;
+    if (Jiffy.parseFromDateTime(beginDate).isSame(Jiffy.parseFromDateTime(beginDate).startOf(Unit.week)) &&
+        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.week))) return NsgPeriodType.week;
     //Проверка на день
-    if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.DAY)) && Jiffy(endDate).isSame(Jiffy(beginDate).endOf(Units.DAY))) return NsgPeriodType.day;
-    if (Jiffy(beginDate).isSame(Jiffy(beginDate).startOf(Units.DAY)) && Jiffy(endDate).isSame(Jiffy(endDate).startOf(Units.DAY))) return NsgPeriodType.period;
+    if (Jiffy.parseFromDateTime(beginDate).isSame(Jiffy.parseFromDateTime(beginDate).startOf(Unit.day)) &&
+        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.day))) return NsgPeriodType.day;
+    if (Jiffy.parseFromDateTime(beginDate).isSame(Jiffy.parseFromDateTime(beginDate).startOf(Unit.day)) &&
+        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(endDate).startOf(Unit.day))) return NsgPeriodType.period;
     return NsgPeriodType.periodWidthTime;
   }
 
   /// Обнуление даты до начала дня
   static DateTime beginOfDay(DateTime date) {
-    return Jiffy(date).startOf(Units.DAY).dateTime;
+    return Jiffy.parseFromDateTime(date).startOf(Unit.day).dateTime;
   }
 }

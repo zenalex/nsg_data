@@ -35,8 +35,8 @@ class NsgDataDateField extends NsgDataField {
 
   @override
   int compareTo(NsgDataItem a, NsgDataItem b) {
-    var valueA = Jiffy(a.getFieldValue(name) as DateTime);
-    var valueB = Jiffy(b.getFieldValue(name) as DateTime);
+    var valueA = Jiffy.parseFromDateTime(a.getFieldValue(name) as DateTime);
+    var valueB = Jiffy.parseFromDateTime(b.getFieldValue(name) as DateTime);
     return valueA.isAfter(valueB)
         ? 1
         : valueB.isAfter(valueA)
