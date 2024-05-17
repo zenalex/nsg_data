@@ -26,6 +26,10 @@ class NsgDataRequestParams {
   ///Имеет смысл использовать только при тонкой оптимизации объема передаваемых данных
   String? fieldsToRead;
 
+  ///Список полей для группировки данных
+  ///Имеет смысл при запросе данных по регистру
+  List<String>? groupBy;
+
   ///Возвращать помеченные на удаление
   bool showDeletedObjects;
 
@@ -41,6 +45,7 @@ class NsgDataRequestParams {
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
     if (readNestedField != null) filter['ReadNestedField'] = readNestedField.toString();
     if (fieldsToRead != null) filter['FieldsToRead'] = fieldsToRead.toString();
+    if (groupBy != null) filter['GroupBy'] = groupBy;
     if (compare.isNotEmpty) filter['Compare'] = compare.toJson();
     filter['ShowDeletedObjects'] = showDeletedObjects.toString();
     if (params != null) {
@@ -56,14 +61,7 @@ class NsgDataRequestParams {
     _compare = newCompare;
   }
 
-  NsgDataRequestParams(
-      {this.top = 0,
-      this.count = 0,
-      this.params,
-      this.sorting,
-      this.readNestedField,
-      this.showDeletedObjects = false,
-      NsgCompare? compare}) {
+  NsgDataRequestParams({this.top = 0, this.count = 0, this.params, this.sorting, this.readNestedField, this.showDeletedObjects = false, NsgCompare? compare}) {
     if (compare != null) {
       _compare = compare;
     }
