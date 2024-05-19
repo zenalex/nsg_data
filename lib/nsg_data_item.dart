@@ -503,7 +503,11 @@ class NsgDataItem {
     var list = <String>[];
     for (var fieldName in fieldList.fields.keys) {
       var field = getField(fieldName);
-      if (field.name == primaryKeyField || field is NsgDataUntypedReferenceField || field is NsgDataEnumReferenceField || field is NsgDataDateField) {
+      if (field.name == primaryKeyField ||
+          field is NsgDataUntypedReferenceField ||
+          field is NsgDataEnumReferenceField ||
+          field is NsgDataDateField ||
+          field is NsgDataBoolField) {
         continue;
       }
       list.add(fieldName);

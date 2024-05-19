@@ -14,7 +14,7 @@ import 'package:nsg_data/nsg_data.dart';
 
 class NsgControllerFilter {
   ///Контроллер, на который будет накладываться фильтр
-  NsgBaseController? controller;
+  NsgBaseController controller;
 
   ///Разрешить использование фильтра для данного контроллера
   bool isAllowed = true;
@@ -50,6 +50,8 @@ class NsgControllerFilter {
   ///Таймер задержки обновления контроллера
   Timer? _updateTimer;
 
+  NsgControllerFilter({required this.controller});
+
   ///Обновить данные в контроллере c задержкой по времени
   ///Каждый новый вызов этого метода отменяет предыдущий и сбрасывает время ожидание на ноль
   void refreshControllerWithDelay({NsgDataRequestParams? filter}) {
@@ -61,6 +63,6 @@ class NsgControllerFilter {
   }
 
   void _updateTick({NsgDataRequestParams? filter}) {
-    controller?.refreshData(filter: filter);
+    controller.refreshData(filter: filter);
   }
 }

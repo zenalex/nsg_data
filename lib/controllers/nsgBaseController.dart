@@ -80,7 +80,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   int autoRepeateCount;
 
   ///Фильтр. После изменения необходимо вызвать controllerFilter.refreshControllerWithDelay()
-  final controllerFilter = NsgControllerFilter();
+  late NsgControllerFilter controllerFilter;
 
   ///Запрет редактирования данных пользователей
   bool readOnly;
@@ -170,6 +170,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       : super() {
     onRetry ??= _updateStatusError;
     this.controllerMode = controllerMode ?? NsgDataControllerMode.defaultDataControllerMode;
+    controllerFilter = NsgControllerFilter(controller: this);
   }
 
   @override
