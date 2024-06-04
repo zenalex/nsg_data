@@ -106,19 +106,16 @@ class NsgLoginParams {
     this.textEnterEmail = 'Введите ваш e-mail', //'Enter your email',
     this.textEnterPassword = 'Введите ваш пароль', // 'Enter you password',
     this.textEnterNewPassword = 'Введите новый пароль', //'Enter new password',
-    this.textEnterPasswordAgain =
-        'Введите второй раз ваш пароль', // 'Confirm password',
+    this.textEnterPasswordAgain = 'Введите второй раз ваш пароль', // 'Confirm password',
     this.textResendSms = 'Отправить СМС заново', //'Send SMS again',
     this.descriptionStyle,
     this.textSendSms = 'Отправить СМС', // 'Send SMS',
     this.textEnterCaptcha = 'Введите текст Капчи', // 'Enter captcha text',
     this.textLoginSuccessful = 'Успешный логин', //'Login successful',
-    this.textEnterCorrectPhone =
-        'Введите корректный номер', // 'Enter correct phone',
+    this.textEnterCorrectPhone = 'Введите корректный номер', // 'Enter correct phone',
     this.textCheckInternet =
         'Невозможно выполнить запрос. Проверьте соединение с интернетом.', //'Cannot compleate request. Check internet connection and repeat.',
-    this.textRegistration =
-        'Регистрация / Забыл пароль', // 'Enter correct phone',
+    this.textRegistration = 'Регистрация / Забыл пароль', // 'Enter correct phone',
     this.textReturnToLogin = 'Уже зарегистрирован / Войти по паролю',
     this.textPhoneField,
     this.cardColor,
