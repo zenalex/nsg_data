@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:dio/adapter.dart';
+import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -132,8 +132,8 @@ class NsgDataProvider {
       method: method,
       responseType: ResponseType.json,
       contentType: 'application/json',
-      connectTimeout: connectDuration,
-      receiveTimeout: requestDuration,
+      connectTimeout: Duration(milliseconds: connectDuration),
+      receiveTimeout: Duration(milliseconds: requestDuration),
     ));
 
     //Response<List<dynamic>> response;
@@ -162,7 +162,7 @@ class NsgDataProvider {
 
       return response.data;
     } on DioError catch (e) {
-      debugPrint('dio error. function: $function, error: ${e.error ??= ''}');
+      debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       if (e.response?.statusCode == 400) {
         //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
         throw NsgApiException(NsgApiError(code: 400, message: e.response?.data, errorType: e.type));
@@ -265,7 +265,7 @@ class NsgDataProvider {
       var curData = response.data;
       return curData;
     } on DioError catch (e) {
-      debugPrint('dio error. function: $function, error: ${e.error ??= ''}');
+      debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
@@ -287,8 +287,8 @@ class NsgDataProvider {
         method: method,
         responseType: ResponseType.json,
         contentType: 'application/json',
-        connectTimeout: connectDuration,
-        receiveTimeout: requestDuration));
+        connectTimeout: Duration(milliseconds: connectDuration),
+        receiveTimeout: Duration(milliseconds: requestDuration)));
 
     late Response<Uint8List> response;
 
@@ -313,7 +313,7 @@ class NsgDataProvider {
 
       return Image.memory(response.data!);
     } on DioError catch (e) {
-      debugPrint('dio error. function: $function, error: ${e.error ??= ''}');
+      debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
