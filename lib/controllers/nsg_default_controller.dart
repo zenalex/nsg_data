@@ -1,5 +1,4 @@
 import 'package:nsg_data/controllers/nsgBaseController.dart';
-import 'package:nsg_data/nsg_data_requestParams.dart';
 
 class NsgDefaultController extends NsgBaseController {
   NsgDefaultController({required super.dataType, super.controllerMode}) : super() {
@@ -7,8 +6,8 @@ class NsgDefaultController extends NsgBaseController {
     lateInit = true;
   }
 
-  @override
-  NsgDataRequestParams get getRequestFilter {
-    return super.getRequestFilter;
-  }
+  // @override
+  // NsgDataRequestParams get getRequestFilter {
+  //   return super.getRequestFilter;
+  // }
 }

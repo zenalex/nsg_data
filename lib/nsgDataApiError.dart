@@ -7,7 +7,7 @@ class NsgApiError {
   NsgApiError({this.code, this.message, this.errorType});
 
   ///Тип ошибки (из пакета Dio)
-  final DioErrorType? errorType;
+  final DioExceptionType? errorType;
 
   ///Код ошибки. Основные коды:
   ///400 - сервер вернул ошибку. Подробности в message. Повтор запроса смысла не имеет

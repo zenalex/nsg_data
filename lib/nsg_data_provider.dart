@@ -141,10 +141,10 @@ class NsgDataProvider {
 
     try {
       if (!kIsWeb) {
-        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-            return true;
-          };
+        (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+          final client = HttpClient();
+
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
           return client;
         };
       }
@@ -161,7 +161,7 @@ class NsgDataProvider {
       }
 
       return response.data;
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       if (e.response?.statusCode == 400) {
         //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
@@ -178,7 +178,7 @@ class NsgDataProvider {
           msg = msgParts.last;
         }
         throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));
-      } else if (e.type == DioErrorType.receiveTimeout || e.type == DioErrorType.sendTimeout) {
+      } else if (e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
         throw NsgApiException(NsgApiError(code: 2, message: 'Истекло время ожидания получения или отправки данных', errorType: e.type));
       } else {
         throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
@@ -246,10 +246,10 @@ class NsgDataProvider {
     try {
       //BrowserHttpClientAdapter
       if (!kIsWeb) {
-        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-            return true;
-          };
+        (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+          final client = HttpClient();
+
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
           return client;
         };
       }
@@ -264,7 +264,7 @@ class NsgDataProvider {
       // }
       var curData = response.data;
       return curData;
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
@@ -294,10 +294,10 @@ class NsgDataProvider {
 
     try {
       if (!kIsWeb) {
-        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-            return true;
-          };
+        (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+          final client = HttpClient();
+
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
           return client;
         };
       }
@@ -312,7 +312,7 @@ class NsgDataProvider {
       }
 
       return Image.memory(response.data!);
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
     } catch (e) {
