@@ -596,10 +596,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Close item page and restore current (selectedItem) item from backup
-  void itemPageCancel({bool useValidation = true}) async {
+  void itemPageCancel({bool useValidation = true, BuildContext? context}) async {
     if (useValidation) {
       if (isModified) {
-        var result = await NsgDialogSaveOrCancel.saveOrCancel();
+        var result = await NsgDialogSaveOrCancel.saveOrCancel(context: context);
         switch (result) {
           case null:
             return;
