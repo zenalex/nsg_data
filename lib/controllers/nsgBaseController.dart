@@ -276,9 +276,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //dataItemList = filter(newItemsList);
       // if (selectedItem != null && dataItemList.firstWhereOrNull((e) => e.id == selectedItem!.id) == null) selectedItem = null; // FIXME вернуть обратно
       //if (selectedItem == null && autoSelectFirstItem && dataItemList.isNotEmpty) { // FIXME вернуть обратно
-      if (autoSelectFirstItem && dataItemList.isNotEmpty) {
-        selectedItem = dataItemList[0];
+      if (autoSelectFirstItem) {
+        if (dataItemList.isNotEmpty) {
+          selectedItem = dataItemList[0];
+        } else {
+          selectedItem = null;
+        }
       }
+
       //service method for descendants
       await afterUpdate();
       // 20.06.2022 Зачем посылать refresh, если он будет отправлен позже в requestItems
