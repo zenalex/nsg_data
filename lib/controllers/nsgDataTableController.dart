@@ -1,5 +1,6 @@
 // ignore_for_file: file_names
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nsg_controls/widgets/nsg_dialog_save_or_cancel.dart';
 import 'package:nsg_data/nsg_data.dart';
@@ -117,7 +118,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Close row page and restore current (selectedItem) item from backup
   @override
-  Future<void> itemPageCancel({bool useValidation = true}) async {
+  Future<void> itemPageCancel({bool useValidation = true, BuildContext? context}) async {
     if (useValidation) {
       if (isModified) {
         var result = await NsgDialogSaveOrCancel.saveOrCancel();
