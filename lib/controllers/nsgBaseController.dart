@@ -734,7 +734,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //Если в items (он же dataItemList) данный элемент уже присутствует, обновляем его новой версией
     if (dataItemList.contains(answer)) {
       var index = dataItemList.indexOf(answer);
-      dataItemList.replaceRange(index, index + 1, [answer]);
+      dataItemList[index] = answer;
+      //dataItemList.replaceRange(index, index + 1, [answer]);
     }
     return answer;
   }
@@ -772,7 +773,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       var newItem = await refreshItem(item, referenceList);
       var index = dataItemList.indexOf(item);
       if (index >= 0) {
-        dataItemList.replaceRange(index, index + 1, [newItem]);
+        dataItemList[index] = newItem;
       } else if (newItem.isEmpty) {
         currentStatus = GetStatus.error('Ошибка NBC-509. Данный объект более недоступен');
         sendNotify();
