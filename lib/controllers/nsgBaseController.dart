@@ -728,6 +728,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
     var filterParam = NsgDataRequestParams(compare: cmp);
     var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
+    filterParam.showDeletedObjects = true;
     var answer = await request.requestItem(
         filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
     assert(answer.isNotEmpty, 'Элемент не найден (возможно помечен на удаление)');
