@@ -3,6 +3,9 @@ class NsgComparisonOperator {
   final String name;
   const NsgComparisonOperator(this.name, this.value);
 
+  @override
+  String toString() => name;
+
   static const NsgComparisonOperator none = NsgComparisonOperator("None", 0);
   static const NsgComparisonOperator equal = NsgComparisonOperator("Equal", 1);
   static const NsgComparisonOperator notEqual = NsgComparisonOperator("NotEqual", 2);

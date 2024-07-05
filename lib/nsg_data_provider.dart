@@ -181,6 +181,9 @@ class NsgDataProvider {
       } else if (e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
         throw NsgApiException(NsgApiError(code: 2, message: 'Истекло время ожидания получения или отправки данных', errorType: e.type));
       } else {
+        debugPrint('###');
+        debugPrint('### Error: ${e.error}');
+        debugPrint('###');
         throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
       }
     } catch (e) {
