@@ -71,15 +71,14 @@ class NsgDataProvider {
   ///Firebase token for this device
   String firebaseToken;
 
-  ///Настройки параметров логина
-  late NsgLoginParams widgetParams;
-
   ///Функция, вызываемая при необходимости отображения окна входа
   final Future Function()? eventOpenLoginPage;
 
   ///milliseconds
   int requestDuration = 120000;
   int connectDuration = 15000;
+
+  late NsgLoginParams Function() widgetParams;
 
   static String defaultSecurityCode = 'security';
 
@@ -92,9 +91,9 @@ class NsgDataProvider {
       this.allowConnect = true,
       required this.firebaseToken,
       required this.applicationVersion,
-      NsgLoginParams? widgetLoginParams,
+      NsgLoginParams Function()? widgetLoginParams,
       this.eventOpenLoginPage}) {
-    widgetParams = widgetLoginParams ?? NsgLoginParams();
+    widgetParams = widgetLoginParams ?? () => NsgLoginParams();
   }
 
   ///Initialization. Load saved token if useNsgAuthorization == true
