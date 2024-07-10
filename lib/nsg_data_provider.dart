@@ -360,6 +360,7 @@ class NsgDataProvider {
         }
       }
     }
+    setLocale(localeName: 'en');
     if (allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
       await openLoginPage().then((value) => controller.loadProviderData());
     } else {
@@ -555,6 +556,30 @@ class NsgDataProvider {
           function: 'CheckVersion',
           headers: getAuthorizationHeader(),
           url: '$serverUri/$authorizationApi/CheckVersion',
+          method: 'GET',
+          params: params,
+          autoRepeate: true,
+          autoRepeateCount: 1000,
+          onRetry: onRetry));
+      var loginResponse = NsgLoginResponse.fromJson(response);
+      return loginResponse.errorCode;
+    } on NsgApiException catch (e) {
+      if (e.error.code == 404) {
+        return 0;
+      }
+    }
+    return 0;
+  }
+
+  ///Передает локаль на сервер для получения всех строковых значений в локали пользователя
+  Future<int> setLocale({required String localeName, FutureOr<void> Function(Exception)? onRetry}) async {
+    var params = <String, dynamic>{};
+    params['locale'] = localeName;
+    try {
+      var response = await (baseRequest(
+          function: 'SetLocale',
+          headers: getAuthorizationHeader(),
+          url: '$serverUri/$authorizationApi/SetLocale',
           method: 'GET',
           params: params,
           autoRepeate: true,
