@@ -360,7 +360,7 @@ class NsgDataProvider {
         }
       }
     }
-    setLocale(localeName: 'en');
+    setLocale(localeName: 'ru');
     if (allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
       await openLoginPage().then((value) => controller.loadProviderData());
     } else {
