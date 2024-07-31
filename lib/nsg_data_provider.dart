@@ -82,6 +82,8 @@ class NsgDataProvider {
 
   static String defaultSecurityCode = 'security';
 
+  String languageCode;
+
   NsgDataProvider(
       {this.name,
       required this.applicationName,
@@ -92,7 +94,8 @@ class NsgDataProvider {
       required this.firebaseToken,
       required this.applicationVersion,
       NsgLoginParams Function()? widgetLoginParams,
-      this.eventOpenLoginPage}) {
+      this.eventOpenLoginPage,
+      this.languageCode = 'ru'}) {
     widgetParams = widgetLoginParams ?? () => NsgLoginParams();
   }
 
@@ -360,7 +363,7 @@ class NsgDataProvider {
         }
       }
     }
-    setLocale(localeName: 'ru');
+    setLocale(languageCode: languageCode);
     if (allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
       await openLoginPage().then((value) => controller.loadProviderData());
     } else {
@@ -572,9 +575,9 @@ class NsgDataProvider {
   }
 
   ///Передает локаль на сервер для получения всех строковых значений в локали пользователя
-  Future<int> setLocale({required String localeName, FutureOr<void> Function(Exception)? onRetry}) async {
+  Future<int> setLocale({required String languageCode, FutureOr<void> Function(Exception)? onRetry}) async {
     var params = <String, dynamic>{};
-    params['locale'] = localeName;
+    params['locale'] = languageCode;
     try {
       var response = await (baseRequest(
           function: 'SetLocale',
