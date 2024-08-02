@@ -9,6 +9,7 @@ class NsgSimpleRequest<T extends Object> {
 
   ///Сколько всего элементов, удовлетворяющих условиям поиска, есть на сервере
   int? totalCount;
+  FutureOr<bool> Function(Exception)? _retryIf;
 
   NsgSimpleRequest();
 
@@ -26,6 +27,7 @@ class NsgSimpleRequest<T extends Object> {
     FutureOr<void> Function(Exception)? onRetry,
     NsgCancelToken? cancelToken,
   }) async {
+    _retryIf = retryIf;
     if (autoRepeate) {
       final r = RetryOptions(maxAttempts: autoRepeateCount);
       return await r.retry(
@@ -38,7 +40,7 @@ class NsgSimpleRequest<T extends Object> {
               method: method,
               postData: postData,
               externalCancelToken: cancelToken),
-          retryIf: retryIf,
+          retryIf: _retryIfInternal,
           onRetry: onRetry);
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
@@ -52,6 +54,15 @@ class NsgSimpleRequest<T extends Object> {
           postData: postData,
           externalCancelToken: cancelToken);
     }
+  }
+
+  FutureOr<bool> _retryIfInternal(Exception ex) async {
+    //400 - код ошибки сервера, не предполагающий повторного запроса данных
+    if (ex is NsgApiException && (ex.error.code == 400 || ex.error.code == 401 || ex.error.code == 500)) {
+      return false;
+    }
+    if (_retryIf != null) return (await _retryIf!(ex));
+    return true;
   }
 
   ///Токен текущего запроса. При повторном вызове запроса, предыдущий запрос будет отменен автоматически
@@ -124,20 +135,20 @@ class NsgSimpleRequest<T extends Object> {
   ///retryIf - функция, вызываемая перед каждым повторным вызовом. Если вернет false, повторы будут остановлены
   ///onRetry - функция, вызываемая при каждом повторе запроса
   ///requestRegime - режим запроса. Позволяет определить для чего загружаются данные при перекрытии логики данного метода
-  Future<T?> requestItem(
-      {required NsgDataProvider provider,
-      required String function,
-      NsgDataRequestParams? filter,
-      bool autoAuthorize = true,
-      String tag = '',
-      String method = 'GET',
-      bool addCount = true,
-      dynamic postData,
-      bool autoRepeate = false,
-      int autoRepeateCount = 1000,
-      FutureOr<bool> Function(Exception)? retryIf,
-      FutureOr<void> Function(Exception)? onRetry,
-      NsgCancelToken? cancelToken,
+  Future<T?> requestItem({
+    required NsgDataProvider provider,
+    required String function,
+    NsgDataRequestParams? filter,
+    bool autoAuthorize = true,
+    String tag = '',
+    String method = 'GET',
+    bool addCount = true,
+    dynamic postData,
+    bool autoRepeate = false,
+    int autoRepeateCount = 1000,
+    FutureOr<bool> Function(Exception)? retryIf,
+    FutureOr<void> Function(Exception)? onRetry,
+    NsgCancelToken? cancelToken,
   }) async {
     NsgDataRequestParams? newFilter;
     if (addCount) {
