@@ -481,7 +481,19 @@ class NsgDataRequest<T extends NsgDataItem> {
 
         if (splitedName.length > 1 && checkItems.isNotEmpty) {
           splitedName.removeAt(0);
-          await loadAllReferents(checkItems, [splitedName.join('.')], tag: tag);
+          //Данные для проверки на дочитывание необходимо рассортировать по типам данных на случай если они получены по нетипизированной ссылке
+          var mapData = <Type, List<NsgDataItem>>{};
+          for (var item in checkItems) {
+            List<NsgDataItem>? list = mapData[item.runtimeType];
+            if (list == null) {
+              list = <NsgDataItem>[];
+              mapData[item.runtimeType] = list;
+            }
+            list.add(item);
+          }
+          for (var key in mapData.keys) {
+            await loadAllReferents(mapData[key]!, [splitedName.join('.')], tag: tag);
+          }
         }
       }
     } catch (ex) {

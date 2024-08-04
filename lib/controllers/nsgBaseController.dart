@@ -765,6 +765,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     selectedItem = item;
     currentStatus = GetStatus.loading();
+    status = GetStatus.loading();
     //11.02.2023 Зенков. Заменил на refresh, потому что иногда происходил конфликт обновления в процессе перерисовки
     //Например, TaskTuner, открытие задачи на просмотр
     refresh();
