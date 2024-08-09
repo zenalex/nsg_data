@@ -459,6 +459,8 @@ class NsgDataItem {
     if (cloneAsCopy) {
       newItem.copyRecordFill();
       newItem.id = Guid.newGuid();
+      newItem.state = NsgDataItemState.create;
+      NsgDataClient.client.addItemsToCache(items: [newItem]);
     }
     return newItem;
   }
