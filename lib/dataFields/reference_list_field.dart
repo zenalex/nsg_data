@@ -57,7 +57,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
           var extTypeName = elem[elem.extensionTypeField].toString();
           if (extTypeName.isNotEmpty && extTypeName != elem.typeName) {
             try {
-              elem = NsgDataClient.client.getNewObjectByTypeName(extTypeName);
+              elem = NsgDataClient.client.getNewObject(NsgDataClient.client.getTypeByServerName(extTypeName));
               elem.fromJson(m);
             } on AssertionError catch (ex) {
               if (ex.message == extTypeName) {
