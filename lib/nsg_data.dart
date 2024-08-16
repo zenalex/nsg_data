@@ -63,3 +63,4 @@ export 'navigator/nsg_get_page.dart';
 export 'navigator/nsg_middleware.dart';
 export 'metrica/nsg_metrica.dart';
 export 'helpers/nsg_barcode_reader.dart';
+export 'models/nsg_server_params.dart';

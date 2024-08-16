@@ -14,6 +14,7 @@ import 'authorize/nsg_login_model.dart';
 import 'authorize/nsg_login_params.dart';
 import 'authorize/nsg_login_response.dart';
 import 'controllers/nsg_cancel_token.dart';
+import 'models/nsg_server_params.dart';
 import 'nsgDataApiError.dart';
 
 class NsgDataProvider {
@@ -116,6 +117,52 @@ class NsgDataProvider {
       }
     }
     _initialized = true;
+  }
+
+  static const String _serverName = 'SERVER_URL';
+
+  //формируем имя хранящегося параметра
+  String get paramName => applicationName + '_$_serverName';
+
+  ///Загрузить созраненный адрес сервера на устройстве
+  ///Проверяет, если на устройстве есть сохраненный адрес и он находится в списке доступных серверов, устанавливает его текущим
+  ///Иначе, не меняет текущий сервер и записывает его в качестве сохраненного
+  Future loadServerAddress(NsgServerParams availableServers) async {
+    var _prefs = await SharedPreferences.getInstance();
+
+    String? savedServerName;
+    if (_prefs.containsKey(paramName)) {
+      savedServerName = _prefs.getString(paramName);
+    }
+    //если нет сохраненного адреса или его нет в списке разрешенных серверов, используем сервер по умолчанию (currentServer)
+    if (savedServerName == null || !availableServers.contains(savedServerName)) {
+      savedServerName = availableServers.currentServer;
+      //Созххраняем новый адрес сервера
+      await _prefs.setString(paramName, savedServerName);
+    } else {
+      //Если есть сохраненный сервер и он в списке разрешенных, устанавливаем его в качестве текущего
+      availableServers.currentServer = savedServerName;
+    }
+    serverUri = availableServers.currentServer;
+  }
+
+  ///Установитт новый адрес сервера и сохранить его в начтройках устройства
+  Future saveServerAddress(String serverAddress) async {
+    var _prefs = await SharedPreferences.getInstance();
+
+    await _prefs.setString(paramName, serverAddress);
+  }
+
+  ///Установить адрес сервера по имени (admin/test)
+  Future setServerByName(NsgServerParams availableServers, String name) async {
+    var newAddress = '';
+    availableServers.serverGroups.forEach((key, value) {
+      if (value == name) {
+        newAddress = key;
+      }
+    });
+    assert(newAddress.isNotEmpty, 'server group $name not found');
+    saveServerAddress(newAddress);
   }
 
   Future<dynamic> baseRequestList(
