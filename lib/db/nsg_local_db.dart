@@ -19,7 +19,7 @@ class NsgLocalDb {
     }
 
     collection = await BoxCollection.open(
-      '/' + databaseName, // Name of database
+      databaseName, // Name of database
       NsgDataClient.client.getAllRegisteredTypes().toSet(), // Names of your boxes
       path: localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
       //key: null, // Key to encrypt your boxes (Only used in Flutter / Dart IO)
