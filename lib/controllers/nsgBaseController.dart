@@ -237,10 +237,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future requestItems({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
     lateInit = false;
     itemsRequested.broadcast();
-    await _requestItems(filter: filter);
-    await getFavorites();
-    itemsRequested.broadcast();
-    sendNotify(keys: keys);
+    try {
+      await _requestItems(filter: filter);
+      await getFavorites();
+      itemsRequested.broadcast();
+      sendNotify(keys: keys);
+    } on NsgExceptionDataObsolete {
+      //Игнорируем ошибку устарешших данных
+    }
   }
 
   ///Обновление данных
@@ -250,6 +254,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     await requestItems(keys: keys, filter: filter);
   }
 
+  ///Идентификатор последнего запроса данных для того, чтобы можно было игнорировать старые данные после отправки нового запроса
+  String _lastRequestId = '';
+
+  ///Запрос данных
   Future _requestItems({NsgDataRequestParams? filter}) async {
     try {
       if (masterController != null && selectedMasterRequired && masterController!.selectedItem == null) {
@@ -263,7 +271,15 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         newItemsList = _filter(dataCache);
         currentStatus = GetStatus.success(emptyData);
       } else {
+        //Создаем идентификатор запроса
+        var currentRequestId = Guid.newGuid();
+        _lastRequestId = currentRequestId;
         newItemsList = await doRequestItems(filter: filter);
+        //Проверяе, не изменился ли идентификатор запроса пока мы ждали данные. То есть, не был ли отправлено новый запрос
+        if (_lastRequestId != currentRequestId) {
+          //В этом случае, игнорируем полученные данные, так как мы уже ждем новые
+          throw NsgExceptionDataObsolete();
+        }
 
         //service method for descendants
         currentStatus = GetStatus.success(emptyData);
@@ -288,6 +304,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       await afterUpdate();
       // 20.06.2022 Зачем посылать refresh, если он будет отправлен позже в requestItems
       // sendNotify();
+    } on NsgExceptionDataObsolete {
+      rethrow;
     } on Exception catch (e) {
       _updateStatusError(e);
       rethrow;
@@ -1157,5 +1175,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         cancelToken: cancelToken,
         retryIf: (e) => retryRequestIf(e));
     return newItem;
+  }
+}
+
+class NsgExceptionDataObsolete implements Exception {
+  @override
+  String toString() {
+    return "Data Obsolete";
   }
 }
