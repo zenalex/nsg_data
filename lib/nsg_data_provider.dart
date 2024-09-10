@@ -231,7 +231,7 @@ class NsgDataProvider {
         throw NsgApiException(NsgApiError(code: 2, message: 'Истекло время ожидания получения или отправки данных', errorType: e.type));
       } else {
         debugPrint('###');
-        debugPrint('### Error: ${e.error}');
+        debugPrint('### Error: ${e.error}, type: ${e.type}');
         debugPrint('###');
         throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
       }
