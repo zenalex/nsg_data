@@ -77,7 +77,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (storageType == NsgDataStorageType.server) {
       retryIf = retryIf;
       if (autoRepeate) {
-        final r = RetryOptions(maxAttempts: autoRepeateCount);
+        final r = RetryOptions(maxAttempts: autoRepeateCount, maxDelay: const Duration(seconds: 15));
         return await r.retry(
             () => _requestItems(
                 filter: filter,
