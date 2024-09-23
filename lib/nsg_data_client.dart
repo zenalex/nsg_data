@@ -24,6 +24,15 @@ class NsgDataClient {
     item.initialize();
   }
 
+  ///Re-initializing enums. For example for changing localization
+  void initializeEnums() {
+    for (var item in _registeredItems.values) {
+      if (item is NsgEnum) {
+        item.initialize();
+      }
+    }
+  }
+
   List<String> getAllRegisteredTypes() {
     return _registeredItems.keys.toList();
   }
