@@ -343,7 +343,7 @@ class NsgDataItem {
   ///Подробности см. в описании свойства isEmpty
   bool get isNotEmpty => !isEmpty;
   @override
-  bool operator ==(Object other) => other is NsgDataItem && equal(other);
+  bool operator ==(Object other) => this.runtimeType == other.runtimeType && other is NsgDataItem && equal(other);
   bool equal(NsgDataItem other) {
     return hashCode == other.hashCode;
     // if (primaryKeyField == '') return hashCode == other.hashCode;
@@ -352,6 +352,9 @@ class NsgDataItem {
 
   @override
   int get hashCode {
+    if (this is NsgEnum) {
+      return (this as NsgEnum).value.hashCode;
+    }
     if (primaryKeyField == '') return super.hashCode;
     //return (getFieldValue(primaryKeyField).toString() + loadTime.toString()).hashCode;
     return (getFieldValue(primaryKeyField).toString()).hashCode;
