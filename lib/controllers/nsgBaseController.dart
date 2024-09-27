@@ -24,8 +24,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   List<NsgDataItem> dataItemList = <NsgDataItem>[];
   List<NsgDataItem> dataCache = <NsgDataItem>[];
 
-  //Referenses to load
+  ///Список ссылок для догрузки при чтении списка
   List<String>? referenceList;
+
+  ///Список ссылок для догрузки при чтении одного элемента (refreshItem)
+  List<String>? referenceItemPage;
   final selectedItemChanged = Event<EventArgs>();
   //Запрошено обновление данных
   final itemsRequested = Event<EventArgs>();
@@ -742,6 +745,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //Возможно, лучше выдавть ошибку, но пока просто проигнорируем
     //Ошибка стабильно проявлялась при нажатии назад в матче приложения футболист
     if (item.id.isEmpty || item.state == NsgDataItemState.create) return item;
+    if (referenceList == null) {
+      referenceList = referenceItemPage;
+    }
     var cmp = NsgCompare();
     cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
     var filterParam = NsgDataRequestParams(compare: cmp);
