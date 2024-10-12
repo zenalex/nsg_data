@@ -809,6 +809,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //вернуть результат обратно
       //selectedItem = null;
       selectedItem!.copyFieldValues(newItem);
+      selectedItem!.state = NsgDataItemState.fill;
       backupItem = newItem;
       await afterRefreshItem(selectedItem!, referenceList);
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
