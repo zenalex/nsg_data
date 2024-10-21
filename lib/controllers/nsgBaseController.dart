@@ -622,7 +622,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Close item page and restore current (selectedItem) item from backup
-  void itemPageCancel({bool useValidation = true, BuildContext? context}) async {
+  void itemPageCancel({bool useValidation = true, required BuildContext context}) async {
     if (useValidation) {
       if (isModified) {
         var result = await NsgDialogSaveOrCancel.saveOrCancel(context: context);
@@ -718,10 +718,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Проверить были ли изменения в объекте, если нет, выполняем Back, если были, то спрашиваем пользователя сохранить изменения или отменить,
   ///а затем выполняем Back
-  Future itemPageCloseCheck() async {
+  Future itemPageCloseCheck(BuildContext context) async {
     if (selectedItem == null) return;
     if (!isModified || saveOrCancelDefaultDialog == null) {
-      itemPageCancel();
+      itemPageCancel(context: context);
       return;
     }
     bool? res = await saveOrCancelDefaultDialog!();
@@ -730,7 +730,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (res) {
         await itemPagePost();
       } else {
-        itemPageCancel(useValidation: false);
+        itemPageCancel(useValidation: false, context: context);
       }
     }
   }
