@@ -8,6 +8,7 @@ import 'package:get/get.dart' as getx;
 import 'package:nsg_controls/widgets/nsg_error_widget.dart';
 import 'package:nsg_data/controllers/nsgBaseController.dart';
 import 'package:nsg_data/nsgApiException.dart';
+import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsg_login_model.dart';
@@ -198,6 +199,8 @@ class NsgDataProvider {
         };
       }
 
+      //Для отладки рассчитаем время выполнения функции
+      var counter = NsgDurationCounter();
       if (isDebug) {
         debugPrint('baseRequestList, function=$function');
       }
@@ -211,9 +214,8 @@ class NsgDataProvider {
         response = await _dio.post(url!, queryParameters: params, data: postData, cancelToken: dioCancelToken);
       }
       if (isDebug) {
-        debugPrint('HTTP STATUS: ${response.statusCode}');
+        counter.difStart(paramName: 'baseRequestList, function=$function. ', criticalDuration: 1500);
       }
-
       return response.data;
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
