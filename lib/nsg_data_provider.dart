@@ -197,6 +197,11 @@ class NsgDataProvider {
           return client;
         };
       }
+
+      if (isDebug) {
+        debugPrint('baseRequestList, function=$function');
+      }
+
       //TODO: сделать генерацию метода запроса GET/POST
       var method2 = 'POST';
       var dioCancelToken = cancelToken?.dioCancelToken;
