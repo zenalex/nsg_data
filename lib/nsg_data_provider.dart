@@ -236,7 +236,7 @@ class NsgDataProvider {
         throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
       }
     } catch (e) {
-      debugPrint('network error. function: $function, error: $e');
+      debugPrint('network error. function: $function, error: $function + ' ' + $e');
       return NsgApiException(NsgApiError(code: 0, message: '$e'));
     }
   }
