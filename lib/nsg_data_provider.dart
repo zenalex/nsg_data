@@ -417,7 +417,7 @@ class NsgDataProvider {
         }
       }
     }
-    setLocale(languageCode: languageCode);
+    await setLocale(languageCode: languageCode);
     if (allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
       await openLoginPage().then((value) => controller.loadProviderData());
     } else {
@@ -639,7 +639,8 @@ class NsgDataProvider {
           url: '$serverUri/$authorizationApi/SetLocale',
           method: 'GET',
           params: params,
-          autoRepeate: true,
+          //FIXME: добавить реакцию на 404
+          autoRepeate: false,
           autoRepeateCount: 1000,
           onRetry: onRetry));
       var loginResponse = NsgLoginResponse.fromJson(response);
