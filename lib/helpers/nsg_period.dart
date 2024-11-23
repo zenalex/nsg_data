@@ -209,4 +209,9 @@ class NsgPeriod {
   static DateTime beginOfDay(DateTime date) {
     return Jiffy.parseFromDateTime(date).startOf(Unit.day).dateTime;
   }
+
+  /// Обнуление даты до начала дня
+  static DateTime endOfDay(DateTime date) {
+    return Jiffy.parseFromDateTime(date).endOf(Unit.day).dateTime;
+  }
 }
