@@ -3,11 +3,11 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'nsg_data_options.dart';
 
 abstract class NsgDateFormat {
-  static dateFormat(DateTime datetime, {String? format, bool ignoreYear = false}) {
+  static dateFormat(DateTime datetime, {String? format, bool ignoreYear = false, String locale = 'ru_RU'}) {
     if (!ignoreYear && datetime.year <= 1754) {
       return "";
     }
-    return DateFormat(format ?? NsgDataOptions.instance.dateformat, 'ru_RU').format(datetime);
+    return DateFormat(format ?? NsgDataOptions.instance.dateformat, locale).format(datetime);
   }
 
   static Duration timeToDuration(DateTime datetime) {
