@@ -111,7 +111,7 @@ class NsgPeriod {
       case NsgPeriodType.week:
         return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
       case NsgPeriodType.day:
-        return NsgDateFormat.dateFormat(beginDate, format: 'dd MMMM yyyy г.');
+        return NsgDateFormat.dateFormat(beginDate, format: 'd MMM yyyy г.');
       case NsgPeriodType.period:
         return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
       case NsgPeriodType.periodWidthTime:
