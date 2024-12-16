@@ -117,11 +117,20 @@ class NsgCompareParam {
         map["Value"] = (parameterValue as NsgDataItem).id;
       }
     } else if (parameterValue is List && (parameterValue as List).isNotEmpty && (parameterValue as List).first is NsgDataItem) {
-      var idList = <String>[];
-      for (NsgDataItem e in parameterValue as List) {
-        idList.add(e.id);
+      if ((parameterValue as List).first is NsgEnum) {
+        //Для NsgEnum значение целое, а не guid
+        var idList = <int>[];
+        for (NsgEnum e in parameterValue as List) {
+          idList.add(e.value);
+        }
+        map["Value"] = idList;
+      } else {
+        var idList = <String>[];
+        for (NsgDataItem e in parameterValue as List) {
+          idList.add(e.id);
+        }
+        map["Value"] = idList;
       }
-      map["Value"] = idList;
     } else if (parameterValue is NsgCompare) {
       //map["ComparisonOperator"] = NsgComparisonOperator.compare;
       map["Value"] = (parameterValue as NsgCompare).toJson();

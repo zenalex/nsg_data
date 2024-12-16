@@ -180,6 +180,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       debugPrint(e.toString());
       rethrow;
     }
+    debugPrint("items length = ${items.length}");
     return items;
   }
 
