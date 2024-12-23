@@ -135,7 +135,9 @@ class NsgDataRequest<T extends NsgDataItem> {
       loadReference = addAllReferences(dataItem.runtimeType);
     }
     filter ??= NsgDataRequestParams();
-    filter.readNestedField = loadReference.join(',');
+    if (filter.readNestedField == null) {
+      filter.readNestedField = loadReference.join(',');
+    }
 
     method = 'POST';
     if (method == 'GET') {
