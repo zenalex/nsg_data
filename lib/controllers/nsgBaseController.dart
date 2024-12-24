@@ -524,7 +524,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Post selected item to the server
-  Future _postSelectedItem() async {
+  Future postSelectedItem() async {
     assert(selectedItem != null, 'No selected item to post');
     selectedItem!.storageType = controllerMode.storageType;
     await selectedItem!.post();
@@ -672,7 +672,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     currentStatus = GetStatus.loading();
     sendNotify();
     try {
-      await _postSelectedItem();
+      await postSelectedItem();
       var oldIndex = dataItemList.length;
       if (backupItem != null && backupItem == selectedItem && dataItemList.contains(backupItem)) {
         oldIndex = dataItemList.indexOf(backupItem!);

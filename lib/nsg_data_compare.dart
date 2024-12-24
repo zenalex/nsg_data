@@ -168,13 +168,17 @@ class NsgCompareParam {
       return (value.toString().toLowerCase().endsWith(parameterValue.toString().toLowerCase()));
     } else if (comparisonOperator == NsgComparisonOperator.equal) {
       var pv = parameterValue;
-      if (parameterValue is NsgDataItem) {
+      if (parameterValue is NsgEnum) {
+        pv = (parameterValue as NsgEnum).value;
+      } else if (parameterValue is NsgDataItem) {
         pv = (parameterValue as NsgDataItem).id;
       }
       return (value == pv);
     } else if (comparisonOperator == NsgComparisonOperator.notEqual) {
       var pv = parameterValue;
-      if (parameterValue is NsgDataItem) {
+      if (parameterValue is NsgEnum) {
+        pv = (parameterValue as NsgEnum).value;
+      } else if (parameterValue is NsgDataItem) {
         pv = (parameterValue as NsgDataItem).id;
       }
       return (value != pv);

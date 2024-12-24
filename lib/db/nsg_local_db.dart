@@ -134,7 +134,7 @@ class NsgLocalDb {
           var value = item.fieldList.fields[name];
           map[name] = value!.convertToJson(item[name]);
         }
-        box.put(item.id, map);
+        await box.put(item.id, map);
 
         for (var name in tableFields) {
           var list = item[name] as List<NsgDataItem>;
