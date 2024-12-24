@@ -750,9 +750,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //Возможно, лучше выдавть ошибку, но пока просто проигнорируем
     //Ошибка стабильно проявлялась при нажатии назад в матче приложения футболист
     if (item.id.isEmpty || item.state == NsgDataItemState.create) return item;
-    if (referenceList == null) {
-      referenceList = referenceItemPage;
-    }
+    referenceList ??= referenceItemPage;
     var cmp = NsgCompare();
     cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
     var filterParam = NsgDataRequestParams(compare: cmp);
