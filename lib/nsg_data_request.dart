@@ -136,9 +136,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
     filter ??= NsgDataRequestParams();
 
-    if (filter.referenceList == null) {
-      filter.referenceList = loadReference;
-    }
+    filter.referenceList ??= loadReference;
 
     method = 'POST';
     if (method == 'GET') {
