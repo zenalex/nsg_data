@@ -156,7 +156,7 @@ class NsgSimpleRequest<T extends Object> {
         newFilter = NsgDataRequestParams(count: 1);
       } else {
         newFilter = NsgDataRequestParams(
-            top: filter.top, count: 1, params: filter.params, sorting: filter.sorting, readNestedField: filter.readNestedField, compare: filter.compare);
+            top: filter.top, count: 1, params: filter.params, sorting: filter.sorting, referenceList: filter.referenceList, compare: filter.compare);
       }
     }
     var data = await requestItems(

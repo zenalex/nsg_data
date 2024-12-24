@@ -41,7 +41,7 @@ class NsgDataPost<T extends NsgDataItem> {
     //Добавим поля для дочитывания
     if (loadReference != null) {
       var filter = NsgDataRequestParams();
-      filter.readNestedField = loadReference.join(',');
+      filter.referenceList = loadReference;
       filterMap = filter.toJson();
     }
     var response = await dataItem.remoteProvider.baseRequestList(

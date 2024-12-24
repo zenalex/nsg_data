@@ -1109,7 +1109,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //Дочитываем недостающие элементы
     if (listToRequest.isNotEmpty) {
       cmp.add(name: dataItem.primaryKeyField, value: listToRequest, comparisonOperator: NsgComparisonOperator.inList);
-      var params = NsgDataRequestParams(compare: cmp, readNestedField: referenceList?.join(','));
+      var params = NsgDataRequestParams(compare: cmp, referenceList: referenceList);
       var request = NsgDataRequest<NsgDataItem>(storageType: controllerMode.storageType, dataItemType: dataType);
       answerList.addAll(await request.requestItems(filter: params));
 

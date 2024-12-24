@@ -20,7 +20,7 @@ class NsgDataRequestParams {
 
   ///Список ссылочных полей, при нахождении не нулевых ссылок на объекты в этих полях
   ///Вместе со списком основных объектов будут получены все объекты, на которые есть ссылки
-  String? readNestedField;
+  List<String>? referenceList;
 
   ///При задании этого списка другие поля не будут прочитаны вообще
   ///Имеет смысл использовать только при тонкой оптимизации объема передаваемых данных
@@ -43,7 +43,7 @@ class NsgDataRequestParams {
     if (top != 0) filter['Top'] = jsonEncode(top); //.toString();
     if (count != 0) filter['Count'] = jsonEncode(count); //.toString();
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
-    if (readNestedField != null) filter['ReadNestedField'] = readNestedField.toString();
+    if (referenceList != null) filter['ReadReferences'] = referenceList;
     if (fieldsToRead != null) filter['FieldsToRead'] = fieldsToRead.toString();
     if (groupBy != null) filter['GroupBy'] = groupBy;
     if (compare.isNotEmpty) filter['Compare'] = compare.toJson();
@@ -61,7 +61,7 @@ class NsgDataRequestParams {
     _compare = newCompare;
   }
 
-  NsgDataRequestParams({this.top = 0, this.count = 0, this.params, this.sorting, this.readNestedField, this.showDeletedObjects = false, NsgCompare? compare}) {
+  NsgDataRequestParams({this.top = 0, this.count = 0, this.params, this.sorting, this.referenceList, this.showDeletedObjects = false, NsgCompare? compare}) {
     if (compare != null) {
       _compare = compare;
     }

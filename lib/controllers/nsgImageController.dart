@@ -98,11 +98,14 @@ class NsgImageController<T extends NsgDataItem> extends NsgDataController<T> {
     _requestList.add(imageQueueParam);
     var cmp = NsgCompare();
     cmp.add(name: nameId, value: imageQueueParam.id);
-    var fields = '$nameId,${imageQueueParam.fieldName}';
+
+    var fields = [nameId, imageQueueParam.fieldName];
     //if (!items.any((e) => e.id == imageQueueParam.id)) {
-    fields += ',' + fieldsToRead.join(',');
+    //fields += ',' + fieldsToRead.join(',');
+    fields.addAll(fieldsToRead);
+
     //}
-    var filter = NsgDataRequestParams(compare: cmp, readNestedField: fields);
+    var filter = NsgDataRequestParams(compare: cmp, referenceList: fields);
     var req = NsgDataRequest(dataItemType: dataType);
     var item = await req.requestItem(filter: filter);
     if (items.contains(item)) {
