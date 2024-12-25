@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:nsg_data/nsg_data.dart';
@@ -379,6 +380,49 @@ class NsgDataItem {
     } else {
       await NsgLocalDb.instance.postItems([this]);
     }
+  }
+
+  ///Прочитать объект из БД по его идентификатору
+  ///Можно использовать для обновления объекта из БД или для его дочитывания
+  Future getById(
+      {bool autoAuthorize = true,
+      String tag = '',
+      List<String>? loadReference,
+      String function = '',
+      String method = 'GET',
+      bool addCount = true,
+      dynamic postData,
+      bool autoRepeate = false,
+      int autoRepeateCount = 1000,
+      FutureOr<bool> Function(Exception)? retryIf,
+      FutureOr<void> Function(Exception)? onRetry,
+      NsgCancelToken? cancelToken}) async {
+    var filter = NsgDataRequestParams();
+    filter.compare.add(name: primaryKeyField, value: id, comparisonOperator: NsgComparisonOperator.equal);
+    late NsgDataItem newItem;
+    if (storageType == NsgDataStorageType.server) {
+      var p = NsgDataRequest(dataItemType: runtimeType);
+      newItem = await p.requestItem(
+          filter: filter,
+          autoAuthorize: autoAuthorize,
+          tag: tag,
+          loadReference: loadReference,
+          function: function,
+          method: method,
+          addCount: addCount,
+          postData: postData,
+          autoRepeate: autoRepeate,
+          autoRepeateCount: autoRepeateCount,
+          retryIf: retryIf,
+          onRetry: onRetry,
+          cancelToken: cancelToken);
+    } else {
+      newItem = (await NsgLocalDb.instance.requestItems(this, filter)).first;
+    }
+    copyFieldValues(newItem);
+    state = newItem.state;
+    docState = newItem.docState;
+    newTableLogic = newItem.newTableLogic;
   }
 
   Future removeItem() async {
