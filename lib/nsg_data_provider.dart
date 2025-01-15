@@ -6,24 +6,19 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' as getx;
 import 'package:nsg_controls/widgets/nsg_error_widget.dart';
-import 'package:nsg_data/controllers/nsgBaseController.dart';
-import 'package:nsg_data/nsgApiException.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsg_login_model.dart';
 import 'authorize/nsg_login_params.dart';
 import 'authorize/nsg_login_response.dart';
-import 'controllers/nsg_cancel_token.dart';
-import 'models/nsg_server_params.dart';
-import 'nsgDataApiError.dart';
 
 class NsgDataProvider {
   ///Token saved after authorization
   String? token = '';
 
   ///server uri (i.e. https://your_server.com:port)
-  String serverUri = 'http://192.168.1.20:5073';
+  String serverUri = '';
 
   ///authorization path without serverUri (i.e. 'Api/Auth/Login')
   String authorizationApi = 'Api/Auth/Login';
@@ -76,6 +71,9 @@ class NsgDataProvider {
   ///Функция, вызываемая при необходимости отображения окна входа
   final Future Function()? eventOpenLoginPage;
 
+  ///Доступные сперверы
+  NsgServerParams availableServers;
+
   ///milliseconds
   int requestDuration = 120000;
   int connectDuration = 15000;
@@ -97,6 +95,7 @@ class NsgDataProvider {
       required this.applicationVersion,
       NsgLoginParams Function()? widgetLoginParams,
       this.eventOpenLoginPage,
+      required this.availableServers,
       this.languageCode = 'ru'}) {
     widgetParams = widgetLoginParams ?? () => NsgLoginParams();
   }
@@ -104,12 +103,17 @@ class NsgDataProvider {
   ///Initialization. Load saved token if useNsgAuthorization == true
   Future initialize() async {
     if (_initialized) return;
+    await loadServerAddress();
     if (useNsgAuthorization) {
-      var _prefs = await SharedPreferences.getInstance();
-      if (_prefs.containsKey(applicationName)) {
-        token = _prefs.getString(applicationName);
-        isAnonymous = false;
+      await getCurrentServerToken();
+      if (token == null || token!.isEmpty) {
+        var _prefs = await SharedPreferences.getInstance();
+        if (_prefs.containsKey(applicationName)) {
+          token = _prefs.getString(applicationName);
+        }
       }
+      //Почему-то условие стояло обратное
+      isAnonymous = !(token != null && token!.isNotEmpty);
       if (kIsWeb && !saveTokenWebDefaultTrue) {
         // || (!Platform.isAndroid && !Platform.isIOS)) {
         saveToken = false;
@@ -128,7 +132,7 @@ class NsgDataProvider {
   ///Загрузить созраненный адрес сервера на устройстве
   ///Проверяет, если на устройстве есть сохраненный адрес и он находится в списке доступных серверов, устанавливает его текущим
   ///Иначе, не меняет текущий сервер и записывает его в качестве сохраненного
-  Future loadServerAddress(NsgServerParams availableServers) async {
+  Future loadServerAddress() async {
     var _prefs = await SharedPreferences.getInstance();
 
     String? savedServerName;
@@ -154,8 +158,35 @@ class NsgDataProvider {
     await _prefs.setString(paramName, serverAddress);
   }
 
+  ///Прочитать сохраненный токен для текущего сервера
+  Future getCurrentServerToken() async {
+    var tokenName = paramName + '_' + availableServers.groupNameByAddress(availableServers.currentServer);
+    var _prefs = await SharedPreferences.getInstance();
+    token = '';
+    if (_prefs.containsKey(tokenName)) {
+      token = _prefs.getString(tokenName);
+      isAnonymous = token == null || token!.isEmpty;
+    }
+  }
+
+  ///Сохранить токен для текущего сервера
+  Future saveCurrentServerToken() async {
+    var _prefs = await SharedPreferences.getInstance();
+    if (token == null || token!.isEmpty) return;
+    var tokenName = paramName + '_' + availableServers.groupNameByAddress(availableServers.currentServer);
+    await _prefs.setString(tokenName, token!);
+  }
+
+  ///Удалить токен для текущего сервера (например, при logout)
+  Future resetCurrentServerToken() async {
+    var _prefs = await SharedPreferences.getInstance();
+    if (token == null || token!.isEmpty) return;
+    var tokenName = paramName + '_' + availableServers.currentServer;
+    await _prefs.remove(tokenName);
+  }
+
   ///Установить адрес сервера по имени (admin/test)
-  Future setServerByName(NsgServerParams availableServers, String name) async {
+  Future setServerByName(String name) async {
     var newAddress = '';
     availableServers.serverGroups.forEach((key, value) {
       if (value == name) {
@@ -494,8 +525,9 @@ class NsgDataProvider {
       token = loginResponse.token;
       isAnonymous = loginResponse.isAnonymous;
       if (!isAnonymous && saveToken) {
-        var _prefs = await SharedPreferences.getInstance();
-        await _prefs.setString(applicationName, token!);
+        // var _prefs = await SharedPreferences.getInstance();
+        // await _prefs.setString(applicationName, token!);
+        await saveCurrentServerToken();
       }
     }
     return loginResponse;
@@ -524,8 +556,9 @@ class NsgDataProvider {
         isAnonymous = loginResponse.isAnonymous;
       }
       if (!isAnonymous && saveToken) {
-        var _prefs = await SharedPreferences.getInstance();
-        await _prefs.setString(applicationName, token!);
+        saveCurrentServerToken();
+        // var _prefs = await SharedPreferences.getInstance();
+        // await _prefs.setString(applicationName, token!);
       }
 
       return loginResponse;
@@ -547,8 +580,9 @@ class NsgDataProvider {
       debugPrint('ERROR logout: ${ex.toString()}');
     }
     if (!isAnonymous) {
-      var _prefs = await SharedPreferences.getInstance();
-      await _prefs.remove(applicationName);
+      resetCurrentServerToken();
+      // var _prefs = await SharedPreferences.getInstance();
+      // await _prefs.remove(applicationName);
       isAnonymous = true;
       token = '';
     }
@@ -557,9 +591,9 @@ class NsgDataProvider {
   }
 
   Future resetUserToken() async {
-    //if (name == '' || name == null) name = authorizationApi;
-    var _prefs = await SharedPreferences.getInstance();
-    await _prefs.remove(applicationName);
+    resetCurrentServerToken();
+    // var _prefs = await SharedPreferences.getInstance();
+    // await _prefs.remove(applicationName);
     isAnonymous = true;
     token = '';
   }

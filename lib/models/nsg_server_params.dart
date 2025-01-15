@@ -4,17 +4,26 @@
 class NsgServerParams {
   NsgServerParams(this.serverGroups, this.currentServer);
 
-  ///Map - адрес сервера - имя
+  ///Map - адрес сервера - имя группы (main/test etc)
   Map<String, String> serverGroups;
   String currentServer;
 
-  ///Проверяет, содержится ли имя сервера в списке доступных серверов
+  ///Map - группа серверов / токен пользователя
+  ///для того, чтобы сохранять на клиенте токены сразу для нескольких серверов
+  Map<String, String> groupToken = {};
+
+  ///Проверяет, содержится ли адрес сервера в списке доступных серверов
   bool contains(String name) {
     return serverGroups[name] != null;
   }
 
-  ///Проверяет соответствие имени и адреса сервера
+  ///Проверяет соответствие имени uheggs и адреса сервера
   bool serverIs(String name) {
     return name == serverGroups[currentServer];
+  }
+
+  ///Вернуть имя группы серверов по адресу
+  String groupNameByAddress(String serverAddress) {
+    return serverGroups[serverAddress] ?? '';
   }
 }
