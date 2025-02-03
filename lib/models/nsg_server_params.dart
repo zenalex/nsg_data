@@ -2,7 +2,10 @@
 ///Например, рабочий, тестовый
 ///И мотоды для работы с ними
 class NsgServerParams {
-  NsgServerParams(this.serverGroups, this.currentServer);
+  NsgServerParams(this.serverGroups, this.currentServer, {this.controlServers = const []});
+
+  ///Список управляющих серверов. Используется для запроса адресов актуальных серверов
+  List<String> controlServers;
 
   ///Map - адрес сервера - имя группы (main/test etc)
   Map<String, String> serverGroups;

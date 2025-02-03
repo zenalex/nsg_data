@@ -288,10 +288,11 @@ class NsgDataProvider {
       final String method = 'GET',
       bool autoRepeate = false,
       int autoRepeateCount = 1000,
+      int maxRepeateDelay = 5,
       FutureOr<bool> Function(Exception)? retryIf,
       FutureOr<void> Function(Exception)? onRetry}) async {
     if (autoRepeate) {
-      final r = RetryOptions(maxAttempts: autoRepeateCount);
+      final r = RetryOptions(maxAttempts: autoRepeateCount, maxDelay: Duration(seconds: maxRepeateDelay));
       return await r.retry(
           () => _baseRequest(
               function: function,
@@ -414,6 +415,45 @@ class NsgDataProvider {
   Future<bool> internetConnected() async {
     return true;
     //return await Connectivity().checkConnectivity() != ConnectivityResult.none;
+  }
+
+  ///Запросить список актуальных серверов приложения с управляющего сервера
+  ///Если список удалось получить - он со=храняется в availableServers, а рекомендованный проставится текущим
+  ///Если управляющих серверов указано несколько, запрашиваем сразу по всем для ускорения получения ответа и решения проблемы с неработающими серверами
+  Future selectApplicationServer() async {
+    if (availableServers.controlServers.isEmpty) {
+      return;
+    }
+  }
+
+  ///Запрос адреса сервера приложения
+  ///Формат запроса 185.65.105.51/AppConnection?appName=App2&clientVersion=1.0&country=US&serverType=release
+  Future<String> _requestAppServer(String controlServerAddress, String serverType) async {
+    String controlServerAddress = "185.65.105.51"; // Пример без /
+    String url = Uri.parse(controlServerAddress).resolve("AppConnection").toString();
+
+    var params = <String, dynamic>{};
+    params['appName'] = applicationName;
+    params['clientVersion'] = applicationVersion;
+    params['country'] = 'me';
+    params['serverType'] = serverType;
+    try {
+      var response = await (baseRequest(
+          function: 'AppConnection',
+          headers: getAuthorizationHeader(),
+          url: url,
+          method: 'GET',
+          params: params,
+          autoRepeate: true,
+          autoRepeateCount: 1000,
+          onRetry: null));
+      return response.toString();
+    } on NsgApiException catch (e) {
+      if (e.error.code == 404) {
+        return '';
+      }
+    }
+    return '';
   }
 
   ///Connect to server
