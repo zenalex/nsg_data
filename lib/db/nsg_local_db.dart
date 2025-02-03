@@ -12,18 +12,37 @@ class NsgLocalDb {
 
   Map<String, CollectionBox<Map>> tables = {};
 
-  Future init(String databaseName) async {
-    String localPath = './';
-    if (!kIsWeb) {
-      localPath = (await getApplicationDocumentsDirectory()).path + '/';
-    }
+  static bool initialized = false;
 
-    collection = await BoxCollection.open(
-      '/' + databaseName, // Name of database
-      NsgDataClient.client.getAllRegisteredTypes().toSet(), // Names of your boxes
-      path: localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
-      //key: null, // Key to encrypt your boxes (Only used in Flutter / Dart IO)
-    );
+  Future init(String databaseName) async {
+    if (initialized) {
+      return;
+    }
+    //Для возможности запуска нескольких экземпляров программы одновременно, пока сделано решение, что для каждого экземпляра будет своя БД
+    //Решение спорное, но лучше так, чем никак
+    var iteration = 0;
+    while (true) {
+      try {
+        String localPath = './';
+        if (!kIsWeb) {
+          localPath = (await getApplicationDocumentsDirectory()).path + '/';
+        }
+
+        collection = await BoxCollection.open(
+          '/' + databaseName + (iteration++ == 0 ? '' : iteration.toString()), // Name of database
+          NsgDataClient.client.getAllRegisteredTypes().toSet(), // Names of your boxes
+          path: localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
+          //key: null, // Key to encrypt your boxes (Only used in Flutter / Dart IO)
+        );
+      } catch (ex) {
+        print(ex);
+        if (iteration < 10) {
+          continue;
+        }
+      }
+      break;
+    }
+    initialized = true;
   }
 
   Future<CollectionBox<Map>> getTable(String tableName) async {
