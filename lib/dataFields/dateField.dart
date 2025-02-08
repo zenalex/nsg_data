@@ -42,8 +42,8 @@ class NsgDataDateField extends NsgDataField {
   }
 
   @override
-  String formattedValue(NsgDataItem item) {
-    return NsgDateFormat.dateFormat(item[name]);
+  String formattedValue(NsgDataItem item, String locale) {
+    return NsgDateFormat.dateFormat(item[name], locale: locale);
   }
 
   @override

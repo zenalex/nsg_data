@@ -3,7 +3,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'nsg_data_options.dart';
 
 abstract class NsgDateFormat {
-  static dateFormat(DateTime datetime, {String? format, bool ignoreYear = false, String locale = 'ru_RU'}) {
+  static dateFormat(DateTime datetime, {String? format, bool ignoreYear = false, required String locale}) {
     if (!ignoreYear && datetime.year <= 1754) {
       return "";
     }

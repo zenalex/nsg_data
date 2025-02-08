@@ -27,7 +27,7 @@ class NsgDataField {
     if (!fieldValues.emptyFields.contains(name)) fieldValues.emptyFields.add(name);
   }
 
-  String formattedValue(NsgDataItem item) {
+  String formattedValue(NsgDataItem item, String locale) {
     return item[name].toString();
   }
 

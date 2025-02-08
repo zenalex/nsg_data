@@ -47,7 +47,7 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
   }
 
   @override
-  String formattedValue(NsgDataItem item) {
+  String formattedValue(NsgDataItem item, String locale) {
     var referent = (getReferent(item, allowNull: true));
     if (referent == null) {
       return item[name].toString();

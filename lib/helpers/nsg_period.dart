@@ -24,10 +24,10 @@ class NsgPeriod {
   DateTime endDate = Jiffy.parseFromDateTime(DateTime.now()).endOf(Unit.month).dateTime;
 
   ///Текстовое представление периода. В случае учета веремен, время в отображении не указыватеся
-  String get dateTextWithoutTime => getDateText(false);
+  String dateTextWithoutTime(String locale) => getDateText(false, locale);
 
   ///Текстовое представление периода. В случае учета веремен, время будет отображено в периоде
-  String get dateTextWithTime => getDateText(true);
+  String dateTextWithTime(String locale) => getDateText(true, locale);
 
   ///Тип периода (определяится автоматически по заданным началу и концу периода)
   NsgPeriodType get type => _detectPeriodType();
@@ -100,25 +100,30 @@ class NsgPeriod {
 
   ///Задать текстовое представление периода
   ///Возможно, надо заменить переменные на геттеры
-  String getDateText(bool? withTime) {
+  String getDateText(bool? withTime, String locale) {
     switch (type) {
       case NsgPeriodType.year:
-        return NsgDateFormat.dateFormat(beginDate, format: 'yyyy г.');
+        return NsgDateFormat.dateFormat(beginDate, format: 'yyyy г.', locale: locale);
       case NsgPeriodType.quarter:
-        return NsgDateFormat.dateFormat(beginDate, format: getQuarter(beginDate).toString() + ' квартал yyyy г.');
+        //TODO: добавить локализацию
+        return NsgDateFormat.dateFormat(beginDate, format: getQuarter(beginDate).toString() + ' квартал yyyy г.', locale: locale);
       case NsgPeriodType.month:
-        return NsgDateFormat.dateFormat(beginDate, format: 'MMM yyyy г.');
+        return NsgDateFormat.dateFormat(beginDate, format: 'MMM yyyy г.', locale: locale);
       case NsgPeriodType.week:
-        return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
+        return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ', locale: locale) +
+            NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy', locale: locale);
       case NsgPeriodType.day:
-        return NsgDateFormat.dateFormat(beginDate, format: 'd MMM yyyy г.');
+        return NsgDateFormat.dateFormat(beginDate, format: 'd MMM yyyy г.', locale: locale);
       case NsgPeriodType.period:
-        return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
+        return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ', locale: locale) +
+            NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy', locale: locale);
       case NsgPeriodType.periodWidthTime:
         if (withTime != null && withTime) {
-          return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy (HH:mm) - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy (HH:mm)');
+          return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy (HH:mm) - ', locale: locale) +
+              NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy (HH:mm)', locale: locale);
         } else {
-          return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ') + NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy');
+          return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ', locale: locale) +
+              NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy', locale: locale);
         }
 
       default:
