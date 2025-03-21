@@ -238,6 +238,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Request Items
   Future requestItems({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
+    // Пока убрал генерацию ошибки, чтобы старый код корректно работал
+    // assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+    //     'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
     lateInit = false;
     itemsRequested.broadcast();
     try {
@@ -252,6 +255,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Обновление данных
   Future refreshData({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
+    // Пока убрал генерацию ошибки, чтобы старый код корректно работал
+    // assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+    //     'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
     currentStatus = GetStatus.loading();
     sendNotify(keys: keys);
     await requestItems(keys: keys, filter: filter);
@@ -536,7 +542,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
   void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
-    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
+    if (this is NsgDataItemController && (this as NsgDataItemController).widgetId == null) {
+      //Если контроллер является контроллером элемента, то вызываем метод контроллера элемента
+      var controller = (this as NsgDataItemController).getDataItemController(element.id);
+      controller.itemPageOpen(element, pageName, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList, offPage: offPage);
+      return;
+    }
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
     } else {
@@ -546,14 +557,15 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
 
     if (offPage) {
-      NsgNavigator.go(pageName, id: selectedItem?.id);
+      NsgNavigator.go(pageName, id: selectedItem?.id, widgetId: _getWidgetId());
     } else {
-      NsgNavigator.push(pageName, id: selectedItem?.id);
+      NsgNavigator.push(pageName, id: selectedItem?.id, widgetId: _getWidgetId());
     }
   }
 
   ///Open list page to view data in controller.items
   void listPageOpen(String pageName, {bool needRefreshItems = false, bool offPage = false}) {
+    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null));
     if (needRefreshItems) {
       refreshData();
     } else {
@@ -561,9 +573,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
 
     if (offPage) {
-      NsgNavigator.go(pageName);
+      NsgNavigator.go(pageName, widgetId: _getWidgetId());
     } else {
-      NsgNavigator.push(pageName);
+      NsgNavigator.push(pageName, widgetId: _getWidgetId());
     }
   }
 
@@ -612,6 +624,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       selectedItemChanged.broadcast(null);
+      if (this is NsgDataItemController) {
+        var controller = (this as NsgDataItemController).getDataItemController(selectedItem!.id);
+        controller.selectedItem = selectedItem;
+        controller.backupItem = selectedItem;
+        controller.sendNotify();
+        controller.selectedItemChanged.broadcast(null);
+      }
     } on Exception catch (e) {
       _updateStatusError(e);
     }
@@ -758,7 +777,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     filterParam.showDeletedObjects = true;
     var answer = await request.requestItem(
         filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
-    assert(answer.isNotEmpty, 'Элемент не найден (возможно помечен на удаление)');
+    assert(answer.isNotEmpty, 'Element not found (possibly marked for deletion)');
+    // assert(answer.isNotEmpty, 'Элемент не найден (возможно помечен на удаление)');
     //Если в items (он же dataItemList) данный элемент уже присутствует, обновляем его новой версией
     if (dataItemList.contains(answer)) {
       var index = dataItemList.indexOf(answer);
@@ -829,6 +849,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future copyAndSetItem(NsgDataItem item, {bool needRefreshSelectedItem = false, List<String>? referenceList}) async {
     assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
+    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
     currentStatus = GetStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
@@ -924,6 +946,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Удаление массива строк из табличной части
   ///На данный момент, метод реализован только для контроллера табличной части
   Future itemsRemove(List<NsgDataItem> itemsToRemove) async {
+    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
     await deleteItems(itemsToRemove);
   }
 
@@ -960,6 +984,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   Future postItems(List<NsgDataItem> itemsToPost, {bool showProgress = false}) async {
+    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
     if (controllerMode.storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: dataType);
       p.itemsToPost = itemsToPost;
@@ -984,6 +1010,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   /// Удаляет currentItem в БД и в items
   Future deleteItem({bool goBack = true}) async {
     assert(selectedItem != null, 'При выполнении deleteItem() -> currentItem==null');
+    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
     await deleteItems([selectedItem!]);
     if (goBack) {
       NsgNavigator.instance.back();
@@ -992,6 +1020,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   /// Удаляет выбранные элементы в БД и в items
   Future deleteItems(List<NsgDataItem> itemsToDelete) async {
+    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
     if (controllerMode.storageType == NsgDataStorageType.server) {
       if (itemsToDelete.isEmpty) return;
       var p = NsgDataDelete(dataItemType: itemsToDelete[0].runtimeType, itemsToDelete: itemsToDelete);
@@ -1018,6 +1048,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Уменьшив таким образом нагрузку на сервер и избежать коллизий
   Future postItemQueue(NsgDataItem obj,
       {Function(List<NsgDataItem> errorObjects)? errorObjects, Function(List<NsgDataItem> postedObjects)? postedObjects}) async {
+    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
     if (_postQueue.contains(obj)) {
       return;
     }
@@ -1185,6 +1217,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         cancelToken: cancelToken,
         retryIf: (e) => retryRequestIf(e));
     return newItem;
+  }
+
+  String? _getWidgetId() {
+    if (this is NsgDataItemController) {
+      var controller = this as NsgDataItemController;
+      return controller.widgetId != null && controller.widgetId!.isNotEmpty ? controller.widgetId : null;
+    }
+    return null;
   }
 }
 

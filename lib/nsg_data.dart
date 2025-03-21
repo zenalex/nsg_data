@@ -65,3 +65,4 @@ export 'metrica/nsg_metrica.dart';
 export 'helpers/nsg_barcode_reader.dart';
 export 'models/nsg_server_params.dart';
 export 'helpers/nsg_duration_counter.dart';
+export 'controllers/nsg_data_item_controller.dart';

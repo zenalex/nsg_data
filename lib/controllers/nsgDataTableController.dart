@@ -14,7 +14,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   ///Имя поля ссылки на таблицу
   String tableFieldName;
   NsgDataTableController(
-      {super.requestOnInit,
+      {super.requestOnInit = false,
       super.useUpdate,
       super.useChange,
       super.builderIDs,
