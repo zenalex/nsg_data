@@ -29,20 +29,15 @@ class NsgLocalDb {
         }
 
         collection = await BoxCollection.open(
-          '/' +
-              databaseName +
-              (iteration++ == 0
-                  ? ''
-                  : iteration.toString()), // Name of database
-          NsgDataClient.client
-              .getAllRegisteredTypes()
-              .toSet(), // Names of your boxes
-          path:
-              localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
+          '/' + databaseName + (iteration++ == 0 ? '' : iteration.toString()), // Name of database
+          NsgDataClient.client.getAllRegisteredTypes().toSet(), // Names of your boxes
+          path: localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
           //key: null, // Key to encrypt your boxes (Only used in Flutter / Dart IO)
         );
       } catch (ex) {
-        print(ex);
+        if (kDebugMode) {
+          print(ex);
+        }
         if (iteration < 10) {
           continue;
         }
@@ -62,9 +57,7 @@ class NsgLocalDb {
     return box;
   }
 
-  Future<List<NsgDataItem>> requestItems(
-      NsgDataItem dataItem, NsgDataRequestParams params,
-      {String tag = ''}) async {
+  Future<List<NsgDataItem>> requestItems(NsgDataItem dataItem, NsgDataRequestParams params, {String tag = ''}) async {
     var box = await getTable(dataItem.typeName);
     var items = <NsgDataItem>[];
     //определяем нет ли в запросе ограничения по id
@@ -97,8 +90,7 @@ class NsgLocalDb {
     return items;
   }
 
-  void _getIdFromCompare(
-      List<String> ids, NsgDataItem dataItem, NsgCompare cmp) {
+  void _getIdFromCompare(List<String> ids, NsgDataItem dataItem, NsgCompare cmp) {
     for (var param in cmp.paramList) {
       if (param.parameterValue is NsgCompare) {
         _getIdFromCompare(ids, dataItem, param.parameterValue);
@@ -130,9 +122,7 @@ class NsgLocalDb {
       if (item.id.isEmpty) {
         item.id = Guid.newGuid();
       }
-      //FIXME: !!!!!!!!!!!!!!!!!!!!!!!!!!
       item.state = NsgDataItemState.fill;
-      //var map = item.toJson(excludeFields: tableFields);
       Map<dynamic, dynamic>? oldObject;
       if (tableFields.isNotEmpty) {
         oldObject = await box.get(item.id.toString());
@@ -148,17 +138,12 @@ class NsgLocalDb {
           //Читаем старый объект, извлекаем из него идентификаторы строк таб частей
           //Сравниваем с новыми, удаляем неиспользуемые
           var oldRowsId = oldObject != null ? oldObject[name] : null;
-          if (oldRowsId != null &&
-              (oldRowsId is List<String>?) &&
-              oldRowsId!.isNotEmpty) {
+          if (oldRowsId != null && (oldRowsId is List<String>?) && oldRowsId!.isNotEmpty) {
             for (var e in ls) {
               oldRowsId.remove(e);
             }
             if (oldRowsId.isNotEmpty) {
-              var tableBox = await getTable(
-                  (item.getField(name) as NsgDataReferenceListField)
-                      .referentElementType
-                      .toString());
+              var tableBox = await getTable((item.getField(name) as NsgDataReferenceListField).referentElementType.toString());
               tableBox.deleteAll(oldRowsId);
             }
           }

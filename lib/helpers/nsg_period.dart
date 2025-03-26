@@ -126,10 +126,8 @@ class NsgPeriod {
               NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy', locale: locale);
         }
 
-      default:
       //print("добавление - ошибка");
     }
-    return '';
   }
 
   ///Установить тип периода год
@@ -190,7 +188,9 @@ class NsgPeriod {
   NsgPeriodType _detectPeriodType() {
     //Проверка на год
     if (Jiffy.parseFromDateTime(beginDate).isSame(Jiffy.parseFromDateTime(beginDate).startOf(Unit.year)) &&
-        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.year))) return NsgPeriodType.year;
+        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.year))) {
+      return NsgPeriodType.year;
+    }
     var qb = Jiffy.parseFromDateTime(DateTime(beginDate.year)).add(months: (getQuarter(beginDate) - 1) * 3);
     var qe = qb.add(months: 3).endOf(Unit.month);
     if (Jiffy.parseFromDateTime(beginDate).isSame(qb) && Jiffy.parseFromDateTime(endDate).isSame(qe)) return NsgPeriodType.quarter;
@@ -201,12 +201,18 @@ class NsgPeriod {
     }
     //Проверка на неделю
     if (Jiffy.parseFromDateTime(beginDate).isSame(Jiffy.parseFromDateTime(beginDate).startOf(Unit.week)) &&
-        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.week))) return NsgPeriodType.week;
+        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.week))) {
+      return NsgPeriodType.week;
+    }
     //Проверка на день
     if (Jiffy.parseFromDateTime(beginDate).isSame(Jiffy.parseFromDateTime(beginDate).startOf(Unit.day)) &&
-        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.day))) return NsgPeriodType.day;
+        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(beginDate).endOf(Unit.day))) {
+      return NsgPeriodType.day;
+    }
     if (Jiffy.parseFromDateTime(beginDate).isSame(Jiffy.parseFromDateTime(beginDate).startOf(Unit.day)) &&
-        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(endDate).startOf(Unit.day))) return NsgPeriodType.period;
+        Jiffy.parseFromDateTime(endDate).isSame(Jiffy.parseFromDateTime(endDate).startOf(Unit.day))) {
+      return NsgPeriodType.period;
+    }
     return NsgPeriodType.periodWidthTime;
   }
 

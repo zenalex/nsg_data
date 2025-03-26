@@ -344,7 +344,7 @@ class NsgDataItem {
   ///Подробности см. в описании свойства isEmpty
   bool get isNotEmpty => !isEmpty;
   @override
-  bool operator ==(Object other) => this.runtimeType == other.runtimeType && other is NsgDataItem && equal(other);
+  bool operator ==(Object other) => runtimeType == other.runtimeType && other is NsgDataItem && equal(other);
   bool equal(NsgDataItem other) {
     return hashCode == other.hashCode;
     // if (primaryKeyField == '') return hashCode == other.hashCode;

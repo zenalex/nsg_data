@@ -298,9 +298,6 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //Вызывать локальную фильтрацию имеет смысл не имеет смысла при запросе частичных данных с сервера
       //Возможно, при загрузке всех данных, имеет смысл активировать локальный поиск вместо серврного, но врядли одновременно
       dataItemList = newItemsList;
-      //dataItemList = filter(newItemsList);
-      // if (selectedItem != null && dataItemList.firstWhereOrNull((e) => e.id == selectedItem!.id) == null) selectedItem = null; // FIXME вернуть обратно
-      //if (selectedItem == null && autoSelectFirstItem && dataItemList.isNotEmpty) { // FIXME вернуть обратно
       if (autoSelectFirstItem) {
         if (dataItemList.isNotEmpty) {
           selectedItem = dataItemList[0];
