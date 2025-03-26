@@ -692,4 +692,13 @@ class NsgDataItem {
 
     return !result;
   }
+
+  ///Получить все объекты из БД, удовлетворящие условию
+  Future<List<T>> select<T extends NsgDataItem>(NsgDataRequestParams filter,
+      {int autoRepeateCount = 3, List<String>? loadReference, NsgCancelToken? cancelToken}) async {
+    NsgDataRequest request = NsgDataRequest<T>();
+    return (await request.requestItems(
+            filter: filter, autoRepeate: autoRepeateCount > 0, autoRepeateCount: autoRepeateCount, loadReference: loadReference, cancelToken: cancelToken))
+        .cast();
+  }
 }
