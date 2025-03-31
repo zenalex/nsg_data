@@ -515,7 +515,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         if (onLoading != null || needProgressBar) {
           return onLoading ?? getDefaultProgressIndicator();
         } else {
-          return widget(value);
+          return widget(NsgBaseController.emptyData);
         }
       } else if (status.isError) {
         return onError != null ? onError(status.errorMessage) : Center(child: Text('A error occurred: ${status.errorMessage}'));
