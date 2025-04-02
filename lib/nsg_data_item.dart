@@ -705,7 +705,7 @@ class NsgDataItem {
   ///Прочитать элемент из базы данных
   ///Чтение идет по ID
   Future<T> selectFromDb<T extends NsgDataItem>({int autoRepeateCount = 3, List<String>? referenceList, NsgCancelToken? cancelToken}) async {
-    NsgDataRequest request = NsgDataRequest<T>();
+    NsgDataRequest request = NsgDataRequest<T>(dataItemType: runtimeType, storageType: storageType);
 
     var cmp = NsgCompare();
     cmp.add(name: primaryKeyField, value: getFieldValue(primaryKeyField));
