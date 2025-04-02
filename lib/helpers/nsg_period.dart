@@ -60,7 +60,7 @@ class NsgPeriod {
         endDate = Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime;
         break;
 
-      default:
+      // default:
       //print('не задан период');
     }
   }
@@ -93,7 +93,7 @@ class NsgPeriod {
         endDate = Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime;
         break;
 
-      default:
+      // default:
       //print("добавление - ошибка");
     }
   }

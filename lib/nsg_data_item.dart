@@ -701,4 +701,18 @@ class NsgDataItem {
             filter: filter, autoRepeate: autoRepeateCount > 0, autoRepeateCount: autoRepeateCount, loadReference: loadReference, cancelToken: cancelToken))
         .cast();
   }
+
+  ///Прочитать элемент из базы данных
+  ///Чтение идет по ID
+  Future<T> selectFromDb<T extends NsgDataItem>({int autoRepeateCount = 3, List<String>? referenceList, NsgCancelToken? cancelToken}) async {
+    NsgDataRequest request = NsgDataRequest<T>();
+
+    var cmp = NsgCompare();
+    cmp.add(name: primaryKeyField, value: getFieldValue(primaryKeyField));
+    var filterParam = NsgDataRequestParams(compare: cmp);
+    filterParam.showDeletedObjects = true;
+    var answer =
+        await request.requestItem(filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeateCount > 0, autoRepeateCount: autoRepeateCount);
+    return answer as T;
+  }
 }
