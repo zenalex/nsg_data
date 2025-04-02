@@ -165,7 +165,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (response == '' || response == null) {
       } else {
         if (response is Map) {
-          items = (await loadDataAndReferences(response, loadReference, tag, filter: filter)).cast();
+          items = (await loadDataAndReferences(response, filter.referenceList!, tag, filter: filter)).cast();
         } else {
           if (response is! List) {
             response = <dynamic>[response];
@@ -174,7 +174,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           NsgDataClient.client.addItemsToCache(items: items, tag: tag);
 
           //Check referent field list
-          await loadAllReferents(items, loadReference, tag: tag);
+          await loadAllReferents(items, filter.referenceList, tag: tag);
         }
       }
     } catch (e) {
