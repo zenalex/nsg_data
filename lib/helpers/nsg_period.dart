@@ -225,4 +225,11 @@ class NsgPeriod {
   static DateTime endOfDay(DateTime date) {
     return Jiffy.parseFromDateTime(date).endOf(Unit.day).dateTime;
   }
+
+  ///Возвращает дату конца недели. Последним днем недели считает воскресенье
+  static DateTime endOfWeek(DateTime date) {
+    final diff = DateTime.sunday - date.weekday;
+    final lastDay = date.add(Duration(days: diff));
+    return endOfDay(lastDay);
+  }
 }
