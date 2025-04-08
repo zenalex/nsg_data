@@ -38,6 +38,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
         }
       }
+      elem.isReadFromServer = storageType == NsgDataStorageType.server;
       // elem.state = NsgDataItemState.fill;
       items.add(elem as T);
     }
