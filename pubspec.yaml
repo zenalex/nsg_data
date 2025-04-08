@@ -37,7 +37,7 @@ dependencies:
 
 dev_dependencies:
   dart_code_metrics: ^4.16.0
-  flutter_lints: ^1.0.0
+  flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
