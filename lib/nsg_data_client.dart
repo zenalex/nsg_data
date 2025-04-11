@@ -33,8 +33,16 @@ class NsgDataClient {
     }
   }
 
+  ///Вернуть все зарегистрированные классы данных по tyoeName
+  ///Внимание!!! В релизной веб версии типы данных изменят свои названия из-за обфускации
   List<String> getAllRegisteredTypes() {
     return _registeredItems.keys.toList();
+  }
+
+  ///Вернуть все зарегистрированные классы данных по именам серверных классов
+  ///Необходимо, чтобы защититься от обфускации
+  List<String> getAllRegisteredServerNames() {
+    return _registeredServerNames.keys.toList();
   }
 
   NsgFieldList getFieldList(Type itemType) {

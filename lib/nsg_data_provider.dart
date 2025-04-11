@@ -250,6 +250,9 @@ class NsgDataProvider {
       return response.data;
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
+      if (e.response != null) {
+        debugPrint('statusCode: ${e.response?.statusCode}');
+      }
       if (e.response?.statusCode == 400) {
         //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
         throw NsgApiException(NsgApiError(code: 400, message: e.response?.data, errorType: e.type));
@@ -344,6 +347,7 @@ class NsgDataProvider {
           return client;
         };
       }
+      print('BSASE REQUEST: $url, url: $url!, params: $params');
       if (method == 'GET') {
         response = await _dio.get(url!, queryParameters: params);
       } else if (method == 'POST') {
