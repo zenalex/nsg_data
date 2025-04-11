@@ -760,7 +760,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///item - перечитываемый объект
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList) async {
+  ///changeStatus - выставить статус контроллера в success после обновления элемента
+  Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList, {bool changeStatus = false}) async {
     assert(item.runtimeType == dataType, '$dataType.refreshItem. item is ${item.runtimeType}');
     //Если у элемента нет ID, то читать его из БД нет смысла
     //Возможно, лучше выдавть ошибку, но пока просто проигнорируем
@@ -781,6 +782,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       var index = dataItemList.indexOf(answer);
       dataItemList[index] = answer;
       //dataItemList.replaceRange(index, index + 1, [answer]);
+    }
+    if (changeStatus) {
+      currentStatus = GetStatus.success(NsgBaseController.emptyData);
+      sendNotify();
     }
     return answer;
   }

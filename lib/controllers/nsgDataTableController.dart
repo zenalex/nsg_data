@@ -56,7 +56,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   ///Перечитать указанный объект из базы данных
   ///Так как данный объект является строкой таблицы, читать из БД ничего не нужно
   @override
-  Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList) async {
+  Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList, {bool changeStatus = false}) async {
     return item;
   }
 
