@@ -766,7 +766,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //Если у элемента нет ID, то читать его из БД нет смысла
     //Возможно, лучше выдавть ошибку, но пока просто проигнорируем
     //Ошибка стабильно проявлялась при нажатии назад в матче приложения футболист
-    if (item.id.isEmpty || item.state == NsgDataItemState.create) return item;
+    if (item.id.isEmpty || item.state == NsgDataItemState.create) {
+      _setSuccesfullStatus(changeStatus);
+      return item;
+    }
     referenceList ??= referenceItemPage;
     var cmp = NsgCompare();
     cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
@@ -783,11 +786,17 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       dataItemList[index] = answer;
       //dataItemList.replaceRange(index, index + 1, [answer]);
     }
+    _setSuccesfullStatus(changeStatus);
+
+    return answer;
+  }
+
+  ///
+  void _setSuccesfullStatus(bool changeStatus) {
     if (changeStatus) {
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
     }
-    return answer;
   }
 
   Future<NsgDataItem> refreshCurrentItem({List<String>? referenceList}) async {
