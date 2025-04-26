@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -25,11 +25,11 @@ class NsgLocalDb {
       try {
         String localPath = './';
         if (!kIsWeb) {
-          localPath = (await getApplicationDocumentsDirectory()).path + '/';
+          localPath = '${(await getApplicationDocumentsDirectory()).path}/';
         }
 
         collection = await BoxCollection.open(
-          '/' + databaseName + (iteration++ == 0 ? '' : iteration.toString()), // Name of database
+          '/$databaseName${iteration++ == 0 ? '' : iteration.toString()}', // Name of database
           NsgDataClient.client.getAllRegisteredServerNames().toSet(), // Names of your boxes
           path: localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
           //key: null, // Key to encrypt your boxes (Only used in Flutter / Dart IO)
