@@ -1,5 +1,4 @@
 // ignore_for_file: file_names
-
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 
@@ -9,18 +8,17 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   List<T> get items => dataItemList.cast<T>();
 
   ///Первый элемент из items. Если items  пустой: вернет новый пустой элемент данных  типа T
-  T get firstItem => (dataItemList.isEmpty)
-      ? NsgDataClient.client.getNewObject(dataType) as T
-      : items[0];
+  T get firstItem => (dataItemList.isEmpty) ? NsgDataClient.client.getNewObject(dataType) as T : items[0];
 
   ///Текущий элемент (например, элемент для отображения на форме элемента)
   ///Представляет из себя типизированный аналой selectedItem.
   ///Если selectedItem null, то вернет пустое значение типа T
-  T get currentItem =>
-      ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
+  T get currentItem => ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
 
   ///Установка текущего элемента для контроллера
   set currentItem(T item) => selectedItem = item;
+
+  bool get withUi => this is NsgDataUI;
 
   NsgDataController({
     bool requestOnInit = true,
@@ -35,6 +33,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     bool selectedMasterRequired = true,
     bool autoSelectFirstItem = false,
     List<NsgBaseController>? dependsOnControllers,
+    int? loadStepCount,
     super.controllerMode,
   }) : super(
             dataType: T,
@@ -48,7 +47,11 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
             selectedMasterRequired: selectedMasterRequired,
             useDataCache: useDataCache,
             autoSelectFirstItem: autoSelectFirstItem,
-            dependsOnControllers: dependsOnControllers);
+            dependsOnControllers: dependsOnControllers) {
+    if (loadStepCount != null && withUi) {
+      (this as NsgDataUI).loadStepCountUi = loadStepCount;
+    }
+  }
 
   ///Сделать текущим предыдущий элемент
   void gotoPrevItem() {
