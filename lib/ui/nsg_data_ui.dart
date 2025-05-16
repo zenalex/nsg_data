@@ -42,14 +42,25 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   void scrollToCurrentItem() {
     scrollController.scrollToIndex(scrollController.dataGroups.getIndexByItem(currentItem));
   }
+
+  // void scrollToCurrentItem2() {
+  //   scrollController.scrollToItemWhenVisible(scrollController.dataGroups.getIndexByItem(currentItem));
+  // }
 }
 
 class DataGroup {
-  const DataGroup({required this.data, required this.groupFieldName, this.dividerBuilder});
+  DataGroup({required this.data, required this.groupFieldName, this.dividerBuilder}) {
+    for (var d in data) {
+      _itemsKeys.addAll({d: GlobalKey()});
+    }
+  }
 
   final List<NsgDataItem> data;
   final String groupFieldName;
   final Widget Function(String grName, dynamic fieldValue)? dividerBuilder;
+
+  final Map<NsgDataItem, GlobalKey> _itemsKeys = {};
+  Map<NsgDataItem, GlobalKey> get itemsKeys => _itemsKeys;
 
   String get groupName {
     if (groupValue != null) {
@@ -96,8 +107,17 @@ class DataGroupList {
       map.addAll({gr: (first: firstIndex, last: firstIndex + gr.data.length - (needDivider ? 0 : 1))});
       _length = firstIndex + gr.data.length - (needDivider ? 0 : 1);
       firstIndex += gr.data.length + (needDivider ? 1 : 0);
+      _itemsKeys.addEntries(gr.itemsKeys.entries);
     }
     _sizes = map;
+  }
+
+  final Map<NsgDataItem, GlobalKey> _itemsKeys = {};
+
+  Map<int, GlobalKey> get itemsKeys {
+    Map<int, GlobalKey> map = {};
+    _itemsKeys.forEach((k, v) => map.addAll({getIndexByItem(k): v}));
+    return map;
   }
 
   bool needDivider;
@@ -108,13 +128,18 @@ class DataGroupList {
 
   int get length => _length;
 
-  ({dynamic value, DataGroup group, bool isDivider}) getElemet(int index) {
+  ({dynamic value, DataGroup group, bool isDivider, GlobalKey? key}) getElemet(int index) {
     var group = _sizes.entries.firstWhereOrNull((i) => i.value.first <= index && index <= i.value.last);
     if (group != null) {
       if (index - group.value.first > 0 || !needDivider) {
-        return (value: group.key.data[index - group.value.first - (needDivider ? 1 : 0)], group: group.key, isDivider: false);
+        return (
+          value: group.key.data[index - group.value.first - (needDivider ? 1 : 0)],
+          group: group.key,
+          isDivider: false,
+          key: _itemsKeys[group.key.data[index - group.value.first - (needDivider ? 1 : 0)]]
+        );
       }
-      return (value: group.key.groupValue, group: group.key, isDivider: true);
+      return (value: group.key.groupValue, group: group.key, isDivider: true, key: _itemsKeys[group.key.groupValue]);
     }
     throw (RangeError("index $index out of range"));
   }
@@ -125,6 +150,6 @@ class DataGroupList {
         return i;
       }
     }
-    return 0;
+    return -1;
   }
 }

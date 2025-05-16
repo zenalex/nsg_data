@@ -36,7 +36,7 @@ class NsgLoadingScrollController<T> extends ScrollController {
   final double positionBeforeLoad;
   final int attemptCount;
 
-  Map<int, double> heightMap = {};
+  //Map<int, double> heightMap = {};
   DataGroupList dataGroups = DataGroupList([]);
 
   int _errCount = 0;
@@ -73,16 +73,48 @@ class NsgLoadingScrollController<T> extends ScrollController {
     _status = NsgLoadingScrollStatus.init;
   }
 
-  void scrollToIndex(int index) {
-    double position = 0;
-    for (int i = 0; i < index; i++) {
-      position += heightMap[i] ?? 0;
+  // void scrollToIndex(int index) {
+  //   double position = 0;
+  //   for (int i = 0; i < index; i++) {
+  //     position += heightMap[i] ?? 0;
+  //   }
+  //   animateTo(
+  //     position,
+  //     duration: const Duration(milliseconds: 300),
+  //     curve: Curves.easeInOut,
+  //   );
+  // }
+
+  Future<void> scrollToIndex(int targetIndex) async {
+    if (targetIndex == -1) {
+      return;
     }
-    animateTo(
-      position,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    while (true) {
+      final key = dataGroups.itemsKeys[targetIndex];
+      if (key == null) {
+        await Future.delayed(const Duration(milliseconds: 50));
+        continue;
+      }
+
+      final context = key.currentContext;
+      if (context != null && context.mounted) {
+        await Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        break;
+      } else {
+        await animateTo(
+          offset + 200,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.linear,
+        );
+      }
+      if (position.pixels >= position.maxScrollExtent) {
+        break;
+      }
+    }
   }
 
   double middleHeight(List<double> list, double delta) {
