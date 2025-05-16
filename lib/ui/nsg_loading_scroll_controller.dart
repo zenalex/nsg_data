@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nsg_data/ui/nsg_data_ui.dart';
 
 class NsgLoadingScrollController<T> extends ScrollController {
-  NsgLoadingScrollController({this.function, this.positionBeforeLoad = 200, this.attemptCount = 1}) {
+  NsgLoadingScrollController({this.function, this.positionBeforeLoad = 200, this.attemptCount = 1}) : super(keepScrollOffset: true) {
     addListener(() async {
       if (_attCount < attemptCount &&
           _stat != NsgLoadingScrollStatus.loading &&
@@ -29,12 +29,16 @@ class NsgLoadingScrollController<T> extends ScrollController {
         _attCount = 0;
         _errCount = 0;
       }
+
+      lastOffset = offset;
     });
   }
 
   final T Function()? function;
   final double positionBeforeLoad;
   final int attemptCount;
+
+  double lastOffset = 0;
 
   //Map<int, double> heightMap = {};
   DataGroupList dataGroups = DataGroupList([]);
@@ -100,7 +104,7 @@ class NsgLoadingScrollController<T> extends ScrollController {
       if (context != null && context.mounted) {
         await Scrollable.ensureVisible(
           context,
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 1),
           curve: Curves.easeInOut,
         );
         break;
