@@ -106,8 +106,8 @@ class NsgLoadingScrollController<T> extends ScrollController {
         break;
       } else {
         await animateTo(
-          offset + 200,
-          duration: const Duration(milliseconds: 100),
+          offset + 400,
+          duration: const Duration(milliseconds: 1),
           curve: Curves.linear,
         );
       }
