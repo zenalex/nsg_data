@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nsg_data/ui/nsg_data_ui.dart';
 
 class NsgLoadingScrollController<T> extends ScrollController {
   NsgLoadingScrollController({this.function, this.positionBeforeLoad = 200, this.attemptCount = 1}) {
@@ -35,6 +36,9 @@ class NsgLoadingScrollController<T> extends ScrollController {
   final double positionBeforeLoad;
   final int attemptCount;
 
+  Map<int, double> heightMap = {};
+  DataGroupList dataGroups = DataGroupList([]);
+
   int _errCount = 0;
   int _attCount = 0;
 
@@ -67,6 +71,48 @@ class NsgLoadingScrollController<T> extends ScrollController {
     _errCount = 0;
     _attCount = 0;
     _status = NsgLoadingScrollStatus.init;
+  }
+
+  void scrollToIndex(int index) {
+    double position = 0;
+    for (int i = 0; i < index; i++) {
+      position += heightMap[i] ?? 0;
+    }
+    animateTo(
+      position,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  double middleHeight(List<double> list, double delta) {
+    if (list.isEmpty) return 0;
+
+    final Map<double, int> counts = {};
+
+    for (var item in list) {
+      bool found = false;
+
+      for (var key in counts.keys) {
+        if ((item - key).abs() <= delta) {
+          counts[key] = counts[key]! + 1;
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        counts[item] = 1;
+      }
+    }
+
+    int maxCount = counts.values.reduce((a, b) => a > b ? a : b);
+
+    List<double> freqList = counts.entries.where((entry) => entry.value == maxCount).map((entry) => entry.key).toList();
+
+    if (freqList.isEmpty) return 0;
+    final sum = freqList.reduce((a, b) => a + b);
+    return sum / freqList.length;
   }
 
   ChangeNotifier statusChange = ChangeNotifier();
