@@ -4,6 +4,9 @@ import 'package:nsg_controls/widgets/nsg_snackbar.dart';
 import 'nsg_login_model.dart';
 
 class NsgLoginParams {
+  /// При добавлении этой функции появляется крестик закрытия окна логина/регистрации
+  VoidCallback? onClose;
+
   ///Введенный пользователем телефон для авторизации
   String phoneNumber;
 
@@ -80,6 +83,7 @@ class NsgLoginParams {
   bool? headerMessageVisible;
 
   NsgLoginParams({
+    this.onClose,
     this.loginType,
     this.email = '',
     this.textEnter = 'Войти',
@@ -99,7 +103,8 @@ class NsgLoginParams {
     this.headerMessageVerification = 'Введите код', // 'Enter security code',
     this.descriptionMessegeVerificationPhone =
         'Мы отправили вам код в СМС\nна номер телефона: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
-    this.descriptionMessegeVerificationEmail = 'Мы отправили вам код в сообщении\nна e-mail: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
+    this.descriptionMessegeVerificationEmail =
+        'Мы отправили вам код в сообщении\nна e-mail: \n{{phone}}', // 'We sent code in SMS\nto phone number\n{{phone}}',
     this.headerMessageStyle,
     this.textEnterCode = 'Код', //'Code',
     this.textEnterPhone = 'Введите номер телефона', //'Enter your phone',
@@ -198,7 +203,7 @@ class NsgLoginParams {
         message = 'Security code is obsolete';
         break;
       case 40303:
-        message = 'You have to enter captcha first';
+        message = 'You need to create verification code again';
         break;
       case 40304:
         message = 'Wrong user name or password';
