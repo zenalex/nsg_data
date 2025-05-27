@@ -664,7 +664,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //selectedItemChanged.broadcast(null);
       backupItem = null;
     }
-    Get.back();
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    } else {
+      Get.back();
+    }
   }
 
   ///Close item page and post current (selectedItem) item to databese (server)
