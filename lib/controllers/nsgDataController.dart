@@ -139,6 +139,16 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     userSettingsController!.addRecentId(item.typeName, item.id);
   }
 
+  Future<List<T>> selectItems(NsgDataRequestParams filter, {int autoRepeateCount = 3, List<String>? loadReference, NsgCancelToken? cancelToken}) async {
+    var dataItem = NsgDataClient.client.getNewObject(dataType);
+    return await dataItem.select<T>(
+      filter,
+      autoRepeateCount: autoRepeateCount,
+      loadReference: loadReference,
+      cancelToken: cancelToken,
+    );
+  }
+
   // @override
   // Future<List<NsgDataItem>> doRequestItems() async {
   //   var newItems = await super.doRequestItems();

@@ -82,6 +82,14 @@ class NsgDataItem {
   ///Объект прочитан с серверной базы данных
   bool isReadFromServer = false;
 
+  ///Время последнего изменения объекта
+  DateTime get lastChangeTime {
+    if (fieldValues.fields.containsKey('lastChangeTime')) {
+      return fieldValues.fields['lastChangeTime'] as DateTime;
+    }
+    return DateTime.now();
+  }
+
   ///------------------------------------
   ///Методы сериализации и десериализации
   ///------------------------------------
