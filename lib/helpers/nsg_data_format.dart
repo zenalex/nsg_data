@@ -16,7 +16,7 @@ abstract class NsgDateFormat {
     return duration;
   }
 
-  static String timeAgo(DateTime datetime, {String locale = 'ru', bool short = false}) {
-    return timeago.format(datetime, locale: short ? '${locale}_short' : locale);
+  static String timeAgo(DateTime datetime, {String locale = 'ru', bool short = false, bool allowFromNow = false}) {
+    return timeago.format(datetime, locale: short ? '${locale}_short' : locale, allowFromNow: allowFromNow);
   }
 }
