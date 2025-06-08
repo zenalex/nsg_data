@@ -726,4 +726,24 @@ class NsgDataItem {
         await request.requestItem(filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeateCount > 0, autoRepeateCount: autoRepeateCount);
     return answer as T;
   }
+
+  //------------------------------------------------------------
+  //Базовые поля для работы с распределенными базама данных
+  //------------------------------------------------------------
+  /// Дата последнего локального изменения
+  DateTime get lastChangeTimeLocal => DateTime(0);
+  set lastChangeTimeLocal(DateTime value) {}
+
+  /// Дата последнего изменения на сервере
+  DateTime get lastChangeTimeServer => DateTime(0);
+  set lastChangeTimeServer(DateTime value) {}
+
+  /// Статус синхронизации
+  SyncStatus _syncStatus = SyncStatus.none;
+  SyncStatus get syncStatus => _syncStatus;
+  set syncStatus(SyncStatus value) {
+    _syncStatus = value;
+  }
 }
+
+enum SyncStatus { none, syncing, changedLocally, changedOnServer }
