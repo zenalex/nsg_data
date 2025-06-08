@@ -25,7 +25,7 @@ dependencies:
   retry: ^3.1.0
   event: ^2.0.5
   pedantic: ^1.11.1
-  intl: any
+  intl: ^0.20.2
   jiffy: ^6.0.0
   uuid: ^4.2.1
   timeago: ^3.5.0
