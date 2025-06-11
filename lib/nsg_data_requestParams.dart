@@ -22,9 +22,15 @@ class NsgDataRequestParams {
   ///Вместе со списком основных объектов будут получены все объекты, на которые есть ссылки
   List<String>? referenceList;
 
-  ///При задании этого списка другие поля не будут прочитаны вообще
+  ///При задании этого списка другие поля не будут прочитаны.
   ///Имеет смысл использовать только при тонкой оптимизации объема передаваемых данных
+  // @Deprecated('Use [neededFields]')
   String? fieldsToRead;
+
+  ///При задании этого списка другие поля не будут прочитаны
+  ///Имеет смысл использовать только при тонкой оптимизации объема передаваемых данных
+  ///Замена fieldsToRead
+  List<String>? neededFields;
 
   ///Список полей для группировки данных
   ///Имеет смысл при запросе данных по регистру
@@ -32,6 +38,12 @@ class NsgDataRequestParams {
 
   ///Возвращать помеченные на удаление
   bool showDeletedObjects;
+
+  /// Идентификатор транзакции. Имеет смысл при Post-запросах
+  String? transactionId;
+
+  /// Идентификатор запроса. Имеет смысл при Post-запросах
+  String? requestId;
 
   NsgCompare _compare = NsgCompare();
 
@@ -45,9 +57,12 @@ class NsgDataRequestParams {
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
     if (referenceList != null) filter['ReadReferences'] = referenceList;
     if (fieldsToRead != null) filter['FieldsToRead'] = fieldsToRead.toString();
+    if (neededFields != null) filter['NeededFields'] = neededFields;
     if (groupBy != null) filter['GroupBy'] = groupBy;
     if (compare.isNotEmpty) filter['Compare'] = compare.toJson();
     filter['ShowDeletedObjects'] = showDeletedObjects.toString();
+    if (transactionId != null) filter['TransactionId'] = transactionId.toString();
+    if (requestId != null) filter['RequestId'] = requestId.toString();
     if (params != null) {
       var paramDict = <String, dynamic>{};
       paramDict.addAll(params!);
