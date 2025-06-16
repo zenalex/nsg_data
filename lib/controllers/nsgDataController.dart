@@ -36,18 +36,19 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     int? loadStepCount,
     super.controllerMode,
   }) : super(
-            dataType: T,
-            requestOnInit: requestOnInit,
-            useUpdate: useUpdate,
-            useChange: useChange,
-            masterController: masterController,
-            dataBinding: dataBindign,
-            autoRepeate: autoRepeate,
-            autoRepeateCount: autoRepeateCount,
-            selectedMasterRequired: selectedMasterRequired,
-            useDataCache: useDataCache,
-            autoSelectFirstItem: autoSelectFirstItem,
-            dependsOnControllers: dependsOnControllers) {
+         dataType: T,
+         requestOnInit: requestOnInit,
+         useUpdate: useUpdate,
+         useChange: useChange,
+         masterController: masterController,
+         dataBinding: dataBindign,
+         autoRepeate: autoRepeate,
+         autoRepeateCount: autoRepeateCount,
+         selectedMasterRequired: selectedMasterRequired,
+         useDataCache: useDataCache,
+         autoSelectFirstItem: autoSelectFirstItem,
+         dependsOnControllers: dependsOnControllers,
+       ) {
     if (loadStepCount != null && withUi) {
       (this as NsgDataUI).loadStepCountUi = loadStepCount;
     }
@@ -146,6 +147,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
       autoRepeateCount: autoRepeateCount,
       loadReference: loadReference,
       cancelToken: cancelToken,
+      storageType: controllerMode.storageType,
     );
   }
 

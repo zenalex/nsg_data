@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -84,19 +85,20 @@ class NsgDataProvider {
 
   String languageCode;
 
-  NsgDataProvider(
-      {this.name,
-      required this.applicationName,
-      this.serverUri = '', //https://servername.me:1234
-      this.authorizationApi = 'Api/Auth',
-      this.useNsgAuthorization = true,
-      this.allowConnect = true,
-      required this.firebaseToken,
-      required this.applicationVersion,
-      NsgLoginParams Function()? widgetLoginParams,
-      this.eventOpenLoginPage,
-      required this.availableServers,
-      this.languageCode = 'ru'}) {
+  NsgDataProvider({
+    this.name,
+    required this.applicationName,
+    this.serverUri = '', //https://servername.me:1234
+    this.authorizationApi = 'Api/Auth',
+    this.useNsgAuthorization = true,
+    this.allowConnect = true,
+    required this.firebaseToken,
+    required this.applicationVersion,
+    NsgLoginParams Function()? widgetLoginParams,
+    this.eventOpenLoginPage,
+    required this.availableServers,
+    this.languageCode = 'ru',
+  }) {
     widgetParams = widgetLoginParams ?? () => NsgLoginParams();
   }
 
@@ -197,25 +199,28 @@ class NsgDataProvider {
     saveServerAddress(newAddress);
   }
 
-  Future<dynamic> baseRequestList(
-      {final String? function,
-      final Map<String, dynamic>? params,
-      final dynamic postData,
-      final Map<String, String?>? headers,
-      final String? url,
-      //TODO: сделать настраиваемым параметром
-      //final int timeout = timeout,
-      final String method = 'GET',
-      final NsgCancelToken? cancelToken,
-      FutureOr<void> Function(Exception)? onRetry}) async {
-    final _dio = Dio(BaseOptions(
-      headers: headers,
-      method: method,
-      responseType: ResponseType.json,
-      contentType: 'application/json',
-      connectTimeout: Duration(milliseconds: connectDuration),
-      receiveTimeout: Duration(milliseconds: requestDuration),
-    ));
+  Future<dynamic> baseRequestList({
+    final String? function,
+    final Map<String, dynamic>? params,
+    final dynamic postData,
+    final Map<String, String?>? headers,
+    final String? url,
+    //TODO: сделать настраиваемым параметром
+    //final int timeout = timeout,
+    final String method = 'GET',
+    final NsgCancelToken? cancelToken,
+    FutureOr<void> Function(Exception)? onRetry,
+  }) async {
+    final _dio = Dio(
+      BaseOptions(
+        headers: headers,
+        method: method,
+        responseType: ResponseType.json,
+        contentType: 'application/json',
+        connectTimeout: Duration(milliseconds: connectDuration),
+        receiveTimeout: Duration(milliseconds: requestDuration),
+      ),
+    );
 
     //Response<List<dynamic>> response;
     late Response<dynamic> response;
@@ -277,44 +282,54 @@ class NsgDataProvider {
         throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
       }
     } catch (e) {
-      debugPrint('network error. function: $function, error: $function + ' ' + $e');
+      debugPrint(
+        'network error. function: $function, error: $function + '
+        ' + $e',
+      );
       return NsgApiException(NsgApiError(code: 0, message: '$e'));
     }
   }
 
-  Future<Map<String, dynamic>?> baseRequest(
-      {final String? function,
-      final Map<String, dynamic>? params,
-      final Map<String, String?>? headers,
-      final String? url,
-      //final int timeout = 15000,
-      final String method = 'GET',
-      bool autoRepeate = false,
-      int autoRepeateCount = 1000,
-      int maxRepeateDelay = 5,
-      FutureOr<bool> Function(Exception)? retryIf,
-      FutureOr<void> Function(Exception)? onRetry}) async {
+  Future<Map<String, dynamic>?> baseRequest({
+    final String? function,
+    final Map<String, dynamic>? params,
+    final Map<String, String?>? headers,
+    final String? url,
+    //final int timeout = 15000,
+    final String method = 'GET',
+    bool autoRepeate = false,
+    int autoRepeateCount = 1000,
+    int maxRepeateDelay = 5,
+    FutureOr<bool> Function(Exception)? retryIf,
+    FutureOr<void> Function(Exception)? onRetry,
+  }) async {
     if (autoRepeate) {
-      final r = RetryOptions(maxAttempts: autoRepeateCount, maxDelay: Duration(seconds: maxRepeateDelay));
+      final r = RetryOptions(
+        maxAttempts: autoRepeateCount,
+        maxDelay: Duration(seconds: maxRepeateDelay),
+      );
       return await r.retry(
-          () => _baseRequest(
-              function: function,
-              params: params,
-              headers: headers,
-              url: url,
-              //timeout: timeout,
-              method: method),
-          retryIf: retryIf,
-          onRetry: onRetry);
-      // onRetry: (error) => _updateStatusError(error.toString()));
-    } else {
-      return await _baseRequest(
+        () => _baseRequest(
           function: function,
           params: params,
           headers: headers,
           url: url,
           //timeout: timeout,
-          method: method);
+          method: method,
+        ),
+        retryIf: retryIf,
+        onRetry: onRetry,
+      );
+      // onRetry: (error) => _updateStatusError(error.toString()));
+    } else {
+      return await _baseRequest(
+        function: function,
+        params: params,
+        headers: headers,
+        url: url,
+        //timeout: timeout,
+        method: method,
+      );
     }
   }
 
@@ -326,14 +341,16 @@ class NsgDataProvider {
     //final int timeout = 15000,
     final String method = 'GET',
   }) async {
-    final _dio = Dio(BaseOptions(
-      headers: headers,
-      method: method,
-      responseType: ResponseType.json,
-      contentType: 'application/json',
-      // connectTimeout: timeout,
-      // receiveTimeout: timeout,
-    ));
+    final _dio = Dio(
+      BaseOptions(
+        headers: headers,
+        method: method,
+        responseType: ResponseType.json,
+        contentType: 'application/json',
+        // connectTimeout: timeout,
+        // receiveTimeout: timeout,
+      ),
+    );
 
     late Response<Map<String, dynamic>> response;
 
@@ -377,13 +394,16 @@ class NsgDataProvider {
     final bool debug = false,
     final String method = 'GET',
   }) async {
-    final _dio = Dio(BaseOptions(
+    final _dio = Dio(
+      BaseOptions(
         headers: headers,
         method: method,
         responseType: ResponseType.json,
         contentType: 'application/json',
         connectTimeout: Duration(milliseconds: connectDuration),
-        receiveTimeout: Duration(milliseconds: requestDuration)));
+        receiveTimeout: Duration(milliseconds: requestDuration),
+      ),
+    );
 
     late Response<Uint8List> response;
 
@@ -397,9 +417,17 @@ class NsgDataProvider {
         };
       }
       if (method == 'GET') {
-        response = await _dio.get<Uint8List>(url!, queryParameters: params, options: Options(responseType: ResponseType.bytes));
+        response = await _dio.get<Uint8List>(
+          url!,
+          queryParameters: params,
+          options: Options(responseType: ResponseType.bytes),
+        );
       } else if (method == 'POST') {
-        response = await _dio.post<Uint8List>(url!, data: params, options: Options(responseType: ResponseType.bytes));
+        response = await _dio.post<Uint8List>(
+          url!,
+          data: params,
+          options: Options(responseType: ResponseType.bytes),
+        );
       }
       if (debug) {
         debugPrint('HTTP STATUS: ${response.statusCode}');
@@ -443,14 +471,15 @@ class NsgDataProvider {
     params['serverType'] = serverType;
     try {
       var response = await (baseRequest(
-          function: 'AppConnection',
-          headers: getAuthorizationHeader(),
-          url: url,
-          method: 'GET',
-          params: params,
-          autoRepeate: true,
-          autoRepeateCount: 1000,
-          onRetry: null));
+        function: 'AppConnection',
+        headers: getAuthorizationHeader(),
+        url: url,
+        method: 'GET',
+        params: params,
+        autoRepeate: true,
+        autoRepeateCount: 1000,
+        onRetry: null,
+      ));
       return response.toString();
     } on NsgApiException catch (e) {
       if (e.error.code == 404) {
@@ -502,13 +531,22 @@ class NsgDataProvider {
 
   Future<Image> getCaptcha() async {
     var response = await imageRequest(
-        debug: isDebug, function: 'GetCaptcha', url: '$serverUri/$authorizationApi/GetCaptcha', method: 'GET', headers: getAuthorizationHeader());
+      debug: isDebug,
+      function: 'GetCaptcha',
+      url: '$serverUri/$authorizationApi/GetCaptcha',
+      method: 'GET',
+      headers: getAuthorizationHeader(),
+    );
 
     return response;
   }
 
-  Future<NsgLoginResponse> phoneLoginRequestSMS(
-      {required String phoneNumber, required String securityCode, NsgLoginType? loginType, required String firebaseToken}) async {
+  Future<NsgLoginResponse> phoneLoginRequestSMS({
+    required String phoneNumber,
+    required String securityCode,
+    NsgLoginType? loginType,
+    required String firebaseToken,
+  }) async {
     this.phoneNumber = phoneNumber;
     var login = NsgLoginModel();
     login.phoneNumber = phoneNumber;
@@ -522,11 +560,12 @@ class NsgDataProvider {
     Map<String, dynamic>? response;
     //await nsgFutureProgressAndException(func: () async {
     response = await (baseRequest(
-        function: 'PhoneLoginRequestSMS',
-        headers: getAuthorizationHeader(),
-        url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
-        method: 'POST',
-        params: s));
+      function: 'PhoneLoginRequestSMS',
+      headers: getAuthorizationHeader(),
+      url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
+      method: 'POST',
+      params: s,
+    ));
     //}
     //);
 
@@ -558,11 +597,12 @@ class NsgDataProvider {
     var s = login.toJson();
 
     var response = await (baseRequest(
-        function: 'PhoneLoginRequestSMS',
-        headers: getAuthorizationHeader(),
-        url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
-        method: 'POST',
-        params: s));
+      function: 'PhoneLoginRequestSMS',
+      headers: getAuthorizationHeader(),
+      url: '$serverUri/$authorizationApi/PhoneLoginRequestSMS',
+      method: 'POST',
+      params: s,
+    ));
 
     var loginResponse = NsgLoginResponse.fromJson(response);
     if (loginResponse.errorCode == 0) {
@@ -592,7 +632,12 @@ class NsgDataProvider {
 
     try {
       var response = await (baseRequest(
-          function: 'PhoneLogin', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/PhoneLogin', method: 'POST', params: s));
+        function: 'PhoneLogin',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/PhoneLogin',
+        method: 'POST',
+        params: s,
+      ));
 
       var loginResponse = NsgLoginResponse.fromJson(response);
       if (loginResponse.errorCode == 0) {
@@ -607,12 +652,15 @@ class NsgDataProvider {
 
       return loginResponse;
     } catch (e) {
-      getx.Get.snackbar('ОШИБКА', 'Произошла ошибка. Попробуйте еще раз.',
-          isDismissible: true,
-          duration: const Duration(seconds: 5),
-          backgroundColor: Colors.red[200],
-          colorText: Colors.black,
-          snackPosition: getx.SnackPosition.bottom);
+      getx.Get.snackbar(
+        'ОШИБКА',
+        'Произошла ошибка. Попробуйте еще раз.',
+        isDismissible: true,
+        duration: const Duration(seconds: 5),
+        backgroundColor: Colors.red[200],
+        colorText: Colors.black,
+        snackPosition: getx.SnackPosition.bottom,
+      );
     }
     return NsgLoginResponse(isError: true, errorCode: 500);
   }
@@ -644,13 +692,14 @@ class NsgDataProvider {
 
   Future<bool> _anonymousLogin(FutureOr<void> Function(Exception)? onRetry) async {
     var response = await (baseRequest(
-        function: 'AnonymousLogin',
-        url: '$serverUri/$authorizationApi/AnonymousLogin',
-        method: 'GET',
-        params: {},
-        autoRepeate: true,
-        autoRepeateCount: 1000,
-        onRetry: onRetry));
+      function: 'AnonymousLogin',
+      url: '$serverUri/$authorizationApi/AnonymousLogin',
+      method: 'GET',
+      params: {},
+      autoRepeate: true,
+      autoRepeateCount: 1000,
+      onRetry: onRetry,
+    ));
 
     var loginResponse = NsgLoginResponse.fromJson(response);
     token = loginResponse.token;
@@ -662,14 +711,15 @@ class NsgDataProvider {
     var params = <String, dynamic>{};
     params['firebaseToken'] = firebaseToken;
     var response = await (baseRequest(
-        function: 'CheckToken',
-        headers: getAuthorizationHeader(),
-        url: '$serverUri/$authorizationApi/CheckToken',
-        method: 'GET',
-        params: params,
-        autoRepeate: true,
-        autoRepeateCount: 1000,
-        onRetry: onRetry));
+      function: 'CheckToken',
+      headers: getAuthorizationHeader(),
+      url: '$serverUri/$authorizationApi/CheckToken',
+      method: 'GET',
+      params: params,
+      autoRepeate: true,
+      autoRepeateCount: 1000,
+      onRetry: onRetry,
+    ));
 
     var loginResponse = NsgLoginResponse.fromJson(response);
     if (loginResponse.errorCode == 0 || loginResponse.errorCode == 402) {
@@ -682,20 +732,48 @@ class NsgDataProvider {
     throw NsgApiException(NsgApiError(code: loginResponse.errorCode));
   }
 
+  Future<Map<String, String>> _getDeviceParams() async {
+    final params = <String, String>{};
+    final deviceInfo = DeviceInfoPlugin();
+
+    if (Platform.isAndroid) {
+      final info = await deviceInfo.androidInfo;
+      params['model'] = info.model ?? '';
+      params['manufacturer'] = info.manufacturer ?? '';
+      params['versionOS'] = info.version.release ?? '';
+      params['platform'] = 'Android';
+    } else if (Platform.isIOS) {
+      final info = await deviceInfo.iosInfo;
+      params['model'] = info.utsname.machine ?? '';
+      params['manufacturer'] = 'Apple';
+      params['versionOS'] = info.systemVersion ?? '';
+      params['platform'] = 'iOS';
+    } else {
+      params['model'] = '';
+      params['manufacturer'] = '';
+      params['versionOS'] = '';
+      params['platform'] = Platform.operatingSystem;
+    }
+
+    return params;
+  }
+
   Future<int> _checkVersion(FutureOr<void> Function(Exception)? onRetry) async {
-    var params = <String, dynamic>{};
+    var params = await _getDeviceParams();
     params['appId'] = applicationName;
     params['version'] = applicationVersion;
+
     try {
       var response = await (baseRequest(
-          function: 'CheckVersion',
-          headers: getAuthorizationHeader(),
-          url: '$serverUri/$authorizationApi/CheckVersion',
-          method: 'GET',
-          params: params,
-          autoRepeate: true,
-          autoRepeateCount: 1000,
-          onRetry: onRetry));
+        function: 'CheckVersion',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/CheckVersion',
+        method: 'GET',
+        params: params,
+        autoRepeate: true,
+        autoRepeateCount: 1000,
+        onRetry: onRetry,
+      ));
       var loginResponse = NsgLoginResponse.fromJson(response);
       return loginResponse.errorCode;
     } on NsgApiException catch (e) {
@@ -712,15 +790,16 @@ class NsgDataProvider {
     params['locale'] = languageCode;
     try {
       var response = await (baseRequest(
-          function: 'SetLocale',
-          headers: getAuthorizationHeader(),
-          url: '$serverUri/$authorizationApi/SetLocale',
-          method: 'GET',
-          params: params,
-          //FIXME: добавить реакцию на 404
-          autoRepeate: false,
-          autoRepeateCount: 1000,
-          onRetry: onRetry));
+        function: 'SetLocale',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/SetLocale',
+        method: 'GET',
+        params: params,
+        //FIXME: добавить реакцию на 404
+        autoRepeate: false,
+        autoRepeateCount: 1000,
+        onRetry: onRetry,
+      ));
       var loginResponse = NsgLoginResponse.fromJson(response);
       return loginResponse.errorCode;
     } on NsgApiException catch (e) {

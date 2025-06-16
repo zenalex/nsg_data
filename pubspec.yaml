@@ -32,6 +32,8 @@ dependencies:
 
   hive_ce: ^2.10.1
   path_provider: ^2.0.11
+  package_info_plus: ^8.0.2
+  device_info_plus: ^11.0.0
   # appmetrica_plugin: ^1.1.0
 
 dev_dependencies:

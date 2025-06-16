@@ -395,38 +395,40 @@ class NsgDataItem {
 
   ///Прочитать объект из БД по его идентификатору
   ///Можно использовать для обновления объекта из БД или для его дочитывания
-  Future getById(
-      {bool autoAuthorize = true,
-      String tag = '',
-      List<String>? loadReference,
-      String function = '',
-      String method = 'GET',
-      bool addCount = true,
-      dynamic postData,
-      bool autoRepeate = false,
-      int autoRepeateCount = 1000,
-      FutureOr<bool> Function(Exception)? retryIf,
-      FutureOr<void> Function(Exception)? onRetry,
-      NsgCancelToken? cancelToken}) async {
+  Future getById({
+    bool autoAuthorize = true,
+    String tag = '',
+    List<String>? loadReference,
+    String function = '',
+    String method = 'GET',
+    bool addCount = true,
+    dynamic postData,
+    bool autoRepeate = false,
+    int autoRepeateCount = 1000,
+    FutureOr<bool> Function(Exception)? retryIf,
+    FutureOr<void> Function(Exception)? onRetry,
+    NsgCancelToken? cancelToken,
+  }) async {
     var filter = NsgDataRequestParams();
     filter.compare.add(name: primaryKeyField, value: id, comparisonOperator: NsgComparisonOperator.equal);
     late NsgDataItem newItem;
     if (storageType == NsgDataStorageType.server) {
       var p = NsgDataRequest(dataItemType: runtimeType);
       newItem = await p.requestItem(
-          filter: filter,
-          autoAuthorize: autoAuthorize,
-          tag: tag,
-          loadReference: loadReference,
-          function: function,
-          method: method,
-          addCount: addCount,
-          postData: postData,
-          autoRepeate: autoRepeate,
-          autoRepeateCount: autoRepeateCount,
-          retryIf: retryIf,
-          onRetry: onRetry,
-          cancelToken: cancelToken);
+        filter: filter,
+        autoAuthorize: autoAuthorize,
+        tag: tag,
+        loadReference: loadReference,
+        function: function,
+        method: method,
+        addCount: addCount,
+        postData: postData,
+        autoRepeate: autoRepeate,
+        autoRepeateCount: autoRepeateCount,
+        retryIf: retryIf,
+        onRetry: onRetry,
+        cancelToken: cancelToken,
+      );
     } else {
       newItem = (await NsgLocalDb.instance.requestItems(this, filter)).first;
     }
@@ -459,13 +461,15 @@ class NsgDataItem {
   ///If you want copy `only not empty fields`, use `copyEmptyFields` parametr.
   ///For copy fields values in other NsgDataItem type obj, use `translateMap` for set fields dependensies:
   ///{oldObjKey: thisObjKey}.
-  void copyFieldValues(NsgDataItem oldItem,
-      {bool cloneAsCopy = false,
-      List<String>? excludeFields,
-      List<String>? includeFields,
-      Map<String, String>? translateMap,
-      bool copyEmptyFields = true,
-      bool onlyMapFields = false}) {
+  void copyFieldValues(
+    NsgDataItem oldItem, {
+    bool cloneAsCopy = false,
+    List<String>? excludeFields,
+    List<String>? includeFields,
+    Map<String, String>? translateMap,
+    bool copyEmptyFields = true,
+    bool onlyMapFields = false,
+  }) {
     if (onlyMapFields && translateMap != null) {
       includeFields = [];
       for (var element in translateMap.keys) {
@@ -705,12 +709,21 @@ class NsgDataItem {
   }
 
   ///Получить все объекты из БД, удовлетворящие условию
-  Future<List<T>> select<T extends NsgDataItem>(NsgDataRequestParams filter,
-      {int autoRepeateCount = 3, List<String>? loadReference, NsgCancelToken? cancelToken}) async {
-    NsgDataRequest request = NsgDataRequest<T>();
+  Future<List<T>> select<T extends NsgDataItem>(
+    NsgDataRequestParams filter, {
+    int autoRepeateCount = 3,
+    List<String>? loadReference,
+    NsgCancelToken? cancelToken,
+    NsgDataStorageType storageType = NsgDataStorageType.server,
+  }) async {
+    NsgDataRequest request = NsgDataRequest<T>(storageType: storageType);
     return (await request.requestItems(
-            filter: filter, autoRepeate: autoRepeateCount > 0, autoRepeateCount: autoRepeateCount, loadReference: loadReference, cancelToken: cancelToken))
-        .cast();
+      filter: filter,
+      autoRepeate: autoRepeateCount > 0,
+      autoRepeateCount: autoRepeateCount,
+      loadReference: loadReference,
+      cancelToken: cancelToken,
+    )).cast();
   }
 
   ///Прочитать элемент из базы данных
@@ -722,8 +735,12 @@ class NsgDataItem {
     cmp.add(name: primaryKeyField, value: getFieldValue(primaryKeyField));
     var filterParam = NsgDataRequestParams(compare: cmp);
     filterParam.showDeletedObjects = true;
-    var answer =
-        await request.requestItem(filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeateCount > 0, autoRepeateCount: autoRepeateCount);
+    var answer = await request.requestItem(
+      filter: filterParam,
+      loadReference: referenceList,
+      autoRepeate: autoRepeateCount > 0,
+      autoRepeateCount: autoRepeateCount,
+    );
     return answer as T;
   }
 
