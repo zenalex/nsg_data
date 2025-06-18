@@ -496,7 +496,7 @@ class NsgDataProvider {
     var onRetry = controller.onRetry;
 
     if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
-      var checkResult = await _checkVersion(onRetry);
+      var checkResult = 0; //await _checkVersion(onRetry);
       if (checkResult == 2) {
         NsgErrorWidget.showErrorByString('Application update required');
         //TODO: сменить на диалог и запретить работу при наличии обязательного обновления
