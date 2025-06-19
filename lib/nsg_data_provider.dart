@@ -266,7 +266,7 @@ class NsgDataProvider {
         throw NsgApiException(NsgApiError(code: 401, message: 'Authorization error', errorType: e.type));
       }
       if (e.response?.statusCode == 500) {
-        var msg = 'Ошибка 500';
+        var msg = 'ERROR 500';
         if (e.response!.data is Map && (e.response!.data as Map).containsKey('message')) {
           var msgParts = e.response!.data['message'].split('---> ');
           //TODO: в нулевом параметре функция, вызвавшая ишибку - надо где-то показывать
@@ -274,7 +274,7 @@ class NsgDataProvider {
         }
         throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));
       } else if (e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
-        throw NsgApiException(NsgApiError(code: 2, message: 'Истекло время ожидания получения или отправки данных', errorType: e.type));
+        throw NsgApiException(NsgApiError(code: 2, message: 'Timeout while receiving or sending data', errorType: e.type));
       } else {
         debugPrint('###');
         debugPrint('### Error: ${e.error}, type: ${e.type}');
@@ -498,10 +498,10 @@ class NsgDataProvider {
     if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
       var checkResult = await _checkVersion(onRetry);
       if (checkResult == 2) {
-        NsgErrorWidget.showErrorByString('Требуется обновление программы');
+        NsgErrorWidget.showErrorByString('Application update required');
         //TODO: сменить на диалог и запретить работу при наличии обязательного обновления
       } else if (checkResult == 1) {
-        NsgErrorWidget.showErrorByString('Есть более новая версия. Рекомендуется обновление программы');
+        NsgErrorWidget.showErrorByString('A newer version is available. It is recommended to update the application');
       }
       if (token == '') {
         await _anonymousLogin(onRetry);
@@ -653,8 +653,8 @@ class NsgDataProvider {
       return loginResponse;
     } catch (e) {
       getx.Get.snackbar(
-        'ОШИБКА',
-        'Произошла ошибка. Попробуйте еще раз.',
+        'ERROR',
+        'An error occurred. Please try again.',
         isDismissible: true,
         duration: const Duration(seconds: 5),
         backgroundColor: Colors.red[200],
@@ -736,23 +736,28 @@ class NsgDataProvider {
     final params = <String, String>{};
     final deviceInfo = DeviceInfoPlugin();
 
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       final info = await deviceInfo.androidInfo;
       params['model'] = info.model ?? '';
       params['manufacturer'] = info.manufacturer ?? '';
       params['versionOS'] = info.version.release ?? '';
       params['platform'] = 'Android';
-    } else if (Platform.isIOS) {
+    } else if (!kIsWeb && Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
       params['model'] = info.utsname.machine ?? '';
       params['manufacturer'] = 'Apple';
       params['versionOS'] = info.systemVersion ?? '';
       params['platform'] = 'iOS';
-    } else {
+    } else if (!kIsWeb) {
       params['model'] = '';
       params['manufacturer'] = '';
       params['versionOS'] = '';
       params['platform'] = Platform.operatingSystem;
+    } else {
+      params['model'] = '';
+      params['manufacturer'] = '';
+      params['versionOS'] = '';
+      params['platform'] = 'WEB';
     }
 
     return params;
