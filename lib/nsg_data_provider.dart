@@ -279,7 +279,7 @@ class NsgDataProvider {
         debugPrint('###');
         debugPrint('### Error: ${e.error}, type: ${e.type}');
         debugPrint('###');
-        throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
+        throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
       }
     } catch (e) {
       debugPrint(
@@ -378,7 +378,7 @@ class NsgDataProvider {
       return curData;
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: 'Internet connection error', errorType: e.type));
+      throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -437,7 +437,7 @@ class NsgDataProvider {
       return Image.memory(response.data!);
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(NsgApiError(code: 1, message: 'Internet connection error', errorType: e.type));
+      throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
