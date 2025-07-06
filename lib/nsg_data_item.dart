@@ -57,7 +57,14 @@ class NsgDataItem {
   NsgDataItemState state = NsgDataItemState.unknown;
 
   ///Текущее состояние жизненного цикла объекта (создан, помечен на удаление и т.п.)
-  NsgDataItemDocState docState = NsgDataItemDocState.created;
+  NsgDataItemDocState _docState = NsgDataItemDocState.created;
+  NsgDataItemDocState get docState => _docState;
+  set docState(NsgDataItemDocState value) {
+    // if (value == NsgDataItemDocState.created && newTableLogic) {
+    //   print('created');
+    // }
+    _docState = value;
+  }
 
   bool newTableLogic = false;
 

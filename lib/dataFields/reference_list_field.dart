@@ -53,6 +53,11 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
       var elem = NsgDataClient.client.getNewObject(referentElementType);
       if (m is Map<String, dynamic>) {
         elem.fromJson(m);
+        //этот признак определфет то что строка пришла из БД, без него она не удалится из базы данных
+        //Другое дело, возможно, надо различать зачем мы проводим десериализацию
+        //или присто отправлять на удаление с сервера все строки, удаляемые на объекте, независимо от того что они помечены как загруженные с сервера
+        //Сервер их проигнорирует. В противном случае, удаление строки из табличной части не будет работать
+        elem.docState = NsgDataItemDocState.saved;
         if (elem.allowExtend) {
           var extTypeName = elem[elem.extensionTypeField].toString();
           if (extTypeName.isNotEmpty && extTypeName != elem.typeName) {

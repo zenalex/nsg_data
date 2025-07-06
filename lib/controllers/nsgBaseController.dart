@@ -152,25 +152,25 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
-  NsgBaseController(
-      {this.dataType = NsgDataItem,
-      this.requestOnInit = false,
-      this.useUpdate = true,
-      this.useChange = true,
-      this.masterController,
-      this.selectedMasterRequired = true,
-      this.dataBinding,
-      this.autoRepeate = false,
-      this.autoRepeateCount = 10,
-      this.useDataCache = false,
-      this.autoSelectFirstItem = false,
-      this.dependsOnControllers,
-      this.onRetry,
-      this.retryIf,
-      this.editModeAllowed = true,
-      this.readOnly = true,
-      NsgDataControllerMode? controllerMode})
-      : super() {
+  NsgBaseController({
+    this.dataType = NsgDataItem,
+    this.requestOnInit = false,
+    this.useUpdate = true,
+    this.useChange = true,
+    this.masterController,
+    this.selectedMasterRequired = true,
+    this.dataBinding,
+    this.autoRepeate = false,
+    this.autoRepeateCount = 10,
+    this.useDataCache = false,
+    this.autoSelectFirstItem = false,
+    this.dependsOnControllers,
+    this.onRetry,
+    this.retryIf,
+    this.editModeAllowed = true,
+    this.readOnly = true,
+    NsgDataControllerMode? controllerMode,
+  }) : super() {
     onRetry ??= _updateStatusError;
     this.controllerMode = controllerMode ?? NsgDataControllerMode.defaultDataControllerMode;
     controllerFilter = NsgControllerFilter(controller: this);
@@ -363,11 +363,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future<List<NsgDataItem>> doRequestItems({NsgDataRequestParams? filter}) async {
     var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     var newItems = await request.requestItems(
-        filter: filter ?? getRequestFilter,
-        loadReference: referenceList,
-        autoRepeate: autoRepeate,
-        autoRepeateCount: autoRepeateCount,
-        userRetryIf: (e) => retryRequestIf(e));
+      filter: filter ?? getRequestFilter,
+      loadReference: referenceList,
+      autoRepeate: autoRepeate,
+      autoRepeateCount: autoRepeateCount,
+      userRetryIf: (e) => retryRequestIf(e),
+    );
     totalCount = request.totalCount;
     return newItems;
   }
@@ -494,12 +495,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
-  Widget obxBase(
-    Widget Function(NsgBaseControllerData?) widget, {
-    Widget Function(String? error)? onError,
-    Widget? onLoading,
-    Widget? onEmpty,
-  }) {
+  Widget obxBase(Widget Function(NsgBaseControllerData?) widget, {Widget Function(String? error)? onError, Widget? onLoading, Widget? onEmpty}) {
     return obx(widget, onError: onError, onLoading: onLoading, onEmpty: onEmpty);
   }
 
@@ -508,22 +504,29 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return const Center(child: CircularProgressIndicator());
   }
 
-  Widget obx(NotifierBuilder<NsgBaseControllerData?> widget,
-      {Widget Function(String? error)? onError, Widget? onLoading, Widget? onEmpty, bool needProgressBar = true}) {
-    return Observer(builder: (_) {
-      if (status.isLoading) {
-        if (onLoading != null || needProgressBar) {
-          return onLoading ?? getDefaultProgressIndicator();
-        } else {
-          return widget(NsgBaseController.emptyData);
+  Widget obx(
+    NotifierBuilder<NsgBaseControllerData?> widget, {
+    Widget Function(String? error)? onError,
+    Widget? onLoading,
+    Widget? onEmpty,
+    bool needProgressBar = true,
+  }) {
+    return Observer(
+      builder: (_) {
+        if (status.isLoading) {
+          if (onLoading != null || needProgressBar) {
+            return onLoading ?? getDefaultProgressIndicator();
+          } else {
+            return widget(NsgBaseController.emptyData);
+          }
+        } else if (status.isError) {
+          return onError != null ? onError(status.errorMessage) : Center(child: Text('A error occurred: ${status.errorMessage}'));
+        } else if (status.isEmpty) {
+          return onEmpty ?? const SizedBox.shrink();
         }
-      } else if (status.isError) {
-        return onError != null ? onError(status.errorMessage) : Center(child: Text('A error occurred: ${status.errorMessage}'));
-      } else if (status.isEmpty) {
-        return onEmpty ?? const SizedBox.shrink();
-      }
-      return widget(value);
-    });
+        return widget(value);
+      },
+    );
   }
 
   ///Post selected item to the server
@@ -777,11 +780,16 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     referenceList ??= referenceItemPage;
     var cmp = NsgCompare();
     cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
-    var filterParam = NsgDataRequestParams(compare: cmp);
+    var filterParam = NsgDataRequestParams(compare: cmp, referenceList: referenceList);
     var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
     filterParam.showDeletedObjects = true;
     var answer = await request.requestItem(
-        filter: filterParam, loadReference: referenceList, autoRepeate: autoRepeate, autoRepeateCount: autoRepeateCount, retryIf: (e) => retryRequestIf(e));
+      filter: filterParam,
+      loadReference: referenceList,
+      autoRepeate: autoRepeate,
+      autoRepeateCount: autoRepeateCount,
+      retryIf: (e) => retryRequestIf(e),
+    );
     assert(answer.isNotEmpty, 'Element not found (possibly marked for deletion)');
     // assert(answer.isNotEmpty, 'Элемент не найден (возможно помечен на удаление)');
     //Если в items (он же dataItemList) данный элемент уже присутствует, обновляем его новой версией
@@ -864,8 +872,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future copyAndSetItem(NsgDataItem item, {bool needRefreshSelectedItem = false, List<String>? referenceList}) async {
     assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
-    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
-        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
+    assert(
+      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
+    );
     currentStatus = GetStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
@@ -956,13 +966,15 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   // }
   // currentStatus = RxStatus.success();
   // sendNotify();
-//}
+  //}
 
   ///Удаление массива строк из табличной части
   ///На данный момент, метод реализован только для контроллера табличной части
   Future itemsRemove(List<NsgDataItem> itemsToRemove) async {
-    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
-        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
+    assert(
+      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
+    );
     await deleteItems(itemsToRemove);
   }
 
@@ -999,8 +1011,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   Future postItems(List<NsgDataItem> itemsToPost, {bool showProgress = false}) async {
-    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
-        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
+    assert(
+      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
+    );
     if (controllerMode.storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: dataType);
       p.itemsToPost = itemsToPost;
@@ -1025,8 +1039,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   /// Удаляет currentItem в БД и в items
   Future deleteItem({bool goBack = true}) async {
     assert(selectedItem != null, 'При выполнении deleteItem() -> currentItem==null');
-    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
-        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
+    assert(
+      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
+    );
     await deleteItems([selectedItem!]);
     if (goBack) {
       NsgNavigator.instance.back();
@@ -1035,8 +1051,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   /// Удаляет выбранные элементы в БД и в items
   Future deleteItems(List<NsgDataItem> itemsToDelete) async {
-    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
-        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
+    assert(
+      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
+    );
     if (controllerMode.storageType == NsgDataStorageType.server) {
       if (itemsToDelete.isEmpty) return;
       var p = NsgDataDelete(dataItemType: itemsToDelete[0].runtimeType, itemsToDelete: itemsToDelete);
@@ -1061,10 +1079,15 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Поставить в очередь на сохранение, чтобы избезать параллельного сохранения
   ///Уменьшив таким образом нагрузку на сервер и избежать коллизий
-  Future postItemQueue(NsgDataItem obj,
-      {Function(List<NsgDataItem> errorObjects)? errorObjects, Function(List<NsgDataItem> postedObjects)? postedObjects}) async {
-    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
-        'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
+  Future postItemQueue(
+    NsgDataItem obj, {
+    Function(List<NsgDataItem> errorObjects)? errorObjects,
+    Function(List<NsgDataItem> postedObjects)? postedObjects,
+  }) async {
+    assert(
+      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
+    );
     if (_postQueue.contains(obj)) {
       return;
     }
@@ -1198,39 +1221,42 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future<String?> beginTransaction(NsgDataProvider provider, {int lifespan = 0, NsgCancelToken? cancelToken}) async {
     var request = NsgSimpleRequest<String>();
     var newItem = await request.requestItem(
-        provider: provider,
-        function: '/Api/Transaction/Begin' + (lifespan > 0 ? '?lifespan=$lifespan' : ''),
-        method: 'POST',
-        autoRepeate: true,
-        autoRepeateCount: 3,
-        cancelToken: cancelToken,
-        retryIf: (e) => retryRequestIf(e));
+      provider: provider,
+      function: '/Api/Transaction/Begin' + (lifespan > 0 ? '?lifespan=$lifespan' : ''),
+      method: 'POST',
+      autoRepeate: true,
+      autoRepeateCount: 3,
+      cancelToken: cancelToken,
+      retryIf: (e) => retryRequestIf(e),
+    );
     return newItem;
   }
 
   Future<bool?> commitTransaction(NsgDataProvider provider, String transactionId, {NsgCancelToken? cancelToken}) async {
     var request = NsgSimpleRequest<bool>();
     var newItem = await request.requestItem(
-        provider: provider,
-        function: '/Api/Transaction/Commit?id=$transactionId',
-        method: 'POST',
-        autoRepeate: true,
-        autoRepeateCount: 3,
-        cancelToken: cancelToken,
-        retryIf: (e) => retryRequestIf(e));
+      provider: provider,
+      function: '/Api/Transaction/Commit?id=$transactionId',
+      method: 'POST',
+      autoRepeate: true,
+      autoRepeateCount: 3,
+      cancelToken: cancelToken,
+      retryIf: (e) => retryRequestIf(e),
+    );
     return newItem;
   }
 
   Future<bool?> rollbackTransaction(NsgDataProvider provider, String transactionId, {NsgCancelToken? cancelToken}) async {
     var request = NsgSimpleRequest<bool>();
     var newItem = await request.requestItem(
-        provider: provider,
-        function: '/Api/Transaction/Rollback?id=$transactionId',
-        method: 'POST',
-        autoRepeate: true,
-        autoRepeateCount: 3,
-        cancelToken: cancelToken,
-        retryIf: (e) => retryRequestIf(e));
+      provider: provider,
+      function: '/Api/Transaction/Rollback?id=$transactionId',
+      method: 'POST',
+      autoRepeate: true,
+      autoRepeateCount: 3,
+      cancelToken: cancelToken,
+      retryIf: (e) => retryRequestIf(e),
+    );
     return newItem;
   }
 
