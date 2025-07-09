@@ -15,9 +15,9 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
     filter ??= getRequestFilter;
     filter.top = top;
     filter.count = count;
-    printWarning("top - $top");
-    printWarning("count - $count");
-    printWarning("last - ${top + count - 1}");
+    // printWarning("top - $top");
+    // printWarning("count - $count");
+    // printWarning("last - ${top + count - 1}");
     List<T> ans = await matches.requestItems(filter: filter, loadReference: referenceList);
     return ans;
   }
