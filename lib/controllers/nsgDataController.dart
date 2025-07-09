@@ -21,38 +21,20 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   bool get withUi => this is NsgDataUI;
 
   NsgDataController({
-    bool requestOnInit = true,
-    bool useUpdate = true,
-    bool useChange = true,
+    super.requestOnInit = true,
+    super.useUpdate,
+    super.useChange,
     List<String>? builderIDs,
-    NsgBaseController? masterController,
+    super.masterController,
     NsgDataBinding? dataBindign,
-    bool autoRepeate = false,
-    int autoRepeateCount = 10,
-    bool useDataCache = false,
-    bool selectedMasterRequired = true,
-    bool autoSelectFirstItem = false,
-    List<NsgBaseController>? dependsOnControllers,
-    int? loadStepCount,
+    super.autoRepeate,
+    super.autoRepeateCount,
+    super.useDataCache,
+    super.selectedMasterRequired,
+    super.autoSelectFirstItem,
+    super.dependsOnControllers,
     super.controllerMode,
-  }) : super(
-         dataType: T,
-         requestOnInit: requestOnInit,
-         useUpdate: useUpdate,
-         useChange: useChange,
-         masterController: masterController,
-         dataBinding: dataBindign,
-         autoRepeate: autoRepeate,
-         autoRepeateCount: autoRepeateCount,
-         selectedMasterRequired: selectedMasterRequired,
-         useDataCache: useDataCache,
-         autoSelectFirstItem: autoSelectFirstItem,
-         dependsOnControllers: dependsOnControllers,
-       ) {
-    if (loadStepCount != null && withUi) {
-      (this as NsgDataUI).loadStepCountUi = loadStepCount;
-    }
-  }
+  }) : super(dataType: T, dataBinding: dataBindign) {}
 
   ///Сделать текущим предыдущий элемент
   void gotoPrevItem() {

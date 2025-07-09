@@ -6,13 +6,18 @@ import 'package:nsg_data/ui/nsg_loading_scroll_controller.dart';
 
 mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   int loadStepCountUi = 25;
-  NsgDataRequestParams? lastRequestFilter;
+  String? grFieldName;
+  List<NsgSortingParam>? sortingParams;
+  NsgSortingDirection? sortDirection;
 
   Future<List<T>> _loadItems(int top, int count, {NsgDataRequestParams? filter}) async {
     var matches = NsgDataRequest<T>(dataItemType: T);
     filter ??= getRequestFilter;
     filter.top = top;
     filter.count = count;
+    printWarning("top - $top");
+    printWarning("count - $count");
+    printWarning("last - ${top + count - 1}");
     List<T> ans = await matches.requestItems(filter: filter, loadReference: referenceList);
     return ans;
   }
@@ -21,6 +26,26 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   NsgDataRequestParams get getRequestFilter {
     var filter = super.getRequestFilter;
     filter.count = loadStepCountUi;
+
+    NsgSorting sort = NsgSorting();
+
+    if (grFieldName != null && grFieldName!.isNotEmpty) {
+      NsgSortingParam sortingParam = NsgSortingParam(parameterName: grFieldName!, direction: sortDirection ?? NsgSortingDirection.ascending);
+      sort.paramList.add(sortingParam);
+    }
+
+    if (sortingParams != null) {
+      for (var sortParam in sortingParams!) {
+        sort.paramList.add(sortParam);
+      }
+    }
+
+    if (filter.sorting != null) {
+      filter.sorting = "${sort.toString()},${filter.sorting}";
+    } else {
+      filter.sorting = sort.toString();
+    }
+
     return filter;
   }
 
@@ -36,7 +61,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 
   late NsgLoadingScrollController scrollController = NsgLoadingScrollController(
     function: () async {
-      await loadNext(filter: lastRequestFilter);
+      await loadNext();
     },
   );
 
@@ -137,7 +162,7 @@ class DataGroupList {
           value: group.key.data[index - group.value.first - (needDivider ? 1 : 0)],
           group: group.key,
           isDivider: false,
-          key: _itemsKeys[group.key.data[index - group.value.first - (needDivider ? 1 : 0)]]
+          key: _itemsKeys[group.key.data[index - group.value.first - (needDivider ? 1 : 0)]],
         );
       }
       return (value: group.key.groupValue, group: group.key, isDivider: true, key: _itemsKeys[group.key.groupValue]);
