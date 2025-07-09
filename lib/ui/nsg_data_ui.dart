@@ -53,7 +53,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
     status = GetStatus.loading();
     sendNotify();
     if (items.length + 1 < (totalCount ?? 1000)) {
-      items.addAll(await _loadItems(items.length + 1, loadStepCountUi, filter: filter));
+      items.addAll(await _loadItems(items.length, loadStepCountUi, filter: filter));
     }
     status = GetStatus.success(NsgBaseController.emptyData);
     sendNotify();
