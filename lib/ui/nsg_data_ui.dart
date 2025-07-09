@@ -6,6 +6,7 @@ import 'package:nsg_data/ui/nsg_loading_scroll_controller.dart';
 
 mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   int loadStepCountUi = 25;
+  NsgDataRequestParams? lastRequestFilter;
 
   Future<List<T>> _loadItems(int top, int count, {NsgDataRequestParams? filter}) async {
     var matches = NsgDataRequest<T>(dataItemType: T);
@@ -35,7 +36,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 
   late NsgLoadingScrollController scrollController = NsgLoadingScrollController(
     function: () async {
-      await loadNext();
+      await loadNext(filter: lastRequestFilter);
     },
   );
 
