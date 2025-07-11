@@ -738,15 +738,15 @@ class NsgDataProvider {
 
     if (!kIsWeb && Platform.isAndroid) {
       final info = await deviceInfo.androidInfo;
-      params['model'] = info.model ?? '';
-      params['manufacturer'] = info.manufacturer ?? '';
-      params['versionOS'] = info.version.release ?? '';
+      params['model'] = info.model;
+      params['manufacturer'] = info.manufacturer;
+      params['versionOS'] = info.version.release;
       params['platform'] = 'Android';
     } else if (!kIsWeb && Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
-      params['model'] = info.utsname.machine ?? '';
+      params['model'] = info.utsname.machine;
       params['manufacturer'] = 'Apple';
-      params['versionOS'] = info.systemVersion ?? '';
+      params['versionOS'] = info.systemVersion;
       params['platform'] = 'iOS';
     } else if (!kIsWeb) {
       params['model'] = '';
