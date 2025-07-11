@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nsg_controls/nsg_controls.dart';
 import 'package:nsg_controls/widgets/nsg_snackbar.dart';
+import 'package:nsg_data/password/nsg_login_password_strength.dart';
 import 'nsg_login_model.dart';
 
 class NsgLoginParams {
@@ -79,6 +80,9 @@ class NsgLoginParams {
   ///isLoginSuccessfull - результат отработки логина. Пользователь авторизован или нет
   final void Function(bool isLoginSuccessfull)? eventLoginWidgweClosed;
 
+  final PasswordStrength Function(String? password)? passwordIndicator;
+  final String Function(String? password)? passwordValidator;
+
   bool? appbar;
   bool? headerMessageVisible;
 
@@ -137,6 +141,8 @@ class NsgLoginParams {
     this.useCaptcha = true,
     this.mainPage = '',
     this.eventLoginWidgweClosed,
+    this.passwordIndicator,
+    this.passwordValidator,
   }) {
     headerMessageStyle ??= TextStyle(
       fontFamily: 'Roboto',
