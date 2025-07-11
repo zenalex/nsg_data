@@ -438,8 +438,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   NsgDataRequestParams get getRequestFilter {
     var cmp = NsgCompare();
     //Добавление условия на мастер-деталь
+    assert(dataBinding != null, 'dataBinding == null, необходимо задать этот параметр в настройках контроллера');
     if (masterController != null &&
         masterController!.selectedItem != null &&
+        dataBinding != null &&
         masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
       var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
       cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
@@ -679,7 +681,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///useValidation == true перед сохранением проводится валидация
   ///В случае успешного сохранения возвращает true
   Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
-    assert(selectedItem != null);
+    assert(selectedItem != null, 'selectedItem = null');
     if (useValidation) {
       var validationResult = selectedItem!.validateFieldValues();
       if (!validationResult.isValid) {
