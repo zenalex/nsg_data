@@ -80,8 +80,8 @@ class NsgLoginParams {
   ///isLoginSuccessfull - результат отработки логина. Пользователь авторизован или нет
   final void Function(bool isLoginSuccessfull)? eventLoginWidgweClosed;
 
-  final PasswordStrength Function(String? password)? passwordIndicator;
-  final String Function(String? password)? passwordValidator;
+  final PasswordStrength? Function(String password)? passwordIndicator;
+  final String? Function(String? password)? passwordValidator;
 
   bool? appbar;
   bool? headerMessageVisible;
