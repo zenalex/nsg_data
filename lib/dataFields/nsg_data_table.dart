@@ -15,7 +15,7 @@ class NsgDataTable<T extends NsgDataItem> {
   bool get isNotEmpty => rows.isNotEmpty;
   List<T> get rows {
     var allRows = owner.getFieldValue(fieldName);
-    return (allRows as List).cast();
+    return (allRows as List).where((e) => e.docState != NsgDataItemDocState.deleted).toList().cast();
   }
 
   int get length => rows.length;
