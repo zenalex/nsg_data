@@ -11,11 +11,17 @@ class NsgDataTable<T extends NsgDataItem> {
 
   Type dataItemType = NsgDataItem;
 
-  bool get isEmpty => rows.isEmpty;
-  bool get isNotEmpty => rows.isNotEmpty;
+  bool get isEmpty => allRows.isEmpty;
+  bool get isNotEmpty => allRows.isNotEmpty;
+
+  ///Строки табличной части, за исключением удаленных
   List<T> get rows {
-    var allRows = owner.getFieldValue(fieldName);
     return (allRows as List).where((e) => e.docState != NsgDataItemDocState.deleted).toList().cast();
+  }
+
+  ///Все строки таблицы, включая удаленные
+  List<T> get allRows {
+    return (owner.getFieldValue(fieldName) as List).cast();
   }
 
   int get length => rows.length;

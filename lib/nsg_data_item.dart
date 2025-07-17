@@ -182,11 +182,7 @@ class NsgDataItem {
 
   ///Добавление ногого поля в объект
   ///Вызывается при инициализации
-  void addField(
-    NsgDataField field, {
-    bool primaryKey = false,
-    String? presentation,
-  }) {
+  void addField(NsgDataField field, {bool primaryKey = false, String? presentation}) {
     var name = field.name;
     assert(!fieldList.fields.containsKey(name));
     fieldList.fields[name] = field;
@@ -216,10 +212,7 @@ class NsgDataItem {
       return fieldValues.fields[name];
     } else {
       //Проверка на наличие поля в списке полей объекта
-      assert(
-        fieldList.fields.containsKey(name),
-        '!!! Не существует поля с именем: ' + name + ' в объекте: ' + typeName,
-      );
+      assert(fieldList.fields.containsKey(name), '!!! Не существует поля с именем: ' + name + ' в объекте: ' + typeName);
       //Проверка не является ли поле пустым (умышленно не читалось из БД, следовательно, нельзя брать значение из него)
       assert(!fieldValues.emptyFields.contains(name));
       if (allowNullValue) return null;
@@ -235,10 +228,7 @@ class NsgDataItem {
   ///Установить значение поля
   void setFieldValue(String name, dynamic value) {
     //TODO: убрать этот метод, присваивать значения в setValue полей
-    assert(
-      fieldList.fields.containsKey(name),
-      'object $runtimeType does not contains field $name',
-    );
+    assert(fieldList.fields.containsKey(name), 'object $runtimeType does not contains field $name');
     if (!fieldList.fields.containsKey(name)) {}
     var field = getField(name);
     if (field is NsgDataDoubleField) {
@@ -279,10 +269,7 @@ class NsgDataItem {
   ///Пометить поле пустым, т.е. что оно не загружалось из БД
   void setFieldEmpty(String name) {
     if (!fieldList.fields.containsKey(name)) {
-      assert(
-        fieldList.fields.containsKey(name),
-        'object $runtimeType does not contains field $name',
-      );
+      assert(fieldList.fields.containsKey(name), 'object $runtimeType does not contains field $name');
     }
     fieldValues.setEmpty(this, name);
   }
@@ -328,17 +315,11 @@ class NsgDataItem {
   }
 
   ///В случае ссылочного поля позвращает объект, на который ссылается данное поле. Если поле не прочитано из БД, читает его асинхронно
-  Future<T> getReferentAsync<T extends NsgDataItem>(
-    String name, {
-    bool useCache = true,
-  }) async {
+  Future<T> getReferentAsync<T extends NsgDataItem>(String name, {bool useCache = true}) async {
     assert(fieldValues.fields.containsKey(name));
     var field = fieldList.fields[name]!;
     assert(field is NsgDataReferenceField);
-    var dataItem = await ((field as NsgDataReferenceField).getReferentAsync(
-      this,
-      useCache: useCache,
-    ));
+    var dataItem = await ((field as NsgDataReferenceField).getReferentAsync(this, useCache: useCache));
     return dataItem as T;
   }
 
@@ -408,9 +389,7 @@ class NsgDataItem {
     if (storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: runtimeType);
       p.itemsToPost = <NsgDataItem>[this];
-      var newItem = await p.postItem(
-        loadReference: NsgDataRequest.addAllReferences(runtimeType),
-      );
+      var newItem = await p.postItem(loadReference: NsgDataRequest.addAllReferences(runtimeType));
       if (newItem != null) {
         copyFieldValues(newItem);
         state = newItem.state;
@@ -464,11 +443,7 @@ class NsgDataItem {
     NsgCancelToken? cancelToken,
   }) async {
     var filter = NsgDataRequestParams();
-    filter.compare.add(
-      name: primaryKeyField,
-      value: id,
-      comparisonOperator: NsgComparisonOperator.equal,
-    );
+    filter.compare.add(name: primaryKeyField, value: id, comparisonOperator: NsgComparisonOperator.equal);
     late NsgDataItem newItem;
     if (storageType == NsgDataStorageType.server) {
       var p = NsgDataRequest(dataItemType: runtimeType);
@@ -549,7 +524,7 @@ class NsgDataItem {
             var newTable = NsgDataTable(owner: this, fieldName: translateKey);
             var curTable = NsgDataTable(owner: oldItem, fieldName: key);
             newTable.clear();
-            for (var row in curTable.rows) {
+            for (var row in curTable.allRows) {
               var newRow = row.clone(cloneAsCopy: cloneAsCopy);
               if (cloneAsCopy) {
                 newRow.copyRecordFill();
@@ -570,11 +545,7 @@ class NsgDataItem {
   ///cloneAsCopy - после копирования подменить id объектов и вызвать метод заполнения после копирования
   NsgDataItem clone({bool cloneAsCopy = false, List<String>? excludeFields}) {
     var newItem = getNewObject();
-    newItem.copyFieldValues(
-      this,
-      cloneAsCopy: cloneAsCopy,
-      excludeFields: excludeFields,
-    );
+    newItem.copyFieldValues(this, cloneAsCopy: cloneAsCopy, excludeFields: excludeFields);
     newItem.loadTime = loadTime;
     newItem.state = cloneAsCopy ? NsgDataItemState.create : state;
     newItem.docState = cloneAsCopy ? NsgDataItemDocState.created : docState;
@@ -732,10 +703,7 @@ class NsgDataItem {
           foundFieldName = splitedPath[i];
           //Если это табличная часть, то она должна быть последняя в списке. Иначе, придется перебирать все элементы, удовлетворяющие условию
           //Возможно, можно и для этого случая собрать все вложенные элементы, но мне кажется это излишним, лучше правильно писать запросы
-          assert(
-            i == splitedPath.length - 1,
-            'NsgDataReferenceListField type field can be last only',
-          );
+          assert(i == splitedPath.length - 1, 'NsgDataReferenceListField type field can be last only');
           break;
         } else {
           throw Exception('Field $foundFullPath not found in object $this');
@@ -788,21 +756,13 @@ class NsgDataItem {
       autoRepeateCount: autoRepeateCount,
       loadReference: loadReference,
       cancelToken: cancelToken,
-    ))
-        .cast();
+    )).cast();
   }
 
   ///Прочитать элемент из базы данных
   ///Чтение идет по ID
-  Future<T> selectFromDb<T extends NsgDataItem>({
-    int autoRepeateCount = 3,
-    List<String>? referenceList,
-    NsgCancelToken? cancelToken,
-  }) async {
-    NsgDataRequest request = NsgDataRequest<T>(
-      dataItemType: runtimeType,
-      storageType: storageType,
-    );
+  Future<T> selectFromDb<T extends NsgDataItem>({int autoRepeateCount = 3, List<String>? referenceList, NsgCancelToken? cancelToken}) async {
+    NsgDataRequest request = NsgDataRequest<T>(dataItemType: runtimeType, storageType: storageType);
 
     var cmp = NsgCompare();
     cmp.add(name: primaryKeyField, value: getFieldValue(primaryKeyField));
