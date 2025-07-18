@@ -112,9 +112,9 @@ class NsgDataItem {
     if (json.containsKey('docState')) {
       docState = NsgDataItemDocState.values[json['docState']];
     }
-    if (json.containsKey('newTableLogic')) {
-      newTableLogic |= json.containsKey('newTableLogic') && json['newTableLogic'] == 'true';
-    }
+    // if (json.containsKey('newTableLogic')) {
+    //   newTableLogic |= json.containsKey('newTableLogic') && json['newTableLogic'] == 'true';
+    // }
     //Чтение дополнительных полей
     if (allowExtend && json.containsKey(additionalDataField)) {
       (jsonDecode(json[additionalDataField])).forEach((name, jsonValue) {
@@ -131,7 +131,7 @@ class NsgDataItem {
   Map<String, dynamic> toJson({List<String> excludeFields = const []}) {
     var map = <String, dynamic>{};
 
-    if (newTableLogic && docState == NsgDataItemDocState.deleted) {
+    if (remoteProvider.newTableLogic && docState == NsgDataItemDocState.deleted) {
       map[primaryKeyField] = id;
     } else {
       for (var name in fieldList.fields.keys) {
@@ -148,7 +148,7 @@ class NsgDataItem {
     }
     map['state'] = state.index;
     map['docState'] = docState.index;
-    map['newTableLogic'] = newTableLogic;
+    map['newTableLogic'] = remoteProvider.newTableLogic;
     //сериализация дополнительных полей
     //TODO: или сделать на сервере или надо знать какие поля являются дополнительными
     if (allowExtend) {}
@@ -392,7 +392,7 @@ class NsgDataItem {
         copyFieldValues(newItem);
         state = newItem.state;
         docState = newItem.docState;
-        newTableLogic = newItem.newTableLogic;
+        // newTableLogic = newItem.newTableLogic;
       }
     } else {
       await NsgLocalDb.instance.postItems([this]);
@@ -466,7 +466,7 @@ class NsgDataItem {
     copyFieldValues(newItem);
     state = newItem.state;
     docState = newItem.docState;
-    newTableLogic = newItem.newTableLogic;
+    // newTableLogic = newItem.newTableLogic;
   }
 
   Future removeItem() async {
@@ -548,7 +548,7 @@ class NsgDataItem {
     newItem.state = cloneAsCopy ? NsgDataItemState.create : state;
     newItem.docState = cloneAsCopy ? NsgDataItemDocState.created : docState;
     newItem.storageType = storageType;
-    newItem.newTableLogic = newTableLogic;
+    // newItem.newTableLogic = newTableLogic;
     if (cloneAsCopy) {
       newItem.copyRecordFill();
       newItem.id = Guid.newGuid();

@@ -65,7 +65,7 @@ class NsgDataTable<T extends NsgDataItem> {
   ///dataItem - объект, в поле которого добавляем значение
   ///row - удаляемая строка
   bool removeRow(T row) {
-    if (row.newTableLogic && row.docState == NsgDataItemDocState.saved) {
+    if (row.remoteProvider.newTableLogic && row.docState == NsgDataItemDocState.saved) {
       row.docState = NsgDataItemDocState.deleted;
       return true;
     }
