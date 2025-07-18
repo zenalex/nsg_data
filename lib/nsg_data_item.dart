@@ -67,8 +67,6 @@ class NsgDataItem {
     _docState = value;
   }
 
-  bool newTableLogic = false;
-
   NsgDataStorageType storageType = NsgDataStorageType.server;
 
   bool isModified = false;
