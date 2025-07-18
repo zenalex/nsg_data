@@ -85,6 +85,8 @@ class NsgDataProvider {
 
   String languageCode;
 
+  bool newTableLogic;
+
   NsgDataProvider({
     this.name,
     required this.applicationName,
@@ -98,6 +100,7 @@ class NsgDataProvider {
     this.eventOpenLoginPage,
     required this.availableServers,
     this.languageCode = 'ru',
+    this.newTableLogic = false,
   }) {
     widgetParams = widgetLoginParams ?? () => NsgLoginParams();
   }

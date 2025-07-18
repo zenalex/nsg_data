@@ -112,8 +112,6 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///requestItems
   bool lateInit = false;
 
-  bool newTableLogic = false;
-
   ///Параметры сортировки данных
   ///Устанавляваются компонентами (например, таблицей), передаются в запрос через getRequestFilter
   NsgSorting sorting = NsgSorting();
