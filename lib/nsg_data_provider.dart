@@ -461,36 +461,35 @@ class NsgDataProvider {
     }
   }
 
-  ///Запрос адреса сервера приложения
-  ///Формат запроса 185.65.105.51/AppConnection?appName=App2&clientVersion=1.0&country=US&serverType=release
-  Future<String> _requestAppServer(String controlServerAddress, String serverType) async {
-    String controlServerAddress = "185.65.105.51"; // Пример без /
-    String url = Uri.parse(controlServerAddress).resolve("AppConnection").toString();
+  // ///Запрос адреса сервера приложения
+  // ///Формат запроса 185.65.105.51/AppConnection?appName=App2&clientVersion=1.0&country=US&serverType=release
+  // Future<String> _requestAppServer(String controlServerAddress, String serverType) async {
+  //   String url = Uri.parse(controlServerAddress).resolve("AppConnection").toString();
 
-    var params = <String, dynamic>{};
-    params['appName'] = applicationName;
-    params['clientVersion'] = applicationVersion;
-    params['country'] = 'me';
-    params['serverType'] = serverType;
-    try {
-      var response = await (baseRequest(
-        function: 'AppConnection',
-        headers: getAuthorizationHeader(),
-        url: url,
-        method: 'GET',
-        params: params,
-        autoRepeate: true,
-        autoRepeateCount: 1000,
-        onRetry: null,
-      ));
-      return response.toString();
-    } on NsgApiException catch (e) {
-      if (e.error.code == 404) {
-        return '';
-      }
-    }
-    return '';
-  }
+  //   var params = <String, dynamic>{};
+  //   params['appName'] = applicationName;
+  //   params['clientVersion'] = applicationVersion;
+  //   params['country'] = 'me';
+  //   params['serverType'] = serverType;
+  //   try {
+  //     var response = await (baseRequest(
+  //       function: 'AppConnection',
+  //       headers: getAuthorizationHeader(),
+  //       url: url,
+  //       method: 'GET',
+  //       params: params,
+  //       autoRepeate: true,
+  //       autoRepeateCount: 1000,
+  //       onRetry: null,
+  //     ));
+  //     return response.toString();
+  //   } on NsgApiException catch (e) {
+  //     if (e.error.code == 404) {
+  //       return '';
+  //     }
+  //   }
+  //   return '';
+  // }
 
   ///Connect to server
   ///If error will be occured, NsgApiException will be generated

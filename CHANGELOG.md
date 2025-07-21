@@ -1,5 +1,5 @@
-0.3.0
-Major improvements and bug fixes
+0.3.0-beta.1
+Major improvements and bug fixes (Beta release)
 18.07.2025
 
 **New Features:**
