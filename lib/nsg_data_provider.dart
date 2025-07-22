@@ -6,12 +6,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' as getx;
-import 'package:nsg_controls/widgets/nsg_error_widget.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsg_login_model.dart';
-import 'authorize/nsg_login_params.dart';
 import 'authorize/nsg_login_response.dart';
 
 class NsgDataProvider {
@@ -79,8 +77,6 @@ class NsgDataProvider {
   int requestDuration = 120000;
   int connectDuration = 15000;
 
-  late NsgLoginParams Function() widgetParams;
-
   static String defaultSecurityCode = 'security';
 
   String languageCode;
@@ -96,13 +92,13 @@ class NsgDataProvider {
     this.allowConnect = true,
     required this.firebaseToken,
     required this.applicationVersion,
-    NsgLoginParams Function()? widgetLoginParams,
+    // NsgLoginParamsInterface Function()? widgetLoginParams,
     this.eventOpenLoginPage,
     required this.availableServers,
     this.languageCode = 'ru',
     this.newTableLogic = false,
   }) {
-    widgetParams = widgetLoginParams ?? () => NsgLoginParams();
+   // widgetParams = widgetLoginParams ?? () => NsgBaseController.defaultLoginParams!;
   }
 
   ///Initialization. Load saved token if useNsgAuthorization == true
@@ -132,7 +128,7 @@ class NsgDataProvider {
   static const String _serverName = 'SERVER_URL';
 
   //формируем имя хранящегося параметра
-  String get paramName => applicationName + '_$_serverName';
+  String get paramName => '${applicationName}_$_serverName';
 
   ///Загрузить созраненный адрес сервера на устройстве
   ///Проверяет, если на устройстве есть сохраненный адрес и он находится в списке доступных серверов, устанавливает его текущим
@@ -165,7 +161,7 @@ class NsgDataProvider {
 
   ///Прочитать сохраненный токен для текущего сервера
   Future getCurrentServerToken() async {
-    var tokenName = paramName + '_' + availableServers.groupNameByAddress(availableServers.currentServer);
+    var tokenName = '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
     var _prefs = await SharedPreferences.getInstance();
     token = '';
     if (_prefs.containsKey(tokenName)) {
@@ -178,7 +174,7 @@ class NsgDataProvider {
   Future saveCurrentServerToken() async {
     var _prefs = await SharedPreferences.getInstance();
     if (token == null || token!.isEmpty) return;
-    var tokenName = paramName + '_' + availableServers.groupNameByAddress(availableServers.currentServer);
+    var tokenName = '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
     await _prefs.setString(tokenName, token!);
   }
 
@@ -186,7 +182,7 @@ class NsgDataProvider {
   Future resetCurrentServerToken() async {
     var _prefs = await SharedPreferences.getInstance();
     if (token == null || token!.isEmpty) return;
-    var tokenName = paramName + '_' + availableServers.currentServer;
+    var tokenName = '${paramName}_${availableServers.currentServer}';
     await _prefs.remove(tokenName);
   }
 
@@ -500,10 +496,10 @@ class NsgDataProvider {
     if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
       var checkResult = await _checkVersion(onRetry);
       if (checkResult == 2) {
-        NsgErrorWidget.showErrorByString('Application update required');
+        NsgBaseController.showErrorByString('Application update required');
         //TODO: сменить на диалог и запретить работу при наличии обязательного обновления
       } else if (checkResult == 1) {
-        NsgErrorWidget.showErrorByString('A newer version is available. It is recommended to update the application');
+        NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
       }
       if (token == '') {
         await _anonymousLogin(onRetry);

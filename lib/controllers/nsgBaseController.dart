@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:event/event.dart';
 import 'package:flutter/material.dart';
-import 'package:nsg_controls/widgets/nsg_dialog_save_or_cancel.dart';
 import 'package:nsg_data/controllers/nsg_controller_filter.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
@@ -589,7 +588,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //Если выставлен признак создавать на сервере, создаем запрос на сервер
     if (elem.createOnServer) {
       var request = NsgDataRequest(dataItemType: dataType);
-      elem = await request.requestItem(method: 'POST', function: elem.apiRequestItems + '/Create');
+      elem = await request.requestItem(method: 'POST', function: '${elem.apiRequestItems}/Create');
     } else {
       elem.newRecordFill();
     }
@@ -651,7 +650,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   void itemPageCancel({bool useValidation = true, required BuildContext context}) async {
     if (useValidation) {
       if (isModified) {
-        var result = await NsgDialogSaveOrCancel.saveOrCancel(context: context);
+        // Use the existing callback pattern instead of direct call
+        if (saveOrCancelDefaultDialog == null) {
+          // Fallback behavior if no dialog is set
+          return;
+        }
+        var result = await saveOrCancelDefaultDialog!(context);
         switch (result) {
           case null:
             return;
@@ -744,7 +748,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return !selectedItem!.isEqual(backupItem!);
   }
 
-  static Future<bool?> Function()? saveOrCancelDefaultDialog;
+  static Future<bool?> Function(BuildContext?)? saveOrCancelDefaultDialog;
+  static Future Function(String errorMessage, {String title}) showErrorByString = (errorMessage, {title = ''}) async => debugPrint(errorMessage);
+  // static NsgLoginParamsInterface? defaultLoginParams;
 
   ///Проверить были ли изменения в объекте, если нет, выполняем Back, если были, то спрашиваем пользователя сохранить изменения или отменить,
   ///а затем выполняем Back
@@ -754,13 +760,15 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       itemPageCancel(context: context);
       return;
     }
-    bool? res = await saveOrCancelDefaultDialog!();
+    bool? res = await saveOrCancelDefaultDialog!(context);
     if (res == null) {
     } else {
       if (res) {
         await itemPagePost();
       } else {
-        itemPageCancel(useValidation: false, context: context);
+        var liveContext = context.mounted ? context : Get.context!;
+        // ignore: use_build_context_synchronously
+        itemPageCancel(useValidation: false, context: liveContext);
       }
     }
   }
@@ -1224,7 +1232,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     var request = NsgSimpleRequest<String>();
     var newItem = await request.requestItem(
       provider: provider,
-      function: '/Api/Transaction/Begin' + (lifespan > 0 ? '?lifespan=$lifespan' : ''),
+      function: '/Api/Transaction/Begin${lifespan > 0 ? '?lifespan=$lifespan' : ''}',
       method: 'POST',
       autoRepeate: true,
       autoRepeateCount: 3,

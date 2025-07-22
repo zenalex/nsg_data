@@ -1,5 +1,4 @@
-library nsg_data;
-
+library;
 export 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 export 'package:nsg_data/authorize/nsgPhoneLoginVerificationPage.dart';
 export 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';

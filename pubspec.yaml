@@ -13,8 +13,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  nsg_controls:
-    path: ../nsg_controls
+  # nsg_controls:
+  #   path: ../nsg_controls
   shared_preferences: ^2.5.3
   flutter_multi_formatter: ^2.13.7
   dio: ^5.4.3+1

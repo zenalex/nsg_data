@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:nsg_controls/widgets/nsg_dialog_save_or_cancel.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер объекта табличной части
@@ -121,7 +120,10 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
   Future<void> itemPageCancel({bool useValidation = true, BuildContext? context}) async {
     if (useValidation) {
       if (isModified) {
-        var result = await NsgDialogSaveOrCancel.saveOrCancel();
+        if (NsgBaseController.saveOrCancelDefaultDialog == null) {
+          return;
+        }
+        var result = await NsgBaseController.saveOrCancelDefaultDialog!(context ?? Get.context!);
         switch (result) {
           case null:
             break;
