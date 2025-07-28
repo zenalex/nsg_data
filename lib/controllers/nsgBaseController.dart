@@ -549,6 +549,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       controller.itemPageOpen(element, pageName, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList, offPage: offPage);
       return;
     }
+
     if (needRefreshSelectedItem) {
       setAndRefreshSelectedItem(element, referenceList);
     } else {

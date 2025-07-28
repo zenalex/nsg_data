@@ -133,6 +133,13 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     );
   }
 
+  ///Open currentItem page to view and edit data
+  ///currentItem saved in backupItem to have possibility revert changes
+  ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
+  void currentItemOpen(String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
+    itemPageOpen(currentItem, pageName, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList, offPage: offPage);
+  }
+
   // @override
   // Future<List<NsgDataItem>> doRequestItems() async {
   //   var newItems = await super.doRequestItems();
