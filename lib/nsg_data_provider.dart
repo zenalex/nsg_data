@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' as getx;
+import 'package:nsg_data/authorize/nsg_social_login_response.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -83,6 +84,15 @@ class NsgDataProvider {
 
   bool newTableLogic;
 
+  ///Ссылка на авторизацию через соцсеть
+  String socialLoginUrl;
+
+  ///Ответ, содержащий данные для верификации
+  NsgSocialLoginResponse socialLoginResponse = NsgSocialLoginResponse();
+
+  ///Обратный вызов верификации
+  void Function()? onVerifySocialLogin; 
+
   NsgDataProvider({
     this.name,
     required this.applicationName,
@@ -97,6 +107,7 @@ class NsgDataProvider {
     required this.availableServers,
     this.languageCode = 'ru',
     this.newTableLogic = false,
+    this.socialLoginUrl = '',
   }) {
    // widgetParams = widgetLoginParams ?? () => NsgBaseController.defaultLoginParams!;
   }
@@ -646,6 +657,157 @@ class NsgDataProvider {
         saveCurrentServerToken();
         // var _prefs = await SharedPreferences.getInstance();
         // await _prefs.setString(applicationName, token!);
+      }
+
+      return loginResponse;
+    } catch (e) {
+      getx.Get.snackbar(
+        'ERROR',
+        'An error occurred. Please try again.',
+        isDismissible: true,
+        duration: const Duration(seconds: 5),
+        backgroundColor: Colors.red[200],
+        colorText: Colors.black,
+        snackPosition: getx.SnackPosition.bottom,
+      );
+    }
+    return NsgLoginResponse(isError: true, errorCode: 500);
+  }
+
+  Future<NsgLoginResponse> requestVK() async {
+    var login = NsgLoginModel();
+
+    try {
+      var response = await (baseRequest(
+        function: 'RequestVK',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/PhoneLoginRequestVK',
+        method: 'POST',
+        params: login.toJson(),
+      ));
+
+      var loginResponse = NsgLoginResponse.fromJson(response);
+      if (loginResponse.errorCode == 0) {
+        token = loginResponse.token;
+        isAnonymous = loginResponse.isAnonymous;
+      }
+      if (!isAnonymous && saveToken) {
+        saveCurrentServerToken();
+      }
+
+      return loginResponse;
+    } catch (e) {
+      getx.Get.snackbar(
+        'ERROR',
+        'An error occurred. Please try again.',
+        isDismissible: true,
+        duration: const Duration(seconds: 5),
+        backgroundColor: Colors.red[200],
+        colorText: Colors.black,
+        snackPosition: getx.SnackPosition.bottom,
+      );
+    }
+    return NsgLoginResponse(isError: true, errorCode: 500);
+  }
+
+  Future<NsgLoginResponse> verifyVK() async {
+    var login = NsgLoginModel();
+    login.code = socialLoginResponse.code;
+    login.deviceId = socialLoginResponse.deviceId;
+    login.state = socialLoginResponse.state;
+
+    try {
+      var response = await (baseRequest(
+        function: 'VerifyVK',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/PhoneLoginVerifyVK',
+        method: 'POST',
+        params: login.toJson(),
+      ));
+
+      var loginResponse = NsgLoginResponse.fromJson(response);
+      if (loginResponse.errorCode == 0) {
+        token = loginResponse.token;
+        isAnonymous = loginResponse.isAnonymous;
+      }
+      if (!isAnonymous) {
+        print('Token saved!');
+        saveCurrentServerToken();
+      }
+
+      return loginResponse;
+    } catch (e) {
+      getx.Get.snackbar(
+        'ERROR',
+        'An error occurred. Please try again.',
+        isDismissible: true,
+        duration: const Duration(seconds: 5),
+        backgroundColor: Colors.red[200],
+        colorText: Colors.black,
+        snackPosition: getx.SnackPosition.bottom,
+      );
+    }
+    return NsgLoginResponse(isError: true, errorCode: 500);
+  }
+
+  Future<NsgLoginResponse> requestGoogle() async {
+    var login = NsgLoginModel();
+
+    try {
+      var response = await (baseRequest(
+        function: 'RequestGoogle',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/PhoneLoginRequestGoogle',
+        method: 'POST',
+        params: login.toJson(),
+      ));
+
+      var loginResponse = NsgLoginResponse.fromJson(response);
+      if (loginResponse.errorCode == 0) {
+        token = loginResponse.token;
+        isAnonymous = loginResponse.isAnonymous;
+      }
+      if (!isAnonymous && saveToken) {
+        saveCurrentServerToken();
+      }
+
+      return loginResponse;
+    } catch (e) {
+      getx.Get.snackbar(
+        'ERROR',
+        'An error occurred. Please try again.',
+        isDismissible: true,
+        duration: const Duration(seconds: 5),
+        backgroundColor: Colors.red[200],
+        colorText: Colors.black,
+        snackPosition: getx.SnackPosition.bottom,
+      );
+    }
+    return NsgLoginResponse(isError: true, errorCode: 500);
+  }
+
+  Future<NsgLoginResponse> verifyGoogle() async {
+    var login = NsgLoginModel();
+    login.code = socialLoginResponse.code;
+    login.deviceId = socialLoginResponse.deviceId;
+    login.state = socialLoginResponse.state;
+
+    try {
+      var response = await (baseRequest(
+        function: 'VerifyGoogle',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/PhoneLoginVerifyGoogle',
+        method: 'POST',
+        params: login.toJson(),
+      ));
+
+      var loginResponse = NsgLoginResponse.fromJson(response);
+      if (loginResponse.errorCode == 0) {
+        token = loginResponse.token;
+        isAnonymous = loginResponse.isAnonymous;
+      }
+      if (!isAnonymous) {
+        saveCurrentServerToken();
       }
 
       return loginResponse;

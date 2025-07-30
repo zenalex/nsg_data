@@ -7,6 +7,9 @@ class NsgLoginModel {
   NsgLoginType? loginType;
   bool register = false;
   String firebaseToken = '';
+  String? code;
+  String? state;
+  String? deviceId;
 
   Map<String, dynamic> toJson() {
     String loginTypeString = '';
@@ -18,6 +21,9 @@ class NsgLoginModel {
       'loginType': loginTypeString,
       'register': register,
       'newPassword': newPassword,
+      'code': code,
+      'state': state,
+      'deviceId': deviceId,
     };
   }
 }
