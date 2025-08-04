@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 ///Интерфейс объекта реализующего связь между NsgDataItem и строками Excel таблицы
+///При инициализации заполнится значениями из строки `row` листа `sheet`
 abstract class NsgExcelImport<T extends NsgDataItem> {
   NsgExcelImport(this.sheet, this.row) {
     fillValues();
@@ -62,7 +63,9 @@ abstract class NsgExcelImport<T extends NsgDataItem> {
     }
   }
 
-  ///Заполнить объект значениями из строки `row`
+  ///Заполнить объект значениями из строки `row`, согласно `excelMap`.
+  ///Реализуют стандартную логику для записи значений в поля объекта "как есть".
+  ///Для сложной логики необходимо использовать `Map customParser`, для настройки парсинга уникальных полей по особой логике
   T fillValues() {
     T obj = getNewObject();
     obj.newRecord();
@@ -137,6 +140,7 @@ abstract class NsgExcelImport<T extends NsgDataItem> {
 }
 
 class NsgExcel {
+  ///Открывает диалог для выбора excel файла. После выбора возвращает объект Excel
   static Future<Excel> getExcel() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xlsx', 'xls']);
     if (result != null) {
@@ -150,6 +154,7 @@ class NsgExcel {
 }
 
 extension ParseExcel on Excel {
+  ///Реализует парсинг ВСЕЙ книги вызывает `parsing` для КАЖДОЙ строки
   void parseExcel(void Function(Sheet sheet, int row) parsing, {int firstDataRow = 1, List<int>? sheetNumbers}) {
     assert(firstDataRow > 0, "Значение первой строки должно быть положительным числом больше 0, сейчас: $firstDataRow");
     firstDataRow--;
@@ -171,10 +176,11 @@ extension ParseExcel on Excel {
 }
 
 extension ParseSheet on Sheet {
+  ///Реализует парсинг листа кники вызывает `parsing` для КАЖДОЙ строки
   void parseSheet(void Function(Sheet sheet, int row) parsing, {int firstDataRow = 1}) {
     assert(firstDataRow > 0, "Значение первой строки должно быть положительным числом больше 0, сейчас: $firstDataRow");
     firstDataRow--;
-    for (int row = firstDataRow; row < this.maxRows; row++) {
+    for (int row = firstDataRow; row < maxRows; row++) {
       parsing(this, row);
     }
   }
