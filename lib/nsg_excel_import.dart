@@ -154,7 +154,7 @@ class NsgExcel {
 }
 
 extension ParseExcel on Excel {
-  ///Реализует парсинг ВСЕЙ книги вызывает `parsing` для КАЖДОЙ строки
+  ///Реализует парсинг всех листов книги (если не заданы конкретные листы `sheetNumbers`) вызывает `parsing` для КАЖДОЙ строки.
   void parseExcel(void Function(Sheet sheet, int row) parsing, {int firstDataRow = 1, List<int>? sheetNumbers}) {
     assert(firstDataRow > 0, "Значение первой строки должно быть положительным числом больше 0, сейчас: $firstDataRow");
     firstDataRow--;
