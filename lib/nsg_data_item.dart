@@ -403,10 +403,6 @@ class NsgDataItem {
   ///В случае успеха, поля объектов будут заполнены полями объектов из БД
   Future postItems(List<NsgDataItem> itemsToPost, {bool showProgress = false}) async {
     if (itemsToPost.isEmpty) return;
-    assert(
-      itemsToPost.any((i) => i.runtimeType != runtimeType),
-      'Попытка сохранить данные неправильного типа. Все элементы массива должны быть типа: $runtimeType',
-    );
     var dataType = itemsToPost.first.runtimeType;
     if (storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: dataType);
