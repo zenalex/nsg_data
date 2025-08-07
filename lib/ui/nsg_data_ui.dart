@@ -11,7 +11,10 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   NsgSortingDirection? sortDirection;
 
   Future<List<T>> _loadItems(int top, int count, {NsgDataRequestParams? filter}) async {
-    var matches = NsgDataRequest<T>(dataItemType: T);
+    if (controllerMode.storageType == NsgDataStorageType.local) {
+      return [];
+    }
+    var matches = NsgDataRequest<T>(dataItemType: T, storageType: controllerMode.storageType);
     filter ??= getRequestFilter;
     filter.top = top;
     filter.count = count;

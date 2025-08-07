@@ -91,7 +91,7 @@ class NsgDataProvider {
   NsgSocialLoginResponse socialLoginResponse = NsgSocialLoginResponse();
 
   ///Обратный вызов верификации
-  void Function()? onVerifySocialLogin; 
+  void Function()? onVerifySocialLogin;
 
   NsgDataProvider({
     this.name,
@@ -109,7 +109,7 @@ class NsgDataProvider {
     this.newTableLogic = false,
     this.socialLoginUrl = '',
   }) {
-   // widgetParams = widgetLoginParams ?? () => NsgBaseController.defaultLoginParams!;
+    // widgetParams = widgetLoginParams ?? () => NsgBaseController.defaultLoginParams!;
   }
 
   ///Initialization. Load saved token if useNsgAuthorization == true
@@ -152,7 +152,8 @@ class NsgDataProvider {
       savedServerName = _prefs.getString(paramName);
     }
     //если нет сохраненного адреса или его нет в списке разрешенных серверов, используем сервер по умолчанию (currentServer)
-    if (savedServerName == null || !availableServers.contains(savedServerName)) {
+    if (savedServerName == null ||
+        !availableServers.contains(savedServerName)) {
       savedServerName = availableServers.currentServer;
       //Созххраняем новый адрес сервера
       await _prefs.setString(paramName, savedServerName);
@@ -172,7 +173,8 @@ class NsgDataProvider {
 
   ///Прочитать сохраненный токен для текущего сервера
   Future getCurrentServerToken() async {
-    var tokenName = '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
+    var tokenName =
+        '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
     var _prefs = await SharedPreferences.getInstance();
     token = '';
     if (_prefs.containsKey(tokenName)) {
@@ -185,7 +187,8 @@ class NsgDataProvider {
   Future saveCurrentServerToken() async {
     var _prefs = await SharedPreferences.getInstance();
     if (token == null || token!.isEmpty) return;
-    var tokenName = '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
+    var tokenName =
+        '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
     await _prefs.setString(tokenName, token!);
   }
 
@@ -240,7 +243,8 @@ class NsgDataProvider {
         (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
           final client = HttpClient();
 
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
           return client;
         };
       }
@@ -255,12 +259,24 @@ class NsgDataProvider {
       var method2 = 'POST';
       var dioCancelToken = cancelToken?.dioCancelToken;
       if (method2 == 'GET') {
-        response = await _dio.get(url!, queryParameters: params, cancelToken: dioCancelToken);
+        response = await _dio.get(
+          url!,
+          queryParameters: params,
+          cancelToken: dioCancelToken,
+        );
       } else if (method2 == 'POST') {
-        response = await _dio.post(url!, queryParameters: params, data: postData, cancelToken: dioCancelToken);
+        response = await _dio.post(
+          url!,
+          queryParameters: params,
+          data: postData,
+          cancelToken: dioCancelToken,
+        );
       }
       if (isDebug) {
-        counter.difStart(paramName: 'baseRequestList, function=$function. ', criticalDuration: 1500);
+        counter.difStart(
+          paramName: 'baseRequestList, function=$function. ',
+          criticalDuration: 1500,
+        );
       }
       return response.data;
     } on DioException catch (e) {
@@ -270,26 +286,50 @@ class NsgDataProvider {
       }
       if (e.response?.statusCode == 400) {
         //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
-        throw NsgApiException(NsgApiError(code: 400, message: e.response?.data, errorType: e.type));
+        throw NsgApiException(
+          NsgApiError(code: 400, message: e.response?.data, errorType: e.type),
+        );
       }
       if (e.response?.statusCode == 401) {
-        throw NsgApiException(NsgApiError(code: 401, message: 'Authorization error', errorType: e.type));
+        throw NsgApiException(
+          NsgApiError(
+            code: 401,
+            message: 'Authorization error',
+            errorType: e.type,
+          ),
+        );
       }
       if (e.response?.statusCode == 500) {
         var msg = 'ERROR 500';
-        if (e.response!.data is Map && (e.response!.data as Map).containsKey('message')) {
+        if (e.response!.data is Map &&
+            (e.response!.data as Map).containsKey('message')) {
           var msgParts = e.response!.data['message'].split('---> ');
           //TODO: в нулевом параметре функция, вызвавшая ишибку - надо где-то показывать
           msg = msgParts.last;
         }
-        throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));
-      } else if (e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
-        throw NsgApiException(NsgApiError(code: 2, message: 'Timeout while receiving or sending data', errorType: e.type));
+        throw NsgApiException(
+          NsgApiError(code: 500, message: msg, errorType: e.type),
+        );
+      } else if (e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
+        throw NsgApiException(
+          NsgApiError(
+            code: 2,
+            message: 'Timeout while receiving or sending data',
+            errorType: e.type,
+          ),
+        );
       } else {
         debugPrint('###');
         debugPrint('### Error: ${e.error}, type: ${e.type}');
         debugPrint('###');
-        throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
+        throw NsgApiException(
+          NsgApiError(
+            code: 1,
+            message: e.error?.toString() ?? 'Internet connection error',
+            errorType: e.type,
+          ),
+        );
       }
     } catch (e) {
       debugPrint(
@@ -305,6 +345,7 @@ class NsgDataProvider {
     final Map<String, dynamic>? params,
     final Map<String, String?>? headers,
     final String? url,
+    final Duration? timeout,
     //final int timeout = 15000,
     final String method = 'GET',
     bool autoRepeate = false,
@@ -324,7 +365,7 @@ class NsgDataProvider {
           params: params,
           headers: headers,
           url: url,
-          //timeout: timeout,
+          timeout: timeout,
           method: method,
         ),
         retryIf: retryIf,
@@ -337,7 +378,7 @@ class NsgDataProvider {
         params: params,
         headers: headers,
         url: url,
-        //timeout: timeout,
+        timeout: timeout,
         method: method,
       );
     }
@@ -348,7 +389,7 @@ class NsgDataProvider {
     final Map<String, dynamic>? params,
     final Map<String, String?>? headers,
     final String? url,
-    //final int timeout = 15000,
+    final Duration? timeout,
     final String method = 'GET',
   }) async {
     final _dio = Dio(
@@ -357,8 +398,9 @@ class NsgDataProvider {
         method: method,
         responseType: ResponseType.json,
         contentType: 'application/json',
+        connectTimeout: timeout,
         // connectTimeout: timeout,
-        // receiveTimeout: timeout,
+        receiveTimeout: timeout,
       ),
     );
 
@@ -370,7 +412,8 @@ class NsgDataProvider {
         (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
           final client = HttpClient();
 
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
           return client;
         };
       }
@@ -388,7 +431,13 @@ class NsgDataProvider {
       return curData;
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
+      throw NsgApiException(
+        NsgApiError(
+          code: e.response?.statusCode,
+          message: e.error?.toString() ?? 'Internet connection error',
+          errorType: e.type,
+        ),
+      );
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -422,7 +471,8 @@ class NsgDataProvider {
         (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
           final client = HttpClient();
 
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
           return client;
         };
       }
@@ -447,7 +497,13 @@ class NsgDataProvider {
       return Image.memory(response.data!);
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
+      throw NsgApiException(
+        NsgApiError(
+          code: 1,
+          message: e.error?.toString() ?? 'Internet connection error',
+          errorType: e.type,
+        ),
+      );
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -510,7 +566,9 @@ class NsgDataProvider {
         NsgBaseController.showErrorByString('Application update required');
         //TODO: сменить на диалог и запретить работу при наличии обязательного обновления
       } else if (checkResult == 1) {
-        NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
+        NsgBaseController.showErrorByString(
+          'A newer version is available. It is recommended to update the application',
+        );
       }
       if (token == '') {
         await _anonymousLogin(onRetry);
@@ -529,8 +587,9 @@ class NsgDataProvider {
           await _anonymousLogin(onRetry);
         }
       }
+      await setLocale(languageCode: languageCode);
     }
-    await setLocale(languageCode: languageCode);
+
     if (allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
       await openLoginPage().then((value) => controller.loadProviderData());
     } else {
@@ -563,7 +622,9 @@ class NsgDataProvider {
     if (securityCode == '') {
       login.register = true;
     }
-    login.securityCode = securityCode == '' ? defaultSecurityCode : securityCode;
+    login.securityCode = securityCode == ''
+        ? defaultSecurityCode
+        : securityCode;
     login.firebaseToken = firebaseToken;
     var s = login.toJson();
     Map<String, dynamic>? response;
@@ -588,7 +649,11 @@ class NsgDataProvider {
   ///Регистрация нового пользователя/восстановление пароля по e-mail или вход по паролю
   ///Опраделяется наличием или отсутствием securityCode
   ///В последнем случае, пользователю будет отправлен код верификации для дальнейшего использования в phoneLogin
-  Future<NsgLoginResponse> phoneLoginPassword({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
+  Future<NsgLoginResponse> phoneLoginPassword({
+    required String phoneNumber,
+    required String securityCode,
+    NsgLoginType? loginType,
+  }) async {
     this.phoneNumber = phoneNumber;
     var login = NsgLoginModel();
     login.phoneNumber = phoneNumber;
@@ -602,7 +667,9 @@ class NsgDataProvider {
     //Если securityCode не задан, заполняем его специальной фразой.
     //По всей видимости, для проверки ее на стороне сервера
     //Скорее всего, смысла в этом нет, оставлено для совместимости
-    login.securityCode = securityCode == '' ? defaultSecurityCode : securityCode;
+    login.securityCode = securityCode == ''
+        ? defaultSecurityCode
+        : securityCode;
     var s = login.toJson();
 
     var response = await (baseRequest(
@@ -630,7 +697,12 @@ class NsgDataProvider {
   ///phoneNumber - телефон или e-mail пользователя, на который был оправлен проверочный код
   ///(запрошенному ранее, например, функцией phoneLoginPassword)
   ///Параметр register опредлеляет просто вход по телефону/почте (false) или установку нового пароля пользователя (true)
-  Future<NsgLoginResponse> phoneLogin({required String phoneNumber, required String securityCode, bool? register, String? newPassword}) async {
+  Future<NsgLoginResponse> phoneLogin({
+    required String phoneNumber,
+    required String securityCode,
+    bool? register,
+    String? newPassword,
+  }) async {
     this.phoneNumber = phoneNumber;
     var login = NsgLoginModel();
     login.phoneNumber = phoneNumber;
@@ -827,7 +899,12 @@ class NsgDataProvider {
 
   Future<bool> logout(NsgBaseController controller) async {
     try {
-      await baseRequest(function: 'Logout', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/Logout', method: 'GET');
+      await baseRequest(
+        function: 'Logout',
+        headers: getAuthorizationHeader(),
+        url: '$serverUri/$authorizationApi/Logout',
+        method: 'GET',
+      );
     } catch (ex) {
       debugPrint('ERROR logout: ${ex.toString()}');
     }
@@ -850,7 +927,9 @@ class NsgDataProvider {
     token = '';
   }
 
-  Future<bool> _anonymousLogin(FutureOr<void> Function(Exception)? onRetry) async {
+  Future<bool> _anonymousLogin(
+    FutureOr<void> Function(Exception)? onRetry,
+  ) async {
     var response = await (baseRequest(
       function: 'AnonymousLogin',
       url: '$serverUri/$authorizationApi/AnonymousLogin',
@@ -950,7 +1029,10 @@ class NsgDataProvider {
   }
 
   ///Передает локаль на сервер для получения всех строковых значений в локали пользователя
-  Future<int> setLocale({required String languageCode, FutureOr<void> Function(Exception)? onRetry}) async {
+  Future<int> setLocale({
+    required String languageCode,
+    FutureOr<void> Function(Exception)? onRetry,
+  }) async {
     var params = <String, dynamic>{};
     params['locale'] = languageCode;
     try {
