@@ -84,15 +84,6 @@ class NsgDataProvider {
 
   bool newTableLogic;
 
-  ///Ссылка на авторизацию через соцсеть
-  String socialLoginUrl;
-
-  ///Ответ, содержащий данные для верификации
-  NsgSocialLoginResponse socialLoginResponse = NsgSocialLoginResponse();
-
-  ///Обратный вызов верификации
-  void Function()? onVerifySocialLogin;
-
   NsgDataProvider({
     this.name,
     required this.applicationName,
@@ -107,7 +98,6 @@ class NsgDataProvider {
     required this.availableServers,
     this.languageCode = 'ru',
     this.newTableLogic = false,
-    this.socialLoginUrl = '',
   }) {
     // widgetParams = widgetLoginParams ?? () => NsgBaseController.defaultLoginParams!;
   }
@@ -782,11 +772,11 @@ class NsgDataProvider {
     return NsgLoginResponse(isError: true, errorCode: 500);
   }
 
-  Future<NsgLoginResponse> verifyVK() async {
+  Future<NsgLoginResponse> verifyVK(NsgSocialLoginResponse response) async {
     var login = NsgLoginModel();
-    login.code = socialLoginResponse.code;
-    login.deviceId = socialLoginResponse.deviceId;
-    login.state = socialLoginResponse.state;
+    login.code = response.code;
+    login.deviceId = response.deviceId;
+    login.state = response.state;
 
     try {
       var response = await (baseRequest(
@@ -858,11 +848,11 @@ class NsgDataProvider {
     return NsgLoginResponse(isError: true, errorCode: 500);
   }
 
-  Future<NsgLoginResponse> verifyGoogle() async {
+  Future<NsgLoginResponse> verifyGoogle(NsgSocialLoginResponse response) async {
     var login = NsgLoginModel();
-    login.code = socialLoginResponse.code;
-    login.deviceId = socialLoginResponse.deviceId;
-    login.state = socialLoginResponse.state;
+    login.code = response.code;
+    login.deviceId = response.deviceId;
+    login.state = response.state;
 
     try {
       var response = await (baseRequest(
