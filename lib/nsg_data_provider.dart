@@ -753,7 +753,8 @@ class NsgDataProvider {
         token = loginResponse.token;
         isAnonymous = loginResponse.isAnonymous;
       }
-      if (!isAnonymous && saveToken) {
+      // if (!isAnonymous && saveToken) {
+      if (!isAnonymous) {
         saveCurrentServerToken();
       }
 
@@ -793,7 +794,6 @@ class NsgDataProvider {
         isAnonymous = loginResponse.isAnonymous;
       }
       if (!isAnonymous) {
-        print('Token saved!');
         saveCurrentServerToken();
       }
 
@@ -829,7 +829,8 @@ class NsgDataProvider {
         token = loginResponse.token;
         isAnonymous = loginResponse.isAnonymous;
       }
-      if (!isAnonymous && saveToken) {
+      // if (!isAnonymous && saveToken) {
+      if (!isAnonymous) {
         saveCurrentServerToken();
       }
 
