@@ -173,6 +173,9 @@ class NsgDataItem {
   ///Список дополнительных параметров
   NsgParamList get paramList => NsgDataClient.client.getParamList(runtimeType);
 
+  ///Список id предопределенных объектов
+  List<String> get predefinedList => NsgDataClient.client.getPredefinedList(runtimeType);
+
   ///Значения полей объекта
   ///Так как поля обшие, значения храняться в отдельном объекте для экономии памяти
   ///Хранятся только значения, отличные от значений по умолчанию
@@ -189,6 +192,15 @@ class NsgDataItem {
       primaryKeyField = name;
     }
     if (presentation != null) field.presentation = presentation;
+  }
+
+  ///Добавление предопределенного объекта
+  ///Вызывается при инициализации
+  void addPredefined(NsgDataItem item) {
+    assert(item.runtimeType == runtimeType);
+    var id = item.id;
+    assert(!predefinedList.contains(id));
+    predefinedList.add(id);
   }
 
   ///Получить поле объекта по его имени

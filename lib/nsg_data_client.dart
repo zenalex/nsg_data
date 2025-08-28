@@ -10,6 +10,7 @@ class NsgDataClient {
   final _registeredItems = <String, NsgDataItem>{};
   final _registeredServerNames = <String, String>{};
   final _fieldList = <String, NsgFieldList>{};
+  final _predefinedList = <String, List<String>>{};
   final _paramList = <String, NsgParamList>{};
   final _itemList = <String, NsgItemList>{};
 
@@ -21,6 +22,7 @@ class NsgDataClient {
     _registeredItems[item.runtimeType.toString()] = item;
     _registeredServerNames[item.typeName] = item.runtimeType.toString();
     _fieldList[item.runtimeType.toString()] = NsgFieldList();
+    _predefinedList[item.runtimeType.toString()] = <String>[];
     item.initialize();
   }
 
@@ -50,6 +52,13 @@ class NsgDataClient {
       return _fieldList[itemType.toString()]!;
     }
     throw ArgumentError('getFieldList: $itemType not found');
+  }
+
+  List<String> getPredefinedList(Type itemType) {
+    if (_registeredItems.containsKey(itemType.toString())) {
+      return _predefinedList[itemType.toString()]!;
+    }
+    throw ArgumentError('getPredefinedList: $itemType not found');
   }
 
   bool isRegistered(Type type) {

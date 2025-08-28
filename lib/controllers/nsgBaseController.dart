@@ -1087,6 +1087,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   Future loadProviderData() async {}
 
   List<String> get objectFieldsNames => NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
+  List<String> get predefinedIds => NsgDataClient.client.getPredefinedList(dataType);
 
   ///Поставить в очередь на сохранение, чтобы избезать параллельного сохранения
   ///Уменьшив таким образом нагрузку на сервер и избежать коллизий
