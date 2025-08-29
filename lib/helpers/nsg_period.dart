@@ -106,7 +106,7 @@ class NsgPeriod {
         return NsgDateFormat.dateFormat(beginDate, format: 'yyyy г.', locale: locale);
       case NsgPeriodType.quarter:
         //TODO: добавить локализацию
-        return NsgDateFormat.dateFormat(beginDate, format: getQuarter(beginDate).toString() + ' квартал yyyy г.', locale: locale);
+        return NsgDateFormat.dateFormat(beginDate, format: '${getQuarter(beginDate)} квартал yyyy г.', locale: locale);
       case NsgPeriodType.month:
         return NsgDateFormat.dateFormat(beginDate, format: 'MMM yyyy г.', locale: locale);
       case NsgPeriodType.week:

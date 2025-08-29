@@ -5,7 +5,7 @@ import 'package:jiffy/jiffy.dart';
 import '../nsg_data.dart';
 
 class NsgDataDateField extends NsgDataField {
-  NsgDataDateField(String name, {this.useDate = true, this.useTime = true}) : super(name);
+  NsgDataDateField(super.name, {this.useDate = true, this.useTime = true});
   @override
   dynamic get defaultValue => DateTime(1);
 
@@ -33,7 +33,7 @@ class NsgDataDateField extends NsgDataField {
         if (value.endsWith('Z') || value.endsWith('z')) {
           fieldValues.fields[name] = DateTime.parse(value);
         } else {
-          fieldValues.fields[name] = DateTime.parse(value + 'Z');
+          fieldValues.fields[name] = DateTime.parse('${value}Z');
         }
       }
     } else {
@@ -53,7 +53,7 @@ class NsgDataDateField extends NsgDataField {
     return valueA.isAfter(valueB)
         ? 1
         : valueB.isAfter(valueA)
-            ? -1
-            : 0;
+        ? -1
+        : 0;
   }
 }

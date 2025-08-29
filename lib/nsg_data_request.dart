@@ -80,20 +80,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (autoRepeate) {
         final r = RetryOptions(maxAttempts: autoRepeateCount, maxDelay: const Duration(seconds: 15));
         return await r.retry(
-            () => _requestItems(
-                filter: filter,
-                autoAuthorize: autoAuthorize,
-                tag: tag,
-                loadReference: loadReference,
-                function: function,
-                method: method,
-                postData: postData,
-                externalCancelToken: cancelToken),
-            retryIf: _retryIfInternal,
-            onRetry: userOnRetry);
-        // onRetry: (error) => _updateStatusError(error.toString()));
-      } else {
-        return await _requestItems(
+          () => _requestItems(
             filter: filter,
             autoAuthorize: autoAuthorize,
             tag: tag,
@@ -101,7 +88,23 @@ class NsgDataRequest<T extends NsgDataItem> {
             function: function,
             method: method,
             postData: postData,
-            externalCancelToken: cancelToken);
+            externalCancelToken: cancelToken,
+          ),
+          retryIf: _retryIfInternal,
+          onRetry: userOnRetry,
+        );
+        // onRetry: (error) => _updateStatusError(error.toString()));
+      } else {
+        return await _requestItems(
+          filter: filter,
+          autoAuthorize: autoAuthorize,
+          tag: tag,
+          loadReference: loadReference,
+          function: function,
+          method: method,
+          postData: postData,
+          externalCancelToken: cancelToken,
+        );
       }
     } else {
       return await _requestItemsFromDb(filter: filter, tag: tag, loadReference: loadReference);
@@ -154,13 +157,14 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
     var url = function;
     var response = await dataItem.remoteProvider.baseRequestList(
-        function: url,
-        headers: dataItem.remoteProvider.getAuthorizationHeader(),
-        url: url,
-        method: method,
-        params: filterMap,
-        postData: postData,
-        cancelToken: cancelToken);
+      function: url,
+      headers: dataItem.remoteProvider.getAuthorizationHeader(),
+      url: url,
+      method: method,
+      params: filterMap,
+      postData: postData,
+      cancelToken: cancelToken,
+    );
     items = <T>[];
     try {
       if (response == '' || response == null) {
@@ -310,7 +314,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (field is NsgDataReferenceListField) {
         var tableRefereces = addAllReferences(field.referentElementType);
         for (var item in tableRefereces) {
-          loadReference.add(field.name + '.' + item);
+          loadReference.add('${field.name}.$item');
         }
       }
     }
@@ -335,42 +339,50 @@ class NsgDataRequest<T extends NsgDataItem> {
   ///retryIf - функция, вызываемая перед каждым повторным вызовом. Если вернет false, повторы будут остановлены
   ///onRetry - функция, вызываемая при каждом повторе запроса
   ///requestRegime - режим запроса. Позволяет определить для чего загружаются данные при перекрытии логики данного метода
-  Future<T> requestItem(
-      {NsgDataRequestParams? filter,
-      bool autoAuthorize = true,
-      String tag = '',
-      List<String>? loadReference,
-      String function = '',
-      String method = 'GET',
-      bool addCount = true,
-      dynamic postData,
-      bool autoRepeate = false,
-      int autoRepeateCount = 1000,
-      FutureOr<bool> Function(Exception)? retryIf,
-      FutureOr<void> Function(Exception)? onRetry,
-      NsgCancelToken? cancelToken}) async {
+  Future<T> requestItem({
+    NsgDataRequestParams? filter,
+    bool autoAuthorize = true,
+    String tag = '',
+    List<String>? loadReference,
+    String function = '',
+    String method = 'GET',
+    bool addCount = true,
+    dynamic postData,
+    bool autoRepeate = false,
+    int autoRepeateCount = 1000,
+    FutureOr<bool> Function(Exception)? retryIf,
+    FutureOr<void> Function(Exception)? onRetry,
+    NsgCancelToken? cancelToken,
+  }) async {
     NsgDataRequestParams? newFilter;
     if (addCount) {
       if (filter == null) {
         newFilter = NsgDataRequestParams(count: 1);
       } else {
         newFilter = NsgDataRequestParams(
-            top: filter.top, count: 1, params: filter.params, sorting: filter.sorting, referenceList: filter.referenceList, compare: filter.compare);
+          top: filter.top,
+          count: 1,
+          params: filter.params,
+          sorting: filter.sorting,
+          referenceList: filter.referenceList,
+          compare: filter.compare,
+        );
       }
     }
     var data = await requestItems(
-        filter: newFilter,
-        autoAuthorize: autoAuthorize,
-        tag: tag,
-        loadReference: loadReference,
-        function: function,
-        method: method,
-        postData: postData,
-        autoRepeate: autoRepeate,
-        autoRepeateCount: autoRepeateCount,
-        userRetryIf: _retryIfInternal,
-        userOnRetry: onRetry,
-        cancelToken: cancelToken);
+      filter: newFilter,
+      autoAuthorize: autoAuthorize,
+      tag: tag,
+      loadReference: loadReference,
+      function: function,
+      method: method,
+      postData: postData,
+      autoRepeate: autoRepeate,
+      autoRepeateCount: autoRepeateCount,
+      userRetryIf: _retryIfInternal,
+      userOnRetry: onRetry,
+      cancelToken: cancelToken,
+    );
     if (data.isEmpty) {
       return NsgDataClient.client.getNewObject(dataItemType) as T;
     }
@@ -407,9 +419,10 @@ class NsgDataRequest<T extends NsgDataItem> {
             var request = NsgDataRequest(dataItemType: field.referentElementType);
             var cmp = NsgCompare();
             cmp.add(
-                name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
-                value: refList,
-                comparisonOperator: NsgComparisonOperator.inList);
+              name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
+              value: refList,
+              comparisonOperator: NsgComparisonOperator.inList,
+            );
             var filter = NsgDataRequestParams(compare: cmp);
             //print('field.referentElementType ${field.referentElementType}');
             if (storageType == NsgDataStorageType.server) {

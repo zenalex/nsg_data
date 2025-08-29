@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../nsg_data.dart';
 
 class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseReferenceField {
-  NsgDataReferenceListField(String name) : super(name);
+  NsgDataReferenceListField(super.name);
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {

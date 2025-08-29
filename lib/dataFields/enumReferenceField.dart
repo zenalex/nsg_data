@@ -3,7 +3,7 @@
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataEnumReferenceField<T extends NsgEnum> extends NsgDataBaseReferenceField {
-  NsgDataEnumReferenceField(String name) : super(name);
+  NsgDataEnumReferenceField(super.name);
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {

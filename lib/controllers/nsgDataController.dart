@@ -34,7 +34,7 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     super.autoSelectFirstItem,
     super.dependsOnControllers,
     super.controllerMode,
-  }) : super(dataType: T, dataBinding: dataBindign) {}
+  }) : super(dataType: T, dataBinding: dataBindign);
 
   ///Сделать текущим предыдущий элемент
   void gotoPrevItem() {

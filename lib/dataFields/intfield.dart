@@ -1,7 +1,7 @@
 import '../nsg_data.dart';
 
 class NsgDataIntField extends NsgDataField {
-  NsgDataIntField(String name) : super(name);
+  NsgDataIntField(super.name);
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {

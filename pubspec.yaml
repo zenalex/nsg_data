@@ -2,7 +2,7 @@ name: nsg_data
 description: Data object model and data exchange with C# server
 version: 1.0.0
 homepage: https://github.com/zenalex/nsg_data
-#publish_to: "none"
+publish_to: "none"
 
 environment:
   sdk: ">=3.8.1 <4.0.0"
@@ -38,6 +38,7 @@ dependencies:
     git: https://github.com/zenalex/excel.git
   #Выбор файлов на устройстве
   file_picker: ^8.1.4
+  web: ^1.1.1
 
   # appmetrica_plugin: ^1.1.0
 

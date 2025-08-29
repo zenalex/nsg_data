@@ -46,7 +46,7 @@ class NsgBarcodeListener extends StatefulWidget {
   /// that end with line feed character and call callback function with result.
   /// Keep in mind this widget will listen for events even when not visible.
   const NsgBarcodeListener({
-    Key? key,
+    super.key,
 
     /// Child widget to be displayed.
     required this.child,
@@ -63,9 +63,8 @@ class NsgBarcodeListener extends StatefulWidget {
     /// previous keys will be ignored.
     Duration bufferDuration = hundredMs,
     this.caseSensitive = false,
-  })  : _onBarcodeScanned = onBarcodeScanned,
-        _bufferDuration = bufferDuration,
-        super(key: key);
+  }) : _onBarcodeScanned = onBarcodeScanned,
+       _bufferDuration = bufferDuration;
 
   @override
   // ignore: no_logic_in_create_state

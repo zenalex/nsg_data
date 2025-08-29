@@ -1,3 +1,5 @@
+// ignore_for_file: camel_case_types
+
 import 'dart:async';
 import 'package:nsg_data/nsg_data.dart';
 
@@ -14,10 +16,7 @@ class NsgDataSyncManager_Disabled<T extends NsgDataItem> extends NsgDataControll
   bool get isLocalEnabled => localController != null;
   bool get isServerEnabled => serverController != null;
 
-  NsgDataSyncManager_Disabled({
-    required this.localController,
-    required this.serverController,
-  });
+  NsgDataSyncManager_Disabled({required this.localController, required this.serverController});
 
   /// Запуск синхронизации с задержкой (debounce) и защитой от параллельных вызовов
   Future<void> sync({Duration debounce = const Duration(milliseconds: 300)}) async {

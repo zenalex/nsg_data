@@ -1,7 +1,7 @@
 import 'package:nsg_data/nsg_data.dart';
 
 class NsgDataUntypedReferenceField extends NsgDataReferenceField {
-  NsgDataUntypedReferenceField(String name, {this.defaultReferentType = NsgDataItem}) : super(name);
+  NsgDataUntypedReferenceField(super.name, {this.defaultReferentType = NsgDataItem});
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {

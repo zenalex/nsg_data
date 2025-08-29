@@ -3,7 +3,7 @@ import 'package:nsg_data/dataFields/datafield.dart';
 import '../nsg_data_item.dart';
 
 class NsgDataBoolField extends NsgDataField {
-  NsgDataBoolField(String name) : super(name);
+  NsgDataBoolField(super.name);
 
   @override
   dynamic convertJsonValue(dynamic jsonValue) {
@@ -20,7 +20,7 @@ class NsgDataBoolField extends NsgDataField {
     return valueA == valueB
         ? 0
         : valueA && !valueB
-            ? 1
-            : -1;
+        ? 1
+        : -1;
   }
 }

@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart' as getx;
 import 'package:nsg_data/authorize/nsg_social_login_response.dart';
 import 'package:nsg_data/nsg_data.dart';
+import 'package:nsg_data/cross_tab_auth.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsg_login_model.dart';
@@ -84,6 +85,14 @@ class NsgDataProvider {
 
   bool newTableLogic;
 
+  // Web-only: cross-tab token sync (stubbed on non-web)
+  CrossTabAuth? _crossAuth;
+
+  // Token change notifications for host apps
+  final _tokenController = StreamController<String?>.broadcast();
+  Stream<String?> get tokenChanges => _tokenController.stream;
+  void Function(String?)? onTokenChanged;
+
   NsgDataProvider({
     this.name,
     required this.applicationName,
@@ -98,8 +107,13 @@ class NsgDataProvider {
     required this.availableServers,
     this.languageCode = 'ru',
     this.newTableLogic = false,
+    this.onTokenChanged,
   }) {
     // widgetParams = widgetLoginParams ?? () => NsgBaseController.defaultLoginParams!;
+  }
+
+  void dispose() {
+    _tokenController.close();
   }
 
   ///Initialization. Load saved token if useNsgAuthorization == true
@@ -109,9 +123,14 @@ class NsgDataProvider {
     if (useNsgAuthorization) {
       await getCurrentServerToken();
       if (token == null || token!.isEmpty) {
-        var _prefs = await SharedPreferences.getInstance();
-        if (_prefs.containsKey(applicationName)) {
-          token = _prefs.getString(applicationName);
+        var prefs = await SharedPreferences.getInstance();
+        if (prefs.containsKey(applicationName)) {
+          token = prefs.getString(applicationName);
+        }
+        // If token still missing on web, try to get it from peers
+        if (kIsWeb && (token == null || token!.isEmpty)) {
+          await _ensureCrossAuthInitialized();
+          _crossAuth?.requestTokenFromPeers();
         }
       }
       //Почему-то условие стояло обратное
@@ -135,18 +154,17 @@ class NsgDataProvider {
   ///Проверяет, если на устройстве есть сохраненный адрес и он находится в списке доступных серверов, устанавливает его текущим
   ///Иначе, не меняет текущий сервер и записывает его в качестве сохраненного
   Future loadServerAddress() async {
-    var _prefs = await SharedPreferences.getInstance();
+    var prefs = await SharedPreferences.getInstance();
 
     String? savedServerName;
-    if (_prefs.containsKey(paramName)) {
-      savedServerName = _prefs.getString(paramName);
+    if (prefs.containsKey(paramName)) {
+      savedServerName = prefs.getString(paramName);
     }
     //если нет сохраненного адреса или его нет в списке разрешенных серверов, используем сервер по умолчанию (currentServer)
-    if (savedServerName == null ||
-        !availableServers.contains(savedServerName)) {
+    if (savedServerName == null || !availableServers.contains(savedServerName)) {
       savedServerName = availableServers.currentServer;
       //Созххраняем новый адрес сервера
-      await _prefs.setString(paramName, savedServerName);
+      await prefs.setString(paramName, savedServerName);
     } else {
       //Если есть сохраненный сервер и он в списке разрешенных, устанавливаем его в качестве текущего
       availableServers.currentServer = savedServerName;
@@ -156,38 +174,36 @@ class NsgDataProvider {
 
   ///Установитт новый адрес сервера и сохранить его в начтройках устройства
   Future saveServerAddress(String serverAddress) async {
-    var _prefs = await SharedPreferences.getInstance();
+    var prefs = await SharedPreferences.getInstance();
 
-    await _prefs.setString(paramName, serverAddress);
+    await prefs.setString(paramName, serverAddress);
   }
 
   ///Прочитать сохраненный токен для текущего сервера
   Future getCurrentServerToken() async {
-    var tokenName =
-        '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
-    var _prefs = await SharedPreferences.getInstance();
+    var tokenName = '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
+    var prefs = await SharedPreferences.getInstance();
     token = '';
-    if (_prefs.containsKey(tokenName)) {
-      token = _prefs.getString(tokenName);
+    if (prefs.containsKey(tokenName)) {
+      token = prefs.getString(tokenName);
       isAnonymous = token == null || token!.isEmpty;
     }
   }
 
   ///Сохранить токен для текущего сервера
   Future saveCurrentServerToken() async {
-    var _prefs = await SharedPreferences.getInstance();
+    var prefs = await SharedPreferences.getInstance();
     if (token == null || token!.isEmpty) return;
-    var tokenName =
-        '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
-    await _prefs.setString(tokenName, token!);
+    var tokenName = '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
+    await prefs.setString(tokenName, token!);
   }
 
   ///Удалить токен для текущего сервера (например, при logout)
   Future resetCurrentServerToken() async {
-    var _prefs = await SharedPreferences.getInstance();
+    var prefs = await SharedPreferences.getInstance();
     if (token == null || token!.isEmpty) return;
     var tokenName = '${paramName}_${availableServers.currentServer}';
-    await _prefs.remove(tokenName);
+    await prefs.remove(tokenName);
   }
 
   ///Установить адрес сервера по имени (admin/test)
@@ -208,13 +224,13 @@ class NsgDataProvider {
     final dynamic postData,
     final Map<String, String?>? headers,
     final String? url,
-    //TODO: сделать настраиваемым параметром
+    //сделать настраиваемым параметром
     //final int timeout = timeout,
     final String method = 'GET',
     final NsgCancelToken? cancelToken,
     FutureOr<void> Function(Exception)? onRetry,
   }) async {
-    final _dio = Dio(
+    final dio = Dio(
       BaseOptions(
         headers: headers,
         method: method,
@@ -230,11 +246,10 @@ class NsgDataProvider {
 
     try {
       if (!kIsWeb) {
-        (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+        (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
           final client = HttpClient();
 
-          client.badCertificateCallback =
-              (X509Certificate cert, String host, int port) => true;
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
           return client;
         };
       }
@@ -245,28 +260,16 @@ class NsgDataProvider {
         debugPrint('baseRequestList, function=$function');
       }
 
-      //TODO: сделать генерацию метода запроса GET/POST
+      //сделать генерацию метода запроса GET/POST
       var method2 = 'POST';
       var dioCancelToken = cancelToken?.dioCancelToken;
       if (method2 == 'GET') {
-        response = await _dio.get(
-          url!,
-          queryParameters: params,
-          cancelToken: dioCancelToken,
-        );
+        response = await dio.get(url!, queryParameters: params, cancelToken: dioCancelToken);
       } else if (method2 == 'POST') {
-        response = await _dio.post(
-          url!,
-          queryParameters: params,
-          data: postData,
-          cancelToken: dioCancelToken,
-        );
+        response = await dio.post(url!, queryParameters: params, data: postData, cancelToken: dioCancelToken);
       }
       if (isDebug) {
-        counter.difStart(
-          paramName: 'baseRequestList, function=$function. ',
-          criticalDuration: 1500,
-        );
+        counter.difStart(paramName: 'baseRequestList, function=$function. ', criticalDuration: 1500);
       }
       return response.data;
     } on DioException catch (e) {
@@ -276,50 +279,26 @@ class NsgDataProvider {
       }
       if (e.response?.statusCode == 400) {
         //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
-        throw NsgApiException(
-          NsgApiError(code: 400, message: e.response?.data, errorType: e.type),
-        );
+        throw NsgApiException(NsgApiError(code: 400, message: e.response?.data, errorType: e.type));
       }
       if (e.response?.statusCode == 401) {
-        throw NsgApiException(
-          NsgApiError(
-            code: 401,
-            message: 'Authorization error',
-            errorType: e.type,
-          ),
-        );
+        throw NsgApiException(NsgApiError(code: 401, message: 'Authorization error', errorType: e.type));
       }
       if (e.response?.statusCode == 500) {
         var msg = 'ERROR 500';
-        if (e.response!.data is Map &&
-            (e.response!.data as Map).containsKey('message')) {
+        if (e.response!.data is Map && (e.response!.data as Map).containsKey('message')) {
           var msgParts = e.response!.data['message'].split('---> ');
           //TODO: в нулевом параметре функция, вызвавшая ишибку - надо где-то показывать
           msg = msgParts.last;
         }
-        throw NsgApiException(
-          NsgApiError(code: 500, message: msg, errorType: e.type),
-        );
-      } else if (e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.sendTimeout) {
-        throw NsgApiException(
-          NsgApiError(
-            code: 2,
-            message: 'Timeout while receiving or sending data',
-            errorType: e.type,
-          ),
-        );
+        throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));
+      } else if (e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
+        throw NsgApiException(NsgApiError(code: 2, message: 'Timeout while receiving or sending data', errorType: e.type));
       } else {
         debugPrint('###');
         debugPrint('### Error: ${e.error}, type: ${e.type}');
         debugPrint('###');
-        throw NsgApiException(
-          NsgApiError(
-            code: 1,
-            message: e.error?.toString() ?? 'Internet connection error',
-            errorType: e.type,
-          ),
-        );
+        throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
       }
     } catch (e) {
       debugPrint(
@@ -350,27 +329,13 @@ class NsgDataProvider {
         maxDelay: Duration(seconds: maxRepeateDelay),
       );
       return await r.retry(
-        () => _baseRequest(
-          function: function,
-          params: params,
-          headers: headers,
-          url: url,
-          timeout: timeout,
-          method: method,
-        ),
+        () => _baseRequest(function: function, params: params, headers: headers, url: url, timeout: timeout, method: method),
         retryIf: retryIf,
         onRetry: onRetry,
       );
       // onRetry: (error) => _updateStatusError(error.toString()));
     } else {
-      return await _baseRequest(
-        function: function,
-        params: params,
-        headers: headers,
-        url: url,
-        timeout: timeout,
-        method: method,
-      );
+      return await _baseRequest(function: function, params: params, headers: headers, url: url, timeout: timeout, method: method);
     }
   }
 
@@ -382,7 +347,7 @@ class NsgDataProvider {
     final Duration? timeout,
     final String method = 'GET',
   }) async {
-    final _dio = Dio(
+    final dio = Dio(
       BaseOptions(
         headers: headers,
         method: method,
@@ -399,19 +364,18 @@ class NsgDataProvider {
     try {
       //BrowserHttpClientAdapter
       if (!kIsWeb) {
-        (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+        (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
           final client = HttpClient();
 
-          client.badCertificateCallback =
-              (X509Certificate cert, String host, int port) => true;
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
           return client;
         };
       }
-      print('BSASE REQUEST: $url, url: $url!, params: $params');
+      debugPrint('BASE REQUEST: $url, url: $url!, params: $params');
       if (method == 'GET') {
-        response = await _dio.get(url!, queryParameters: params);
+        response = await dio.get(url!, queryParameters: params);
       } else if (method == 'POST') {
-        response = await _dio.post(url!, data: params);
+        response = await dio.post(url!, data: params);
       }
       // if (isDebug) {
       //   print('HTTP STATUS: ${response.statusCode}');
@@ -421,13 +385,7 @@ class NsgDataProvider {
       return curData;
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(
-        NsgApiError(
-          code: e.response?.statusCode,
-          message: e.error?.toString() ?? 'Internet connection error',
-          errorType: e.type,
-        ),
-      );
+      throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -443,7 +401,7 @@ class NsgDataProvider {
     final bool debug = false,
     final String method = 'GET',
   }) async {
-    final _dio = Dio(
+    final dio = Dio(
       BaseOptions(
         headers: headers,
         method: method,
@@ -458,22 +416,21 @@ class NsgDataProvider {
 
     try {
       if (!kIsWeb) {
-        (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+        (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
           final client = HttpClient();
 
-          client.badCertificateCallback =
-              (X509Certificate cert, String host, int port) => true;
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
           return client;
         };
       }
       if (method == 'GET') {
-        response = await _dio.get<Uint8List>(
+        response = await dio.get<Uint8List>(
           url!,
           queryParameters: params,
           options: Options(responseType: ResponseType.bytes),
         );
       } else if (method == 'POST') {
-        response = await _dio.post<Uint8List>(
+        response = await dio.post<Uint8List>(
           url!,
           data: params,
           options: Options(responseType: ResponseType.bytes),
@@ -487,13 +444,7 @@ class NsgDataProvider {
       return Image.memory(response.data!);
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(
-        NsgApiError(
-          code: 1,
-          message: e.error?.toString() ?? 'Internet connection error',
-          errorType: e.type,
-        ),
-      );
+      throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -551,14 +502,20 @@ class NsgDataProvider {
     var onRetry = controller.onRetry;
 
     if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
+      // Ensure cross-tab sync is ready (web) and we can respond if we have a token
+      if (kIsWeb) {
+        await _ensureCrossAuthInitialized();
+        // If we still have no token, ask neighbors again
+        if (token == null || token!.isEmpty) {
+          _crossAuth?.requestTokenFromPeers();
+        }
+      }
       var checkResult = await _checkVersion(onRetry);
       if (checkResult == 2) {
         NsgBaseController.showErrorByString('Application update required');
-        //TODO: сменить на диалог и запретить работу при наличии обязательного обновления
+        //сменить на диалог и запретить работу при наличии обязательного обновления
       } else if (checkResult == 1) {
-        NsgBaseController.showErrorByString(
-          'A newer version is available. It is recommended to update the application',
-        );
+        NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
       }
       if (token == '') {
         await _anonymousLogin(onRetry);
@@ -612,9 +569,7 @@ class NsgDataProvider {
     if (securityCode == '') {
       login.register = true;
     }
-    login.securityCode = securityCode == ''
-        ? defaultSecurityCode
-        : securityCode;
+    login.securityCode = securityCode == '' ? defaultSecurityCode : securityCode;
     login.firebaseToken = firebaseToken;
     var s = login.toJson();
     Map<String, dynamic>? response;
@@ -639,11 +594,7 @@ class NsgDataProvider {
   ///Регистрация нового пользователя/восстановление пароля по e-mail или вход по паролю
   ///Опраделяется наличием или отсутствием securityCode
   ///В последнем случае, пользователю будет отправлен код верификации для дальнейшего использования в phoneLogin
-  Future<NsgLoginResponse> phoneLoginPassword({
-    required String phoneNumber,
-    required String securityCode,
-    NsgLoginType? loginType,
-  }) async {
+  Future<NsgLoginResponse> phoneLoginPassword({required String phoneNumber, required String securityCode, NsgLoginType? loginType}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgLoginModel();
     login.phoneNumber = phoneNumber;
@@ -657,9 +608,7 @@ class NsgDataProvider {
     //Если securityCode не задан, заполняем его специальной фразой.
     //По всей видимости, для проверки ее на стороне сервера
     //Скорее всего, смысла в этом нет, оставлено для совместимости
-    login.securityCode = securityCode == ''
-        ? defaultSecurityCode
-        : securityCode;
+    login.securityCode = securityCode == '' ? defaultSecurityCode : securityCode;
     var s = login.toJson();
 
     var response = await (baseRequest(
@@ -679,6 +628,11 @@ class NsgDataProvider {
         // await _prefs.setString(applicationName, token!);
         await saveCurrentServerToken();
       }
+      // Share new token to other tabs
+      if (!isAnonymous && token != null && token!.isNotEmpty) {
+        _crossAuth?.publishToken(token!);
+      }
+      _notifyTokenChanged();
     }
     return loginResponse;
   }
@@ -687,12 +641,7 @@ class NsgDataProvider {
   ///phoneNumber - телефон или e-mail пользователя, на который был оправлен проверочный код
   ///(запрошенному ранее, например, функцией phoneLoginPassword)
   ///Параметр register опредлеляет просто вход по телефону/почте (false) или установку нового пароля пользователя (true)
-  Future<NsgLoginResponse> phoneLogin({
-    required String phoneNumber,
-    required String securityCode,
-    bool? register,
-    String? newPassword,
-  }) async {
+  Future<NsgLoginResponse> phoneLogin({required String phoneNumber, required String securityCode, bool? register, String? newPassword}) async {
     this.phoneNumber = phoneNumber;
     var login = NsgLoginModel();
     login.phoneNumber = phoneNumber;
@@ -720,6 +669,10 @@ class NsgDataProvider {
         // var _prefs = await SharedPreferences.getInstance();
         // await _prefs.setString(applicationName, token!);
       }
+      if (!isAnonymous && token != null && token!.isNotEmpty) {
+        _crossAuth?.publishToken(token!);
+      }
+      _notifyTokenChanged();
 
       return loginResponse;
     } catch (e) {
@@ -757,6 +710,10 @@ class NsgDataProvider {
       if (!isAnonymous) {
         saveCurrentServerToken();
       }
+      if (!isAnonymous && token != null && token!.isNotEmpty) {
+        _crossAuth?.publishToken(token!);
+      }
+      _notifyTokenChanged();
 
       return loginResponse;
     } catch (e) {
@@ -796,6 +753,10 @@ class NsgDataProvider {
       if (!isAnonymous) {
         saveCurrentServerToken();
       }
+      if (!isAnonymous && token != null && token!.isNotEmpty) {
+        _crossAuth?.publishToken(token!);
+      }
+      _notifyTokenChanged();
 
       return loginResponse;
     } catch (e) {
@@ -833,6 +794,10 @@ class NsgDataProvider {
       if (!isAnonymous) {
         saveCurrentServerToken();
       }
+      if (!isAnonymous && token != null && token!.isNotEmpty) {
+        _crossAuth?.publishToken(token!);
+      }
+      _notifyTokenChanged();
 
       return loginResponse;
     } catch (e) {
@@ -872,6 +837,9 @@ class NsgDataProvider {
       if (!isAnonymous) {
         saveCurrentServerToken();
       }
+      if (!isAnonymous && token != null && token!.isNotEmpty) {
+        _crossAuth?.publishToken(token!);
+      }
 
       return loginResponse;
     } catch (e) {
@@ -890,12 +858,7 @@ class NsgDataProvider {
 
   Future<bool> logout(NsgBaseController controller) async {
     try {
-      await baseRequest(
-        function: 'Logout',
-        headers: getAuthorizationHeader(),
-        url: '$serverUri/$authorizationApi/Logout',
-        method: 'GET',
-      );
+      await baseRequest(function: 'Logout', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/Logout', method: 'GET');
     } catch (ex) {
       debugPrint('ERROR logout: ${ex.toString()}');
     }
@@ -906,6 +869,9 @@ class NsgDataProvider {
       isAnonymous = true;
       token = '';
     }
+    // Tell other tabs to clear auth state
+    _crossAuth?.broadcastLogout();
+    _notifyTokenChanged();
     await _anonymousLogin(controller.onRetry);
     return true;
   }
@@ -916,11 +882,11 @@ class NsgDataProvider {
     // await _prefs.remove(applicationName);
     isAnonymous = true;
     token = '';
+    _crossAuth?.broadcastLogout();
+    _notifyTokenChanged();
   }
 
-  Future<bool> _anonymousLogin(
-    FutureOr<void> Function(Exception)? onRetry,
-  ) async {
+  Future<bool> _anonymousLogin(FutureOr<void> Function(Exception)? onRetry) async {
     var response = await (baseRequest(
       function: 'AnonymousLogin',
       url: '$serverUri/$authorizationApi/AnonymousLogin',
@@ -934,6 +900,7 @@ class NsgDataProvider {
     var loginResponse = NsgLoginResponse.fromJson(response);
     token = loginResponse.token;
     isAnonymous = loginResponse.isAnonymous;
+    _notifyTokenChanged();
     return true;
   }
 
@@ -956,6 +923,10 @@ class NsgDataProvider {
       if (!isAnonymous) {
         token = loginResponse.token;
         isAnonymous = loginResponse.isAnonymous;
+        if (token != null && token!.isNotEmpty) {
+          _crossAuth?.publishToken(token!);
+        }
+        _notifyTokenChanged();
       }
       return true;
     }
@@ -1020,10 +991,7 @@ class NsgDataProvider {
   }
 
   ///Передает локаль на сервер для получения всех строковых значений в локали пользователя
-  Future<int> setLocale({
-    required String languageCode,
-    FutureOr<void> Function(Exception)? onRetry,
-  }) async {
+  Future<int> setLocale({required String languageCode, FutureOr<void> Function(Exception)? onRetry}) async {
     var params = <String, dynamic>{};
     params['locale'] = languageCode;
     try {
@@ -1033,7 +1001,7 @@ class NsgDataProvider {
         url: '$serverUri/$authorizationApi/SetLocale',
         method: 'GET',
         params: params,
-        //FIXME: добавить реакцию на 404
+        //добавить реакцию на 404
         autoRepeate: false,
         autoRepeateCount: 1000,
         onRetry: onRetry,
@@ -1058,8 +1026,47 @@ class NsgDataProvider {
   Future openLoginPage() async {
     if (eventOpenLoginPage != null) {
       await eventOpenLoginPage!();
-    } else {
-      //TODO: действие открытия окна login по умолчанию
-    }
+    } else {}
+  }
+}
+
+extension _CrossTabAuthExt on NsgDataProvider {
+  Future<void> _ensureCrossAuthInitialized() async {
+    if (_crossAuth != null) return;
+    // Build a stable channel per app + server group to avoid cross-app leaks
+    final group = availableServers.groupNameByAddress(availableServers.currentServer);
+    final channel = 'nsg-auth:$group:$applicationName';
+    _crossAuth = CrossTabAuth(
+      channelName: channel,
+      scope: serverUri,
+      onTokenChanged: (tok) async {
+        // Adopt token from other tab
+        final got = (tok != null && tok.isNotEmpty);
+        if (got) {
+          token = tok;
+          isAnonymous = false;
+          if (saveToken) {
+            await saveCurrentServerToken();
+          }
+        } else {
+          token = '';
+          isAnonymous = true;
+        }
+      },
+      getCurrentToken: () {
+        if (!isAnonymous && token != null && token!.isNotEmpty) return token;
+        return null;
+      },
+    );
+    await _crossAuth!.init();
+  }
+
+  void _notifyTokenChanged() {
+    try {
+      _tokenController.add(token);
+    } catch (_) {}
+    try {
+      onTokenChanged?.call(token);
+    } catch (_) {}
   }
 }

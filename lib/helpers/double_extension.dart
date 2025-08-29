@@ -16,7 +16,7 @@ extension NsgDoubleExtension on double {
       formatter = NumberFormat("#,##0", "ru_RU");
     }
     if (showCurrencySymbol == true) {
-      result = formatter.format(this) + ' ' + currencySymbol;
+      result = '${formatter.format(this)} $currencySymbol';
     } else {
       result = formatter.format(this);
     }

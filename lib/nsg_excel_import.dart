@@ -70,7 +70,7 @@ abstract class NsgExcelImport<T extends NsgDataItem> {
     T obj = getNewObject();
     obj.newRecord();
     excelMap.forEach((fieldName, excelColumn) {
-      assert(obj.fieldList.fields.containsKey(fieldName), '!!! Не существует поля с именем: ' + fieldName + ' в объекте: ' + obj.runtimeType.toString());
+      assert(obj.fieldList.fields.containsKey(fieldName), '!!! Не существует поля с именем: $fieldName в объекте: ${obj.runtimeType}');
 
       Data? val = _getExcelValue(excelColumn);
       var fieldType = obj.getFieldValue(fieldName).runtimeType;

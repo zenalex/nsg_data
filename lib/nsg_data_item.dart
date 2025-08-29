@@ -17,10 +17,10 @@ class NsgDataItem {
   }
 
   ///Get API path for posting Items
-  String get apiPostItems => apiRequestItems + '/Post';
+  String get apiPostItems => '$apiRequestItems/Post';
 
   ///Get API path for delete Items
-  String get apiDeleteItems => apiRequestItems + '/Delete';
+  String get apiDeleteItems => '$apiRequestItems/Delete';
 
   ///Имя поля для фильтрации в контроллере по периоду
   ///Используется, например, в NsgListPage
@@ -59,6 +59,7 @@ class NsgDataItem {
 
   ///Текущее состояние жизненного цикла объекта (создан, помечен на удаление и т.п.)
   NsgDataItemDocState _docState = NsgDataItemDocState.created;
+  // ignore: unnecessary_getters_setters
   NsgDataItemDocState get docState => _docState;
   set docState(NsgDataItemDocState value) {
     // if (value == NsgDataItemDocState.created && newTableLogic) {
@@ -150,7 +151,7 @@ class NsgDataItem {
     map['docState'] = docState.index;
     map['newTableLogic'] = remoteProvider.newTableLogic;
     //сериализация дополнительных полей
-    //TODO: или сделать на сервере или надо знать какие поля являются дополнительными
+    //или сделать на сервере или надо знать какие поля являются дополнительными
     if (allowExtend) {}
     return map;
   }
@@ -222,7 +223,7 @@ class NsgDataItem {
       return fieldValues.fields[name];
     } else {
       //Проверка на наличие поля в списке полей объекта
-      assert(fieldList.fields.containsKey(name), '!!! Не существует поля с именем: ' + name + ' в объекте: ' + typeName);
+      assert(fieldList.fields.containsKey(name), '!!! Не существует поля с именем: $name в объекте: $typeName');
       //Проверка не является ли поле пустым (умышленно не читалось из БД, следовательно, нельзя брать значение из него)
       assert(!fieldValues.emptyFields.contains(name));
       if (allowNullValue) return null;
@@ -696,7 +697,7 @@ class NsgDataItem {
       if (foundFullPath.isEmpty) {
         foundFullPath = splitedPath[i];
       } else {
-        foundFullPath += '.' + splitedPath[i];
+        foundFullPath += '.${splitedPath[i]}';
       }
       if (curField == null) {
         curObject = this;
@@ -796,6 +797,7 @@ class NsgDataItem {
 
   /// Статус синхронизации
   SyncStatus _syncStatus = SyncStatus.none;
+  // ignore: unnecessary_getters_setters
   SyncStatus get syncStatus => _syncStatus;
   set syncStatus(SyncStatus value) {
     _syncStatus = value;
