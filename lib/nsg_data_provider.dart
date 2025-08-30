@@ -130,11 +130,18 @@ class NsgDataProvider {
       }
       //Почему-то условие стояло обратное
       isAnonymous = !(token != null && token!.isNotEmpty);
-      // If token still missing on web, try to get it from peers
-      if (kIsWeb && (token == null || token!.isEmpty || isAnonymous)) {
+      // Always initialize CrossTabAuth on web for cross-tab synchronization
+      if (kIsWeb) {
+        debugPrint('[NsgDataProvider] Initializing CrossTabAuth for cross-tab sync');
         await _ensureCrossAuthInitialized();
-        _crossAuth?.requestTokenFromPeers();
-        isAnonymous = !(token != null && token!.isNotEmpty);
+        // Only request token if we don't have one
+        if (token == null || token!.isEmpty || isAnonymous) {
+          debugPrint('[NsgDataProvider] No token, requesting from peers');
+          _crossAuth?.requestTokenFromPeers();
+          isAnonymous = !(token != null && token!.isNotEmpty);
+        } else {
+          debugPrint('[NsgDataProvider] Token exists, CrossTabAuth ready for sharing');
+        }
       }
       if (kIsWeb && !saveTokenWebDefaultTrue) {
         // || (!Platform.isAndroid && !Platform.isIOS)) {
@@ -170,7 +177,12 @@ class NsgDataProvider {
       //Если есть сохраненный сервер и он в списке разрешенных, устанавливаем его в качестве текущего
       availableServers.currentServer = savedServerName;
     }
+    final oldServer = serverUri;
     serverUri = availableServers.currentServer;
+    if (kIsWeb && oldServer != serverUri) {
+      debugPrint('[NsgDataProvider] serverUri changed: old=$oldServer new=$serverUri → reinit CrossTabAuth');
+      await reinitCrossTabAuthIfNeeded();
+    }
   }
 
   ///Установитт новый адрес сервера и сохранить его в начтройках устройства
@@ -505,10 +517,14 @@ class NsgDataProvider {
     if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
       // Ensure cross-tab sync is ready (web) and we can respond if we have a token
       if (kIsWeb) {
+        debugPrint('[NsgDataProvider] Connecting to server, ensuring CrossTabAuth is ready');
         await _ensureCrossAuthInitialized();
         // If we still have no token, ask neighbors again
         if (token == null || token!.isEmpty) {
+          debugPrint('[NsgDataProvider] No token after connect, requesting from peers');
           _crossAuth?.requestTokenFromPeers();
+        } else {
+          debugPrint('[NsgDataProvider] Token exists after connect: length=${token!.length}');
         }
       }
       var checkResult = await _checkVersion(onRetry);
@@ -631,7 +647,10 @@ class NsgDataProvider {
       }
       // Share new token to other tabs
       if (!isAnonymous && token != null && token!.isNotEmpty) {
+        debugPrint('[NsgDataProvider] Publishing token to other tabs, isAnonymous: $isAnonymous, token length: ${token!.length}');
         _crossAuth?.publishToken(token!);
+      } else {
+        debugPrint('[NsgDataProvider] Skipping token publish - isAnonymous: $isAnonymous, token: ${token != null ? 'length=${token!.length}' : 'null'}');
       }
       _notifyTokenChanged();
     }
@@ -1033,23 +1052,34 @@ class NsgDataProvider {
 
 extension _CrossTabAuthExt on NsgDataProvider {
   Future<void> _ensureCrossAuthInitialized() async {
-    if (_crossAuth != null) return;
-    // Build a stable channel per app + server group to avoid cross-app leaks
-    final group = availableServers.groupNameByAddress(availableServers.currentServer);
-    final channel = 'nsg-auth:$group:$applicationName';
+    if (_crossAuth != null) {
+      debugPrint('[NsgDataProvider] CrossTabAuth already initialized');
+      return;
+    }
+    debugPrint('[NsgDataProvider] Initializing CrossTabAuth...');
+    // Build a stable channel per app only to ensure cross-tab communication works
+    // across different server groups (test/main) for the same application
+    final channel = 'nsg-auth:$applicationName';
+    // Scope должен различать как приложение, так и сервер, чтобы не смешивать токены разных серверов
+    final normalizedServer = serverUri.replaceAll(RegExp(r'/+$'), '');
+    final scope = '$applicationName|$normalizedServer';
+    debugPrint('[NsgDataProvider] Creating CrossTabAuth with channel: $channel, scope: $scope');
     _crossAuth = CrossTabAuth(
       channelName: channel,
-      scope: serverUri,
+      scope: scope,
       onTokenChanged: (tok) async {
         // Adopt token from other tab
+        debugPrint('[NsgDataProvider] onTokenChanged callback received token: ${tok != null ? 'length=${tok.length}' : 'null'}');
         final got = (tok != null && tok.isNotEmpty);
         if (got) {
+          debugPrint('[NsgDataProvider] Adopting token from other tab');
           token = tok;
           isAnonymous = false;
           if (saveToken) {
             await saveCurrentServerToken();
           }
         } else {
+          debugPrint('[NsgDataProvider] Token from other tab is null or empty');
           token = '';
           isAnonymous = true;
         }
@@ -1069,5 +1099,24 @@ extension _CrossTabAuthExt on NsgDataProvider {
     try {
       onTokenChanged?.call(token);
     } catch (_) {}
+  }
+
+  /// Переключение сервера требует переинициализации CrossTabAuth (scope меняется)
+  Future<void> reinitCrossTabAuthIfNeeded() async {
+    if (!kIsWeb) return;
+    final normalizedServer = serverUri.replaceAll(RegExp(r'/+$'), '');
+    final expectedScope = '$applicationName|$normalizedServer';
+    // Если CrossTabAuth еще не создан или scope отличается — переинициализируем
+    if (_crossAuth == null || _crossAuth!.scope != expectedScope) {
+      try {
+        _crossAuth?.dispose();
+      } catch (_) {}
+      _crossAuth = null;
+      await _ensureCrossAuthInitialized();
+      // Если после смены сервера токена нет — запросим у соседей в той же scope
+      if (token == null || token!.isEmpty || isAnonymous) {
+        _crossAuth?.requestTokenFromPeers();
+      }
+    }
   }
 }
