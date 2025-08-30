@@ -8,7 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart' as getx;
 import 'package:nsg_data/authorize/nsg_social_login_response.dart';
 import 'package:nsg_data/nsg_data.dart';
-import 'package:nsg_data/cross_tab_auth.dart';
+import 'package:nsg_data/web/cross_tab_auth.dart';
 import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsg_login_model.dart';
@@ -127,14 +127,15 @@ class NsgDataProvider {
         if (prefs.containsKey(applicationName)) {
           token = prefs.getString(applicationName);
         }
-        // If token still missing on web, try to get it from peers
-        if (kIsWeb && (token == null || token!.isEmpty)) {
-          await _ensureCrossAuthInitialized();
-          _crossAuth?.requestTokenFromPeers();
-        }
       }
       //Почему-то условие стояло обратное
       isAnonymous = !(token != null && token!.isNotEmpty);
+      // If token still missing on web, try to get it from peers
+      if (kIsWeb && (token == null || token!.isEmpty || isAnonymous)) {
+        await _ensureCrossAuthInitialized();
+        _crossAuth?.requestTokenFromPeers();
+        isAnonymous = !(token != null && token!.isNotEmpty);
+      }
       if (kIsWeb && !saveTokenWebDefaultTrue) {
         // || (!Platform.isAndroid && !Platform.isIOS)) {
         saveToken = false;
