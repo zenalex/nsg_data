@@ -4,33 +4,39 @@ import 'package:nsg_data/ui/nsg_data_ui.dart';
 class NsgLoadingScrollController<T> extends ScrollController {
   NsgLoadingScrollController({this.function, this.positionBeforeLoad = 200, this.attemptCount = 1}) : super(keepScrollOffset: true) {
     addListener(() async {
-      if (_attCount < attemptCount &&
-          _stat != NsgLoadingScrollStatus.loading &&
-          _stat != NsgLoadingScrollStatus.pause &&
-          (position.pixels >= position.maxScrollExtent - positionBeforeLoad)) {
-        _stat = NsgLoadingScrollStatus.loading;
-        try {
-          _attCount++;
-          if (function != null) {
-            Future(function!).then((T val) {
-              _value = val;
-              _stat = NsgLoadingScrollStatus.success;
-            });
-          } else {
-            _stat = NsgLoadingScrollStatus.empty;
+      try {
+        if (_attCount < attemptCount &&
+            _stat != NsgLoadingScrollStatus.loading &&
+            _stat != NsgLoadingScrollStatus.pause &&
+            positions.isNotEmpty &&
+            (position.pixels >= position.maxScrollExtent - positionBeforeLoad)) {
+          _stat = NsgLoadingScrollStatus.loading;
+          try {
+            _attCount++;
+            if (function != null) {
+              Future(function!).then((T val) {
+                _value = val;
+                _stat = NsgLoadingScrollStatus.success;
+              });
+            } else {
+              _stat = NsgLoadingScrollStatus.empty;
+            }
+          } catch (er) {
+            _errCount++;
+            if (_errCount > 3) {
+              _stat = NsgLoadingScrollStatus.error;
+            }
           }
-        } catch (er) {
-          _errCount++;
-          if (_errCount > 3) {
-            _stat = NsgLoadingScrollStatus.error;
-          }
+        } else if (!(positions.isNotEmpty && position.pixels >= position.maxScrollExtent - positionBeforeLoad)) {
+          _attCount = 0;
+          _errCount = 0;
         }
-      } else if (!(position.pixels >= position.maxScrollExtent - positionBeforeLoad)) {
-        _attCount = 0;
-        _errCount = 0;
-      }
 
-      lastOffset = offset;
+        lastOffset = offset;
+      } catch (e) {
+        // Handle cases where ScrollController is not properly attached
+        // or has multiple positions
+      }
     });
   }
 
@@ -102,20 +108,12 @@ class NsgLoadingScrollController<T> extends ScrollController {
 
       final context = key.currentContext;
       if (context != null && context.mounted) {
-        await Scrollable.ensureVisible(
-          context,
-          duration: const Duration(milliseconds: 1),
-          curve: Curves.easeInOut,
-        );
+        await Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 1), curve: Curves.easeInOut);
         break;
       } else {
-        await animateTo(
-          offset + 400,
-          duration: const Duration(milliseconds: 1),
-          curve: Curves.linear,
-        );
+        await animateTo(offset + 400, duration: const Duration(milliseconds: 1), curve: Curves.linear);
       }
-      if (position.pixels >= position.maxScrollExtent) {
+      if (positions.isNotEmpty && position.pixels >= position.maxScrollExtent) {
         break;
       }
     }
@@ -154,11 +152,4 @@ class NsgLoadingScrollController<T> extends ScrollController {
   ChangeNotifier statusChange = ChangeNotifier();
 }
 
-enum NsgLoadingScrollStatus {
-  loading,
-  success,
-  empty,
-  pause,
-  error,
-  init;
-}
+enum NsgLoadingScrollStatus { loading, success, empty, pause, error, init }

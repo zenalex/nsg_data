@@ -75,6 +75,30 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   // void scrollToCurrentItem2() {
   //   scrollController.scrollToItemWhenVisible(scrollController.dataGroups.getIndexByItem(currentItem));
   // }
+
+  Widget getListWidget(Widget Function(T item) itemBuilder, {Widget Function(dynamic groupValue)? dividerBuilder}) {
+    return obx((state) {
+      if (items.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      scrollController.dataGroups = DataGroupList([DataGroup(data: items, groupFieldName: grFieldName ?? '')], needDivider: dividerBuilder != null);
+
+      return ListView.builder(
+        controller: scrollController,
+        itemCount: scrollController.dataGroups.length,
+        itemBuilder: (context, index) {
+          final element = scrollController.dataGroups.getElemet(index);
+          if (element.isDivider && dividerBuilder != null) {
+            return dividerBuilder!(element.value);
+          } else if (!element.isDivider) {
+            return itemBuilder(element.value as T);
+          }
+          return const SizedBox.shrink();
+        },
+      );
+    });
+  }
 }
 
 class DataGroup {
