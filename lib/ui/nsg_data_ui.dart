@@ -4,12 +4,34 @@ import 'package:get/get_navigation/src/routes/new_path_route.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/ui/nsg_loading_scroll_controller.dart';
 
+// Import for MatchItem - this might need to be adjusted based on actual import path
+// import 'package:footballers_diary_app/model/match_item.dart';
+
+/// UI-миксин для `NsgDataController`, который упрощает построение списков с:
+/// - постраничной/поштучной загрузкой данных (ленивая загрузка);
+/// - поддержкой группировки по полю (например, по дате);
+/// - автоматической прокруткой до текущего элемента;
+/// - единообразной сортировкой и статусами загрузки.
+///
+/// Использование:
+/// 1) Наследуйте контроллер от `NsgDataController<X>` и добавьте `with NsgDataUI`.
+/// 2) Укажите `grFieldName`, если нужно разделять список разделителями (датами и т.п.).
+/// 3) Отдайте виджет списка через `getListWidget`.
 mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
+  /// Сколько элементов подгружать за один шаг для UI.
   int loadStepCountUi = 25;
+
+  /// Имя поля, по которому выполняется группировка (используется в `DataGroup`).
   String? grFieldName;
+
+  /// Дополнительные параметры сортировки (в дополнение к сортировке контроллера).
   List<NsgSortingParam>? sortingParams;
+
+  /// Направление сортировки для поля группировки.
   NsgSortingDirection? sortDirection;
 
+  /// Загружает часть элементов из источника данных с учётом фильтра и ссылок.
+  /// `top` — смещение; `count` — сколько элементов загрузить.
   Future<List<T>> _loadItems(int top, int count, {NsgDataRequestParams? filter}) async {
     if (controllerMode.storageType == NsgDataStorageType.local) {
       return [];
@@ -52,6 +74,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
     return filter;
   }
 
+  /// Подгружает следующую порцию элементов и уведомляет слушателей об обновлении.
   Future loadNext({NsgDataRequestParams? filter}) async {
     status = GetStatus.loading();
     sendNotify();
@@ -62,12 +85,14 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
     sendNotify();
   }
 
+  /// Контроллер ленивой прокрутки. При достижении конца списка вызывает `loadNext`.
   late NsgLoadingScrollController scrollController = NsgLoadingScrollController(
     function: () async {
       await loadNext();
     },
   );
 
+  /// Прокручивает список к текущему выбранному элементу контроллера `currentItem`.
   void scrollToCurrentItem() {
     scrollController.scrollToIndex(scrollController.dataGroups.getIndexByItem(currentItem));
   }
@@ -76,6 +101,10 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   //   scrollController.scrollToItemWhenVisible(scrollController.dataGroups.getIndexByItem(currentItem));
   // }
 
+  /// Возвращает реактивный (`obx`) виджет списка с поддержкой группировки.
+  ///
+  /// - `itemBuilder` — билдер элемента списка.
+  /// - `dividerBuilder` — опциональный билдер разделителя группы (например, заголовок с датой).
   Widget getListWidget(Widget Function(T item) itemBuilder, {Widget Function(dynamic groupValue)? dividerBuilder}) {
     return obx((state) {
       if (items.isEmpty) {
@@ -90,7 +119,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
         itemBuilder: (context, index) {
           final element = scrollController.dataGroups.getElemet(index);
           if (element.isDivider && dividerBuilder != null) {
-            return dividerBuilder!(element.value);
+            return dividerBuilder(element.value);
           } else if (!element.isDivider) {
             return itemBuilder(element.value as T);
           }
@@ -101,6 +130,8 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   }
 }
 
+/// Представляет одну группу данных в списке (например, все элементы одного дня).
+/// Хранит сами элементы, имя поля группировки и ключи для точной прокрутки к элементам.
 class DataGroup {
   DataGroup({required this.data, required this.groupFieldName, this.dividerBuilder}) {
     for (var d in data) {
@@ -108,13 +139,19 @@ class DataGroup {
     }
   }
 
+  /// Элементы группы.
   final List<NsgDataItem> data;
+
+  /// Имя поля в модели, по которому вычисляется `groupValue`.
   final String groupFieldName;
+
+  /// Кастомный билдер разделителя группы (опционально).
   final Widget Function(String grName, dynamic fieldValue)? dividerBuilder;
 
   final Map<NsgDataItem, GlobalKey> _itemsKeys = {};
   Map<NsgDataItem, GlobalKey> get itemsKeys => _itemsKeys;
 
+  /// Человекочитаемое имя группы на основе `groupValue`.
   String get groupName {
     if (groupValue != null) {
       try {
@@ -126,6 +163,8 @@ class DataGroup {
     return "";
   }
 
+  /// Значение поля группировки для первой записи в группе.
+  /// Поддерживаются ссылочные, перечислимые, булевые, строковые, числовые и датовые поля.
   dynamic get groupValue {
     if (data.isNotEmpty) {
       try {
@@ -152,13 +191,19 @@ class DataGroup {
   }
 }
 
+/// Коллекция групп `DataGroup` с быстрым доступом по индексу и поддержкой разделителей.
+///
+/// Отвечает за сопоставление линейного индекса `ListView` к конкретному элементу
+/// или разделителю группы, корректно учитывая наличие/отсутствие divider-строк.
 class DataGroupList {
   DataGroupList(this.groups, {this.needDivider = false}) {
     Map<DataGroup, ({int first, int last})> map = {};
     int firstIndex = 0;
     for (var gr in groups) {
       map.addAll({gr: (first: firstIndex, last: firstIndex + gr.data.length - (needDivider ? 0 : 1))});
-      _length = firstIndex + gr.data.length - (needDivider ? 0 : 1);
+      // _length должен содержать ОБЩЕЕ количество элементов (включая divider),
+      // а не индекс последнего элемента. Поэтому прибавляем 1, когда есть divider.
+      _length = firstIndex + gr.data.length + (needDivider ? 1 : 0);
       firstIndex += gr.data.length + (needDivider ? 1 : 0);
       _itemsKeys.addEntries(gr.itemsKeys.entries);
     }
@@ -179,8 +224,12 @@ class DataGroupList {
   Map<DataGroup, ({int first, int last})> _sizes = {};
   int _length = 0;
 
+  /// Общее количество строк списка (элементы + разделители).
   int get length => _length;
 
+  /// Возвращает описание элемента по индексу.
+  /// Если это разделитель — `isDivider == true` и `value` содержит значение группы (например, дату).
+  /// Если это обычный элемент — `isDivider == false` и `value` содержит сам `NsgDataItem`.
   ({dynamic value, DataGroup group, bool isDivider, GlobalKey? key}) getElemet(int index) {
     var group = _sizes.entries.firstWhereOrNull((i) => i.value.first <= index && index <= i.value.last);
     if (group != null) {
@@ -192,11 +241,12 @@ class DataGroupList {
           key: _itemsKeys[group.key.data[index - group.value.first - (needDivider ? 1 : 0)]],
         );
       }
-      return (value: group.key.groupValue, group: group.key, isDivider: true, key: _itemsKeys[group.key.groupValue]);
+      return (value: group.key.groupValue, group: group.key, isDivider: true, key: _itemsKeys[group.key.groupValue] ?? GlobalKey());
     }
     throw (RangeError("index $index out of range"));
   }
 
+  /// Возвращает индекс строки, соответствующей заданному элементу `item`.
   int getIndexByItem(NsgDataItem item) {
     for (int i = 0; i < _length; i++) {
       if (getElemet(i).value == item) {
