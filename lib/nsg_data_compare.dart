@@ -103,7 +103,7 @@ class NsgCompare {
 
     var indent = '  ' * indentLevel;
     var operatorStr = logicalOperator == NsgLogicalOperator.and ? '\n${indent}AND ' : '\n${indent}OR ';
-    var result = '(\n${indent}  ${conditions.join(operatorStr)}\n${indent})';
+    var result = '(\n$indent  ${conditions.join(operatorStr)}\n$indent)';
 
     return result;
   }
@@ -113,16 +113,16 @@ class NsgCompare {
       // Для вложенных условий типа "compare" не показываем оператор
       if (param.comparisonOperator == NsgComparisonOperator.compare) {
         var nested = (param.parameterValue as NsgCompare)._toStringFormatted(indentLevel);
-        return '${param.parameterName} ${nested}';
+        return '${param.parameterName} $nested';
       } else {
         var operatorStr = param._getOperatorSymbol();
         var nested = (param.parameterValue as NsgCompare)._toStringFormatted(indentLevel);
-        return '${param.parameterName} ${operatorStr} ${nested}';
+        return '${param.parameterName} $operatorStr $nested';
       }
     } else {
       var operatorStr = param._getOperatorSymbol();
       var valueStr = param._getValueString();
-      return '${param.parameterName} ${operatorStr} ${valueStr}';
+      return '${param.parameterName} $operatorStr $valueStr';
     }
   }
 }
