@@ -105,9 +105,12 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   ///
   /// - `itemBuilder` — билдер элемента списка.
   /// - `dividerBuilder` — опциональный билдер разделителя группы (например, заголовок с датой).
-  Widget getListWidget(Widget Function(T item) itemBuilder, {Widget Function(dynamic groupValue)? dividerBuilder}) {
+  Widget getListWidget(Widget Function(T item) itemBuilder, {Widget Function(dynamic groupValue)? dividerBuilder, Widget? onEmptyList}) {
     return obx((state) {
       if (items.isEmpty) {
+        if (onEmptyList != null) {
+          return onEmptyList;
+        }
         return const SizedBox.shrink();
       }
 
