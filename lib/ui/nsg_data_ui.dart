@@ -105,7 +105,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   ///
   /// - `itemBuilder` — билдер элемента списка.
   /// - `dividerBuilder` — опциональный билдер разделителя группы (например, заголовок с датой).
-  Widget getListWidget(Widget? Function(T item) itemBuilder, {Widget Function(dynamic groupValue)? dividerBuilder, Widget? onEmptyList}) {
+  Widget getListWidgetInData(Widget? Function(T item) itemBuilder, {Widget Function(dynamic groupValue)? dividerBuilder, Widget? onEmptyList}) {
     return obx((state) {
       if (items.isEmpty) {
         if (onEmptyList != null) {
@@ -203,7 +203,7 @@ class DataGroupList {
     Map<DataGroup, ({int first, int last})> map = {};
     int firstIndex = 0;
     for (var gr in groups) {
-      map.addAll({gr: (first: firstIndex, last: firstIndex + gr.data.length - (needDivider ? 0 : 1))});
+      map.addAll({gr: (first: firstIndex, last: firstIndex + gr.data.length - 1 + (needDivider ? 1 : 0))});
       // _length должен содержать ОБЩЕЕ количество элементов (включая divider),
       // а не индекс последнего элемента. Поэтому прибавляем 1, когда есть divider.
       _length = firstIndex + gr.data.length + (needDivider ? 1 : 0);
