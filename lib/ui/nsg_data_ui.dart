@@ -136,7 +136,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 /// Представляет одну группу данных в списке (например, все элементы одного дня).
 /// Хранит сами элементы, имя поля группировки и ключи для точной прокрутки к элементам.
 class DataGroup {
-  DataGroup({required this.data, required this.groupFieldName, this.dividerBuilder}) {
+  DataGroup({required this.data, required this.groupFieldName, this.dividerBuilder, this.partOfDate}) {
     for (var d in data) {
       _itemsKeys.addAll({d: GlobalKey()});
     }
@@ -144,6 +144,9 @@ class DataGroup {
 
   /// Элементы группы.
   final List<NsgDataItem> data;
+
+  ///Часть даты сортировки
+  final PartOfDate? partOfDate;
 
   /// Имя поля в модели, по которому вычисляется `groupValue`.
   final String groupFieldName;
@@ -158,6 +161,9 @@ class DataGroup {
   String get groupName {
     if (groupValue != null) {
       try {
+        if (groupValue is DateTime && partOfDate != null) {
+          return NsgDateFormat.dateFormat(groupValue, format: partOfDate!.formatTime, locale: Localizations.localeOf(Get.context!).languageCode);
+        }
         return groupValue.toString();
       } catch (ex) {
         return "error";
@@ -257,5 +263,33 @@ class DataGroupList {
       }
     }
     return -1;
+  }
+}
+
+enum PartOfDate {
+  second,
+  minute,
+  hour,
+  day,
+  month,
+  year;
+
+  const PartOfDate();
+
+  String get formatTime {
+    switch (this) {
+      case second:
+        return "HH:mm:ss dd.MM.yyyy";
+      case minute:
+        return "HH:mm dd.MM.yyyy";
+      case hour:
+        return "HH dd.MM.yyyy";
+      case day:
+        return "dd.MM.yyyy";
+      case month:
+        return "MM.yyyy";
+      case year:
+        return "yyyy";
+    }
   }
 }
