@@ -7,6 +7,9 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Представляет собой типизированный вариант массива dataItemList
   List<T> get items => dataItemList.cast<T>();
 
+  final String _controllerId = Guid.newGuid();
+  String get controllerId => _controllerId;
+
   ///Первый элемент из items. Если items  пустой: вернет новый пустой элемент данных  типа T
   T get firstItem => (dataItemList.isEmpty) ? NsgDataClient.client.getNewObject(dataType) as T : items[0];
 
