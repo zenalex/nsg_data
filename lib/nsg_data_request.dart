@@ -366,6 +366,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           sorting: filter.sorting,
           referenceList: filter.referenceList,
           compare: filter.compare,
+          showDeletedObjects: filter.showDeletedObjects,
         );
       }
     }
