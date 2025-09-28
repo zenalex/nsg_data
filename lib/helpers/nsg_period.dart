@@ -9,14 +9,28 @@ enum NsgPeriodType {
   week(4),
   day(5),
   period(6),
-  periodWidthTime(7);
+  periodWidthTime(7),
+  custom(8);
 
   final int periodType;
   const NsgPeriodType(this.periodType);
 }
 
-///Класс для задания фиолтра по периоду. Используется, например, в фильтре контроллера данных
+class NsgPeriodCustomPeriod {
+  String name;
+  DateTime beginDate;
+  DateTime endDate;
+  NsgPeriodCustomPeriod({required this.name, required this.beginDate, required this.endDate});
+}
+
+///Класс для задания фильтра по периоду. Используется, например, в фильтре контроллера данных
 class NsgPeriod {
+  /// Дополнительные объекты NsgDataItem с периодом, взятым из полей
+  List<NsgPeriodCustomPeriod> customPeriods = [];
+  String customPeriodsTitle = '';
+  int customPeriodsIndex = 0;
+  NsgPeriodType selectedType = NsgPeriodType.week;
+
   ///дата начала периода
   DateTime beginDate = Jiffy.parseFromDateTime(DateTime.now()).startOf(Unit.month).dateTime;
 
@@ -34,8 +48,8 @@ class NsgPeriod {
 
   ///Выбрать следующий период
   ///Например, если период месяц - будет выбран следующий месяц
-  void plus() {
-    switch (type) {
+  void plus(NsgPeriodType curType) {
+    switch (curType) {
       case NsgPeriodType.year:
         setToYear(Jiffy.parseFromDateTime(beginDate).add(years: 1).dateTime);
         break;
@@ -59,6 +73,13 @@ class NsgPeriod {
         beginDate = Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime;
         endDate = Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime;
         break;
+      case NsgPeriodType.custom:
+        if (customPeriodsIndex > 0) {
+          customPeriodsIndex--;
+          beginDate = customPeriods[customPeriodsIndex].beginDate;
+          endDate = customPeriods[customPeriodsIndex].endDate;
+        }
+        break;
 
       // default:
       //print('не задан период');
@@ -67,8 +88,8 @@ class NsgPeriod {
 
   ///Выбрать предыдущий период
   ///Например, если период месяц - будет выбран предыдущий месяц
-  void minus() {
-    switch (type) {
+  void minus(NsgPeriodType curType) {
+    switch (curType) {
       case NsgPeriodType.year:
         setToYear(Jiffy.parseFromDateTime(beginDate).subtract(years: 1).dateTime);
         break;
@@ -92,6 +113,12 @@ class NsgPeriod {
         beginDate = Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime;
         endDate = Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime;
         break;
+      case NsgPeriodType.custom:
+        if (customPeriodsIndex < customPeriods.length - 1) {
+          customPeriodsIndex++;
+          beginDate = customPeriods[customPeriodsIndex].beginDate;
+          endDate = customPeriods[customPeriodsIndex].endDate;
+        }
 
       // default:
       //print("добавление - ошибка");
@@ -101,7 +128,7 @@ class NsgPeriod {
   ///Задать текстовое представление периода
   ///Возможно, надо заменить переменные на геттеры
   String getDateText(bool? withTime, String locale) {
-    switch (type) {
+    switch (selectedType) {
       case NsgPeriodType.year:
         return NsgDateFormat.dateFormat(beginDate, format: 'yyyy г.', locale: locale);
       case NsgPeriodType.quarter:
@@ -125,7 +152,11 @@ class NsgPeriod {
           return NsgDateFormat.dateFormat(beginDate, format: 'dd.MM.yy - ', locale: locale) +
               NsgDateFormat.dateFormat(endDate, format: 'dd.MM.yy', locale: locale);
         }
-
+      case NsgPeriodType.custom:
+        return NsgDateFormat.dateFormat(beginDate, format: 'MMM yyyy г. - ', locale: locale) +
+            NsgDateFormat.dateFormat(endDate, format: 'MMM yyyy г.', locale: locale);
+        //return customPeriods[customPeriodsIndex].name;
+        break;
       //print("добавление - ошибка");
     }
   }
@@ -176,6 +207,18 @@ class NsgPeriod {
   void setToPeriodWithTime(NsgPeriod p) {
     beginDate = p.beginDate;
     endDate = p.endDate;
+  }
+
+  ///Установить тип периода custom
+  ///Будет установлен интервал с начала по конец суток, взятых из переденной даты
+  void setToCustom(NsgPeriod date) {
+    var newCustomPeriod = customPeriods.firstWhere(
+      (el) =>
+          (el.beginDate.isBefore(date.beginDate) || el.beginDate.isAtSameMomentAs(date.beginDate)) &&
+          (el.endDate.isAfter(date.beginDate) || el.endDate.isAtSameMomentAs(date.beginDate)),
+    );
+    beginDate = newCustomPeriod.beginDate;
+    endDate = newCustomPeriod.endDate;
   }
 
   ///Определить номер квартала по дате

@@ -458,7 +458,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (fieldNames.isNotEmpty) {
         var searchCmp = NsgCompare();
         searchCmp.logicalOperator = NsgLogicalOperator.and;
-        var searchArray = controllerFilter.searchString.split(' ');
+        var searchArray = controllerFilter.searchString.split(' ').where((el) => el.isNotEmpty).toList();
 
         for (var searchString in searchArray) {
           var searchArrayCmp = NsgCompare();
