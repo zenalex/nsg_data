@@ -39,6 +39,7 @@ dependencies:
   #Выбор файлов на устройстве
   file_picker: ^8.1.4
   web: ^1.1.1
+  crypto: ^3.0.6
 
   # appmetrica_plugin: ^1.1.0
 

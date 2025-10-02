@@ -151,6 +151,18 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
+  ///Обновить URL страницы
+  ///Работает только на Web
+  ///На остальных платформах игнорируется
+  void updateUrlParameters() {
+    try {
+      // Обновляем URL на Web при смене выбранного элемента
+      NsgNavigator.updateUrlParameters(id: _selectedItem?.id, widgetId: _getWidgetId(), replace: true);
+    } catch (_) {
+      // безопасно игнорировать на платформах без Web
+    }
+  }
+
   NsgBaseController({
     this.dataType = NsgDataItem,
     this.requestOnInit = false,
