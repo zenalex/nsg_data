@@ -554,7 +554,7 @@ class NsgDataProvider {
       await setLocale(languageCode: languageCode);
     }
 
-    if (allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
+    if (useNsgAuthorization && allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
       await openLoginPage().then((value) => controller.loadProviderData());
     } else {
       await controller.loadProviderData();
