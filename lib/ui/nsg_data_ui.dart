@@ -22,7 +22,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   int loadStepCountUi = 25;
 
   /// Имя поля, по которому выполняется группировка (используется в `DataGroup`).
-  String? grFieldName;
+  String? groupFieldName;
 
   /// Дополнительные параметры сортировки (в дополнение к сортировке контроллера).
   List<NsgSortingParam>? sortingParams;
@@ -54,8 +54,8 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 
     NsgSorting sort = NsgSorting();
 
-    if (grFieldName != null && grFieldName!.isNotEmpty) {
-      NsgSortingParam sortingParam = NsgSortingParam(parameterName: grFieldName!, direction: sortDirection ?? NsgSortingDirection.ascending);
+    if (groupFieldName != null && groupFieldName!.isNotEmpty) {
+      NsgSortingParam sortingParam = NsgSortingParam(parameterName: groupFieldName!, direction: sortDirection ?? NsgSortingDirection.ascending);
       sort.paramList.add(sortingParam);
     }
 
@@ -114,7 +114,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
         return const SizedBox.shrink();
       }
 
-      scrollController.dataGroups = DataGroupList([DataGroup(data: items, groupFieldName: grFieldName ?? '')], needDivider: dividerBuilder != null);
+      scrollController.dataGroups = DataGroupList([DataGroup(data: items, groupFieldName: groupFieldName ?? '')], needDivider: dividerBuilder != null);
 
       return ListView.builder(
         controller: scrollController,
