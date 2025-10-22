@@ -86,6 +86,10 @@ class NsgDataItem {
   ///Имя поля, содержащего реальный тип данных
   String get extensionTypeField => '';
 
+  ///Запрещено отправлять массовый POST обектов
+  ///Пример такого объекта - FileItem с сохранением картинок в minIO
+  bool get postArrayIsForbidden => false;
+
   ///Объект прочитан с серверной базы данных
   bool isReadFromServer = false;
 
