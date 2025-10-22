@@ -27,6 +27,13 @@ class NsgDataPost<T extends NsgDataItem> {
   Future<List<T>> postItems({bool autoAuthorize = true, String tag = '', List<String>? loadReference, String function = ''}) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
 
+    ///для объектов с запретом массового POST вызываем последовательное сохранение каждого объекта
+    if (dataItem.postArrayIsForbidden) {
+      for (var item in itemsToPost) {
+        await item.post();
+      }
+      return itemsToPost;
+    }
     var header = <String, String?>{};
     if (dataItem.remoteProvider.token != '') {
       header['Authorization'] = dataItem.remoteProvider.token;
@@ -45,12 +52,13 @@ class NsgDataPost<T extends NsgDataItem> {
       filterMap = filter.toJson();
     }
     var response = await dataItem.remoteProvider.baseRequestList(
-        function: '$function ${dataItem.runtimeType}',
-        headers: dataItem.remoteProvider.getAuthorizationHeader(),
-        url: function,
-        postData: _toJson(),
-        method: 'POST',
-        params: filterMap);
+      function: '$function ${dataItem.runtimeType}',
+      headers: dataItem.remoteProvider.getAuthorizationHeader(),
+      url: function,
+      postData: _toJson(),
+      method: 'POST',
+      params: filterMap,
+    );
 
     var req = NsgDataRequest<T>(dataItemType: dataItemType);
     _items = (await req.loadDataAndReferences(response, loadReference ?? [], tag)).cast();
@@ -60,12 +68,7 @@ class NsgDataPost<T extends NsgDataItem> {
     return _items;
   }
 
-  Future<T?> postItem({
-    bool autoAuthorize = true,
-    String tag = '',
-    List<String>? loadReference,
-    String function = '',
-  }) async {
+  Future<T?> postItem({bool autoAuthorize = true, String tag = '', List<String>? loadReference, String function = ''}) async {
     var data = await postItems(autoAuthorize: autoAuthorize, tag: tag, loadReference: loadReference, function: function);
     if (data.isEmpty) {
       return null;
