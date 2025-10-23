@@ -28,7 +28,7 @@ class NsgDataPost<T extends NsgDataItem> {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
 
     ///для объектов с запретом массового POST вызываем последовательное сохранение каждого объекта
-    if (dataItem.postArrayIsForbidden) {
+    if (itemsToPost.length > 1 && dataItem.postArrayIsForbidden) {
       for (var item in itemsToPost) {
         await item.post();
       }
