@@ -514,7 +514,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
       }
     } catch (ex) {
-      debugPrint('ERROR LAR-375: $ex');
+      debugPrint('ERROR LAR-375: dataType: $dataItemType, $ex');
     }
   }
 
