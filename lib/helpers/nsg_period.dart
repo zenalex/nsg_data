@@ -155,8 +155,8 @@ class NsgPeriod {
       case NsgPeriodType.custom:
         return NsgDateFormat.dateFormat(beginDate, format: 'MMM yyyy г. - ', locale: locale) +
             NsgDateFormat.dateFormat(endDate, format: 'MMM yyyy г.', locale: locale);
-        //return customPeriods[customPeriodsIndex].name;
-        break;
+      //return customPeriods[customPeriodsIndex].name;
+      // break;
       //print("добавление - ошибка");
     }
   }

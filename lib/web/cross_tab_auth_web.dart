@@ -151,7 +151,7 @@ class CrossTabAuth {
 
     // Проверяем cross-origin возможности
     try {
-      final testOrigin = web.window.location.origin;
+      // final testOrigin = web.window.location.origin;
       // debugPrint('[CrossTabAuth] [INIT] Cross-origin test - origin: $testOrigin');
       // debugPrint('[CrossTabAuth] [INIT] ⚠️  ВАЖНО: Все вкладки должны использовать одинаковый origin для работы CrossTabAuth');
       // debugPrint('[CrossTabAuth] [INIT] 💡 Рекомендация: Используйте один домен для всех вкладок приложения');
@@ -164,7 +164,7 @@ class CrossTabAuth {
       final testKey = '${_lsKey}_test';
       final testValue = 'test_value_${DateTime.now().millisecondsSinceEpoch}';
       web.window.localStorage.setItem(testKey, testValue);
-      final readValue = web.window.localStorage.getItem(testKey);
+      // final readValue = web.window.localStorage.getItem(testKey);
       web.window.localStorage.removeItem(testKey);
       //debugPrint('[CrossTabAuth] [TEST] localStorage тест: записано=$testValue, прочитано=$readValue, успех=${testValue == readValue}');
     } catch (e) {
@@ -225,10 +225,10 @@ class CrossTabAuth {
         final key = se.key;
         final oldValue = se.oldValue;
         final newValue = se.newValue;
-        final url = se.url;
+        // final url = se.url;
         // debugPrint('[CrossTabAuth] [LS] StorageEvent - key: $key, url: $url');
-        final oldLen = oldValue?.length ?? 0;
-        final newLen = newValue?.length ?? 0;
+        // final oldLen = oldValue?.length ?? 0;
+        // final newLen = newValue?.length ?? 0;
         // debugPrint('[CrossTabAuth] [LS] oldValue length: $oldLen, newValue length: $newLen');
 
         if (key != _lsKey) {
@@ -377,7 +377,7 @@ class CrossTabAuth {
 
     // debugPrint('[CrossTabAuth] [BROADCAST] Отправка через localStorage (key: $_lsKey)');
     try {
-      final oldValue = web.window.localStorage.getItem(_lsKey);
+      // final oldValue = web.window.localStorage.getItem(_lsKey);
       web.window.localStorage.setItem(_lsKey, message);
       // debugPrint('[CrossTabAuth] [BROADCAST] localStorage.setItem выполнен (старое значение: ${oldValue?.length ?? 0} символов)');
       web.window.localStorage.removeItem(_lsKey);
