@@ -20,10 +20,7 @@ class NsgLocalDb {
   static const Duration _reinitCooldown = Duration(milliseconds: 500);
   final Set<String> _additionalBoxNames = {};
 
-  Future init(
-    String databaseName, {
-    Set<String> extraBoxNames = const {},
-  }) async {
+  Future init(String databaseName, {Set<String> extraBoxNames = const {}}) async {
     _currentDatabaseName = databaseName;
     // Merge additional box names (e.g., app-specific local boxes)
     if (extraBoxNames.isNotEmpty) {
@@ -53,15 +50,11 @@ class NsgLocalDb {
           localPath = '${(await getApplicationDocumentsDirectory()).path}/';
         }
 
-        final boxNames = {
-          ...NsgDataClient.client.getAllRegisteredServerNames(),
-          ..._additionalBoxNames,
-        };
+        final boxNames = {...NsgDataClient.client.getAllRegisteredServerNames(), ..._additionalBoxNames};
         collection = await BoxCollection.open(
           '/$databaseName${iteration++ == 0 ? '' : iteration.toString()}', // Name of database
           boxNames, // Names of your boxes
-          path:
-              localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
+          path: localPath, // Path where to store your boxes (Only used in Flutter / Dart IO)
           //key: null, // Key to encrypt your boxes (Only used in Flutter / Dart IO)
         );
 
@@ -100,8 +93,7 @@ class NsgLocalDb {
       return false;
     }
     final now = DateTime.now();
-    if (_lastReinitTime != null &&
-        now.difference(_lastReinitTime!) < _reinitCooldown) {
+    if (_lastReinitTime != null && now.difference(_lastReinitTime!) < _reinitCooldown) {
       if (kDebugMode) {
         print('Reinitialization cooldown active, skipping');
       }
@@ -127,10 +119,7 @@ class NsgLocalDb {
         localPath = '${(await getApplicationDocumentsDirectory()).path}/';
       }
 
-      final boxNames = {
-        ...NsgDataClient.client.getAllRegisteredServerNames(),
-        ..._additionalBoxNames,
-      };
+      final boxNames = {...NsgDataClient.client.getAllRegisteredServerNames(), ..._additionalBoxNames};
       var newCollection = await BoxCollection.open(
         '/$_currentDatabaseName${_currentIteration == 0 ? '' : _currentIteration.toString()}',
         boxNames,
@@ -144,16 +133,12 @@ class NsgLocalDb {
       tables.clear(); // Очищаем кэш боксов
 
       if (kDebugMode) {
-        print(
-          'Successfully reinitialized database with iteration $_currentIteration',
-        );
+        print('Successfully reinitialized database with iteration $_currentIteration');
       }
       return true;
     } catch (ex) {
       if (kDebugMode) {
-        print(
-          'Failed to reinitialize database with iteration $_currentIteration: $ex',
-        );
+        print('Failed to reinitialize database with iteration $_currentIteration: $ex');
       }
       return false;
     } finally {
@@ -168,7 +153,11 @@ class NsgLocalDb {
       return box;
     }
     try {
-      box = await collection.openBox<Map>(tableName);
+      box = await collection.openBox<Map>(
+        tableName,
+        // Hive CE requires explicit converters for non-primitive types (like Map) on web.
+        fromJson: (dynamic json) => (json as Map).cast<dynamic, dynamic>(),
+      );
       tables[tableName] = box;
       return box;
     } catch (e) {
@@ -178,9 +167,7 @@ class NsgLocalDb {
       // If box opening fails due to compaction issues, try to reinitialize database
       if (e.toString().contains('rename') || e.toString().contains('compact')) {
         if (kDebugMode) {
-          print(
-            'Compaction error opening box $tableName, trying to reinitialize database',
-          );
+          print('Compaction error opening box $tableName, trying to reinitialize database');
         }
         var reinitialized = await _reinitializeDatabase();
         if (reinitialized) {
@@ -195,11 +182,7 @@ class NsgLocalDb {
     }
   }
 
-  Future<List<NsgDataItem>> requestItems(
-    NsgDataItem dataItem,
-    NsgDataRequestParams params, {
-    String tag = '',
-  }) async {
+  Future<List<NsgDataItem>> requestItems(NsgDataItem dataItem, NsgDataRequestParams params, {String tag = ''}) async {
     try {
       var box = await getTable(dataItem.typeName);
       var items = <NsgDataItem>[];
@@ -238,9 +221,7 @@ class NsgLocalDb {
       // If it's a compaction-related error, try to reinitialize database
       if (e.toString().contains('compact') || e.toString().contains('rename')) {
         if (kDebugMode) {
-          print(
-            'Compaction error during requestItems, trying to reinitialize database',
-          );
+          print('Compaction error during requestItems, trying to reinitialize database');
         }
         var reinitialized = await _reinitializeDatabase();
         if (reinitialized) {
@@ -255,11 +236,7 @@ class NsgLocalDb {
     }
   }
 
-  void _getIdFromCompare(
-    List<String> ids,
-    NsgDataItem dataItem,
-    NsgCompare cmp,
-  ) {
+  void _getIdFromCompare(List<String> ids, NsgDataItem dataItem, NsgCompare cmp) {
     for (var param in cmp.paramList) {
       if (param.parameterValue is NsgCompare) {
         _getIdFromCompare(ids, dataItem, param.parameterValue);
@@ -309,18 +286,12 @@ class NsgLocalDb {
             //Читаем старый объект, извлекаем из него идентификаторы строк таб частей
             //Сравниваем с новыми, удаляем неиспользуемые
             var oldRowsId = oldObject != null ? oldObject[name] : null;
-            if (oldRowsId != null &&
-                (oldRowsId is List<String>?) &&
-                oldRowsId!.isNotEmpty) {
+            if (oldRowsId != null && (oldRowsId is List<String>?) && oldRowsId!.isNotEmpty) {
               for (var e in ls) {
                 oldRowsId.remove(e);
               }
               if (oldRowsId.isNotEmpty) {
-                var tableBox = await getTable(
-                  (item.getField(name) as NsgDataReferenceListField)
-                      .referentElementType
-                      .toString(),
-                );
+                var tableBox = await getTable((item.getField(name) as NsgDataReferenceListField).referentElementType.toString());
                 tableBox.deleteAll(oldRowsId);
               }
             }
@@ -348,9 +319,7 @@ class NsgLocalDb {
       // If it's a compaction-related error, try to reinitialize database
       if (e.toString().contains('compact') || e.toString().contains('rename')) {
         if (kDebugMode) {
-          print(
-            'Compaction error during postItems, trying to reinitialize database',
-          );
+          print('Compaction error during postItems, trying to reinitialize database');
         }
         var reinitialized = await _reinitializeDatabase();
         if (reinitialized) {
@@ -388,9 +357,7 @@ class NsgLocalDb {
       // If it's a compaction-related error, try to reinitialize database
       if (e.toString().contains('compact') || e.toString().contains('rename')) {
         if (kDebugMode) {
-          print(
-            'Compaction error during deleteItems, trying to reinitialize database',
-          );
+          print('Compaction error during deleteItems, trying to reinitialize database');
         }
         var reinitialized = await _reinitializeDatabase();
         if (reinitialized) {
