@@ -30,7 +30,7 @@ dependencies:
   uuid: ^4.2.1
   timeago: ^3.5.0
 
-  hive_ce: ^2.10.1
+  hive_ce: ^2.15.1
   path_provider: ^2.0.11
   package_info_plus: ^8.0.2
   device_info_plus: ^11.0.0
