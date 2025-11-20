@@ -439,7 +439,7 @@ class NsgDataItem {
 
   ///Прочитать объект из БД по его идентификатору
   ///Можно использовать для обновления объекта из БД или для его дочитывания
-  Future getById({
+  Future<NsgDataItem> getById({
     bool autoAuthorize = true,
     String tag = '',
     List<String>? loadReference,
@@ -480,6 +480,7 @@ class NsgDataItem {
     state = newItem.state;
     docState = newItem.docState;
     // newTableLogic = newItem.newTableLogic;
+    return this;
   }
 
   Future removeItem() async {
