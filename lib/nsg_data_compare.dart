@@ -45,6 +45,12 @@ class NsgCompare {
     bool isDataItem = value is NsgDataItem;
     bool isTypeOperator = (comparisonOperator == NsgComparisonOperator.typeEqual || comparisonOperator == NsgComparisonOperator.typeNotEqual);
     assert(isTypeOperator ? (isDataItem) : true, 'Не поддерживаемый тип');
+    //Условие на минимальную дату - 1.1.175 года
+    if (value is DateTime) {
+      if (value.isBefore(DateTime(1754, 1, 1))) {
+        value = DateTime(1754, 1, 1);
+      }
+    }
     paramList.add(NsgCompareParam(parameterName: name, parameterValue: value, comparisonOperator: comparisonOperator));
   }
 
