@@ -408,7 +408,7 @@ class NsgDataRequest<T extends NsgDataItem> {
             var checkedItem = field.getReferent(item, allowNull: true);
             if (checkedItem == null) {
               var fieldValue = item.getFieldValue(splitedName[0]).toString();
-              if (!fieldValue.contains(Guid.Empty) && (!refList.contains(fieldValue))) {
+              if (fieldValue != '' && !fieldValue.contains(Guid.Empty) && (!refList.contains(fieldValue))) {
                 refList.add(fieldValue);
               }
             } else {
