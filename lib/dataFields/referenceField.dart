@@ -22,6 +22,9 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
   T? getReferent(NsgDataItem dataItem, {bool useCache = true, bool allowNull = false}) {
     var id = dataItem.getFieldValue(name).toString();
     if (id == '' || id == Guid.Empty) {
+      if (allowNull) {
+        return null;
+      }
       return NsgDataClient.client.getNewObject(T) as T;
     }
     if (useCache) {

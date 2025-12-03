@@ -338,6 +338,157 @@ class NsgDataItem {
     return dataItem as T;
   }
 
+  /// Универсальный метод для загрузки ссылочных полей с проверкой кэша.
+  /// Собирает уникальные ID из указанного поля всех элементов списка, проверяет кэш
+  /// и загружает отсутствующие элементы одним запросом.
+  ///
+  /// Поддерживает:
+  /// - Простые ссылочные поля: "coachId"
+  /// - Вложенные ссылки через точку: "teamId.clubId" (дочитает команду, затем клуб)
+  /// - Табличные части: "playersTable.playerId" (соберет ссылки из строк таблицы)
+  /// - Нетипизированные ссылки (NsgDataUntypedReferenceField)
+  ///
+  /// Пример использования:
+  /// ```dart
+  /// // Загрузить тренеров для списка команд турниров
+  /// await NsgDataItem.loadReferencesWithCache(
+  ///   tournamentTeams,
+  ///   ['coachId', 'teamId.clubId'],
+  /// );
+  /// ```
+  ///
+  /// [items] - список элементов, из которых нужно извлечь ссылочные ID
+  /// [fieldNames] - список имен полей для загрузки (поддерживает вложенные через точку)
+  static Future<void> loadReferencesWithCache(List<NsgDataItem> items, List<String> fieldNames) async {
+    if (items.isEmpty || fieldNames.isEmpty) return;
+
+    for (var fieldName in fieldNames) {
+      await _loadReferenceFieldWithCache(items, fieldName);
+    }
+  }
+
+  /// Внутренний метод для загрузки одного ссылочного поля с проверкой кэша
+  static Future<void> _loadReferenceFieldWithCache(List<NsgDataItem> items, String fieldName) async {
+    if (items.isEmpty) return;
+
+    var splitedName = fieldName.split('.');
+    var field = NsgDataClient.client.getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
+    if (field is! NsgDataBaseReferenceField) return;
+
+    var checkItems = <NsgDataItem>[];
+
+    if (field is NsgDataReferenceField && field is! NsgDataUntypedReferenceField) {
+      // Обычное ссылочное поле
+      final idsNotInCache = <String>[];
+
+      for (var item in items) {
+        var checkedItem = field.getReferent(item, allowNull: true);
+        if (checkedItem == null) {
+          var fieldValue = item.getFieldValue(splitedName[0]).toString();
+          if (fieldValue.isNotEmpty && !fieldValue.contains(Guid.Empty)) {
+            // Проверяем кэш
+            var cachedItem = NsgDataClient.client.getItemsFromCache(field.referentElementType, fieldValue, allowNull: true);
+            if (cachedItem == null) {
+              if (!idsNotInCache.contains(fieldValue)) {
+                idsNotInCache.add(fieldValue);
+              }
+            } else {
+              checkItems.add(cachedItem);
+            }
+          }
+        } else {
+          checkItems.add(checkedItem);
+        }
+      }
+
+      // Загружаем отсутствующие элементы одним запросом
+      if (idsNotInCache.isNotEmpty) {
+        var request = NsgDataRequest(dataItemType: field.referentElementType);
+        var cmp = NsgCompare();
+        cmp.add(
+          name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
+          value: idsNotInCache,
+          comparisonOperator: NsgComparisonOperator.inList,
+        );
+        var filter = NsgDataRequestParams(compare: cmp);
+        var refItems = await request.requestItems(filter: filter, loadReference: []);
+        checkItems.addAll(refItems);
+      }
+    } else if (field is NsgDataUntypedReferenceField) {
+      // Нетипизированная ссылка - группируем по типам
+      var sortedFields = <String, List<String>>{};
+
+      for (var item in items) {
+        var checkedItem = field.getReferent(item, allowNull: true);
+        if (checkedItem == null) {
+          var splittedFieldValue = item.getFieldValue(splitedName[0]).toString().split('.');
+
+          if (splittedFieldValue.length == 2 && !splittedFieldValue[0].contains(Guid.Empty)) {
+            var typeName = splittedFieldValue[1];
+            var guid = splittedFieldValue[0];
+
+            // Проверяем кэш
+            try {
+              var refType = NsgDataClient.client.getTypeByServerName(typeName);
+              var cachedItem = NsgDataClient.client.getItemsFromCache(refType, guid, allowNull: true);
+              if (cachedItem == null) {
+                sortedFields.putIfAbsent(typeName, () => <String>[]);
+                if (!sortedFields[typeName]!.contains(guid)) {
+                  sortedFields[typeName]!.add(guid);
+                }
+              } else {
+                checkItems.add(cachedItem);
+              }
+            } catch (_) {
+              // Неизвестный тип - пропускаем
+            }
+          }
+        } else {
+          checkItems.add(checkedItem);
+        }
+      }
+
+      // Загружаем по типам
+      for (var typeName in sortedFields.keys) {
+        var refList = sortedFields[typeName]!;
+        if (refList.isEmpty) continue;
+
+        var refType = NsgDataClient.client.getTypeByServerName(typeName);
+        var request = NsgDataRequest(dataItemType: refType);
+        var cmp = NsgCompare();
+        cmp.add(name: NsgDataClient.client.getNewObject(refType).primaryKeyField, value: refList, comparisonOperator: NsgComparisonOperator.inList);
+        var filter = NsgDataRequestParams(compare: cmp);
+        var refItems = await request.requestItems(filter: filter, loadReference: []);
+        checkItems.addAll(refItems);
+      }
+    } else if (field is NsgDataReferenceListField) {
+      // Табличная часть - собираем элементы из строк
+      for (var item in items) {
+        var fieldValue = item.getFieldValue(splitedName[0]);
+        if (fieldValue is List<NsgDataItem>) {
+          checkItems.addAll(fieldValue);
+        }
+      }
+    }
+
+    // Рекурсивно обрабатываем вложенные ссылки
+    if (splitedName.length > 1 && checkItems.isNotEmpty) {
+      splitedName.removeAt(0);
+      var nestedFieldName = splitedName.join('.');
+
+      // Группируем по типам на случай нетипизированных ссылок
+      var mapData = <Type, List<NsgDataItem>>{};
+      for (var item in checkItems) {
+        mapData.putIfAbsent(item.runtimeType, () => <NsgDataItem>[]);
+        mapData[item.runtimeType]!.add(item);
+      }
+
+      for (var key in mapData.keys) {
+        await _loadReferenceFieldWithCache(mapData[key]!, nestedFieldName);
+      }
+    }
+  }
+
   // ignore: constant_identifier_names
   static const String _PRIMARY_KEY_FIELD = 'PrimaryKeyField';
 
