@@ -17,6 +17,9 @@ class NsgDataClient {
   ///Количество зарегистрированных типов данных в провайдере
   int get registeredDataItemsCount => _registeredItems.keys.length;
 
+  ///Количество зарегистрированных типов данных в провайдере
+  List<NsgDataItem> get registeredDataItems => _registeredItems.values.toList();
+
   void registerDataItem(NsgDataItem item, {NsgDataProvider? remoteProvider, NsgLocalDb? localDb}) {
     if (remoteProvider != null) item.remoteProvider = remoteProvider;
     _registeredItems[item.runtimeType.toString()] = item;

@@ -20,6 +20,8 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
   ///Объект какого типа возвращать, если будет рапрошен метод getReferent у незаполненной ссылки
   Type defaultReferentType;
 
+  Type get realDefaultReferentType => defaultReferentType == NsgDataItem ? NsgDataClient.client.registeredDataItems.first.runtimeType : defaultReferentType;
+
   @override
   NsgDataItem? getReferent(NsgDataItem dataItem, {bool useCache = true, bool allowNull = false}) {
     var id = dataItem.getFieldValue(name).toString();
@@ -30,7 +32,7 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
       if (allowNull) {
         return null;
       } else {
-        return NsgDataClient.client.getNewObject(defaultReferentType);
+        return NsgDataClient.client.getNewObject(realDefaultReferentType);
       }
     }
     if (uid.guid == Guid.Empty || uid.guid == '') {
@@ -43,7 +45,7 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
       if (allowNull) {
         return null;
       } else {
-        return NsgDataClient.client.getNewObject(defaultReferentType);
+        return NsgDataClient.client.getNewObject(realDefaultReferentType);
       }
     }
   }
