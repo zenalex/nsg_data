@@ -17,13 +17,14 @@ class NsgDurationCounter {
   ///Вывести разницу во времени от момента старта счетчика
   ///paramName - выводмое сообщение
   ///criticalDuration - если задано и время прошло больше этого значения, текст будет выведен желтым
-  void difStart({String paramName = '', int criticalDuration = 0}) {
+  int difStart({String paramName = '', int criticalDuration = 0}) {
     var diff = DateTime.now().difference(startTime).inMilliseconds;
     if (criticalDuration > 0 && diff > criticalDuration) {
       printWarning('$paramName = ${(diff)} ms');
     } else {
       debugPrint('$paramName = ${(diff)} ms');
     }
+    return diff;
   }
 }
 
