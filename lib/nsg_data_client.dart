@@ -129,6 +129,15 @@ class NsgDataClient {
     return item == null ? (allowNull ? null : NsgDataClient.client.getNewObject(type)) : item.dataItem;
   }
 
+  /// Получить все ID кэшированных объектов указанного типа
+  List<String> getCachedItemIds(Type type) {
+    var cache = _getItemsCacheByType(type);
+    if (cache == null || cache.items.isEmpty) {
+      return [];
+    }
+    return cache.items.keys.toList();
+  }
+
   NsgDataBaseReferenceField? getReferentFieldByFullPath(Type dataType, String fullPath) {
     var splitedPath = fullPath.split('.');
     var type = dataType;
