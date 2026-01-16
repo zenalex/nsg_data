@@ -28,7 +28,7 @@ abstract class NsgExcelImport<T extends NsgDataItem> {
   final int row;
   T getNewObject();
 
-  late T object;
+  late T object = getNewObject();
 
   int _getExcelColumn(dynamic column) {
     if (column is String) {
@@ -67,17 +67,17 @@ abstract class NsgExcelImport<T extends NsgDataItem> {
   ///Реализуют стандартную логику для записи значений в поля объекта "как есть".
   ///Для сложной логики необходимо использовать `Map customParser`, для настройки парсинга уникальных полей по особой логике
   T fillValues() {
-    T obj = getNewObject();
-    obj.newRecord();
+    object = getNewObject();
+    object.newRecord();
     excelMap.forEach((fieldName, excelColumn) {
-      assert(obj.fieldList.fields.containsKey(fieldName), '!!! Не существует поля с именем: $fieldName в объекте: ${obj.runtimeType}');
+      assert(object.fieldList.fields.containsKey(fieldName), '!!! Не существует поля с именем: $fieldName в объекте: ${object.runtimeType}');
 
       Data? val = _getExcelValue(excelColumn);
-      var fieldType = obj.getFieldValue(fieldName).runtimeType;
+      var fieldType = object.getFieldValue(fieldName).runtimeType;
 
       if (customParser.containsKey(fieldName)) {
         var value = customParser[fieldName]!(fieldType, val?.value);
-        obj.setFieldValue(fieldName, value);
+        object.setFieldValue(fieldName, value);
       } else {
         if (fieldType == DateTime) {
           DateTime newValue;
@@ -102,40 +102,58 @@ abstract class NsgExcelImport<T extends NsgDataItem> {
             newValue = DateTime(safeCell(val).tryParseInt(emptyValue: 0));
           }
           if (newValue.isBefore(DateTime(10))) {
-            obj.setFieldValue(fieldName, obj.fieldList.fields[fieldName]!.defaultValue);
+            object.setFieldValue(fieldName, object.fieldList.fields[fieldName]!.defaultValue);
           } else {
-            obj.setFieldValue(fieldName, newValue);
+            object.setFieldValue(fieldName, newValue);
           }
         } else if (fieldType == int) {
-          obj.setFieldValue(fieldName, safeCell(val).tryParseInt(emptyValue: obj.fieldList.fields[fieldName]!.defaultValue));
+          object.setFieldValue(fieldName, safeCell(val).tryParseInt(emptyValue: object.fieldList.fields[fieldName]!.defaultValue));
         } else if (fieldType == double) {
-          obj.setFieldValue(fieldName, safeCell(val).tryParseDouble(emptyValue: obj.fieldList.fields[fieldName]!.defaultValue));
+          object.setFieldValue(fieldName, safeCell(val).tryParseDouble(emptyValue: object.fieldList.fields[fieldName]!.defaultValue));
         } else if (fieldType == bool) {
-          obj.setFieldValue(fieldName, safeCell(val).tryParseBool(emptyValue: obj.fieldList.fields[fieldName]!.defaultValue));
+          object.setFieldValue(fieldName, safeCell(val).tryParseBool(emptyValue: object.fieldList.fields[fieldName]!.defaultValue));
         } else {
-          obj.setFieldValue(fieldName, safeCell(val));
+          object.setFieldValue(fieldName, safeCell(val));
         }
       }
     });
 
-    var valid = obj.validateFieldValues();
+    var valid = object.validateFieldValues();
 
     if (!valid.isValid) {
       log(valid.errorMessage);
-      object = obj;
-    } else {
       object = getNewObject();
     }
 
     return object;
   }
 
-  static String safeCell(Data? data) {
+  static String safeCell(dynamic data) {
     if (data == null) {
       return "";
-    } else {
-      return data.value?.toString() ?? "";
     }
+    if (data is Data) {
+      return data.value?.toString() ?? "";
+    } else if (data is CellValue) {
+      if (data is TextCellValue) {
+        return data.value.toString();
+      } else if (data is FormulaCellValue) {
+        return data.formula;
+      } else if (data is IntCellValue) {
+        return data.value.toString();
+      } else if (data is BoolCellValue) {
+        return data.value.toString();
+      } else if (data is DoubleCellValue) {
+        return data.value.toString();
+      } else if (data is DateCellValue) {
+        return "${data.year}-${data.month}-${data.day}";
+      } else if (data is TimeCellValue) {
+        return "${data.hour}:${data.minute}:${data.second}";
+      } else if (data is DateTimeCellValue) {
+        return DateTime(data.year, data.month, data.day, data.hour, data.minute, data.second).toString();
+      }
+    }
+    return "";
   }
 }
 
@@ -155,21 +173,24 @@ class NsgExcel {
 
 extension ParseExcel on Excel {
   ///Реализует парсинг всех листов книги (если не заданы конкретные листы `sheetNumbers`) вызывает `parsing` для КАЖДОЙ строки.
-  void parseExcel(void Function(Sheet sheet, int row) parsing, {int firstDataRow = 1, List<int>? sheetNumbers}) {
+  void parseExcel(void Function(Sheet sheet, int row) parsing, {int firstDataRow = 1, List<int>? sheetNumbers, int? lastDataRow}) {
     assert(firstDataRow > 0, "Значение первой строки должно быть положительным числом больше 0, сейчас: $firstDataRow");
-    firstDataRow--;
+    assert(
+      lastDataRow == null || lastDataRow >= firstDataRow,
+      "Значение последней строки должно быть положительным числом большим или равным firstDataRow ($firstDataRow), сейчас: $lastDataRow",
+    );
     if (sheetNumbers != null) {
       assert(sheetNumbers.any((i) => i > 0), "Значение всех элементов sheetNumbers долно быть положительным числом больше 0, сейчас: $sheetNumbers");
       for (var sheetNumber in sheetNumbers) {
         if (sheets.keys.toList().length >= sheetNumber) {
           var ex = this[sheets.keys.toList()[sheetNumber - 1]];
-          ex.parseSheet(parsing, firstDataRow: firstDataRow);
+          ex.parseSheet(parsing, firstDataRow: firstDataRow, lastDataRow: lastDataRow);
         }
       }
     } else {
       for (var sheet in sheets.keys) {
         var ex = this[sheet];
-        ex.parseSheet(parsing, firstDataRow: firstDataRow);
+        ex.parseSheet(parsing, firstDataRow: firstDataRow, lastDataRow: lastDataRow);
       }
     }
   }
@@ -177,10 +198,14 @@ extension ParseExcel on Excel {
 
 extension ParseSheet on Sheet {
   ///Реализует парсинг листа кники вызывает `parsing` для КАЖДОЙ строки
-  void parseSheet(void Function(Sheet sheet, int row) parsing, {int firstDataRow = 1}) {
+  void parseSheet(void Function(Sheet sheet, int row) parsing, {int firstDataRow = 1, int? lastDataRow}) {
     assert(firstDataRow > 0, "Значение первой строки должно быть положительным числом больше 0, сейчас: $firstDataRow");
+    assert(
+      lastDataRow == null || lastDataRow >= firstDataRow,
+      "Значение последней строки должно быть положительным числом большим или равным firstDataRow ($firstDataRow), сейчас: $lastDataRow",
+    );
     firstDataRow--;
-    for (int row = firstDataRow; row < maxRows; row++) {
+    for (int row = firstDataRow; row < (lastDataRow ?? maxRows); row++) {
       parsing(this, row);
     }
   }
