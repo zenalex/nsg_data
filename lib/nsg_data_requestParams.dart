@@ -76,6 +76,24 @@ class NsgDataRequestParams {
     _compare = newCompare;
   }
 
+  /// Создает глубокую копию объекта NsgDataRequestParams
+  NsgDataRequestParams clone() {
+    return NsgDataRequestParams(
+        top: top,
+        count: count,
+        params: params != null ? Map<String, dynamic>.from(params!) : null,
+        sorting: sorting,
+        referenceList: referenceList != null ? List<String>.from(referenceList!) : null,
+        showDeletedObjects: showDeletedObjects,
+        compare: _compare.clone(),
+      )
+      ..fieldsToRead = fieldsToRead
+      ..neededFields = neededFields != null ? List<String>.from(neededFields!) : null
+      ..groupBy = groupBy != null ? List<String>.from(groupBy!) : null
+      ..transactionId = transactionId
+      ..requestId = requestId;
+  }
+
   NsgDataRequestParams({this.top = 0, this.count = 0, this.params, this.sorting, this.referenceList, this.showDeletedObjects = false, NsgCompare? compare}) {
     if (compare != null) {
       _compare = compare;

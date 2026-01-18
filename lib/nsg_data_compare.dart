@@ -77,6 +77,16 @@ class NsgCompare {
     paramList.clear();
   }
 
+  /// Создает глубокую копию объекта NsgCompare
+  NsgCompare clone() {
+    var cloned = NsgCompare();
+    cloned.logicalOperator = logicalOperator;
+    for (var param in paramList) {
+      cloned.paramList.add(param.clone());
+    }
+    return cloned;
+  }
+
   bool isValid(NsgDataItem item) {
     if (isEmpty) return true;
     var r = logicalOperator == NsgLogicalOperator.and;
@@ -149,6 +159,28 @@ class NsgCompareParam {
   //   parameterValue =
   //       parameterValue[parameterValue.primaryKeyField];
   // }
+
+  /// Создает глубокую копию объекта NsgCompareParam
+  NsgCompareParam clone() {
+    dynamic clonedValue;
+    
+    if (parameterValue is NsgCompare) {
+      clonedValue = (parameterValue as NsgCompare).clone();
+    } else if (parameterValue is List) {
+      // Для списков создаем новый список с теми же элементами
+      clonedValue = List.from(parameterValue as List);
+    } else {
+      // Для примитивных типов (int, String, DateTime, etc.) и NsgDataItem/NsgEnum просто копируем ссылку
+      // так как они либо immutable, либо мы не хотим их глубоко клонировать
+      clonedValue = parameterValue;
+    }
+    
+    return NsgCompareParam(
+      parameterName: parameterName,
+      parameterValue: clonedValue,
+      comparisonOperator: comparisonOperator,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     var map = <String, dynamic>{};

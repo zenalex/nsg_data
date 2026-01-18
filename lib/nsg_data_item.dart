@@ -922,6 +922,26 @@ class NsgDataItem {
     )).cast();
   }
 
+  ///Получить количество объектов в БД, удовлетворящие условию
+  Future<int> selectCount<T extends NsgDataItem>(
+    NsgDataRequestParams filter, {
+    int autoRepeateCount = 3,
+    NsgCancelToken? cancelToken,
+    NsgDataStorageType storageType = NsgDataStorageType.server,
+  }) async {
+    var countFilter = filter.clone();
+    countFilter.count = 0;
+    NsgDataRequest request = NsgDataRequest<T>(storageType: storageType);
+    request.requestItems(
+      filter: countFilter,
+      autoRepeate: autoRepeateCount > 0,
+      autoRepeateCount: autoRepeateCount,
+      loadReference: [],
+      cancelToken: cancelToken,
+    );
+    return request.totalCount ?? 0;
+  }
+
   ///Прочитать элемент из базы данных
   ///Чтение идет по ID
   Future<T> selectFromDb<T extends NsgDataItem>({int autoRepeateCount = 3, List<String>? referenceList, NsgCancelToken? cancelToken}) async {

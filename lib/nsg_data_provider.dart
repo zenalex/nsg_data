@@ -979,14 +979,14 @@ class NsgDataProvider {
 
     var loginResponse = NsgLoginResponse.fromJson(response);
     if (loginResponse.errorCode == 0 || loginResponse.errorCode == 402) {
-      if (!isAnonymous) {
-        token = loginResponse.token;
-        isAnonymous = loginResponse.isAnonymous;
-        if (token != null && token!.isNotEmpty) {
-          _crossAuth?.publishToken(token!);
-        }
-        _notifyTokenChanged();
+      //if (!isAnonymous) {
+      token = loginResponse.token;
+      isAnonymous = loginResponse.isAnonymous;
+      if (token != null && token!.isNotEmpty) {
+        _crossAuth?.publishToken(token!);
       }
+      _notifyTokenChanged();
+      //}
       return true;
     }
     throw NsgApiException(NsgApiError(code: loginResponse.errorCode));
