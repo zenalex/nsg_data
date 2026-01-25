@@ -71,7 +71,7 @@ class NsgPeriod {
         break;
       case NsgPeriodType.periodWidthTime:
         beginDate = Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime;
-        endDate = Jiffy.parseFromDateTime(beginDate).add(days: 1).dateTime;
+        endDate = Jiffy.parseFromDateTime(endDate).add(days: 1).dateTime;
         break;
       case NsgPeriodType.custom:
         if (customPeriodsIndex > 0) {
@@ -111,7 +111,7 @@ class NsgPeriod {
         break;
       case NsgPeriodType.periodWidthTime:
         beginDate = Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime;
-        endDate = Jiffy.parseFromDateTime(beginDate).subtract(days: 1).dateTime;
+        endDate = Jiffy.parseFromDateTime(endDate).subtract(days: 1).dateTime;
         break;
       case NsgPeriodType.custom:
         if (customPeriodsIndex < customPeriods.length - 1) {
