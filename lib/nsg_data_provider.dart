@@ -16,7 +16,7 @@ import 'authorize/nsg_login_response.dart';
 
 class NsgDataProvider {
   ///Token saved after authorization
-  String? token = '';
+  String token = '';
 
   ///server uri (i.e. https://your_server.com:port)
   String serverUri = '';
@@ -122,10 +122,10 @@ class NsgDataProvider {
     await loadServerAddress();
     if (useNsgAuthorization) {
       await getCurrentServerToken();
-      if (token == null || token!.isEmpty) {
+      if (token.isEmpty) {
         var prefs = await SharedPreferences.getInstance();
         if (prefs.containsKey(applicationName)) {
-          token = prefs.getString(applicationName);
+          token = prefs.getString(applicationName) ?? '';
         }
       }
       //Почему-то условие стояло обратное
@@ -198,17 +198,17 @@ class NsgDataProvider {
     var prefs = await SharedPreferences.getInstance();
     token = '';
     if (prefs.containsKey(tokenName)) {
-      token = prefs.getString(tokenName);
-      isAnonymous = token == null || token!.isEmpty;
+      token = prefs.getString(tokenName) ?? '';
+      isAnonymous = token.isEmpty;
     }
   }
 
   ///Сохранить токен для текущего сервера
   Future saveCurrentServerToken() async {
     var prefs = await SharedPreferences.getInstance();
-    if (token == null || token!.isEmpty) return;
+    if (token.isEmpty) return;
     var tokenName = '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
-    await prefs.setString(tokenName, token!);
+    await prefs.setString(tokenName, token);
   }
 
   ///Удалить токен для текущего сервера (например, при logout)
@@ -982,8 +982,8 @@ class NsgDataProvider {
       //if (!isAnonymous) {
       token = loginResponse.token;
       isAnonymous = loginResponse.isAnonymous;
-      if (token != null && token!.isNotEmpty) {
-        _crossAuth?.publishToken(token!);
+      if (token.isNotEmpty) {
+        _crossAuth?.publishToken(token);
       }
       _notifyTokenChanged();
       //}
