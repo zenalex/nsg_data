@@ -544,11 +544,13 @@ class NsgDataProvider {
             await _anonymousLogin(onRetry);
           }
         } on NsgApiException catch (e) {
-          if (e.error.errorType == null) {
+          if (e.error.code == 401) {
+            await _anonymousLogin(onRetry);
+          } else if (e.error.errorType == null) {
           } else {
             rethrow;
           }
-          await _anonymousLogin(onRetry);
+          // await _anonymousLogin(onRetry); // (Кирилл 27.01.2026) получение анонимного токена при любой ошибке (нужно выполнять только при 401, а не любой технической информации)
         }
       }
       await setLocale(languageCode: languageCode);
