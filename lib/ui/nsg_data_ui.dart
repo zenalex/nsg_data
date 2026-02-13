@@ -81,7 +81,8 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   Future loadNext({NsgDataRequestParams? filter}) async {
     status = GetStatus.loading();
     sendNotify();
-    if (items.length + 1 < (totalCount ?? 1000)) {
+    //было items.length + 1 < (totalCount ?? 1000) - но это неправильно, потому что если остался 1 элемент, мы его не догрузим
+    if (items.length < (totalCount ?? 1000)) {
       items.addAll(await _loadItems(items.length, loadStepCountUi, filter: filter));
     }
     status = GetStatus.success(NsgBaseController.emptyData);
