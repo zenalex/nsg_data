@@ -82,7 +82,6 @@ class NsgDataRequest<T extends NsgDataItem> {
         return await r.retry(
           () => _requestItems(
             filter: filter,
-            autoAuthorize: autoAuthorize,
             tag: tag,
             loadReference: loadReference,
             function: function,
@@ -97,7 +96,6 @@ class NsgDataRequest<T extends NsgDataItem> {
       } else {
         return await _requestItems(
           filter: filter,
-          autoAuthorize: autoAuthorize,
           tag: tag,
           loadReference: loadReference,
           function: function,
@@ -116,7 +114,6 @@ class NsgDataRequest<T extends NsgDataItem> {
   NsgCancelToken? cancelToken;
   Future<List<T>> _requestItems({
     NsgDataRequestParams? filter,
-    bool autoAuthorize = true,
     String tag = '',
     List<String>? loadReference,
     String function = '',

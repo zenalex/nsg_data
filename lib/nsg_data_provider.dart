@@ -129,16 +129,16 @@ class NsgDataProvider {
         }
       }
       //Почему-то условие стояло обратное
-      isAnonymous = !(token != null && token!.isNotEmpty);
+      isAnonymous = !(token.isNotEmpty);
       // Always initialize CrossTabAuth on web for cross-tab synchronization
       if (kIsWeb) {
         debugPrint('[NsgDataProvider] Initializing CrossTabAuth for cross-tab sync');
         await _ensureCrossAuthInitialized();
         // Only request token if we don't have one
-        if (token == null || token!.isEmpty || isAnonymous) {
+        if (token.isEmpty || isAnonymous) {
           debugPrint('[NsgDataProvider] No token, requesting from peers');
           _crossAuth?.requestTokenFromPeers();
-          isAnonymous = !(token != null && token!.isNotEmpty);
+          isAnonymous = !(token.isNotEmpty);
         } else {
           debugPrint('[NsgDataProvider] Token exists, CrossTabAuth ready for sharing');
         }
@@ -214,7 +214,7 @@ class NsgDataProvider {
   ///Удалить токен для текущего сервера (например, при logout)
   Future resetCurrentServerToken() async {
     var prefs = await SharedPreferences.getInstance();
-    if (token == null || token!.isEmpty) return;
+    if (token.isEmpty) return;
     var tokenName = '${paramName}_${availableServers.currentServer}';
     await prefs.remove(tokenName);
   }
@@ -520,11 +520,11 @@ class NsgDataProvider {
         debugPrint('[NsgDataProvider] Connecting to server, ensuring CrossTabAuth is ready');
         await _ensureCrossAuthInitialized();
         // If we still have no token, ask neighbors again
-        if (token == null || token!.isEmpty) {
+        if (token.isEmpty) {
           debugPrint('[NsgDataProvider] No token after connect, requesting from peers');
           _crossAuth?.requestTokenFromPeers();
         } else {
-          debugPrint('[NsgDataProvider] Token exists after connect: length=${token!.length}');
+          debugPrint('[NsgDataProvider] Token exists after connect: length=${token.length}');
         }
       }
       var checkResult = await _checkVersion(onRetry);
@@ -648,11 +648,11 @@ class NsgDataProvider {
         await saveCurrentServerToken();
       }
       // Share new token to other tabs
-      if (!isAnonymous && token != null && token!.isNotEmpty) {
-        debugPrint('[NsgDataProvider] Publishing token to other tabs, isAnonymous: $isAnonymous, token length: ${token!.length}');
-        _crossAuth?.publishToken(token!);
+      if (!isAnonymous && token.isNotEmpty) {
+        debugPrint('[NsgDataProvider] Publishing token to other tabs, isAnonymous: $isAnonymous, token length: ${token.length}');
+        _crossAuth?.publishToken(token);
       } else {
-        debugPrint('[NsgDataProvider] Skipping token publish - isAnonymous: $isAnonymous, token: ${token != null ? 'length=${token!.length}' : 'null'}');
+        debugPrint('[NsgDataProvider] Skipping token publish - isAnonymous: $isAnonymous, token: ${'length=${token.length}'}');
       }
       _notifyTokenChanged();
     }
@@ -691,8 +691,8 @@ class NsgDataProvider {
         // var _prefs = await SharedPreferences.getInstance();
         // await _prefs.setString(applicationName, token!);
       }
-      if (!isAnonymous && token != null && token!.isNotEmpty) {
-        _crossAuth?.publishToken(token!);
+      if (!isAnonymous && token.isNotEmpty) {
+        _crossAuth?.publishToken(token);
       }
       _notifyTokenChanged();
 
@@ -730,8 +730,8 @@ class NsgDataProvider {
       if (!isAnonymous) {
         saveCurrentServerToken();
       }
-      if (!isAnonymous && token != null && token!.isNotEmpty) {
-        _crossAuth?.publishToken(token!);
+      if (!isAnonymous && token.isNotEmpty) {
+        _crossAuth?.publishToken(token);
       }
       _notifyTokenChanged();
 
@@ -1079,7 +1079,7 @@ class NsgDataProvider {
 
   Map<String, String> getAuthorizationHeader() {
     var map = <String, String>{};
-    if (token != '' && token != null) map['Authorization'] = token!;
+    if (token != '') map['Authorization'] = token;
     return map;
   }
 
@@ -1126,7 +1126,7 @@ extension _CrossTabAuthExt on NsgDataProvider {
         }
       },
       getCurrentToken: () {
-        if (!isAnonymous && token != null && token!.isNotEmpty) return token;
+        if (!isAnonymous && token.isNotEmpty) return token;
         return null;
       },
     );
@@ -1155,7 +1155,7 @@ extension _CrossTabAuthExt on NsgDataProvider {
       _crossAuth = null;
       await _ensureCrossAuthInitialized();
       // Если после смены сервера токена нет — запросим у соседей в той же scope
-      if (token == null || token!.isEmpty || isAnonymous) {
+      if (token.isEmpty || isAnonymous) {
         _crossAuth?.requestTokenFromPeers();
       }
     }

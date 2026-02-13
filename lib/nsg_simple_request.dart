@@ -34,8 +34,6 @@ class NsgSimpleRequest<T extends Object> {
           () => _requestItems(
               provider: provider,
               filter: filter,
-              autoAuthorize: autoAuthorize,
-              tag: tag,
               function: function,
               method: method,
               postData: postData,
@@ -47,8 +45,6 @@ class NsgSimpleRequest<T extends Object> {
       return await _requestItems(
           provider: provider,
           filter: filter,
-          autoAuthorize: autoAuthorize,
-          tag: tag,
           function: function,
           method: method,
           postData: postData,
@@ -72,8 +68,6 @@ class NsgSimpleRequest<T extends Object> {
     required NsgDataProvider provider,
     required String function,
     NsgDataRequestParams? filter,
-    bool autoAuthorize = true,
-    String tag = '',
     String method = 'GET',
     Map<String, dynamic>? postData,
     NsgCancelToken? externalCancelToken,
