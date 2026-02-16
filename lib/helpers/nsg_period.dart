@@ -266,7 +266,18 @@ class NsgPeriod {
 
   /// Обнуление даты до начала дня
   static DateTime endOfDay(DateTime date) {
-    return Jiffy.parseFromDateTime(date).endOf(Unit.day).dateTime;
+    //DateTime endOfDay = Jiffy.parseFromDateTime(date).endOf(Unit.day).dateTime;
+    DateTime endOfDayWithoutMs = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      23,
+      59,
+      59, // часы, минуты, секунды
+      0,
+      0, // миллисекунды и микросекунды = 0
+    );
+    return endOfDayWithoutMs;
   }
 
   ///Возвращает дату конца недели. Последним днем недели считает воскресенье
