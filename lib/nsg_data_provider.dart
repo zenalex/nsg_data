@@ -737,6 +737,7 @@ class NsgDataProvider {
 
       return loginResponse;
     } catch (e) {
+      debugPrint('requestSocialMethod error: $e');
       getx.Get.snackbar(
         'ERROR',
         'An error occurred. Please try again.',
