@@ -392,8 +392,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   List<NsgDataItem> _filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
-    if (masterController!.selectedItem == null ||
-        !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
+    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
       return newItemsList;
     }
     var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
@@ -408,8 +407,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '')
-      return newItemsList;
+    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') return newItemsList;
     return newItemsList.where((element) {
       for (var fieldName in element.fieldList.fields.keys) {
         var field = element.getField(fieldName);
@@ -436,10 +434,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Фильтрует строки из по фильтру добавляет в контроллер
   ///Если фильтр не задан, он будет запрошен у контроллера стандартным способом - через getRequestFilter
   ///Возвращает отфильтрованные и отсортированные данные
-  Future<List<NsgDataItem>> filterItems({
-    required List<NsgDataItem> newItemsList,
-    NsgDataRequestParams? filterParam,
-  }) async {
+  Future<List<NsgDataItem>> filterItems({required List<NsgDataItem> newItemsList, NsgDataRequestParams? filterParam}) async {
     var filter = filterParam ?? getRequestFilter;
     var filteredItemList = <NsgDataItem>[];
     for (var row in newItemsList) {
@@ -464,16 +459,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
     //Учитываем пользовательский фильтр на дату
     if (controllerFilter.isOpen && controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
-      cmp.add(
-        name: controllerFilter.periodFieldName,
-        value: controllerFilter.nsgPeriod.beginDate,
-        comparisonOperator: NsgComparisonOperator.greaterOrEqual,
-      );
-      cmp.add(
-        name: controllerFilter.periodFieldName,
-        value: controllerFilter.nsgPeriod.endDate,
-        comparisonOperator: NsgComparisonOperator.less,
-      );
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.beginDate, comparisonOperator: NsgComparisonOperator.greaterOrEqual);
+      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
     }
     //Добавляем условие по строке поиска если фильтр разрешен и открыт
     if (controllerFilter.isOpen && controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
@@ -490,13 +477,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
           searchArrayCmp.logicalOperator = NsgLogicalOperator.or;
           for (var fieldName in fieldNames) {
             var field = dataItem.fieldList.fields[fieldName];
-            if ((field is NsgDataStringField || field is NsgDataReferenceField) &&
-                field is! NsgDataEnumReferenceField) {
-              searchArrayCmp.add(
-                name: fieldName,
-                value: searchString,
-                comparisonOperator: NsgComparisonOperator.contain,
-              );
+            if ((field is NsgDataStringField || field is NsgDataReferenceField) && field is! NsgDataEnumReferenceField) {
+              searchArrayCmp.add(name: fieldName, value: searchString, comparisonOperator: NsgComparisonOperator.contain);
             }
           }
           searchCmp.add(name: "SearchStringComparisonAllWords", value: searchArrayCmp);
@@ -526,12 +508,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
-  Widget obxBase(
-    Widget Function(NsgBaseControllerData?) widget, {
-    Widget Function(String? error)? onError,
-    Widget? onLoading,
-    Widget? onEmpty,
-  }) {
+  Widget obxBase(Widget Function(NsgBaseControllerData?) widget, {Widget Function(String? error)? onError, Widget? onLoading, Widget? onEmpty}) {
     return obx(widget, onError: onError, onLoading: onLoading, onEmpty: onEmpty);
   }
 
@@ -556,9 +533,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
             return widget(NsgBaseController.emptyData);
           }
         } else if (status.isError) {
-          return onError != null
-              ? onError(status.errorMessage)
-              : Center(child: Text('A error occurred: ${status.errorMessage}'));
+          return onError != null ? onError(status.errorMessage) : Center(child: Text('A error occurred: ${status.errorMessage}'));
         } else if (status.isEmpty) {
           return onEmpty ?? const SizedBox.shrink();
         }
@@ -579,23 +554,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
-  void itemPageOpen(
-    NsgDataItem element,
-    String pageName, {
-    bool needRefreshSelectedItem = false,
-    List<String>? referenceList,
-    bool offPage = false,
-  }) {
+  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
     if (this is NsgDataItemController && (this as NsgDataItemController).widgetId == null) {
       //Если контроллер является контроллером элемента, то вызываем метод контроллера элемента
       var controller = (this as NsgDataItemController).getDataItemController(element.id);
-      controller.itemPageOpen(
-        element,
-        pageName,
-        needRefreshSelectedItem: needRefreshSelectedItem,
-        referenceList: referenceList,
-        offPage: offPage,
-      );
+      controller.itemPageOpen(element, pageName, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList, offPage: offPage);
       return;
     }
 
@@ -690,16 +653,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Copy item and open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///referenceList - список полей для дочитывания. null - перечитать все
-  void itemCopyPageOpen(
-    NsgDataItem element,
-    String pageName, {
-    bool needRefreshSelectedItem = false,
-    List<String>? referenceList,
-  }) {
-    assert(
-      element.runtimeType == dataType,
-      'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType',
-    );
+  void itemCopyPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
+    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
     copyAndSetItem(element, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList);
     NsgNavigator.instance.toPage(pageName);
   }
@@ -807,8 +762,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   static Future<bool?> Function(BuildContext?)? saveOrCancelDefaultDialog;
-  static Future Function(String errorMessage, {String title}) showErrorByString = (errorMessage, {title = ''}) async =>
-      debugPrint(errorMessage);
+  static Future Function(String errorMessage, {String title}) showErrorByString = (errorMessage, {title = ''}) async => debugPrint(errorMessage);
   // static NsgLoginParamsInterface? defaultLoginParams;
 
   ///Проверить были ли изменения в объекте, если нет, выполняем Back, если были, то спрашиваем пользователя сохранить изменения или отменить,
@@ -925,6 +879,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //selectedItem = null;
       selectedItem!.copyFieldValues(newItem);
       selectedItem!.state = newItem.state; // NsgDataItemState.fill;
+      selectedItem!.docState = newItem.docState;
       backupItem = newItem;
       await afterRefreshItem(selectedItem!, referenceList);
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
@@ -1169,10 +1124,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   final Map<NsgDataItem, int> _postingItemErrorCount = {};
-  Future _postingItemQueue({
-    required Function(List<NsgDataItem>)? errorObjects,
-    required Function(List<NsgDataItem>)? postedObjects,
-  }) async {
+  Future _postingItemQueue({required Function(List<NsgDataItem>)? errorObjects, required Function(List<NsgDataItem>)? postedObjects}) async {
     if (_isPosting) {
       return true;
     }
@@ -1319,11 +1271,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return newItem;
   }
 
-  Future<bool?> rollbackTransaction(
-    NsgDataProvider provider,
-    String transactionId, {
-    NsgCancelToken? cancelToken,
-  }) async {
+  Future<bool?> rollbackTransaction(NsgDataProvider provider, String transactionId, {NsgCancelToken? cancelToken}) async {
     var request = NsgSimpleRequest<bool>();
     var newItem = await request.requestItem(
       provider: provider,
