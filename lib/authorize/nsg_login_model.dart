@@ -10,6 +10,7 @@ class NsgLoginModel {
   String? code;
   String? state;
   String? deviceId;
+  Map<String, dynamic>? payload;
 
   Map<String, dynamic> toJson() {
     String loginTypeString = '';
@@ -24,6 +25,7 @@ class NsgLoginModel {
       'code': code,
       'state': state,
       'deviceId': deviceId,
+      'paylod': payload,
     };
   }
 }
