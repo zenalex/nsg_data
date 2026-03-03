@@ -2,10 +2,13 @@ class NsgSocialLoginResponse {
   String state;
   String code;
   String deviceId;
-  String? email;
-  String? firstName;
-  String? lastName;
-  NsgSocialLoginResponse({this.state = '', this.code = '', this.deviceId = '', this.email, this.firstName, this.lastName});
+  Map<String, dynamic>? payload;
+  NsgSocialLoginResponse({
+    this.state = '',
+    this.code = '',
+    this.deviceId = '',
+    this.payload,
+  });
 
   bool get isEmpty {
     if (state == '' || code == '') return true;
@@ -17,9 +20,7 @@ class NsgSocialLoginResponse {
       state = json['state'] ?? '';
       code = json['code'] ?? '';
       deviceId = json['device_id'] ?? '';
-      email = json['email'];
-      firstName = json['firstName'];
-      lastName = json['lastName'];
+      payload = json['payload'];
     }
   }
 }
