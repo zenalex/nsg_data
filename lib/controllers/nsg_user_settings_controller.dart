@@ -6,23 +6,23 @@ import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер для управления настройками пользователя
 class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController<T> {
-  NsgUserSettingsController(
-      {super.requestOnInit,
-      super.useUpdate,
-      super.useChange,
-      super.builderIDs,
-      super.dataBindign,
-      super.autoRepeate = false,
-      super.autoRepeateCount = 10,
-      super.useDataCache = false,
-      super.selectedMasterRequired = true,
-      super.autoSelectFirstItem = false,
-      super.dependsOnControllers,
-      super.masterController,
-      super.controllerMode,
-      this.maxFavotrites = 100,
-      this.maxRecent = 25})
-      : super() {
+  NsgUserSettingsController({
+    super.requestOnInit,
+    super.useUpdate,
+    super.useChange,
+    super.builderIDs,
+    super.dataBindign,
+    super.autoRepeate = false,
+    super.autoRepeateCount = 10,
+    super.useDataCache = false,
+    super.selectedMasterRequired = true,
+    super.autoSelectFirstItem = false,
+    super.dependsOnControllers,
+    super.masterController,
+    super.controllerMode,
+    this.maxFavotrites = 100,
+    this.maxRecent = 25,
+  }) : super() {
     assert(NsgDataClient.client.getNewObject(T) is NsgUserSettings);
   }
 
@@ -83,7 +83,7 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   }
 
   @override
-  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true, bool enableShowException = true}) async {
     (currentItem as NsgUserSettings).settings = jsonEncode(settingsMap);
     currentItem.storageType = controllerMode.storageType;
     return await super.itemPagePost(goBack: goBack, useValidation: useValidation);
@@ -93,13 +93,18 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   static const String _recentSettingsName = '_recent_';
 
   NsgUserSettings getUserSettingsObject(String key) {
-    var obj = items.firstWhere((e) => (e as NsgUserSettings).name == key, orElse: () {
-      var obj = NsgDataClient.client.getNewObject(T) as T;
-      obj.newRecord();
-      (obj as NsgUserSettings).name = key;
-      items.add(obj);
-      return obj;
-    }) as NsgUserSettings;
+    var obj =
+        items.firstWhere(
+              (e) => (e as NsgUserSettings).name == key,
+              orElse: () {
+                var obj = NsgDataClient.client.getNewObject(T) as T;
+                obj.newRecord();
+                (obj as NsgUserSettings).name = key;
+                items.add(obj);
+                return obj;
+              },
+            )
+            as NsgUserSettings;
     return obj;
   }
 

@@ -697,7 +697,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
   ///useValidation == true перед сохранением проводится валидация
   ///В случае успешного сохранения возвращает true
-  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true, bool enableShowException = true}) async {
     assert(selectedItem != null, 'selectedItem = null');
     if (useValidation) {
       var validationResult = selectedItem!.validateFieldValues();
@@ -740,7 +740,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (ex is NsgApiException) {
         var func = showException ?? NsgApiException.showExceptionDefault;
 
-        if (func != null && showExceptionDialog) func(ex);
+        if (func != null && showExceptionDialog && enableShowException) func(ex);
       }
       rethrow;
     } finally {

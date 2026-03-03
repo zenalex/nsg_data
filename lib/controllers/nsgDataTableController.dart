@@ -12,22 +12,22 @@ import 'package:nsg_data/nsg_data.dart';
 class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T> {
   ///Имя поля ссылки на таблицу
   String tableFieldName;
-  NsgDataTableController(
-      {super.requestOnInit = false,
-      super.useUpdate,
-      super.useChange,
-      super.builderIDs,
-      super.dataBindign,
-      super.autoRepeate = false,
-      super.autoRepeateCount = 10,
-      super.useDataCache = false,
-      super.selectedMasterRequired = true,
-      super.autoSelectFirstItem = false,
-      super.dependsOnControllers,
-      required super.masterController,
-      required this.tableFieldName,
-      super.controllerMode})
-      : super();
+  NsgDataTableController({
+    super.requestOnInit = false,
+    super.useUpdate,
+    super.useChange,
+    super.builderIDs,
+    super.dataBindign,
+    super.autoRepeate = false,
+    super.autoRepeateCount = 10,
+    super.useDataCache = false,
+    super.selectedMasterRequired = true,
+    super.autoSelectFirstItem = false,
+    super.dependsOnControllers,
+    required super.masterController,
+    required this.tableFieldName,
+    super.controllerMode,
+  }) : super();
 
   ///Создает новую строку.
   @override
@@ -61,7 +61,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Close row page and post current (selectedItem) item to dataTable
   @override
-  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true}) async {
+  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true, bool enableShowException = true}) async {
     assert(selectedItem != null);
     var validationResult = selectedItem!.validateFieldValues();
     if (!validationResult.isValid) {
