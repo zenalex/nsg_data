@@ -874,14 +874,17 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         sendNotify();
         throw Exception('Ошибка NBC-509. Данный объект более недоступен');
       }
-      //запоминаем текущий элемент в бэкапе на случай отмены редактирования пользователем для возможности вернуть
-      //вернуть результат обратно
-      //selectedItem = null;
-      selectedItem!.copyFieldValues(newItem);
-      selectedItem!.state = newItem.state; // NsgDataItemState.fill;
-      selectedItem!.docState = newItem.docState;
+      var currentSelected = selectedItem;
+      if (currentSelected == null) {
+        selectedItem = newItem;
+        currentSelected = newItem;
+      } else {
+        currentSelected.copyFieldValues(newItem);
+        currentSelected.state = newItem.state;
+        currentSelected.docState = newItem.docState;
+      }
       backupItem = newItem;
-      await afterRefreshItem(selectedItem!, referenceList);
+      await afterRefreshItem(currentSelected, referenceList);
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       selectedItemChanged.broadcast(null);
