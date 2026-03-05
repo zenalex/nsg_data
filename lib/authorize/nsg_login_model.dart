@@ -10,12 +10,20 @@ class NsgLoginModel {
   String? code;
   String? state;
   String? deviceId;
+  String? loginTypeString;
   Map<String, dynamic>? payload;
 
   Map<String, dynamic> toJson() {
-    String loginTypeString = '';
-    if (loginType == NsgLoginType.email) loginTypeString = 'email';
-    if (loginType == NsgLoginType.phone) loginTypeString = 'phone';
+    if (loginTypeString == null) {
+      if (loginType == NsgLoginType.email) {
+        loginTypeString = 'email';
+      } else if (loginType == NsgLoginType.phone) {
+        loginTypeString = 'phone';
+      } else {
+        loginTypeString = '';
+      }
+    }
+
     return {
       'phoneNumber': phoneNumber,
       'securityCode': securityCode,
@@ -25,7 +33,7 @@ class NsgLoginModel {
       'code': code,
       'state': state,
       'deviceId': deviceId,
-      'paylod': payload,
+      'payload': payload,
     };
   }
 }

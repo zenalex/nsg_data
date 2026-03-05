@@ -1,3 +1,5 @@
+import 'package:nsg_data/authorize/nsg_login_model.dart';
+
 class NsgSocialLoginResponse {
   String state;
   String code;
@@ -21,7 +23,12 @@ class NsgSocialLoginResponse {
     }
   }
 
-  Map<String, dynamic> toJson() {
-    return {'state': state, 'code': code, 'device_id': deviceId, 'payload': payload, 'loginType': loginType};
-  }
+  Map<String, dynamic> toJson() => toLoginModel().toJson();
+
+  NsgLoginModel toLoginModel() => NsgLoginModel()
+    ..code = code
+    ..deviceId = deviceId
+    ..payload = payload
+    ..state = state
+    ..loginTypeString = loginType;
 }
