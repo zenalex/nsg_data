@@ -301,7 +301,7 @@ class NsgDataProvider {
         var msg = 'ERROR 500';
         if (e.response!.data is Map && (e.response!.data as Map).containsKey('message')) {
           var msgParts = e.response!.data['message'].split('---> ');
-          //TODO: в нулевом параметре функция, вызвавшая ишибку - надо где-то показывать
+          //TODO_FUTURE: в нулевом параметре функция, вызвавшая ишибку - надо где-то показывать
           msg = msgParts.last;
         }
         throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));

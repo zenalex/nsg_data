@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:web/web.dart' as web;
 
 /// Утилиты для работы с URL в веб-приложениях Flutter
@@ -60,19 +61,19 @@ class UrlUtils {
 
   /// Вывести всю информацию о URL в консоль
   static void printUrlInfo() {
-    print('=== ИНФОРМАЦИЯ О URL ===');
-    print('Полный URL: ${getCurrentUrl()}');
-    print('Origin: ${getCurrentOrigin()}');
-    print('Hostname: ${getCurrentHostname()}');
-    print('Port: ${getPort()}');
-    print('Protocol: ${getProtocol()}');
-    print('Pathname: ${getCurrentPathname()}');
-    print('Search: ${getCurrentSearch()}');
-    print('Hash: ${getCurrentHash()}');
-    print('Referrer: ${getReferrer()}');
-    print('Безопасный (HTTPS): ${isSecureUrl()}');
-    print('Base URL: ${getBaseUrl()}');
-    print('========================');
+    debugPrint('=== ИНФОРМАЦИЯ О URL ===');
+    debugPrint('Полный URL: ${getCurrentUrl()}');
+    debugPrint('Origin: ${getCurrentOrigin()}');
+    debugPrint('Hostname: ${getCurrentHostname()}');
+    debugPrint('Port: ${getPort()}');
+    debugPrint('Protocol: ${getProtocol()}');
+    debugPrint('Pathname: ${getCurrentPathname()}');
+    debugPrint('Search: ${getCurrentSearch()}');
+    debugPrint('Hash: ${getCurrentHash()}');
+    debugPrint('Referrer: ${getReferrer()}');
+    debugPrint('Безопасный (HTTPS): ${isSecureUrl()}');
+    debugPrint('Base URL: ${getBaseUrl()}');
+    debugPrint('========================');
   }
 }
 
@@ -123,27 +124,27 @@ class UrlExamples {
   static void exampleUsage() {
     // Получить текущий URL
     final currentUrl = UrlUtils.getCurrentUrl();
-    print('Текущий URL: $currentUrl');
+    debugPrint('Текущий URL: $currentUrl');
 
     // Проверить, безопасное ли соединение
     final isSecure = UrlUtils.isSecureUrl();
-    print('HTTPS: $isSecure');
+    debugPrint('HTTPS: $isSecure');
 
     // Получить параметры из URL
     final params = UrlParams.getQueryParameters();
     final userId = UrlParams.getQueryParameter('userId');
     final sessionId = UrlParams.getQueryParameter('session');
-    print('Все параметры: $params');
-    print('User ID: $userId');
-    print('Session ID: $sessionId');
+    debugPrint('Все параметры: $params');
+    debugPrint('User ID: $userId');
+    debugPrint('Session ID: $sessionId');
 
     // Получить referrer
     final referrer = UrlUtils.getReferrer();
-    print('Пришли с сайта: ${referrer.isEmpty ? 'прямой заход' : referrer}');
+    debugPrint('Пришли с сайта: ${referrer.isEmpty ? 'прямой заход' : referrer}');
 
     // Проверить наличие определенных параметров
     if (UrlParams.hasQueryParameter('utm_source')) {
-      print('Есть UTM метка: ${UrlParams.getQueryParameter('utm_source')}');
+      debugPrint('Есть UTM метка: ${UrlParams.getQueryParameter('utm_source')}');
     }
 
     // Вывести всю информацию
@@ -155,22 +156,22 @@ class UrlExamples {
     final currentUrl = UrlUtils.getCurrentUrl();
     final params = UrlParams.getQueryParametersString();
 
-    print('=== АНАЛИЗ ПОЛЬЗОВАТЕЛЬСКОГО ПУТИ ===');
-    print('Текущая страница: $currentUrl');
-    print('Источник: ${referrer.isEmpty ? 'Прямой заход или закладки' : referrer}');
-    print('Параметры: $params');
+    debugPrint('=== АНАЛИЗ ПОЛЬЗОВАТЕЛЬСКОГО ПУТИ ===');
+    debugPrint('Текущая страница: $currentUrl');
+    debugPrint('Источник: ${referrer.isEmpty ? 'Прямой заход или закладки' : referrer}');
+    debugPrint('Параметры: $params');
 
     // Анализ источника трафика
     if (referrer.contains('google.com')) {
-      print('Источник: Google');
+      debugPrint('Источник: Google');
     } else if (referrer.contains('yandex.ru')) {
-      print('Источник: Yandex');
+      debugPrint('Источник: Yandex');
     } else if (referrer.contains('facebook.com')) {
-      print('Источник: Facebook');
+      debugPrint('Источник: Facebook');
     } else if (referrer.isEmpty) {
-      print('Источник: Прямой заход');
+      debugPrint('Источник: Прямой заход');
     } else {
-      print('Источник: ${Uri.parse(referrer).host}');
+      debugPrint('Источник: ${Uri.parse(referrer).host}');
     }
 
     // Анализ UTM меток
@@ -179,11 +180,11 @@ class UrlExamples {
     final utmCampaign = UrlParams.getQueryParameter('utm_campaign');
 
     if (utmSource != null) {
-      print('UTM Source: $utmSource');
-      print('UTM Medium: ${utmMedium ?? 'не указан'}');
-      print('UTM Campaign: ${utmCampaign ?? 'не указан'}');
+      debugPrint('UTM Source: $utmSource');
+      debugPrint('UTM Medium: ${utmMedium ?? 'не указан'}');
+      debugPrint('UTM Campaign: ${utmCampaign ?? 'не указан'}');
     }
 
-    print('=====================================');
+    debugPrint('=====================================');
   }
 }

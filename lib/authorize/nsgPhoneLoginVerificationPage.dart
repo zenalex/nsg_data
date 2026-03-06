@@ -330,7 +330,7 @@ class _NsgPhoneLoginVerificationState extends State<NsgPhoneLoginVerificationWid
                       ),
                     ),
                   const SizedBox(height: 15),
-                  //widget.verificationPage.getButtons(), FIXME повторная отправка кода
+                  //widget.verificationPage.getButtons(), FIXME_FUTURE повторная отправка кода
                   InkWell(
                     onTap: () {
                       gotoLoginPage(context);

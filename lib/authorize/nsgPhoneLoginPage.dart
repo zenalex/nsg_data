@@ -127,7 +127,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   //таймер, запускаемый по факту получения капчи. С автообновлением капчи через 2 минуты
   Timer? updateTimer;
 
-  //TODO: заполнять токен!!!
+  //TODO_FUTURE: заполнять токен!!!
   String firebaseToken = '';
 
   ///Get captcha and send request for SMS

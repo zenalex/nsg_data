@@ -133,7 +133,7 @@ class NsgLoginProvider {
     if (eventOpenLoginPage != null) {
       eventOpenLoginPage!();
     } else {
-      //TODO: действие открытия окна login по умолчанию
+      //TODO_FUTURE: действие открытия окна login по умолчанию
     }
   }
 }

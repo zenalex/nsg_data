@@ -242,7 +242,7 @@ class NsgDataItem {
 
   ///Установить значение поля
   void setFieldValue(String name, dynamic value) {
-    //TODO: убрать этот метод, присваивать значения в setValue полей
+    //TODO_FUTURE: убрать этот метод, присваивать значения в setValue полей
     assert(fieldList.fields.containsKey(name), 'object $runtimeType does not contains field $name');
     if (!fieldList.fields.containsKey(name)) {}
     var field = getField(name);
@@ -271,7 +271,7 @@ class NsgDataItem {
         if (field is NsgDataStringField && value.length > field.maxLength && field.maxLength != 0) {
           value = value.toString().substring(0, field.maxLength);
         } else if (field is NsgDataDoubleField) {
-          //TODO: такое впечатление, что весь это метод надо заменить на данную строку.
+          //TODO_FUTURE: такое впечатление, что весь это метод надо заменить на данную строку.
           //Отложил это изменение, чтобы все не сломать
           field.setValue(fieldValues, value);
           return;

@@ -39,7 +39,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
     row.state = NsgDataItemState.create;
     row.storageType = controllerMode.storageType;
     row.ownerId = masterController!.selectedItem!.id;
-    //dataTable.addRow(row); // FIXME не работает создание нового элемента в табличном контроллере!
+    //dataTable.addRow(row); // FIXME_FUTURE не работает создание нового элемента в табличном контроллере!
     return row;
   }
 

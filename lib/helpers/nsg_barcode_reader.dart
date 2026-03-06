@@ -15,8 +15,8 @@ typedef BarcodeScannedCallback = void Function(String barcode);
 /// It will buffer all characters coming in specifed `bufferDuration` time frame
 /// that end with line feed character and call callback function with result.
 /// Keep in mind this widget will listen for events even when not visible.
-/// Windows seems to be using the [RawKeyDownEvent] instead of the
-/// [RawKeyUpEvent], this behaviour can be managed by setting [useKeyDownEvent].
+/// Windows seems to be using the [KeyDownEvent] instead of the
+/// [KeyUpEvent], this behaviour can be managed by setting [useKeyDownEvent].
 class NsgBarcodeListener extends StatefulWidget {
   /// Child widget to be displayed.
   final Widget child;

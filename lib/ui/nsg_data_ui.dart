@@ -68,7 +68,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
     if (filter.sorting != null) {
       var sortStr = sort.toString();
       if (sortStr.isNotEmpty) {
-        filter.sorting = "${sortStr},${filter.sorting}";
+        filter.sorting = "$sortStr,${filter.sorting}";
       }
     } else {
       filter.sorting = sort.toString();
