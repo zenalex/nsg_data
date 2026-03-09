@@ -40,6 +40,7 @@ dependencies:
   file_picker: ^8.1.4
   web: ^1.1.1
   crypto: ^3.0.6
+  string_similarity: ^2.1.1
 
   # appmetrica_plugin: ^1.1.0
 
