@@ -160,9 +160,17 @@ abstract class NsgExcelImport<T extends NsgDataItem> {
 class NsgExcel {
   ///Открывает диалог для выбора excel файла. После выбора возвращает объект Excel
   static Future<Excel> getExcel() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xlsx', 'xls']);
-    if (result != null) {
-      var fileBytes = File(result.files.single.path!).readAsBytesSync();
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xlsx', 'xls'], withData: kIsWeb);
+    if (result != null && (result.files.isEmpty || !kIsWeb)) {
+      Uint8List? fileBytes;
+      if (kIsWeb) {
+        fileBytes = result.files.single.bytes;
+      } else {
+        fileBytes = File(result.files.single.path!).readAsBytesSync();
+      }
+      if (fileBytes == null) {
+        throw Exception("Не удалось прочитать файл");
+      }
       var excel = Excel.decodeBytes(fileBytes);
       return excel;
     } else {
