@@ -174,6 +174,19 @@ class NsgExcel {
       throw Exception("Не удалось прочитать файл");
     }
   }
+
+  static String intToExcelColumn(int number) {
+    if (number <= 0) {
+      throw ArgumentError('Number must be greater than 0');
+    }
+    String result = '';
+    while (number > 0) {
+      number--;
+      result = String.fromCharCode(65 + (number % 26)) + result;
+      number ~/= 26;
+    }
+    return result;
+  }
 }
 
 extension ParseExcel on Excel {
