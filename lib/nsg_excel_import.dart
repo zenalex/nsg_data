@@ -6,6 +6,7 @@ import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nsg_data/nsg_data.dart';
+import 'package:nsg_data/nsg_excel_aliases.dart';
 
 ///Интерфейс объекта реализующего связь между NsgDataItem и строками Excel таблицы
 ///При инициализации заполнится значениями из строки `row` листа `sheet`
@@ -222,6 +223,37 @@ extension ParseExcel on Excel {
       }
     }
   }
+
+  void parseExcelWithHeaderAliases(
+    void Function(Sheet sheet, int row, List<ImportModel> excelMap) parsing,
+    List<ColumnDefinition<NsgDataItem>> config, {
+    List<int>? sheetNumbers,
+    int? lastDataRow,
+    int maxRowsToScan = 50,
+    double minScorePerCell = 0.6,
+    int minRequiredMatches = 2,
+  }) {
+    if (sheetNumbers != null) {
+      assert(sheetNumbers.any((i) => i > 0), "Значение всех элементов sheetNumbers долно быть положительным числом больше 0, сейчас: $sheetNumbers");
+      for (var sheetNumber in sheetNumbers) {
+        if (sheets.keys.toList().length >= sheetNumber) {
+          var ex = this[sheets.keys.toList()[sheetNumber - 1]];
+          final header = ex.detectHeaders(config);
+          if (header == null) continue;
+          final excelMap = NsgExcelAliases.buildExcelMapFromHeader(header, config, NsgExcel.intToExcelColumn);
+          ex.parseSheet((s, i) => parsing(s, i, excelMap), firstDataRow: header.firstDataRow, lastDataRow: lastDataRow);
+        }
+      }
+    } else {
+      for (var sheet in sheets.keys) {
+        var ex = this[sheet];
+        final header = ex.detectHeaders(config);
+        if (header == null) continue;
+        final excelMap = NsgExcelAliases.buildExcelMapFromHeader(header, config, NsgExcel.intToExcelColumn);
+        ex.parseSheet((s, i) => parsing(s, i, excelMap), firstDataRow: header.firstDataRow, lastDataRow: lastDataRow);
+      }
+    }
+  }
 }
 
 extension ParseSheet on Sheet {
@@ -237,6 +269,13 @@ extension ParseSheet on Sheet {
       parsing(this, row);
     }
   }
+
+  DetectedHeader? detectHeaders(
+    List<ColumnDefinition<NsgDataItem>> config, {
+    int maxRowsToScan = 50,
+    double minScorePerCell = 0.6,
+    int minRequiredMatches = 2,
+  }) => NsgExcelAliases.findHeaderRow(this, config, maxRowsToScan: maxRowsToScan, minScorePerCell: minScorePerCell, minRequiredMatches: minRequiredMatches);
 }
 
 extension ParseString on String {
@@ -251,7 +290,12 @@ extension ParseString on String {
 
   double tryParseDouble({double emptyValue = -999999, bool enableLog = kDebugMode}) {
     try {
-      return tryParseNum(emptyValue: emptyValue, enableLog: enableLog) as double;
+      var val = tryParseNum(emptyValue: emptyValue, enableLog: enableLog);
+      if (val is int) {
+        return val.toDouble();
+      } else {
+        return val as double;
+      }
     } catch (ex) {
       if (enableLog) log(ex.toString());
       return emptyValue;
