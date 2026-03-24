@@ -1,4 +1,5 @@
 library;
+
 export 'package:nsg_data/authorize/nsgPhoneLoginParams.dart';
 export 'package:nsg_data/authorize/nsgPhoneLoginVerificationPage.dart';
 export 'package:nsg_data/authorize/nsgPhoneLoginPage.dart';
@@ -33,6 +34,7 @@ export 'package:nsg_data/controllers/nsgDataBinding.dart';
 export 'package:nsg_data/nsg_data_post.dart';
 export 'package:nsg_data/nsgDataFreeRequest.dart';
 export 'helpers/nsg_period.dart';
+export 'helpers/nsg_period_new.dart';
 export 'helpers/nsg_data_options.dart';
 export 'helpers/nsg_data_format.dart';
 export 'helpers/nsg_data_guid.dart';
