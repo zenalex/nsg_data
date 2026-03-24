@@ -61,7 +61,41 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   }
 
   ///Удалить настройку по имени.
-  void removeSettingItem(String settingName) {}
+  void removeSettingItem(String settingName) {
+    unawaited(_removeSettingsByNames([settingName]));
+  }
+
+  ///Удалить все настройки пользователя, сохраненные отдельными записями.
+  void removeAllSettings() {
+    unawaited(_removeSettingsByNames(userSettings.keys.toList()));
+  }
+
+  Future<void> _removeSettingsByNames(List<String> settingNames) async {
+    if (settingNames.isEmpty) {
+      return;
+    }
+
+    final itemsToDelete = <T>[];
+    for (final name in settingNames.toSet()) {
+      final item = userSettings.remove(name);
+      if (item == null) {
+        continue;
+      }
+      itemsToDelete.add(item);
+    }
+
+    if (itemsToDelete.isEmpty) {
+      return;
+    }
+
+    _settingsPostQueue.removeWhere((item) => itemsToDelete.contains(item));
+
+    if (selectedItem != null && itemsToDelete.contains(selectedItem)) {
+      selectedItem = null;
+    }
+
+    await deleteItems(itemsToDelete);
+  }
 
   @override
   Future afterRequestItems(List<NsgDataItem> newItemsList) async {
