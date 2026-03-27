@@ -207,17 +207,18 @@ class NsgTypedPeriod extends NsgDateTimePeriod {
   }
 
   NsgTypedPeriod changeType(NsgPeriodGranularity newType) {
+    final midPeriod = Jiffy.parseFromDateTime(begin).add(days: end.difference(begin).inDays ~/ 2).dateTime;
     switch (newType) {
       case NsgPeriodGranularity.year:
-        return NsgTypedPeriod.year(begin);
+        return NsgTypedPeriod.year(midPeriod);
       case NsgPeriodGranularity.quarter:
-        return NsgTypedPeriod.quarter(begin);
+        return NsgTypedPeriod.quarter(midPeriod);
       case NsgPeriodGranularity.month:
-        return NsgTypedPeriod.month(begin);
+        return NsgTypedPeriod.month(midPeriod);
       case NsgPeriodGranularity.week:
-        return NsgTypedPeriod.week(begin);
+        return NsgTypedPeriod.week(midPeriod);
       case NsgPeriodGranularity.day:
-        return NsgTypedPeriod.day(begin);
+        return NsgTypedPeriod.day(midPeriod);
       case NsgPeriodGranularity.days:
         return NsgTypedPeriod.days(begin, end);
       case NsgPeriodGranularity.custom:
