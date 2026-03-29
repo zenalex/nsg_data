@@ -139,7 +139,8 @@ class NsgDataItem {
   Map<String, dynamic> toJson({List<String> excludeFields = const []}) {
     var map = <String, dynamic>{};
 
-    if (remoteProvider.newTableLogic && docState == NsgDataItemDocState.deleted) {
+    if (remoteProvider.newTableLogic &&
+        docState == NsgDataItemDocState.deleted) {
       map[primaryKeyField] = id;
     } else {
       for (var name in fieldList.fields.keys) {
@@ -182,7 +183,8 @@ class NsgDataItem {
   NsgParamList get paramList => NsgDataClient.client.getParamList(runtimeType);
 
   ///Список id предопределенных объектов
-  List<String> get predefinedList => NsgDataClient.client.getPredefinedList(runtimeType);
+  List<String> get predefinedList =>
+      NsgDataClient.client.getPredefinedList(runtimeType);
 
   ///Значения полей объекта
   ///Так как поля обшие, значения храняться в отдельном объекте для экономии памяти
@@ -191,7 +193,11 @@ class NsgDataItem {
 
   ///Добавление ногого поля в объект
   ///Вызывается при инициализации
-  void addField(NsgDataField field, {bool primaryKey = false, String? presentation}) {
+  void addField(
+    NsgDataField field, {
+    bool primaryKey = false,
+    String? presentation,
+  }) {
     var name = field.name;
     assert(!fieldList.fields.containsKey(name));
     fieldList.fields[name] = field;
@@ -230,7 +236,10 @@ class NsgDataItem {
       return fieldValues.fields[name];
     } else {
       //Проверка на наличие поля в списке полей объекта
-      assert(fieldList.fields.containsKey(name), '!!! Не существует поля с именем: $name в объекте: $typeName');
+      assert(
+        fieldList.fields.containsKey(name),
+        '!!! Не существует поля с именем: $name в объекте: $typeName',
+      );
       //Проверка не является ли поле пустым (умышленно не читалось из БД, следовательно, нельзя брать значение из него)
       assert(!fieldValues.emptyFields.contains(name));
       if (allowNullValue) return null;
@@ -246,7 +255,10 @@ class NsgDataItem {
   ///Установить значение поля
   void setFieldValue(String name, dynamic value) {
     //TODO_FUTURE: убрать этот метод, присваивать значения в setValue полей
-    assert(fieldList.fields.containsKey(name), 'object $runtimeType does not contains field $name');
+    assert(
+      fieldList.fields.containsKey(name),
+      'object $runtimeType does not contains field $name',
+    );
     if (!fieldList.fields.containsKey(name)) {}
     var field = getField(name);
     if (field is NsgDataDoubleField) {
@@ -257,7 +269,8 @@ class NsgDataItem {
       value = value.value;
     } else if (value is NsgDataItem) {
       if (fieldList.fields[name] is NsgDataUntypedReferenceField) {
-        value = '${value.getFieldValue(value.primaryKeyField)}.${value.typeName}';
+        value =
+            '${value.getFieldValue(value.primaryKeyField)}.${value.typeName}';
       } else {
         value = value.getFieldValue(value.primaryKeyField);
       }
@@ -271,7 +284,9 @@ class NsgDataItem {
     } else if (name != primaryKeyField) {
       if (value is String) {
         var field = getField(name);
-        if (field is NsgDataStringField && value.length > field.maxLength && field.maxLength != 0) {
+        if (field is NsgDataStringField &&
+            value.length > field.maxLength &&
+            field.maxLength != 0) {
           value = value.toString().substring(0, field.maxLength);
         } else if (field is NsgDataDoubleField) {
           //TODO_FUTURE: такое впечатление, что весь это метод надо заменить на данную строку.
@@ -287,7 +302,10 @@ class NsgDataItem {
   ///Пометить поле пустым, т.е. что оно не загружалось из БД
   void setFieldEmpty(String name) {
     if (!fieldList.fields.containsKey(name)) {
-      assert(fieldList.fields.containsKey(name), 'object $runtimeType does not contains field $name');
+      assert(
+        fieldList.fields.containsKey(name),
+        'object $runtimeType does not contains field $name',
+      );
     }
     fieldValues.setEmpty(this, name);
   }
@@ -302,7 +320,8 @@ class NsgDataItem {
     }
   }
 
-  set remoteProvider(NsgDataProvider? value) => paramList.params[_PARAM_REMOTE_PROVIDER] = value;
+  set remoteProvider(NsgDataProvider? value) =>
+      paramList.params[_PARAM_REMOTE_PROVIDER] = value;
 
   NsgServerpodAdapter get resolvedServerpodAdapter {
     final adapter = serverpodAdapter ?? remoteProvider.serverpodAdapter;
@@ -312,7 +331,9 @@ class NsgDataItem {
     return adapter;
   }
 
-  Map<String, dynamic> toServerpodJson({List<String> excludeFields = const []}) {
+  Map<String, dynamic> toServerpodJson({
+    List<String> excludeFields = const [],
+  }) {
     return toJson(excludeFields: excludeFields);
   }
 
@@ -335,7 +356,9 @@ class NsgDataItem {
     final dynamic dynamicValue = value;
     final json = dynamicValue.toJson();
     if (json is! Map<String, dynamic>) {
-      throw ArgumentError('Serverpod value for $typeName must be NsgDataItem, Map<String, dynamic>, or expose toJson()');
+      throw ArgumentError(
+        'Serverpod value for $typeName must be NsgDataItem, Map<String, dynamic>, or expose toJson()',
+      );
     }
     fromServerpodJson(json);
   }
@@ -369,11 +392,17 @@ class NsgDataItem {
   }
 
   ///В случае ссылочного поля позвращает объект, на который ссылается данное поле. Если поле не прочитано из БД, читает его асинхронно
-  Future<T> getReferentAsync<T extends NsgDataItem>(String name, {bool useCache = true}) async {
+  Future<T> getReferentAsync<T extends NsgDataItem>(
+    String name, {
+    bool useCache = true,
+  }) async {
     assert(fieldValues.fields.containsKey(name));
     var field = fieldList.fields[name]!;
     assert(field is NsgDataReferenceField);
-    var dataItem = await ((field as NsgDataReferenceField).getReferentAsync(this, useCache: useCache));
+    var dataItem = await ((field as NsgDataReferenceField).getReferentAsync(
+      this,
+      useCache: useCache,
+    ));
     return dataItem as T;
   }
 
@@ -398,7 +427,10 @@ class NsgDataItem {
   ///
   /// [items] - список элементов, из которых нужно извлечь ссылочные ID
   /// [fieldNames] - список имен полей для загрузки (поддерживает вложенные через точку)
-  static Future<void> loadReferencesWithCache(List<NsgDataItem> items, List<String> fieldNames) async {
+  static Future<void> loadReferencesWithCache(
+    List<NsgDataItem> items,
+    List<String> fieldNames,
+  ) async {
     if (items.isEmpty || fieldNames.isEmpty) return;
 
     for (var fieldName in fieldNames) {
@@ -407,16 +439,23 @@ class NsgDataItem {
   }
 
   /// Внутренний метод для загрузки одного ссылочного поля с проверкой кэша
-  static Future<void> _loadReferenceFieldWithCache(List<NsgDataItem> items, String fieldName) async {
+  static Future<void> _loadReferenceFieldWithCache(
+    List<NsgDataItem> items,
+    String fieldName,
+  ) async {
     if (items.isEmpty) return;
 
     var splitedName = fieldName.split('.');
-    var field = NsgDataClient.client.getReferentFieldByFullPath(items[0].runtimeType, splitedName[0]);
+    var field = NsgDataClient.client.getReferentFieldByFullPath(
+      items[0].runtimeType,
+      splitedName[0],
+    );
     if (field is! NsgDataBaseReferenceField) return;
 
     var checkItems = <NsgDataItem>[];
 
-    if (field is NsgDataReferenceField && field is! NsgDataUntypedReferenceField) {
+    if (field is NsgDataReferenceField &&
+        field is! NsgDataUntypedReferenceField) {
       // Обычное ссылочное поле
       final idsNotInCache = <String>[];
 
@@ -426,7 +465,11 @@ class NsgDataItem {
           var fieldValue = item.getFieldValue(splitedName[0]).toString();
           if (fieldValue.isNotEmpty && !fieldValue.contains(Guid.Empty)) {
             // Проверяем кэш
-            var cachedItem = NsgDataClient.client.getItemsFromCache(field.referentElementType, fieldValue, allowNull: true);
+            var cachedItem = NsgDataClient.client.getItemsFromCache(
+              field.referentElementType,
+              fieldValue,
+              allowNull: true,
+            );
             if (cachedItem == null) {
               if (!idsNotInCache.contains(fieldValue)) {
                 idsNotInCache.add(fieldValue);
@@ -445,12 +488,17 @@ class NsgDataItem {
         var request = NsgDataRequest(dataItemType: field.referentElementType);
         var cmp = NsgCompare();
         cmp.add(
-          name: NsgDataClient.client.getNewObject(field.referentElementType).primaryKeyField,
+          name: NsgDataClient.client
+              .getNewObject(field.referentElementType)
+              .primaryKeyField,
           value: idsNotInCache,
           comparisonOperator: NsgComparisonOperator.inList,
         );
         var filter = NsgDataRequestParams(compare: cmp);
-        var refItems = await request.requestItems(filter: filter, loadReference: []);
+        var refItems = await request.requestItems(
+          filter: filter,
+          loadReference: [],
+        );
         checkItems.addAll(refItems);
       }
     } else if (field is NsgDataUntypedReferenceField) {
@@ -460,16 +508,24 @@ class NsgDataItem {
       for (var item in items) {
         var checkedItem = field.getReferent(item, allowNull: true);
         if (checkedItem == null) {
-          var splittedFieldValue = item.getFieldValue(splitedName[0]).toString().split('.');
+          var splittedFieldValue = item
+              .getFieldValue(splitedName[0])
+              .toString()
+              .split('.');
 
-          if (splittedFieldValue.length == 2 && !splittedFieldValue[0].contains(Guid.Empty)) {
+          if (splittedFieldValue.length == 2 &&
+              !splittedFieldValue[0].contains(Guid.Empty)) {
             var typeName = splittedFieldValue[1];
             var guid = splittedFieldValue[0];
 
             // Проверяем кэш
             try {
               var refType = NsgDataClient.client.getTypeByServerName(typeName);
-              var cachedItem = NsgDataClient.client.getItemsFromCache(refType, guid, allowNull: true);
+              var cachedItem = NsgDataClient.client.getItemsFromCache(
+                refType,
+                guid,
+                allowNull: true,
+              );
               if (cachedItem == null) {
                 sortedFields.putIfAbsent(typeName, () => <String>[]);
                 if (!sortedFields[typeName]!.contains(guid)) {
@@ -495,9 +551,16 @@ class NsgDataItem {
         var refType = NsgDataClient.client.getTypeByServerName(typeName);
         var request = NsgDataRequest(dataItemType: refType);
         var cmp = NsgCompare();
-        cmp.add(name: NsgDataClient.client.getNewObject(refType).primaryKeyField, value: refList, comparisonOperator: NsgComparisonOperator.inList);
+        cmp.add(
+          name: NsgDataClient.client.getNewObject(refType).primaryKeyField,
+          value: refList,
+          comparisonOperator: NsgComparisonOperator.inList,
+        );
         var filter = NsgDataRequestParams(compare: cmp);
-        var refItems = await request.requestItems(filter: filter, loadReference: []);
+        var refItems = await request.requestItems(
+          filter: filter,
+          loadReference: [],
+        );
         checkItems.addAll(refItems);
       }
     } else if (field is NsgDataReferenceListField) {
@@ -541,7 +604,8 @@ class NsgDataItem {
   }
 
   ///Устанавливает значение ключевого поля (обычно Guid)
-  set primaryKeyField(String value) => paramList.params[_PRIMARY_KEY_FIELD] = value;
+  set primaryKeyField(String value) =>
+      paramList.params[_PRIMARY_KEY_FIELD] = value;
 
   ///Возвращает список всех полей ссылочных типов
   List<String> getAllReferenceFields() {
@@ -568,7 +632,8 @@ class NsgDataItem {
   ///Подробности см. в описании свойства isEmpty
   bool get isNotEmpty => !isEmpty;
   @override
-  bool operator ==(Object other) => runtimeType == other.runtimeType && other is NsgDataItem && equal(other);
+  bool operator ==(Object other) =>
+      runtimeType == other.runtimeType && other is NsgDataItem && equal(other);
   bool equal(NsgDataItem other) {
     return hashCode == other.hashCode;
     // if (primaryKeyField == '') return hashCode == other.hashCode;
@@ -594,7 +659,9 @@ class NsgDataItem {
     if (storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: runtimeType);
       p.itemsToPost = <NsgDataItem>[this];
-      var newItem = await p.postItem(loadReference: NsgDataRequest.addAllReferences(runtimeType));
+      var newItem = await p.postItem(
+        loadReference: NsgDataRequest.addAllReferences(runtimeType),
+      );
       if (newItem != null) {
         copyFieldValues(newItem);
         state = newItem.state;
@@ -608,13 +675,18 @@ class NsgDataItem {
 
   ///Сохранение объектов в БД
   ///В случае успеха, поля объектов будут заполнены полями объектов из БД
-  Future postItems(List<NsgDataItem> itemsToPost, {bool showProgress = false}) async {
+  Future postItems(
+    List<NsgDataItem> itemsToPost, {
+    bool showProgress = false,
+  }) async {
     if (itemsToPost.isEmpty) return;
     var dataType = itemsToPost.first.runtimeType;
     if (storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: dataType);
       p.itemsToPost = itemsToPost;
-      var newItems = await p.postItems(loadReference: NsgDataRequest.addAllReferences(dataType));
+      var newItems = await p.postItems(
+        loadReference: NsgDataRequest.addAllReferences(dataType),
+      );
       for (var item in newItems) {
         var old = itemsToPost.firstWhereOrNull((e) => e.id == item.id);
         if (old != null) {
@@ -644,7 +716,11 @@ class NsgDataItem {
     NsgCancelToken? cancelToken,
   }) async {
     var filter = NsgDataRequestParams();
-    filter.compare.add(name: primaryKeyField, value: id, comparisonOperator: NsgComparisonOperator.equal);
+    filter.compare.add(
+      name: primaryKeyField,
+      value: id,
+      comparisonOperator: NsgComparisonOperator.equal,
+    );
     late NsgDataItem newItem;
     if (storageType == NsgDataStorageType.server) {
       var p = NsgDataRequest(dataItemType: runtimeType);
@@ -734,7 +810,8 @@ class NsgDataItem {
               newTable.addRow(newRow);
             }
           } else {
-            if (copyEmptyFields || !oldItem.fieldValues.emptyFields.contains(key)) {
+            if (copyEmptyFields ||
+                !oldItem.fieldValues.emptyFields.contains(key)) {
               setFieldValue(translateKey, oldItem.getFieldValue(key));
             }
           }
@@ -747,7 +824,11 @@ class NsgDataItem {
   ///cloneAsCopy - после копирования подменить id объектов и вызвать метод заполнения после копирования
   NsgDataItem clone({bool cloneAsCopy = false, List<String>? excludeFields}) {
     var newItem = getNewObject();
-    newItem.copyFieldValues(this, cloneAsCopy: cloneAsCopy, excludeFields: excludeFields);
+    newItem.copyFieldValues(
+      this,
+      cloneAsCopy: cloneAsCopy,
+      excludeFields: excludeFields,
+    );
     newItem.loadTime = loadTime;
     newItem.state = cloneAsCopy ? NsgDataItemState.create : state;
     newItem.docState = cloneAsCopy ? NsgDataItemDocState.created : docState;
@@ -826,14 +907,22 @@ class NsgDataItem {
     var answer = NsgValidateResult();
     for (var fieldName in fieldList.fields.keys) {
       if (isFieldRequired(fieldName)) {
-        if (fieldValues.fields[fieldName] == fieldList.fields[fieldName]!.defaultValue) {
-          //&& fieldList.fields[fieldName]!.defaultValue! != 0
+        final field = fieldList.fields[fieldName]!;
+        final hasExplicitValue =
+            fieldValues.fields.containsKey(fieldName) &&
+            !fieldValues.emptyFields.contains(fieldName);
+        final isMissing = field is NsgDataEnumReferenceField
+            ? !hasExplicitValue
+            : !hasExplicitValue ||
+                  fieldValues.fields[fieldName] == field.defaultValue;
+        if (isMissing) {
           var fieldPresentation = fieldList.fields[fieldName]!.presentation;
           if (fieldPresentation.isEmpty) {
             fieldPresentation = fieldName;
           }
           answer.isValid = false;
-          answer.fieldsWithError[fieldName] = 'Не заполнено обязательное поле $fieldPresentation';
+          answer.fieldsWithError[fieldName] =
+              'Не заполнено обязательное поле $fieldPresentation';
           if (controller != null) {
             controller.fieldsWithError = answer.fieldsWithError;
           }
@@ -905,7 +994,10 @@ class NsgDataItem {
           foundFieldName = splitedPath[i];
           //Если это табличная часть, то она должна быть последняя в списке. Иначе, придется перебирать все элементы, удовлетворяющие условию
           //Возможно, можно и для этого случая собрать все вложенные элементы, но мне кажется это излишним, лучше правильно писать запросы
-          assert(i == splitedPath.length - 1, 'NsgDataReferenceListField type field can be last only');
+          assert(
+            i == splitedPath.length - 1,
+            'NsgDataReferenceListField type field can be last only',
+          );
           break;
         } else {
           throw Exception('Field $foundFullPath not found in object $this');
@@ -983,8 +1075,15 @@ class NsgDataItem {
 
   ///Прочитать элемент из базы данных
   ///Чтение идет по ID
-  Future<T> selectFromDb<T extends NsgDataItem>({int autoRepeateCount = 3, List<String>? referenceList, NsgCancelToken? cancelToken}) async {
-    NsgDataRequest request = NsgDataRequest<T>(dataItemType: runtimeType, storageType: storageType);
+  Future<T> selectFromDb<T extends NsgDataItem>({
+    int autoRepeateCount = 3,
+    List<String>? referenceList,
+    NsgCancelToken? cancelToken,
+  }) async {
+    NsgDataRequest request = NsgDataRequest<T>(
+      dataItemType: runtimeType,
+      storageType: storageType,
+    );
 
     var cmp = NsgCompare();
     cmp.add(name: primaryKeyField, value: getFieldValue(primaryKeyField));

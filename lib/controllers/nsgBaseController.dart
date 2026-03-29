@@ -407,7 +407,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') return newItemsList;
+    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') {
+      return newItemsList;
+    }
     return newItemsList.where((element) {
       for (var fieldName in element.fieldList.fields.keys) {
         var field = element.getField(fieldName);
@@ -703,7 +705,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       var validationResult = selectedItem!.validateFieldValues();
       if (!validationResult.isValid) {
         var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
-        if (NsgApiException.showExceptionDefault != null) {
+        if (enableShowException && NsgApiException.showExceptionDefault != null) {
           NsgApiException.showExceptionDefault!(err);
         }
         sendNotify();
@@ -740,7 +742,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (ex is NsgApiException) {
         var func = showException ?? NsgApiException.showExceptionDefault;
 
-        if (func != null && showExceptionDialog && enableShowException) func(ex);
+        if (func != null && showExceptionDialog && enableShowException) {
+          func(ex);
+        }
       }
       rethrow;
     } finally {
