@@ -1,10 +1,11 @@
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'nsg_data_options.dart';
+import 'nsg_date_helper.dart';
 
 abstract class NsgDateFormat {
   static dateFormat(DateTime datetime, {String? format, bool ignoreYear = false, required String locale}) {
-    if (!ignoreYear && datetime.year <= 1754) {
+    if (!ignoreYear && NsgDateHelper.isEmptyDate(datetime)) {
       return "";
     }
     return DateFormat(format ?? NsgDataOptions.instance.dateformat, locale).format(datetime);

@@ -90,6 +90,9 @@ class NsgDataItem {
   ///Пример такого объекта - FileItem с сохранением картинок в minIO
   bool get postArrayIsForbidden => false;
 
+  ///Адаптер доступа к serverpod. Если не задан у объекта, будет взят из remoteProvider.
+  NsgServerpodAdapter? get serverpodAdapter => null;
+
   ///Объект прочитан с серверной базы данных
   bool isReadFromServer = false;
 
@@ -300,6 +303,42 @@ class NsgDataItem {
   }
 
   set remoteProvider(NsgDataProvider? value) => paramList.params[_PARAM_REMOTE_PROVIDER] = value;
+
+  NsgServerpodAdapter get resolvedServerpodAdapter {
+    final adapter = serverpodAdapter ?? remoteProvider.serverpodAdapter;
+    if (adapter == null) {
+      throw Exception('Serverpod adapter not set for $typeName');
+    }
+    return adapter;
+  }
+
+  Map<String, dynamic> toServerpodJson({List<String> excludeFields = const []}) {
+    return toJson(excludeFields: excludeFields);
+  }
+
+  void fromServerpodJson(Map<String, dynamic> json) {
+    fromJson(json);
+  }
+
+  void fromServerpodValue(dynamic value) {
+    if (value is NsgDataItem) {
+      copyFieldValues(value);
+      state = value.state;
+      docState = value.docState;
+      loadTime = DateTime.now().microsecondsSinceEpoch;
+      return;
+    }
+    if (value is Map<String, dynamic>) {
+      fromServerpodJson(value);
+      return;
+    }
+    final dynamic dynamicValue = value;
+    final json = dynamicValue.toJson();
+    if (json is! Map<String, dynamic>) {
+      throw ArgumentError('Serverpod value for $typeName must be NsgDataItem, Map<String, dynamic>, or expose toJson()');
+    }
+    fromServerpodJson(json);
+  }
 
   ///В случае ссылочного поля позвращает объект, на который ссылается данное поле
   T getReferent<T extends NsgDataItem?>(String name) {

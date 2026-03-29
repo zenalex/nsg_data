@@ -18,6 +18,19 @@ class NsgDataDelete<T extends NsgDataItem> {
 
   Future deleteItems({bool autoAuthorize = true, String tag = '', List<String>? loadReference, String function = ''}) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
+    if (dataItem.remoteProvider.usesServerpod) {
+      final context = NsgServerpodMutationContext(
+        provider: dataItem.remoteProvider,
+        prototype: dataItem,
+        dataItemType: dataItemType,
+        items: itemsToDelete.cast<NsgDataItem>(),
+        loadReference: loadReference ?? const <String>[],
+        tag: tag,
+        function: function,
+      );
+      await dataItem.resolvedServerpodAdapter.deleteItems(context);
+      return;
+    }
 
     var header = <String, String?>{};
     if (dataItem.remoteProvider.token != '') {

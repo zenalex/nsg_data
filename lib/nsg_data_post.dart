@@ -26,6 +26,9 @@ class NsgDataPost<T extends NsgDataItem> {
 
   Future<List<T>> postItems({bool autoAuthorize = true, String tag = '', List<String>? loadReference, String function = ''}) async {
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
+    if (dataItem.remoteProvider.usesServerpod) {
+      return await _postItemsServerpod(dataItem: dataItem, tag: tag, loadReference: loadReference, function: function);
+    }
 
     ///для объектов с запретом массового POST вызываем последовательное сохранение каждого объекта
     if (itemsToPost.length > 1 && dataItem.postArrayIsForbidden) {
@@ -65,6 +68,40 @@ class NsgDataPost<T extends NsgDataItem> {
     for (var element in _items) {
       element.state = NsgDataItemState.fill;
     }
+    return _items;
+  }
+
+  Future<List<T>> _postItemsServerpod({
+    required NsgDataItem dataItem,
+    required String tag,
+    List<String>? loadReference,
+    String function = '',
+  }) async {
+    final context = NsgServerpodMutationContext(
+      provider: dataItem.remoteProvider,
+      prototype: dataItem,
+      dataItemType: dataItemType,
+      items: itemsToPost.cast<NsgDataItem>(),
+      loadReference: loadReference ?? const <String>[],
+      tag: tag,
+      function: function,
+    );
+    final response = await dataItem.resolvedServerpodAdapter.postItems(context);
+    dynamic rawItems = response;
+    if (response is NsgServerpodListResult) {
+      rawItems = response.items;
+    }
+    if (rawItems is! List) {
+      rawItems = rawItems == null ? <dynamic>[] : <dynamic>[rawItems];
+    }
+    _items = <T>[];
+    for (final rawItem in rawItems) {
+      final elem = NsgDataClient.client.getNewObject(dataItemType);
+      elem.fromServerpodValue(rawItem);
+      elem.state = NsgDataItemState.fill;
+      _items.add(elem as T);
+    }
+    NsgDataClient.client.addItemsToCache(items: _items, tag: tag);
     return _items;
   }
 

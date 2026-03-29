@@ -43,6 +43,48 @@ item.setValue('age', 30);
 await provider.postItem(item);
 ```
 
+## Serverpod
+
+`nsg_data` can now work with `serverpod` as an alternative server transport without changing `NsgDataController` or `NsgInput`.
+
+```dart
+class CompanyItem extends NsgServerpodDataItem<CompanyDto> {
+  @override
+  String get apiRequestItems => '/company';
+
+  @override
+  CompanyItem getNewObject() => CompanyItem();
+
+  @override
+  CompanyDto createServerpodModel(Map<String, dynamic> json) => CompanyDto.fromJson(json);
+
+  @override
+  void initialize() {
+    addField(NsgDataStringField('id'), primaryKey: true);
+    addField(NsgDataStringField('name'));
+  }
+}
+
+final provider = NsgDataProvider(
+  applicationName: 'titan_control',
+  applicationVersion: '1.0.0',
+  firebaseToken: '',
+  availableServers: availableServers,
+  providerKind: NsgRemoteProviderKind.serverpod,
+  serverpodAdapter: NsgServerpodAdapter(
+    fetchItems: (context) async => client.company.list(context.filter),
+    postItems: (context) async => client.company.saveMany(
+      context.items.map((e) => (e as CompanyItem).toServerpodModel()).toList(),
+    ),
+    deleteItems: (context) async {
+      await client.company.deleteMany(context.items.map((e) => e.id).toList());
+    },
+  ),
+);
+```
+
+For per-entity customization you can override `serverpodAdapter` directly in a concrete `NsgDataItem`.
+
 ## Dependencies
 
 This package depends on `nsg_controls` which should be published first due to circular dependency.

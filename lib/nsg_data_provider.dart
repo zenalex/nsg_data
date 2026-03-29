@@ -85,6 +85,9 @@ class NsgDataProvider {
 
   bool newTableLogic;
 
+  NsgRemoteProviderKind providerKind;
+  NsgServerpodAdapter? serverpodAdapter;
+
   // Web-only: cross-tab token sync (stubbed on non-web)
   CrossTabAuth? _crossAuth;
 
@@ -108,9 +111,13 @@ class NsgDataProvider {
     this.languageCode = 'ru',
     this.newTableLogic = false,
     this.onTokenChanged,
+    this.providerKind = NsgRemoteProviderKind.rest,
+    this.serverpodAdapter,
   }) {
     // widgetParams = widgetLoginParams ?? () => NsgBaseController.defaultLoginParams!;
   }
+
+  bool get usesServerpod => providerKind == NsgRemoteProviderKind.serverpod;
 
   void dispose() {
     _tokenController.close();

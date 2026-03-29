@@ -20,13 +20,22 @@ class NsgDataDateField extends NsgDataField {
 
   @override
   dynamic convertToJson(dynamic jsonValue) {
-    if (useDate == useTime) return (jsonValue as DateTime).toUtc().toIso8601String();
-    return (jsonValue as DateTime).toIso8601String();
+    final value = jsonValue is DateTime ? NsgDateHelper.clampToMinDate(jsonValue) : NsgDateHelper.minDate;
+    if (useDate == useTime) return value.toUtc().toIso8601String();
+    return value.toIso8601String();
   }
 
   @override
   void setValue(NsgFieldValues fieldValues, dynamic value) {
+    if (value == null) {
+      fieldValues.fields[name] = NsgDateHelper.minDate;
+      return;
+    }
     if (value is String) {
+      if (value.trim().isEmpty) {
+        fieldValues.fields[name] = NsgDateHelper.minDate;
+        return;
+      }
       if (useDate == useTime) {
         fieldValues.fields[name] = DateTime.parse(value).toLocal();
       } else {

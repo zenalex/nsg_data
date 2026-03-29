@@ -125,6 +125,15 @@ class NsgDataRequest<T extends NsgDataItem> {
       cancelToken!.calcel();
     }
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
+    if (dataItem.remoteProvider.usesServerpod) {
+      return await _requestItemsFromServerpod(
+        dataItem: dataItem,
+        filter: filter,
+        tag: tag,
+        loadReference: loadReference,
+        function: function,
+      );
+    }
     var filterMap = <String, dynamic>{};
 
     //Добавление в запрос имен полей, требующих дочитывания
@@ -184,6 +193,49 @@ class NsgDataRequest<T extends NsgDataItem> {
       rethrow;
     }
     debugPrint("items length = ${items.length}");
+    return items;
+  }
+
+  Future<List<T>> _requestItemsFromServerpod({
+    required NsgDataItem dataItem,
+    NsgDataRequestParams? filter,
+    String tag = '',
+    List<String>? loadReference,
+    String function = '',
+  }) async {
+    loadReference ??= dataItem.loadReferenceDefault ?? addAllReferences(dataItem.runtimeType);
+    filter ??= NsgDataRequestParams();
+    filter.referenceList ??= loadReference;
+
+    final context = NsgServerpodRequestContext(
+      provider: dataItem.remoteProvider,
+      prototype: dataItem,
+      dataItemType: dataItemType,
+      filter: filter,
+      loadReference: filter.referenceList ?? const <String>[],
+      tag: tag,
+      function: function,
+    );
+    final response = await dataItem.resolvedServerpodAdapter.fetchItems(context);
+
+    dynamic rawItems = response;
+    if (response is NsgServerpodListResult) {
+      totalCount = response.totalCount;
+      rawItems = response.items;
+    }
+    if (rawItems is! List) {
+      rawItems = rawItems == null ? <dynamic>[] : <dynamic>[rawItems];
+    }
+
+    items = <T>[];
+    for (final rawItem in rawItems) {
+      final elem = NsgDataClient.client.getNewObject(dataItemType);
+      elem.fromServerpodValue(rawItem);
+      elem.isReadFromServer = true;
+      items.add(elem as T);
+    }
+    NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+    await loadAllReferents(items, filter.referenceList, tag: tag);
     return items;
   }
 
