@@ -206,6 +206,16 @@ class NsgTypedPeriod extends NsgDateTimePeriod {
     return NsgPeriodGranularity.custom;
   }
 
+  @override
+  NsgTypedPeriod copyWithBegin(DateTime begin) => NsgTypedPeriod(begin, end);
+
+  @override
+  NsgTypedPeriod copyWithEnd(DateTime end) => NsgTypedPeriod(begin, end);
+
+  NsgTypedPeriod copyWithBeginTime(TimeOfDay beginTime) => NsgTypedPeriod(DateTime(begin.year, begin.month, begin.day, beginTime.hour, beginTime.minute), end);
+
+  NsgTypedPeriod copyWithEndTime(TimeOfDay endTime) => NsgTypedPeriod(begin, DateTime(end.year, end.month, end.day, endTime.hour, endTime.minute));
+
   NsgTypedPeriod changeType(NsgPeriodGranularity newType) {
     final midPeriod = Jiffy.parseFromDateTime(begin).add(days: end.difference(begin).inDays ~/ 2).dateTime;
     switch (newType) {
@@ -241,7 +251,7 @@ class NsgTypedPeriod extends NsgDateTimePeriod {
       case NsgPeriodGranularity.days:
         return '${DateFormat.yMd(locale).format(begin)} - ${DateFormat.yMd(locale).format(end)}';
       case NsgPeriodGranularity.custom:
-        return '${DateFormat.yMd(locale).format(begin)} - ${DateFormat.yMd(locale).format(end)}';
+        return '${DateFormat.yMd(locale).add_jm().format(begin)} - ${DateFormat.yMd(locale).add_jm().format(end)}';
     }
   }
 
@@ -315,11 +325,26 @@ extension NsgTypedPeriodExtension on NsgTypedPeriod {
   DateTimeRange toDateTimeRange() {
     return DateTimeRange(start: begin, end: end);
   }
+
+  NsgTimeOfDayPeriod toNsgTimeOfDayPeriod() {
+    return NsgTimeOfDayPeriod(TimeOfDay.fromDateTime(begin), TimeOfDay.fromDateTime(end));
+  }
 }
 
 extension NsgPeriodExtension on NsgPeriod {
   NsgTypedPeriod toNsgTypedPeriod() {
     final period = NsgTypedPeriod(beginDate, endDate);
     return period;
+  }
+
+  NsgTimeOfDayPeriod toNsgTimeOfDayPeriod() {
+    return NsgTimeOfDayPeriod(TimeOfDay.fromDateTime(beginDate), TimeOfDay.fromDateTime(endDate));
+  }
+}
+
+extension NsgTimeOfDayPeriodExtension on NsgTimeOfDayPeriod {
+  NsgTypedPeriod toNsgTypedPeriod(DateTime? date) {
+    date ??= DateTime.now();
+    return NsgTypedPeriod(DateTime(date.year, date.month, date.day, begin.hour, begin.minute), DateTime(date.year, date.month, date.day, end.hour, end.minute));
   }
 }
