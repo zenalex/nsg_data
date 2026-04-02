@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_navigation/src/routes/new_path_route.dart';
+import 'package:nsg_data/controllers/nsg_controller_regime.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/ui/nsg_loading_scroll_controller.dart';
 
@@ -96,6 +97,15 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
     },
   );
 
+  @override
+  Future refreshData({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) {
+    if (regime == NsgControllerRegime.selection) {
+      scrollController.lastOffset = 0;
+      scrollController.startUpdate();
+    }
+    return super.refreshData(keys: keys, filter: filter);
+  }
+
   /// Прокручивает список к текущему выбранному элементу контроллера `currentItem`.
   void scrollToCurrentItem() {
     scrollController.scrollToIndex(scrollController.dataGroups.getIndexByItem(currentItem));
@@ -140,9 +150,11 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 /// Представляет одну группу данных в списке (например, все элементы одного дня).
 /// Хранит сами элементы, имя поля группировки и ключи для точной прокрутки к элементам.
 class DataGroup {
-  DataGroup({required this.data, required this.groupFieldName, this.dividerBuilder, this.partOfDate}) {
-    for (var d in data) {
-      _itemsKeys.addAll({d: GlobalKey()});
+  // GlobalKey на индекс строки, не на item: при повторе одного NsgDataItem в data карта давала один ключ на две строки → Duplicate GlobalKey.
+  DataGroup({required this.data, required this.groupFieldName, this.dividerBuilder, this.partOfDate})
+      : rowKeys = List<GlobalKey>.generate(data.length, (_) => GlobalKey()) {
+    for (var i = 0; i < data.length; i++) {
+      _itemsKeys[data[i]] = rowKeys[i];
     }
   }
 
@@ -157,6 +169,11 @@ class DataGroup {
 
   /// Кастомный билдер разделителя группы (опционально).
   final Widget Function(String grName, dynamic fieldValue)? dividerBuilder;
+
+  /// Ключи строк данных; разделитель — [dividerKey] (раньше для divider создавался новый GlobalKey при каждом getElemet).
+  final List<GlobalKey> rowKeys;
+
+  final GlobalKey dividerKey = GlobalKey();
 
   final Map<NsgDataItem, GlobalKey> _itemsKeys = {};
   Map<NsgDataItem, GlobalKey> get itemsKeys => _itemsKeys;
@@ -247,14 +264,15 @@ class DataGroupList {
     var group = _sizes.entries.firstWhereOrNull((i) => i.value.first <= index && index <= i.value.last);
     if (group != null) {
       if (index - group.value.first > 0 || !needDivider) {
+        final rowIndex = index - group.value.first - (needDivider ? 1 : 0);
         return (
-          value: group.key.data[index - group.value.first - (needDivider ? 1 : 0)],
+          value: group.key.data[rowIndex],
           group: group.key,
           isDivider: false,
-          key: _itemsKeys[group.key.data[index - group.value.first - (needDivider ? 1 : 0)]],
+          key: group.key.rowKeys[rowIndex], // не _itemsKeys[item]: см. коммент. у конструктора DataGroup
         );
       }
-      return (value: group.key.groupValue, group: group.key, isDivider: true, key: _itemsKeys[group.key.groupValue] ?? GlobalKey());
+      return (value: group.key.groupValue, group: group.key, isDivider: true, key: group.key.dividerKey);
     }
     throw (RangeError("index $index out of range"));
   }

@@ -5,11 +5,15 @@ class NsgLoadingScrollController<T> extends ScrollController {
   NsgLoadingScrollController({this.function, this.positionBeforeLoad = 200, this.attemptCount = 1}) : super(keepScrollOffset: true) {
     addListener(() async {
       try {
+        // Нельзя вызывать [position] / [offset] при positions.length != 1 (переход между экранами).
+        if (positions.length != 1) {
+          return;
+        }
+        final p = positions.first;
         if (_attCount < attemptCount &&
             _stat != NsgLoadingScrollStatus.loading &&
             _stat != NsgLoadingScrollStatus.pause &&
-            positions.isNotEmpty &&
-            (position.pixels >= position.maxScrollExtent - positionBeforeLoad)) {
+            (p.pixels >= p.maxScrollExtent - positionBeforeLoad)) {
           _stat = NsgLoadingScrollStatus.loading;
           try {
             _attCount++;
@@ -27,12 +31,12 @@ class NsgLoadingScrollController<T> extends ScrollController {
               _stat = NsgLoadingScrollStatus.error;
             }
           }
-        } else if (!(positions.isNotEmpty && position.pixels >= position.maxScrollExtent - positionBeforeLoad)) {
+        } else if (!(p.pixels >= p.maxScrollExtent - positionBeforeLoad)) {
           _attCount = 0;
           _errCount = 0;
         }
 
-        lastOffset = offset;
+        lastOffset = p.pixels;
       } catch (e) {
         // Handle cases where ScrollController is not properly attached
         // or has multiple positions
@@ -51,6 +55,9 @@ class NsgLoadingScrollController<T> extends ScrollController {
 
   int _errCount = 0;
   int _attCount = 0;
+
+  /// Схлопывает несколько scheduleRestoreScrollOffsetAfterRebuild подряд (per-frame obx).
+  int _restoreScrollSeq = 0;
 
   T? _value;
 
@@ -83,6 +90,24 @@ class NsgLoadingScrollController<T> extends ScrollController {
     _status = NsgLoadingScrollStatus.init;
   }
 
+  /// Восстановить [lastOffset] после пересборки списка. Без [position] при 0/2+ Scrollable; один jumpTo на серию rebuild.
+  void scheduleRestoreScrollOffsetAfterRebuild() {
+    final seq = ++_restoreScrollSeq;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.microtask(() {
+        if (seq != _restoreScrollSeq) return;
+        try {
+          if (!hasClients || positions.length != 1) return;
+          final target = lastOffset;
+          if (target <= 0) return;
+          final max = positions.first.maxScrollExtent;
+          if (max <= 0) return;
+          jumpTo(target.clamp(0.0, max));
+        } catch (_) {}
+      });
+    });
+  }
+
   // void scrollToIndex(int index) {
   //   double position = 0;
   //   for (int i = 0; i < index; i++) {
@@ -111,10 +136,15 @@ class NsgLoadingScrollController<T> extends ScrollController {
         await Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 1), curve: Curves.easeInOut);
         break;
       } else {
-        await animateTo(offset + 400, duration: const Duration(milliseconds: 1), curve: Curves.linear);
+        if (positions.length == 1) {
+          await animateTo(positions.first.pixels + 400, duration: const Duration(milliseconds: 1), curve: Curves.linear);
+        }
       }
-      if (positions.isNotEmpty && position.pixels >= position.maxScrollExtent) {
-        break;
+      if (positions.length == 1) {
+        final p = positions.first;
+        if (p.pixels >= p.maxScrollExtent) {
+          break;
+        }
       }
     }
   }
