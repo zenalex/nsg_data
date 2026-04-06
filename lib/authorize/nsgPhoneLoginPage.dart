@@ -196,7 +196,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
           NsgNavigator.instance.offAndToPage(widget.widgetParams!.mainPage);
         } else {
           //if (widget.widgetParams!.needOpenPage) {
-          Get.back();
+          NsgShell.navigation.back();
           //}
         }
 
@@ -551,7 +551,7 @@ class _NsgPhoneLoginWidgetState extends State<NsgPhoneLoginWidget> {
   }
 
   void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password, required String firebaseToken}) {
-    var context = Get.context;
+    var context = NsgShell.environment.context;
     if (!_formKey.currentState!.validate()) return;
 
     NsgMetrica.reportLoginStart(loginType.toString());

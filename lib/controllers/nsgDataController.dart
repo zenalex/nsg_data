@@ -11,12 +11,15 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   String get controllerId => _controllerId;
 
   ///Первый элемент из items. Если items  пустой: вернет новый пустой элемент данных  типа T
-  T get firstItem => (dataItemList.isEmpty) ? NsgDataClient.client.getNewObject(dataType) as T : items[0];
+  T get firstItem => (dataItemList.isEmpty)
+      ? NsgDataClient.client.getNewObject(dataType) as T
+      : items[0];
 
   ///Текущий элемент (например, элемент для отображения на форме элемента)
   ///Представляет из себя типизированный аналой selectedItem.
   ///Если selectedItem null, то вернет пустое значение типа T
-  T get currentItem => ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
+  T get currentItem =>
+      ((selectedItem ?? NsgDataClient.client.getNewObject(dataType)) as T);
 
   ///Установка текущего элемента для контроллера
   set currentItem(T item) => selectedItem = item;
@@ -67,9 +70,12 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
 
   ///Cоздает новый элемент и открывает страницу для его редактирования
   ///В зависимости от свойства объекта createOnServer создание нового объекта может происходить на сервере
-  Future itemNewPageOpen(String pageName) async {
+  Future itemNewPageOpen(
+    String pageName, {
+    Map<String, String>? routeParameters,
+  }) async {
     await createNewItemAsync();
-    NsgNavigator.instance.toPage(pageName);
+    NsgNavigator.instance.toPage(pageName, parameters: routeParameters);
   }
 
   ///Создает новый элемент. Используется, например, при нажатии добавить в форме списка
@@ -125,7 +131,12 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
     userSettingsController!.addRecentId(item.typeName, item.id);
   }
 
-  Future<List<T>> selectItems(NsgDataRequestParams filter, {int autoRepeateCount = 3, List<String>? loadReference, NsgCancelToken? cancelToken}) async {
+  Future<List<T>> selectItems(
+    NsgDataRequestParams filter, {
+    int autoRepeateCount = 3,
+    List<String>? loadReference,
+    NsgCancelToken? cancelToken,
+  }) async {
     var dataItem = NsgDataClient.client.getNewObject(dataType);
     return await dataItem.select<T>(
       filter,
@@ -139,8 +150,21 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Open currentItem page to view and edit data
   ///currentItem saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
-  void currentItemPageOpen(String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
-    itemPageOpen(currentItem, pageName, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList, offPage: offPage);
+  void currentItemPageOpen(
+    String pageName, {
+    bool needRefreshSelectedItem = false,
+    List<String>? referenceList,
+    bool offPage = false,
+    Map<String, String>? routeParameters,
+  }) {
+    itemPageOpen(
+      currentItem,
+      pageName,
+      needRefreshSelectedItem: needRefreshSelectedItem,
+      referenceList: referenceList,
+      offPage: offPage,
+      routeParameters: routeParameters,
+    );
   }
 
   // @override

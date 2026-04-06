@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../metrica/nsg_metrica.dart';
+import '../shell/nsg_shell.dart';
 
 class NsgMiddleware extends GetMiddleware {
   static bool isFirstStep = true;
@@ -25,7 +26,7 @@ class NsgMiddleware extends GetMiddleware {
       NsgMetrica.reportToPage(initialPage);
       return RouteSettings(name: initialPage);
     } else if (isFirstStep) {
-      pageParameters = Get.parameters;
+      pageParameters = NsgShell.navigation.parameters;
       initialBinding(route);
       NsgMetrica.reportToPage(initialPage);
       return RouteSettings(name: initialPage);

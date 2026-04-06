@@ -10,7 +10,8 @@ import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data_delete.dart';
 import 'nsg_controller_regime.dart';
 
-class NsgBaseController extends GetxController with StateMixin<NsgBaseControllerData> {
+class NsgBaseController extends GetxController
+    with StateMixin<NsgBaseControllerData> {
   Type dataType;
   bool requestOnInit;
   bool selectedMasterRequired;
@@ -47,7 +48,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Binding rule
   NsgDataBinding? dataBinding;
 
-  NsgDataControllerMode controllerMode = NsgDataControllerMode.defaultDataControllerMode;
+  NsgDataControllerMode controllerMode =
+      NsgDataControllerMode.defaultDataControllerMode;
 
   GetStatus<NsgBaseControllerData> _currentStatus = GetStatus.loading();
 
@@ -66,14 +68,16 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Status of last data request operation
   GetStatus<NsgBaseControllerData> get currentStatus {
     if (_currentStatus.isSuccess) {
-      if (masterController != null && !masterController!.currentStatus.isSuccess) {
+      if (masterController != null &&
+          !masterController!.currentStatus.isSuccess) {
         return masterController!.currentStatus;
       }
     }
     return _currentStatus;
   }
 
-  set currentStatus(GetStatus<NsgBaseControllerData> value) => _currentStatus = value;
+  set currentStatus(GetStatus<NsgBaseControllerData> value) =>
+      _currentStatus = value;
 
   ///Enable auto repeate attempts of requesting data
   bool autoRepeate;
@@ -157,7 +161,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   void updateUrlParameters() {
     try {
       // Обновляем URL на Web при смене выбранного элемента
-      NsgNavigator.updateUrlParameters(id: _selectedItem?.id, widgetId: _getWidgetId(), replace: true);
+      NsgNavigator.updateUrlParameters(
+        id: _selectedItem?.id,
+        widgetId: _getWidgetId(),
+        replace: true,
+      );
     } catch (_) {
       // безопасно игнорировать на платформах без Web
     }
@@ -183,7 +191,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     NsgDataControllerMode? controllerMode,
   }) : super() {
     onRetry ??= _updateStatusError;
-    this.controllerMode = controllerMode ?? NsgDataControllerMode.defaultDataControllerMode;
+    this.controllerMode =
+        controllerMode ?? NsgDataControllerMode.defaultDataControllerMode;
     controllerFilter = NsgControllerFilter(controller: this);
   }
 
@@ -248,7 +257,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Request Items
-  Future requestItems({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
+  Future requestItems({
+    List<NsgUpdateKey>? keys,
+    NsgDataRequestParams? filter,
+  }) async {
     // Пока убрал генерацию ошибки, чтобы старый код корректно работал
     // assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
     //     'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
@@ -265,7 +277,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Обновление данных
-  Future refreshData({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
+  Future refreshData({
+    List<NsgUpdateKey>? keys,
+    NsgDataRequestParams? filter,
+  }) async {
     // Пока убрал генерацию ошибки, чтобы старый код корректно работал
     // assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
     //     'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
@@ -280,7 +295,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Запрос данных
   Future _requestItems({NsgDataRequestParams? filter}) async {
     try {
-      if (masterController != null && selectedMasterRequired && masterController!.selectedItem == null) {
+      if (masterController != null &&
+          selectedMasterRequired &&
+          masterController!.selectedItem == null) {
         if (dataItemList.isNotEmpty) {
           dataItemList.clear();
         }
@@ -354,7 +371,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   FutureOr<bool> retryRequestIf(Exception exception) async {
     if (exception is NsgApiException) {
       if (exception.error.code == 401) {
-        var provider = NsgDataClient.client.getNewObject(dataType).remoteProvider;
+        var provider = NsgDataClient.client
+            .getNewObject(dataType)
+            .remoteProvider;
         await provider.connect(this);
         if (provider.isAnonymous) {
           //Ошибка авторизации - переход на логин
@@ -371,8 +390,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return !status.isEmpty;
   }
 
-  Future<List<NsgDataItem>> doRequestItems({NsgDataRequestParams? filter}) async {
-    var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
+  Future<List<NsgDataItem>> doRequestItems({
+    NsgDataRequestParams? filter,
+  }) async {
+    var request = NsgDataRequest(
+      dataItemType: dataType,
+      storageType: controllerMode.storageType,
+    );
     var newItems = await request.requestItems(
       filter: filter ?? getRequestFilter,
       loadReference: referenceList,
@@ -392,14 +416,21 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   List<NsgDataItem> _filter(List<NsgDataItem> newItemsList) {
     if (dataBinding == null) return _applyControllerFilter(newItemsList);
-    if (masterController!.selectedItem == null || !masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
+    if (masterController!.selectedItem == null ||
+        !masterController!.selectedItem!.fieldList.fields.containsKey(
+          dataBinding!.masterFieldName,
+        )) {
       return newItemsList;
     }
-    var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+    var masterValue = masterController!
+        .selectedItem!
+        .fieldValues
+        .fields[dataBinding!.masterFieldName];
 
     var list = <NsgDataItem>[];
     for (var element in newItemsList) {
-      if (element.fieldValues.fields[dataBinding!.slaveFieldName] == masterValue) {
+      if (element.fieldValues.fields[dataBinding!.slaveFieldName] ==
+          masterValue) {
         list.add(element);
       }
     }
@@ -407,7 +438,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   List<NsgDataItem> _applyControllerFilter(List<NsgDataItem> newItemsList) {
-    if (!controllerFilter.isAllowed || !controllerFilter.isOpen || controllerFilter.searchString == '') {
+    if (!controllerFilter.isAllowed ||
+        !controllerFilter.isOpen ||
+        controllerFilter.searchString == '') {
       return newItemsList;
     }
     return newItemsList.where((element) {
@@ -419,7 +452,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         } else {
           s = element.getFieldValue(fieldName).toString();
         }
-        if (s.toString().toUpperCase().contains(controllerFilter.searchString.toUpperCase())) {
+        if (s.toString().toUpperCase().contains(
+          controllerFilter.searchString.toUpperCase(),
+        )) {
           return true;
         }
       }
@@ -436,7 +471,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Фильтрует строки из по фильтру добавляет в контроллер
   ///Если фильтр не задан, он будет запрошен у контроллера стандартным способом - через getRequestFilter
   ///Возвращает отфильтрованные и отсортированные данные
-  Future<List<NsgDataItem>> filterItems({required List<NsgDataItem> newItemsList, NsgDataRequestParams? filterParam}) async {
+  Future<List<NsgDataItem>> filterItems({
+    required List<NsgDataItem> newItemsList,
+    NsgDataRequestParams? filterParam,
+  }) async {
     var filter = filterParam ?? getRequestFilter;
     var filteredItemList = <NsgDataItem>[];
     for (var row in newItemsList) {
@@ -454,36 +492,68 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
     if (masterController != null &&
         masterController!.selectedItem != null &&
-        masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
-      assert(dataBinding != null, 'dataBinding == null, необходимо задать этот параметр в настройках контроллера');
-      var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
+        masterController!.selectedItem!.fieldList.fields.containsKey(
+          dataBinding!.masterFieldName,
+        )) {
+      assert(
+        dataBinding != null,
+        'dataBinding == null, необходимо задать этот параметр в настройках контроллера',
+      );
+      var masterValue = masterController!
+          .selectedItem!
+          .fieldValues
+          .fields[dataBinding!.masterFieldName];
       cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
     }
     //Учитываем пользовательский фильтр на дату
-    if (controllerFilter.isOpen && controllerFilter.isPeriodAllowed && controllerFilter.periodFieldName.isNotEmpty) {
-      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.beginDate, comparisonOperator: NsgComparisonOperator.greaterOrEqual);
-      cmp.add(name: controllerFilter.periodFieldName, value: controllerFilter.nsgPeriod.endDate, comparisonOperator: NsgComparisonOperator.less);
+    if (controllerFilter.isOpen &&
+        controllerFilter.isPeriodAllowed &&
+        controllerFilter.periodFieldName.isNotEmpty) {
+      cmp.add(
+        name: controllerFilter.periodFieldName,
+        value: controllerFilter.nsgPeriod.beginDate,
+        comparisonOperator: NsgComparisonOperator.greaterOrEqual,
+      );
+      cmp.add(
+        name: controllerFilter.periodFieldName,
+        value: controllerFilter.nsgPeriod.endDate,
+        comparisonOperator: NsgComparisonOperator.less,
+      );
     }
     //Добавляем условие по строке поиска если фильтр разрешен и открыт
-    if (controllerFilter.isOpen && controllerFilter.isAllowed && controllerFilter.searchString.isNotEmpty) {
+    if (controllerFilter.isOpen &&
+        controllerFilter.isAllowed &&
+        controllerFilter.searchString.isNotEmpty) {
       var dataItem = NsgDataClient.client.getNewObject(dataType);
       var fieldNames = dataItem.searchFieldList;
 
       if (fieldNames.isNotEmpty) {
         var searchCmp = NsgCompare();
         searchCmp.logicalOperator = NsgLogicalOperator.and;
-        var searchArray = controllerFilter.searchString.split(' ').where((el) => el.isNotEmpty).toList();
+        var searchArray = controllerFilter.searchString
+            .split(' ')
+            .where((el) => el.isNotEmpty)
+            .toList();
 
         for (var searchString in searchArray) {
           var searchArrayCmp = NsgCompare();
           searchArrayCmp.logicalOperator = NsgLogicalOperator.or;
           for (var fieldName in fieldNames) {
             var field = dataItem.fieldList.fields[fieldName];
-            if ((field is NsgDataStringField || field is NsgDataReferenceField) && field is! NsgDataEnumReferenceField) {
-              searchArrayCmp.add(name: fieldName, value: searchString, comparisonOperator: NsgComparisonOperator.contain);
+            if ((field is NsgDataStringField ||
+                    field is NsgDataReferenceField) &&
+                field is! NsgDataEnumReferenceField) {
+              searchArrayCmp.add(
+                name: fieldName,
+                value: searchString,
+                comparisonOperator: NsgComparisonOperator.contain,
+              );
             }
           }
-          searchCmp.add(name: "SearchStringComparisonAllWords", value: searchArrayCmp);
+          searchCmp.add(
+            name: "SearchStringComparisonAllWords",
+            value: searchArrayCmp,
+          );
         }
         cmp.add(name: "SearchStringComparison", value: searchCmp);
       }
@@ -510,11 +580,22 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
-  Widget obxBase(Widget Function(NsgBaseControllerData?) widget, {Widget Function(String? error)? onError, Widget? onLoading, Widget? onEmpty}) {
-    return obx(widget, onError: onError, onLoading: onLoading, onEmpty: onEmpty);
+  Widget obxBase(
+    Widget Function(NsgBaseControllerData?) widget, {
+    Widget Function(String? error)? onError,
+    Widget? onLoading,
+    Widget? onEmpty,
+  }) {
+    return obx(
+      widget,
+      onError: onError,
+      onLoading: onLoading,
+      onEmpty: onEmpty,
+    );
   }
 
-  static Widget Function() getDefaultProgressIndicator = _defaultProgressIndicator;
+  static Widget Function() getDefaultProgressIndicator =
+      _defaultProgressIndicator;
   static Widget _defaultProgressIndicator() {
     return const Center(child: CircularProgressIndicator());
   }
@@ -535,7 +616,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
             return widget(NsgBaseController.emptyData);
           }
         } else if (status.isError) {
-          return onError != null ? onError(status.errorMessage) : Center(child: Text('A error occurred: ${status.errorMessage}'));
+          return onError != null
+              ? onError(status.errorMessage)
+              : Center(child: Text('A error occurred: ${status.errorMessage}'));
         } else if (status.isEmpty) {
           return onEmpty ?? const SizedBox.shrink();
         }
@@ -556,11 +639,28 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///needRefreshSelectedItem - Требуется ли перечитать текущий элемент из БД, например, для чтения табличных частей
-  void itemPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList, bool offPage = false}) {
-    if (this is NsgDataItemController && (this as NsgDataItemController).widgetId == null) {
+  void itemPageOpen(
+    NsgDataItem element,
+    String pageName, {
+    bool needRefreshSelectedItem = false,
+    List<String>? referenceList,
+    bool offPage = false,
+    Map<String, String>? routeParameters,
+  }) {
+    if (this is NsgDataItemController &&
+        (this as NsgDataItemController).widgetId == null) {
       //Если контроллер является контроллером элемента, то вызываем метод контроллера элемента
-      var controller = (this as NsgDataItemController).getDataItemController(element.id);
-      controller.itemPageOpen(element, pageName, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList, offPage: offPage);
+      var controller = (this as NsgDataItemController).getDataItemController(
+        element.id,
+      );
+      controller.itemPageOpen(
+        element,
+        pageName,
+        needRefreshSelectedItem: needRefreshSelectedItem,
+        referenceList: referenceList,
+        offPage: offPage,
+        routeParameters: routeParameters,
+      );
       return;
     }
 
@@ -573,15 +673,33 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
 
     if (offPage) {
-      NsgNavigator.go(pageName, id: selectedItem?.id, widgetId: _getWidgetId());
+      NsgNavigator.go(
+        pageName,
+        id: selectedItem?.id,
+        widgetId: _getWidgetId(),
+        parameters: routeParameters,
+      );
     } else {
-      NsgNavigator.push(pageName, id: selectedItem?.id, widgetId: _getWidgetId());
+      NsgNavigator.push(
+        pageName,
+        id: selectedItem?.id,
+        widgetId: _getWidgetId(),
+        parameters: routeParameters,
+      );
     }
   }
 
   ///Open list page to view data in controller.items
-  void listPageOpen(String pageName, {bool needRefreshItems = false, bool offPage = false}) {
-    assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null));
+  void listPageOpen(
+    String pageName, {
+    bool needRefreshItems = false,
+    bool offPage = false,
+    Map<String, String>? routeParameters,
+  }) {
+    assert(
+      (this is! NsgDataItemController ||
+          (this as NsgDataItemController).widgetId != null),
+    );
     if (needRefreshItems) {
       refreshData();
     } else {
@@ -589,9 +707,17 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
 
     if (offPage) {
-      NsgNavigator.go(pageName, widgetId: _getWidgetId());
+      NsgNavigator.go(
+        pageName,
+        widgetId: _getWidgetId(),
+        parameters: routeParameters,
+      );
     } else {
-      NsgNavigator.push(pageName, widgetId: _getWidgetId());
+      NsgNavigator.push(
+        pageName,
+        widgetId: _getWidgetId(),
+        parameters: routeParameters,
+      );
     }
   }
 
@@ -603,7 +729,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     //Если выставлен признак создавать на сервере, создаем запрос на сервер
     if (elem.createOnServer) {
       var request = NsgDataRequest(dataItemType: dataType);
-      elem = await request.requestItem(method: 'POST', function: '${elem.apiRequestItems}/Create');
+      elem = await request.requestItem(
+        method: 'POST',
+        function: '${elem.apiRequestItems}/Create',
+      );
     } else {
       elem.newRecordFill();
     }
@@ -615,12 +744,16 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Create new item and open page to view and edit it
   ///pageName -  страница, которую необходимо открыть по окончанию создания нового элемента
-  void newItemPageOpen({required String pageName, bool offPage = false}) {
+  void newItemPageOpen({
+    required String pageName,
+    bool offPage = false,
+    Map<String, String>? routeParameters,
+  }) {
     createAndSetSelectedItem();
     if (offPage) {
-      Get.offAndToNamed(pageName);
+      NsgShell.navigation.offAndToNamed(pageName, parameters: routeParameters);
     } else {
-      NsgNavigator.instance.toPage(pageName);
+      NsgNavigator.instance.toPage(pageName, parameters: routeParameters);
     }
   }
 
@@ -641,7 +774,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       sendNotify();
       selectedItemChanged.broadcast(null);
       if (this is NsgDataItemController) {
-        var controller = (this as NsgDataItemController).getDataItemController(selectedItem!.id);
+        var controller = (this as NsgDataItemController).getDataItemController(
+          selectedItem!.id,
+        );
         controller.selectedItem = selectedItem;
         controller.backupItem = selectedItem;
         controller.sendNotify();
@@ -655,14 +790,30 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Copy item and open item page to view and edit data
   ///element saved in backupItem to have possibility revert changes
   ///referenceList - список полей для дочитывания. null - перечитать все
-  void itemCopyPageOpen(NsgDataItem element, String pageName, {bool needRefreshSelectedItem = false, List<String>? referenceList}) {
-    assert(element.runtimeType == dataType, 'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType');
-    copyAndSetItem(element, needRefreshSelectedItem: needRefreshSelectedItem, referenceList: referenceList);
-    NsgNavigator.instance.toPage(pageName);
+  void itemCopyPageOpen(
+    NsgDataItem element,
+    String pageName, {
+    bool needRefreshSelectedItem = false,
+    List<String>? referenceList,
+    Map<String, String>? routeParameters,
+  }) {
+    assert(
+      element.runtimeType == dataType,
+      'Использован неправильный контроллер для данного типа данных. ${element.runtimeType} != $dataType',
+    );
+    copyAndSetItem(
+      element,
+      needRefreshSelectedItem: needRefreshSelectedItem,
+      referenceList: referenceList,
+    );
+    NsgNavigator.instance.toPage(pageName, parameters: routeParameters);
   }
 
   ///Close item page and restore current (selectedItem) item from backup
-  void itemPageCancel({bool useValidation = true, required BuildContext context}) async {
+  void itemPageCancel({
+    bool useValidation = true,
+    required BuildContext context,
+  }) async {
     if (useValidation) {
       if (isModified) {
         // Use the existing callback pattern instead of direct call
@@ -691,7 +842,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     if (context.mounted) {
       Navigator.of(context).pop();
     } else {
-      Get.back();
+      NsgShell.navigation.back();
     }
   }
 
@@ -699,13 +850,23 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///если goBack == true (по умолчанию), после сохранения элемента, будет выполнен переход назад
   ///useValidation == true перед сохранением проводится валидация
   ///В случае успешного сохранения возвращает true
-  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true, bool enableShowException = true}) async {
+  Future<bool> itemPagePost({
+    bool goBack = true,
+    bool useValidation = true,
+    bool enableShowException = true,
+  }) async {
     assert(selectedItem != null, 'selectedItem = null');
     if (useValidation) {
       var validationResult = selectedItem!.validateFieldValues();
       if (!validationResult.isValid) {
-        var err = NsgApiException(NsgApiError(code: 999, message: validationResult.errorMessageWithFields()));
-        if (enableShowException && NsgApiException.showExceptionDefault != null) {
+        var err = NsgApiException(
+          NsgApiError(
+            code: 999,
+            message: validationResult.errorMessageWithFields(),
+          ),
+        );
+        if (enableShowException &&
+            NsgApiException.showExceptionDefault != null) {
           NsgApiException.showExceptionDefault!(err);
         }
         sendNotify();
@@ -718,7 +879,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     try {
       await postSelectedItem();
       var oldIndex = dataItemList.length;
-      if (backupItem != null && backupItem == selectedItem && dataItemList.contains(backupItem)) {
+      if (backupItem != null &&
+          backupItem == selectedItem &&
+          dataItemList.contains(backupItem)) {
         oldIndex = dataItemList.indexOf(backupItem!);
         dataItemList.remove(backupItem!);
       }
@@ -730,7 +893,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         sortDataItemList();
       }
       if (goBack) {
-        Get.back();
+        NsgShell.navigation.back();
       } else {
         saveBackup(selectedItem!);
       }
@@ -766,7 +929,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   static Future<bool?> Function(BuildContext?)? saveOrCancelDefaultDialog;
-  static Future Function(String errorMessage, {String title}) showErrorByString = (errorMessage, {title = ''}) async => debugPrint(errorMessage);
+  static Future Function(String errorMessage, {String title})
+  showErrorByString = (errorMessage, {title = ''}) async =>
+      debugPrint(errorMessage);
   // static NsgLoginParamsInterface? defaultLoginParams;
 
   ///Проверить были ли изменения в объекте, если нет, выполняем Back, если были, то спрашиваем пользователя сохранить изменения или отменить,
@@ -783,7 +948,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (res) {
         await itemPagePost();
       } else {
-        var liveContext = context.mounted ? context : Get.context!;
+        var liveContext = context.mounted ? context : NsgShell.environment.requireContext;
         // ignore: use_build_context_synchronously
         itemPageCancel(useValidation: false, context: liveContext);
       }
@@ -795,8 +960,15 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   ///changeStatus - выставить статус контроллера в success после обновления элемента
-  Future<NsgDataItem> refreshItem(NsgDataItem item, List<String>? referenceList, {bool changeStatus = false}) async {
-    assert(item.runtimeType == dataType, '$dataType.refreshItem. item is ${item.runtimeType}');
+  Future<NsgDataItem> refreshItem(
+    NsgDataItem item,
+    List<String>? referenceList, {
+    bool changeStatus = false,
+  }) async {
+    assert(
+      item.runtimeType == dataType,
+      '$dataType.refreshItem. item is ${item.runtimeType}',
+    );
     //Если у элемента нет ID, то читать его из БД нет смысла
     //Возможно, лучше выдавть ошибку, но пока просто проигнорируем
     //Ошибка стабильно проявлялась при нажатии назад в матче приложения футболист
@@ -806,9 +978,18 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
     referenceList ??= referenceItemPage;
     var cmp = NsgCompare();
-    cmp.add(name: item.primaryKeyField, value: item.getFieldValue(item.primaryKeyField));
-    var filterParam = NsgDataRequestParams(compare: cmp, referenceList: referenceList);
-    var request = NsgDataRequest(dataItemType: dataType, storageType: controllerMode.storageType);
+    cmp.add(
+      name: item.primaryKeyField,
+      value: item.getFieldValue(item.primaryKeyField),
+    );
+    var filterParam = NsgDataRequestParams(
+      compare: cmp,
+      referenceList: referenceList,
+    );
+    var request = NsgDataRequest(
+      dataItemType: dataType,
+      storageType: controllerMode.storageType,
+    );
     filterParam.showDeletedObjects = true;
     var answer = await request.requestItem(
       filter: filterParam,
@@ -817,7 +998,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       autoRepeateCount: autoRepeateCount,
       retryIf: (e) => retryRequestIf(e),
     );
-    assert(answer.isNotEmpty, 'Element not found (possibly marked for deletion)');
+    assert(
+      answer.isNotEmpty,
+      'Element not found (possibly marked for deletion)',
+    );
     // assert(answer.isNotEmpty, 'Элемент не найден (возможно помечен на удаление)');
     //Если в items (он же dataItemList) данный элемент уже присутствует, обновляем его новой версией
     if (dataItemList.contains(answer)) {
@@ -852,14 +1036,23 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Вызывается после метода refreshItem.
   ///Можно использовать, например, для обновления связанных контроллеров
-  Future afterRefreshItem(NsgDataItem item, List<String>? referenceList) async {}
+  Future afterRefreshItem(
+    NsgDataItem item,
+    List<String>? referenceList,
+  ) async {}
 
   ///Перечитать из базы данных текущий объект (selectedItem)
   ///На время чтерния статус контроллера будет loading
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
-    assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
+  Future setAndRefreshSelectedItem(
+    NsgDataItem item,
+    List<String>? referenceList,
+  ) async {
+    assert(
+      item.isNotEmpty,
+      'Попытка перечитать с сервера объект с пустым guid (например, новый)',
+    );
     selectedItem = item;
     currentStatus = GetStatus.loading();
     status = GetStatus.loading();
@@ -874,7 +1067,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (index >= 0) {
         dataItemList[index] = newItem;
       } else if (newItem.isEmpty) {
-        currentStatus = GetStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+        currentStatus = GetStatus.error(
+          'Ошибка NBC-509. Данный объект более недоступен',
+        );
         sendNotify();
         throw Exception('Ошибка NBC-509. Данный объект более недоступен');
       }
@@ -901,22 +1096,34 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///На время чтерния статус контроллера будет loading
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
-  Future copyAndSetItem(NsgDataItem item, {bool needRefreshSelectedItem = false, List<String>? referenceList}) async {
-    assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
+  Future copyAndSetItem(
+    NsgDataItem item, {
+    bool needRefreshSelectedItem = false,
+    List<String>? referenceList,
+  }) async {
     assert(
-      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      item.isNotEmpty,
+      'Попытка перечитать с сервера объект с пустым guid (например, новый)',
+    );
+    assert(
+      (this is! NsgDataItemController ||
+          (this as NsgDataItemController).widgetId != null),
       'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
     );
     currentStatus = GetStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
     try {
-      var newItem = needRefreshSelectedItem ? await refreshItem(item, referenceList) : item;
+      var newItem = needRefreshSelectedItem
+          ? await refreshItem(item, referenceList)
+          : item;
       var index = dataItemList.indexOf(item);
       if (index >= 0) {
         dataItemList.replaceRange(index, index + 1, [newItem]);
       } else if (newItem.isEmpty) {
-        currentStatus = GetStatus.error('Ошибка NBC-509. Данный объект более недоступен');
+        currentStatus = GetStatus.error(
+          'Ошибка NBC-509. Данный объект более недоступен',
+        );
         sendNotify();
         throw Exception('Ошибка NBC-509. Данный объект более недоступен');
       }
@@ -1003,7 +1210,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///На данный момент, метод реализован только для контроллера табличной части
   Future itemsRemove(List<NsgDataItem> itemsToRemove) async {
     assert(
-      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      (this is! NsgDataItemController ||
+          (this as NsgDataItemController).widgetId != null),
       'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
     );
     await deleteItems(itemsToRemove);
@@ -1041,15 +1249,21 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
   }
 
-  Future postItems(List<NsgDataItem> itemsToPost, {bool showProgress = false}) async {
+  Future postItems(
+    List<NsgDataItem> itemsToPost, {
+    bool showProgress = false,
+  }) async {
     assert(
-      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      (this is! NsgDataItemController ||
+          (this as NsgDataItemController).widgetId != null),
       'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
     );
     if (controllerMode.storageType == NsgDataStorageType.server) {
       var p = NsgDataPost(dataItemType: dataType);
       p.itemsToPost = itemsToPost;
-      var newItems = await p.postItems(loadReference: NsgDataRequest.addAllReferences(dataType));
+      var newItems = await p.postItems(
+        loadReference: NsgDataRequest.addAllReferences(dataType),
+      );
       for (var item in newItems) {
         var old = itemsToPost.firstWhereOrNull((e) => e.id == item.id);
         if (old != null) {
@@ -1069,9 +1283,13 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   /// Удаляет currentItem в БД и в items
   Future deleteItem({bool goBack = true}) async {
-    assert(selectedItem != null, 'При выполнении deleteItem() -> currentItem==null');
     assert(
-      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      selectedItem != null,
+      'При выполнении deleteItem() -> currentItem==null',
+    );
+    assert(
+      (this is! NsgDataItemController ||
+          (this as NsgDataItemController).widgetId != null),
       'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
     );
     await deleteItems([selectedItem!]);
@@ -1083,12 +1301,16 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   /// Удаляет выбранные элементы в БД и в items
   Future deleteItems(List<NsgDataItem> itemsToDelete) async {
     assert(
-      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      (this is! NsgDataItemController ||
+          (this as NsgDataItemController).widgetId != null),
       'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
     );
     if (controllerMode.storageType == NsgDataStorageType.server) {
       if (itemsToDelete.isEmpty) return;
-      var p = NsgDataDelete(dataItemType: itemsToDelete[0].runtimeType, itemsToDelete: itemsToDelete);
+      var p = NsgDataDelete(
+        dataItemType: itemsToDelete[0].runtimeType,
+        itemsToDelete: itemsToDelete,
+      );
       await p.deleteItems();
     } else {
       await NsgLocalDb.instance.deleteItems(itemsToDelete);
@@ -1106,8 +1328,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Метод, вызываемый при инициализации provider (загрузка приложения)
   Future loadProviderData() async {}
 
-  List<String> get objectFieldsNames => NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
-  List<String> get predefinedIds => NsgDataClient.client.getPredefinedList(dataType);
+  List<String> get objectFieldsNames =>
+      NsgDataClient.client.getFieldList(dataType).fields.keys.toList();
+  List<String> get predefinedIds =>
+      NsgDataClient.client.getPredefinedList(dataType);
 
   ///Поставить в очередь на сохранение, чтобы избезать параллельного сохранения
   ///Уменьшив таким образом нагрузку на сервер и избежать коллизий
@@ -1117,7 +1341,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     Function(List<NsgDataItem> postedObjects)? postedObjects,
   }) async {
     assert(
-      (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
+      (this is! NsgDataItemController ||
+          (this as NsgDataItemController).widgetId != null),
       'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType',
     );
     if (_postQueue.contains(obj)) {
@@ -1131,7 +1356,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   final Map<NsgDataItem, int> _postingItemErrorCount = {};
-  Future _postingItemQueue({required Function(List<NsgDataItem>)? errorObjects, required Function(List<NsgDataItem>)? postedObjects}) async {
+  Future _postingItemQueue({
+    required Function(List<NsgDataItem>)? errorObjects,
+    required Function(List<NsgDataItem>)? postedObjects,
+  }) async {
     if (_isPosting) {
       return true;
     }
@@ -1182,16 +1410,25 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
       if (_postQueue.isNotEmpty) {
         Timer(const Duration(seconds: 1), () {
-          _postingItemQueue(errorObjects: errorObjects, postedObjects: postedObjects);
+          _postingItemQueue(
+            errorObjects: errorObjects,
+            postedObjects: postedObjects,
+          );
         });
       }
     } else {
       _isPosting = false;
-      _postingItemQueue(errorObjects: errorObjects, postedObjects: postedObjects);
+      _postingItemQueue(
+        errorObjects: errorObjects,
+        postedObjects: postedObjects,
+      );
     }
   }
 
-  Future<List<NsgDataItem>> loadFavorites(NsgUserSettingsController userSetiingsController, List<String> ids) async {
+  Future<List<NsgDataItem>> loadFavorites(
+    NsgUserSettingsController userSetiingsController,
+    List<String> ids,
+  ) async {
     var cmp = NsgCompare();
     var dataItem = NsgDataClient.client.getNewObject(dataType);
     var answerList = <NsgDataItem>[];
@@ -1208,16 +1445,30 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     }
     //Дочитываем недостающие элементы
     if (listToRequest.isNotEmpty) {
-      cmp.add(name: dataItem.primaryKeyField, value: listToRequest, comparisonOperator: NsgComparisonOperator.inList);
-      var params = NsgDataRequestParams(compare: cmp, referenceList: referenceList);
-      var request = NsgDataRequest<NsgDataItem>(storageType: controllerMode.storageType, dataItemType: dataType);
+      cmp.add(
+        name: dataItem.primaryKeyField,
+        value: listToRequest,
+        comparisonOperator: NsgComparisonOperator.inList,
+      );
+      var params = NsgDataRequestParams(
+        compare: cmp,
+        referenceList: referenceList,
+      );
+      var request = NsgDataRequest<NsgDataItem>(
+        storageType: controllerMode.storageType,
+        dataItemType: dataType,
+      );
       answerList.addAll(await request.requestItems(filter: params));
 
       var newIds = answerList.map((e) => e.id).join(',');
       if (newIds != ids.join(',')) {
-        var objFavorite = userSetiingsController.getFavoriteObject(dataItem.typeName);
+        var objFavorite = userSetiingsController.getFavoriteObject(
+          dataItem.typeName,
+        );
         objFavorite.settings = newIds;
-        await userSettingsController!.postUserSettings(objFavorite as NsgDataItem);
+        await userSettingsController!.postUserSettings(
+          objFavorite as NsgDataItem,
+        );
       }
     }
     return answerList;
@@ -1250,11 +1501,16 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   static NsgBaseControllerData emptyData = NsgBaseControllerData();
 
-  Future<String?> beginTransaction(NsgDataProvider provider, {int lifespan = 0, NsgCancelToken? cancelToken}) async {
+  Future<String?> beginTransaction(
+    NsgDataProvider provider, {
+    int lifespan = 0,
+    NsgCancelToken? cancelToken,
+  }) async {
     var request = NsgSimpleRequest<String>();
     var newItem = await request.requestItem(
       provider: provider,
-      function: '/Api/Transaction/Begin${lifespan > 0 ? '?lifespan=$lifespan' : ''}',
+      function:
+          '/Api/Transaction/Begin${lifespan > 0 ? '?lifespan=$lifespan' : ''}',
       method: 'POST',
       autoRepeate: true,
       autoRepeateCount: 3,
@@ -1264,7 +1520,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return newItem;
   }
 
-  Future<bool?> commitTransaction(NsgDataProvider provider, String transactionId, {NsgCancelToken? cancelToken}) async {
+  Future<bool?> commitTransaction(
+    NsgDataProvider provider,
+    String transactionId, {
+    NsgCancelToken? cancelToken,
+  }) async {
     var request = NsgSimpleRequest<bool>();
     var newItem = await request.requestItem(
       provider: provider,
@@ -1278,7 +1538,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     return newItem;
   }
 
-  Future<bool?> rollbackTransaction(NsgDataProvider provider, String transactionId, {NsgCancelToken? cancelToken}) async {
+  Future<bool?> rollbackTransaction(
+    NsgDataProvider provider,
+    String transactionId, {
+    NsgCancelToken? cancelToken,
+  }) async {
     var request = NsgSimpleRequest<bool>();
     var newItem = await request.requestItem(
       provider: provider,
@@ -1295,7 +1559,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   String? _getWidgetId() {
     if (this is NsgDataItemController) {
       var controller = this as NsgDataItemController;
-      return controller.widgetId != null && controller.widgetId!.isNotEmpty ? controller.widgetId : null;
+      return controller.widgetId != null && controller.widgetId!.isNotEmpty
+          ? controller.widgetId
+          : null;
     }
     return null;
   }

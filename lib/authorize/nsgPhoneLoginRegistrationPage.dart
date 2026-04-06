@@ -297,7 +297,7 @@ class _NsgPhoneLoginregistrationState extends State<NsgPhoneLoginRegistrationWid
   }
 
   void doSmsRequest({NsgLoginType loginType = NsgLoginType.phone, String? password, required firebaseToken}) {
-    var context = Get.context;
+    var context = NsgShell.environment.context;
     if (!_formKey.currentState!.validate()) return;
     setState(() {
       isSMSRequested = true;

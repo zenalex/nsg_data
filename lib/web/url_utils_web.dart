@@ -59,6 +59,15 @@ class UrlUtils {
     return web.window.location.protocol;
   }
 
+  /// Перейти по URL (в той же вкладке).
+  static void navigateTo(String url, {bool replace = false}) {
+    if (replace) {
+      web.window.location.replace(url);
+    } else {
+      web.window.location.assign(url);
+    }
+  }
+
   /// Вывести всю информацию о URL в консоль
   static void printUrlInfo() {
     debugPrint('=== ИНФОРМАЦИЯ О URL ===');

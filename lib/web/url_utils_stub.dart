@@ -1,3 +1,5 @@
+import 'package:url_launcher/url_launcher.dart';
+
 /// Заглушка для не-веб платформ
 class UrlUtils {
   static String getCurrentUrl() => '';
@@ -12,6 +14,16 @@ class UrlUtils {
   static String getPort() => '';
   static String getProtocol() => '';
   static void printUrlInfo() {}
+
+  /// Открыть URL во внешнем приложении (например, оплата PhonePe).
+  static void navigateTo(String url, {bool replace = false}) {
+    final uri = Uri.parse(url);
+    Future<void>(() async {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    });
+  }
 }
 
 class UrlParams {

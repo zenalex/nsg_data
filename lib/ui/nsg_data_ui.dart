@@ -183,7 +183,7 @@ class DataGroup {
     if (groupValue != null) {
       try {
         if (groupValue is DateTime && partOfDate != null) {
-          return NsgDateFormat.dateFormat(groupValue, format: partOfDate!.formatTime, locale: Localizations.localeOf(Get.context!).languageCode);
+          return NsgDateFormat.dateFormat(groupValue, format: partOfDate!.formatTime, locale: Localizations.localeOf(NsgShell.environment.requireContext).languageCode);
         }
         return groupValue.toString();
       } catch (ex) {

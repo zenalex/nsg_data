@@ -5,7 +5,6 @@ import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:get/get.dart' as getx;
 //import 'package:nsg_data/authorize/nsg_social_login_response.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/web/cross_tab_auth.dart';
@@ -705,14 +704,14 @@ class NsgDataProvider {
 
       return loginResponse;
     } catch (e) {
-      getx.Get.snackbar(
-        'ERROR',
-        'An error occurred. Please try again.',
+      NsgShell.message.showSnackbar(
+        title: 'ERROR',
+        message: 'An error occurred. Please try again.',
         isDismissible: true,
         duration: const Duration(seconds: 5),
         backgroundColor: Colors.red[200],
         colorText: Colors.black,
-        snackPosition: getx.SnackPosition.bottom,
+        position: NsgMessagePosition.bottom,
       );
     }
     return NsgLoginResponse(isError: true, errorCode: 500);
@@ -745,14 +744,14 @@ class NsgDataProvider {
       return loginResponse;
     } catch (e) {
       debugPrint('requestSocialMethod error: $e');
-      getx.Get.snackbar(
-        'ERROR',
-        'An error occurred. Please try again.',
+      NsgShell.message.showSnackbar(
+        title: 'ERROR',
+        message: 'An error occurred. Please try again.',
         isDismissible: true,
         duration: const Duration(seconds: 5),
         backgroundColor: Colors.red[200],
         colorText: Colors.black,
-        snackPosition: getx.SnackPosition.bottom,
+        position: NsgMessagePosition.bottom,
       );
     }
     return NsgLoginResponse(isError: true, errorCode: 500);

@@ -1,23 +1,24 @@
 import '../nsg_data_item.dart';
 import 'nsgDataController.dart';
 
-class NsgDataItemController<T extends NsgDataItem> extends NsgDataController<T> {
-  NsgDataItemController(
-      {this.widgetId,
-      super.requestOnInit = true,
-      super.useUpdate = true,
-      super.useChange = true,
-      super.builderIDs,
-      super.masterController,
-      super.dataBindign,
-      super.autoRepeate = false,
-      super.autoRepeateCount = 10,
-      super.useDataCache = false,
-      super.selectedMasterRequired = true,
-      super.autoSelectFirstItem = false,
-      super.dependsOnControllers,
-      super.controllerMode})
-      : super();
+class NsgDataItemController<T extends NsgDataItem>
+    extends NsgDataController<T> {
+  NsgDataItemController({
+    this.widgetId,
+    super.requestOnInit = true,
+    super.useUpdate = true,
+    super.useChange = true,
+    super.builderIDs,
+    super.masterController,
+    super.dataBindign,
+    super.autoRepeate = false,
+    super.autoRepeateCount = 10,
+    super.useDataCache = false,
+    super.selectedMasterRequired = true,
+    super.autoSelectFirstItem = false,
+    super.dependsOnControllers,
+    super.controllerMode,
+  }) : super();
   String? widgetId;
   final _dataItemControllers = <String, NsgDataItemController<T>>{};
 
@@ -44,18 +45,45 @@ class NsgDataItemController<T extends NsgDataItem> extends NsgDataController<T> 
 
   @override
   @Deprecated('Use listPageOpenDataItem instead')
-  void listPageOpen(String pageName, {bool needRefreshItems = false, bool offPage = false}) {
+  void listPageOpen(
+    String pageName, {
+    bool needRefreshItems = false,
+    bool offPage = false,
+    Map<String, String>? routeParameters,
+  }) {
     assert(widgetId != null);
-    super.listPageOpen(pageName, needRefreshItems: needRefreshItems, offPage: offPage);
+    super.listPageOpen(
+      pageName,
+      needRefreshItems: needRefreshItems,
+      offPage: offPage,
+      routeParameters: routeParameters,
+    );
   }
 
-  void listPageOpenDataItem(String pageName, {required String widgetId, bool needRefreshItems = false, bool offPage = false}) {
+  void listPageOpenDataItem(
+    String pageName, {
+    required String widgetId,
+    bool needRefreshItems = false,
+    bool offPage = false,
+    Map<String, String>? routeParameters,
+  }) {
     if (this.widgetId == widgetId) {
-      super.listPageOpen(pageName, needRefreshItems: needRefreshItems, offPage: offPage);
+      super.listPageOpen(
+        pageName,
+        needRefreshItems: needRefreshItems,
+        offPage: offPage,
+        routeParameters: routeParameters,
+      );
       return;
     }
 
     var controller = getDataItemController(widgetId);
-    controller.listPageOpenDataItem(pageName, widgetId: widgetId, needRefreshItems: needRefreshItems, offPage: offPage);
+    controller.listPageOpenDataItem(
+      pageName,
+      widgetId: widgetId,
+      needRefreshItems: needRefreshItems,
+      offPage: offPage,
+      routeParameters: routeParameters,
+    );
   }
 }
