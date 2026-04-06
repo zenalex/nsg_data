@@ -42,6 +42,34 @@ class NsgEditState<T extends NsgDataItem> {
     return !draft!.isEqual(original!);
   }
 
+  NsgEditState<T> withDraft(T? draft, {bool trusted = false}) {
+    return NsgEditState<T>._trusted(
+      original: original,
+      draft: trusted ? draft : (draft?.clone() as T?),
+      isSaving: isSaving,
+      isLoading: isLoading,
+      validationErrors: validationErrors,
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  NsgEditState<T> withOriginalAndDraft({
+    T? original,
+    T? draft,
+    bool trusted = false,
+  }) {
+    return NsgEditState<T>._trusted(
+      original: trusted ? original : (original?.clone() as T?),
+      draft: trusted ? draft : (draft?.clone() as T?),
+      isSaving: isSaving,
+      isLoading: isLoading,
+      validationErrors: validationErrors,
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
   NsgEditState<T> copyWith({
     Object? original = _sentinel,
     Object? draft = _sentinel,

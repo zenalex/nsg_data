@@ -96,25 +96,25 @@ abstract class NsgEditNotifier<T extends NsgDataItem>
   }
 
   void seedFromItem(T item) {
-    state = state.copyWith(
-      original: item,
-      draft: item,
-      isSaving: false,
-      isLoading: false,
-      validationErrors: const {},
-      error: null,
-      stackTrace: null,
-    );
+    state = state
+        .withOriginalAndDraft(original: item, draft: item)
+        .copyWith(
+          isSaving: false,
+          isLoading: false,
+          validationErrors: const {},
+          error: null,
+          stackTrace: null,
+        );
   }
 
   void setDraft(T draft) {
-    state = state.copyWith(draft: draft);
+    state = state.withDraft(draft);
   }
 
   void updateDraft(T Function(T currentDraft) update) {
     final currentDraft = state.draft;
     if (currentDraft == null) return;
-    state = state.copyWith(draft: update(currentDraft));
+    state = state.withDraft(update(currentDraft), trusted: true);
   }
 
   Map<String, String> validate() {
@@ -160,15 +160,15 @@ abstract class NsgEditNotifier<T extends NsgDataItem>
 
     try {
       final saved = await repository.save(draft);
-      state = state.copyWith(
-        original: saved,
-        draft: saved,
-        isSaving: false,
-        isLoading: false,
-        validationErrors: const {},
-        error: null,
-        stackTrace: null,
-      );
+      state = state
+          .withOriginalAndDraft(original: saved, draft: saved)
+          .copyWith(
+            isSaving: false,
+            isLoading: false,
+            validationErrors: const {},
+            error: null,
+            stackTrace: null,
+          );
       return saved;
     } catch (error, stackTrace) {
       state = state.copyWith(
@@ -181,14 +181,15 @@ abstract class NsgEditNotifier<T extends NsgDataItem>
   }
 
   void reset() {
-    state = state.copyWith(
-      draft: state.original,
-      validationErrors: const {},
-      error: null,
-      stackTrace: null,
-      isSaving: false,
-      isLoading: false,
-    );
+    state = state
+        .withDraft(state.original)
+        .copyWith(
+          validationErrors: const {},
+          error: null,
+          stackTrace: null,
+          isSaving: false,
+          isLoading: false,
+        );
   }
 
   void clearError() {

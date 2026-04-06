@@ -46,6 +46,8 @@ dependencies:
   # appmetrica_plugin: ^1.1.0
 
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
   dart_code_metrics: ^4.16.0
   flutter_lints: ^5.0.0
 
