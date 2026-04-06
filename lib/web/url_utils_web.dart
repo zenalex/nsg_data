@@ -59,6 +59,15 @@ class UrlUtils {
     return web.window.location.protocol;
   }
 
+  /// Перейти по URL в текущей вкладке без window.open/noreferrer.
+  static void navigateTo(String url, {bool replace = false}) {
+    if (replace) {
+      web.window.location.replace(url);
+      return;
+    }
+    web.window.location.assign(url);
+  }
+
   /// Вывести всю информацию о URL в консоль
   static void printUrlInfo() {
     debugPrint('=== ИНФОРМАЦИЯ О URL ===');

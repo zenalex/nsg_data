@@ -11,6 +11,7 @@ class UrlUtils {
   static String getBaseUrl() => '';
   static String getPort() => '';
   static String getProtocol() => '';
+  static void navigateTo(String url, {bool replace = false}) {}
   static void printUrlInfo() {}
 }
 
