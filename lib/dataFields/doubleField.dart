@@ -3,7 +3,7 @@
 import '../nsg_data.dart';
 
 class NsgDataDoubleField extends NsgDataField {
-  final int maxDecimalPlaces;
+  int maxDecimalPlaces;
 
   NsgDataDoubleField(super.name, {this.maxDecimalPlaces = 2});
 
