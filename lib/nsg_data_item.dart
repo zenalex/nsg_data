@@ -381,9 +381,9 @@ class NsgDataItem {
     assert(fieldList.fields.containsKey(name));
     var field = fieldList.fields[name]!;
     if (field is NsgDataReferenceField) {
-      return field.getReferent(this, allowNull: true) as T;
+      return field.getReferent(this, allowNull: true) as T?;
     } else if (field is NsgDataEnumReferenceField) {
-      return field.getReferent(this) as T;
+      return field.getReferent(this) as T?;
     } else if (field is NsgDataReferenceListField) {
       // Пока решил возвращать null, т.к. иначе непонятно что возвращать
       return null;

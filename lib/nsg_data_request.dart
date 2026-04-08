@@ -76,7 +76,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     NsgCancelToken? cancelToken,
   }) async {
     if (storageType == NsgDataStorageType.server) {
-      retryIf = retryIf;
+      retryIf = userRetryIf;
       if (autoRepeate) {
         final r = RetryOptions(maxAttempts: autoRepeateCount, maxDelay: const Duration(seconds: 15));
         return await r.retry(
@@ -216,7 +216,9 @@ class NsgDataRequest<T extends NsgDataItem> {
       tag: tag,
       function: function,
     );
-    final response = await dataItem.resolvedServerpodAdapter.fetchItems(context);
+    final response = await _runServerpodReadWithRetry(
+      () async => await dataItem.resolvedServerpodAdapter.fetchItems(context),
+    );
 
     dynamic rawItems = response;
     if (response is NsgServerpodListResult) {
@@ -237,6 +239,28 @@ class NsgDataRequest<T extends NsgDataItem> {
     NsgDataClient.client.addItemsToCache(items: items, tag: tag);
     await loadAllReferents(items, filter.referenceList, tag: tag);
     return items;
+  }
+
+  Future<dynamic> _runServerpodReadWithRetry(Future<dynamic> Function() action) async {
+    final retry = RetryOptions(
+      maxAttempts: 3,
+      delayFactor: const Duration(milliseconds: 300),
+      maxDelay: const Duration(milliseconds: 1800),
+    );
+    try {
+      return await retry.retry(
+        action,
+        retryIf: (e) async => _shouldRetryServerpodRead(e),
+        onRetry: (e) => debugPrint('Retry serverpod read for $dataItemType: $e'),
+      );
+    } catch (e) {
+      if (_shouldRetryServerpodRead(e)) {
+        final localized = _localizedServerpodReadErrorMessage(e);
+        debugPrint('Serverpod read failed after retries for $dataItemType: $e');
+        throw Exception(localized);
+      }
+      rethrow;
+    }
   }
 
   Future<List<T>> _requestItemsFromDb({NsgDataRequestParams? filter, String tag = '', List<String>? loadReference}) async {
@@ -574,5 +598,39 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
     if (retryIf != null) return (await retryIf!(ex));
     return true;
+  }
+
+  bool _shouldRetryServerpodRead(Object error) {
+    final text = error.toString().toLowerCase();
+    if (text.contains('accessdenied') ||
+        text.contains('validation') ||
+        text.contains('conflict') ||
+        text.contains('permission') ||
+        text.contains('statuscode = 400') ||
+        text.contains('statuscode = 401') ||
+        text.contains('statuscode = 403') ||
+        text.contains('statuscode = 404')) {
+      return false;
+    }
+    return text.contains('socketexception') ||
+        text.contains('timed out') ||
+        text.contains('timeout') ||
+        text.contains('statuscode = -1') ||
+        text.contains('connection closed') ||
+        text.contains('connection terminated');
+  }
+
+  String _localizedServerpodReadErrorMessage(Object error) {
+    final languageCode = WidgetsBinding.instance.platformDispatcher.locale.languageCode.toLowerCase();
+    final text = error.toString().toLowerCase();
+    final isRu = languageCode.startsWith('ru');
+    if (text.contains('timed out') || text.contains('timeout')) {
+      return isRu
+          ? 'Превышено время ожидания ответа сервера. Проверьте соединение и повторите попытку.'
+          : 'The server response timed out. Check your connection and try again.';
+    }
+    return isRu
+        ? 'Сервер временно недоступен или соединение нестабильно. Повторите попытку через несколько секунд.'
+        : 'The server is temporarily unavailable or the connection is unstable. Please try again in a few seconds.';
   }
 }
