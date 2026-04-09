@@ -217,11 +217,6 @@ class NsgDataItem {
   NsgDataField getField(String name) {
     assert(fieldList.fields.containsKey(name), 'containsKey >> $name');
     var value = fieldList.fields[name]!;
-    if (value is NsgDataDoubleField) {
-      if (maxDecimalPlaces != null) {
-        value.maxDecimalPlaces = maxDecimalPlaces!;
-      }
-    }
     return value;
   }
 
