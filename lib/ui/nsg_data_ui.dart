@@ -99,10 +99,9 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 
   @override
   Future refreshData({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) {
-    if (regime == NsgControllerRegime.selection) {
-      scrollController.lastOffset = 0;
-      scrollController.startUpdate();
-    }
+    scrollController.lastOffset = 0;
+    scrollController.startUpdate();
+
     return super.refreshData(keys: keys, filter: filter);
   }
 
@@ -152,7 +151,7 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 class DataGroup {
   // GlobalKey на индекс строки, не на item: при повторе одного NsgDataItem в data карта давала один ключ на две строки → Duplicate GlobalKey.
   DataGroup({required this.data, required this.groupFieldName, this.dividerBuilder, this.partOfDate})
-      : rowKeys = List<GlobalKey>.generate(data.length, (_) => GlobalKey()) {
+    : rowKeys = List<GlobalKey>.generate(data.length, (_) => GlobalKey()) {
     for (var i = 0; i < data.length; i++) {
       _itemsKeys[data[i]] = rowKeys[i];
     }
