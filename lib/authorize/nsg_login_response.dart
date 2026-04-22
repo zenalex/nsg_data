@@ -11,7 +11,8 @@ class NsgLoginResponse {
 
   NsgLoginResponse.fromJson(Map<String, dynamic>? json) : super() {
     if (json != null) {
-      token = json['token'].toString();
+      final rawToken = json['token'];
+      token = rawToken == null ? '' : rawToken.toString();
       isError = (json['isError'] ?? false) as bool;
       errorMessage = (json['errorMessage'] ?? '').toString();
       errorCode = (json['errorCode'] ?? 0) as int;

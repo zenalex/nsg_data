@@ -1,11 +1,15 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'url_updater_stub.dart' if (dart.library.html) 'url_updater_web.dart' as nsg_url;
 
 class NsgNavigator {
   static NsgNavigator instance = NsgNavigator();
+  static GlobalKey<NavigatorState>? navigatorKey;
 
   static String? initialRoute;
   static bool useSplashPage = true;
+  static BuildContext? get currentContext =>
+      navigatorKey?.currentContext ?? Get.context;
 
   static bool get isLastPage => (useSplashPage && previousRoute == (initialRoute ?? "/")) || currentRoute == (initialRoute ?? "/");
 
