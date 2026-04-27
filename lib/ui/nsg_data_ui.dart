@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_navigation/src/routes/new_path_route.dart';
-import 'package:nsg_data/controllers/nsg_controller_regime.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/ui/nsg_loading_scroll_controller.dart';
 
