@@ -453,7 +453,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       postData: postData,
       autoRepeate: autoRepeate,
       autoRepeateCount: autoRepeateCount,
-      userRetryIf: _retryIfInternal,
+      userRetryIf: retryIf,
       userOnRetry: onRetry,
       cancelToken: cancelToken,
     );
