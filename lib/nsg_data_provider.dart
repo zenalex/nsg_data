@@ -299,7 +299,9 @@ class NsgDataProvider {
       }
       if (e.response?.statusCode == 400) {
         //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
-        throw NsgApiException(NsgApiError(code: 400, message: e.response?.data, errorType: e.type));
+        throw NsgApiException(
+          NsgApiError(code: 400, message: e.response == null ? 'Error with Empty server response' : e.response!.data['message'], errorType: e.type),
+        );
       }
       if (e.response?.statusCode == 401) {
         throw NsgApiException(NsgApiError(code: 401, message: 'Authorization error', errorType: e.type));
