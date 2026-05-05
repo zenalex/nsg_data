@@ -4,7 +4,7 @@ import 'package:nsg_data/nsg_data.dart';
 import 'package:path_provider/path_provider.dart';
 
 class NsgLocalDb {
-  late BoxCollection collection;
+  BoxCollection? collection;
 
   NsgLocalDb._();
 
@@ -127,7 +127,7 @@ class NsgLocalDb {
       );
 
       // Закрываем старую коллекцию
-      collection.close();
+      collection?.close();
 
       collection = newCollection;
       tables.clear(); // Очищаем кэш боксов
@@ -147,13 +147,20 @@ class NsgLocalDb {
     }
   }
 
-  Future<CollectionBox<Map>> getTable(String tableName) async {
+  Future<CollectionBox<Map>?> getTable(String tableName) async {
     var box = tables[tableName];
     if (box != null) {
       return box;
     }
+    final col = collection;
+    if (col == null) {
+      if (kDebugMode) {
+        print('NsgLocalDb.getTable($tableName): collection is not initialized yet');
+      }
+      return null;
+    }
     try {
-      box = await collection.openBox<Map>(
+      box = await col.openBox<Map>(
         tableName,
         // Hive CE requires explicit converters for non-primitive types (like Map) on web.
         fromJson: (dynamic json) => (json as Map).cast<dynamic, dynamic>(),
@@ -185,6 +192,7 @@ class NsgLocalDb {
   Future<List<NsgDataItem>> requestItems(NsgDataItem dataItem, NsgDataRequestParams params, {String tag = ''}) async {
     try {
       var box = await getTable(dataItem.typeName);
+      if (box == null) return <NsgDataItem>[];
       var items = <NsgDataItem>[];
       //определяем нет ли в запросе ограничения по id
       var idList = <String>[];
@@ -258,6 +266,7 @@ class NsgLocalDb {
     }
     var firstItem = itemsToPost.first;
     var box = await getTable(firstItem.typeName);
+    if (box == null) return;
 
     try {
       var tableFields = <String>[];
@@ -292,7 +301,7 @@ class NsgLocalDb {
               }
               if (oldRowsId.isNotEmpty) {
                 var tableBox = await getTable((item.getField(name) as NsgDataReferenceListField).referentElementType.toString());
-                tableBox.deleteAll(oldRowsId);
+                tableBox?.deleteAll(oldRowsId);
               }
             }
 
@@ -341,6 +350,7 @@ class NsgLocalDb {
     }
     var firstItem = itemsToDelete.first;
     var box = await getTable(firstItem.typeName);
+    if (box == null) return;
     var ids = <String>[];
     for (var item in itemsToDelete) {
       if (item.id.isEmpty) {
