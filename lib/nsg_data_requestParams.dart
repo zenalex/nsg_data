@@ -99,4 +99,9 @@ class NsgDataRequestParams {
       _compare = compare;
     }
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is NsgDataRequestParams && toJson() == other.toJson();
+  }
 }

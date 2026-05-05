@@ -1169,3 +1169,79 @@ extension _CrossTabAuthExt on NsgDataProvider {
     }
   }
 }
+
+extension NsgDataProviderV2 on NsgDataProvider {
+  ///Connect to server
+  ///If error will be occured, NsgApiException will be generated
+  Future connectV2({FutureOr<void> Function(Exception)? onRetry, required Future<void> Function() onSuccess}) async {
+    if (!_initialized) await initialize();
+
+    if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
+      // Ensure cross-tab sync is ready (web) and we can respond if we have a token
+      if (kIsWeb) {
+        debugPrint('[NsgDataProvider] Connecting to server, ensuring CrossTabAuth is ready');
+        await _ensureCrossAuthInitialized();
+        // If we still have no token, ask neighbors again
+        if (token.isEmpty) {
+          debugPrint('[NsgDataProvider] No token after connect, requesting from peers');
+          _crossAuth?.requestTokenFromPeers();
+        } else {
+          debugPrint('[NsgDataProvider] Token exists after connect: length=${token.length}');
+        }
+      }
+      var checkResult = await _checkVersion(onRetry);
+      if (checkResult == 2) {
+        NsgBaseController.showErrorByString('Application update required');
+        //сменить на диалог и запретить работу при наличии обязательного обновления
+      } else if (checkResult == 1) {
+        NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
+      }
+      if (token == '') {
+        await _anonymousLogin(onRetry);
+      } else {
+        try {
+          var result = await _checkToken(onRetry);
+          if (!result) {
+            debugPrint('CheckToken - Сервер отверг токен');
+            await _anonymousLogin(onRetry);
+          }
+        } on NsgApiException catch (e) {
+          if (e.error.code == 401) {
+            await _anonymousLogin(onRetry);
+          } else if (e.error.errorType == null) {
+          } else {
+            rethrow;
+          }
+          // await _anonymousLogin(onRetry); // (Кирилл 27.01.2026) получение анонимного токена при любой ошибке (нужно выполнять только при 401, а не любой технической информации)
+        }
+      }
+      await setLocale(languageCode: languageCode);
+    }
+
+    if (useNsgAuthorization && allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
+      await openLoginPage().then((value) => onSuccess());
+    } else {
+      await onSuccess();
+    }
+  }
+
+  Future<bool> logoutV2(FutureOr<void> Function(Exception)? onRetry) async {
+    try {
+      await baseRequest(function: 'Logout', headers: getAuthorizationHeader(), url: '$serverUri/$authorizationApi/Logout', method: 'GET');
+    } catch (ex) {
+      debugPrint('ERROR logout: ${ex.toString()}');
+    }
+    if (!isAnonymous) {
+      resetCurrentServerToken();
+      // var _prefs = await SharedPreferences.getInstance();
+      // await _prefs.remove(applicationName);
+      isAnonymous = true;
+      token = '';
+    }
+    // Tell other tabs to clear auth state
+    _crossAuth?.broadcastLogout();
+    _notifyTokenChanged();
+    await _anonymousLogin(onRetry);
+    return true;
+  }
+}

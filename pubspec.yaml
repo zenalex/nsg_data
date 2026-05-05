@@ -41,12 +41,14 @@ dependencies:
   web: ^1.1.1
   crypto: ^3.0.6
   string_similarity: ^2.1.1
+  bloc: ^9.0.0
+  riverpod: ^2.6.1
+  async: ^2.13.1
 
   # appmetrica_plugin: ^1.1.0
 
 dev_dependencies:
-  dart_code_metrics: ^4.16.0
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

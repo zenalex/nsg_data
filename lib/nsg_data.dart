@@ -71,3 +71,4 @@ export 'models/nsg_server_params.dart';
 export 'helpers/nsg_duration_counter.dart';
 export 'controllers/nsg_data_item_controller.dart';
 export 'ui/nsg_data_ui.dart';
+export 'ui/nsg_data_ui_v2.dart';

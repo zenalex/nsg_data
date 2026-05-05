@@ -126,13 +126,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     if (dataItem.remoteProvider.usesServerpod) {
-      return await _requestItemsFromServerpod(
-        dataItem: dataItem,
-        filter: filter,
-        tag: tag,
-        loadReference: loadReference,
-        function: function,
-      );
+      return await _requestItemsFromServerpod(dataItem: dataItem, filter: filter, tag: tag, loadReference: loadReference, function: function);
     }
     var filterMap = <String, dynamic>{};
 
@@ -216,9 +210,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       tag: tag,
       function: function,
     );
-    final response = await _runServerpodReadWithRetry(
-      () async => await dataItem.resolvedServerpodAdapter.fetchItems(context),
-    );
+    final response = await _runServerpodReadWithRetry(() async => await dataItem.resolvedServerpodAdapter.fetchItems(context));
 
     dynamic rawItems = response;
     if (response is NsgServerpodListResult) {
@@ -242,11 +234,7 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   Future<dynamic> _runServerpodReadWithRetry(Future<dynamic> Function() action) async {
-    final retry = RetryOptions(
-      maxAttempts: 3,
-      delayFactor: const Duration(milliseconds: 300),
-      maxDelay: const Duration(milliseconds: 1800),
-    );
+    final retry = RetryOptions(maxAttempts: 3, delayFactor: const Duration(milliseconds: 300), maxDelay: const Duration(milliseconds: 1800));
     try {
       return await retry.retry(
         action,
