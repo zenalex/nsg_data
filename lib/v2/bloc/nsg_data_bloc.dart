@@ -10,7 +10,10 @@ sealed class NsgDataBlocEvent<T extends NsgDataItem> {
 }
 
 final class NsgDataRefreshEvent<T extends NsgDataItem> extends NsgDataBlocEvent<T> {
+  /// When non-null, replaces the controller's request params before refresh.
   final NsgDataRequestParams? params;
+
+  /// When non-null, replaces the controller's load reference before refresh.
   final Iterable<String>? loadReference;
 
   const NsgDataRefreshEvent({this.params, this.loadReference});
@@ -24,6 +27,7 @@ final class NsgDataSelectEvent<T extends NsgDataItem> extends NsgDataBlocEvent<T
 }
 
 final class NsgDataCreateEvent<T extends NsgDataItem> extends NsgDataBlocEvent<T> {
+  /// When true, the created item is immediately set as [selectedItem].
   final bool selectCreated;
   final bool saveAsBackup;
 
@@ -46,6 +50,16 @@ final class _NsgDataSyncEvent<T extends NsgDataItem> extends NsgDataBlocEvent<T>
   const _NsgDataSyncEvent(this.snapshot);
 }
 
+/// BLoC adapter for [NsgViewControllerV2].
+///
+/// Mirrors the controller's **main list** snapshot as bloc state. Selection
+/// state ([selectedStore] / [backupStore]) is NOT mirrored — observe it via
+/// [NsgViewControllerV2.selectedItemsUpdates] or
+/// [NsgViewControllerV2.observeStatus] directly.
+///
+/// When [disposeControllerOnClose] is `true` (default), [close] disposes the
+/// [NsgViewControllerV2]. The underlying [NsgDataControllerV2] is NOT
+/// disposed automatically — manage it via DI or the composition root.
 class NsgDataBloc<T extends NsgDataItem> extends Bloc<NsgDataBlocEvent<T>, NsgControllerSnapshot<T>> {
   final NsgViewControllerV2<T> controller;
   final bool disposeControllerOnClose;
@@ -59,7 +73,7 @@ class NsgDataBloc<T extends NsgDataItem> extends Bloc<NsgDataBlocEvent<T>, NsgCo
     on<NsgDataDeleteSelectedEvent<T>>(_onDeleteSelected);
     on<_NsgDataSyncEvent<T>>(_onSync);
     _subscription = controller.itemsUpdates.listen((snapshot) {
-      add(_NsgDataSyncEvent<T>(snapshot));
+      if (!isClosed) add(_NsgDataSyncEvent<T>(snapshot));
     });
   }
 
@@ -67,11 +81,18 @@ class NsgDataBloc<T extends NsgDataItem> extends Bloc<NsgDataBlocEvent<T>, NsgCo
     await controller.init();
   }
 
+  /// Optionally persists [event.params] and [event.loadReference] into the
+  /// controller snapshot via [replaceRequestParams], then triggers a refresh.
   Future<void> _onRefresh(NsgDataRefreshEvent<T> event, Emitter<NsgControllerSnapshot<T>> emit) async {
-    if (event.params != null) {
-      controller.dataController.replaceRequestParams(event.params!, loadReference: event.loadReference);
+    final hasParams = event.params != null;
+    final hasRef = event.loadReference != null;
+    if (hasParams || hasRef) {
+      controller.dataController.replaceRequestParams(
+        event.params ?? controller.requestParams,
+        loadReference: event.loadReference,
+      );
     }
-    await controller.refresh(loadReference: event.loadReference);
+    await controller.refresh();
   }
 
   Future<void> _onSelect(NsgDataSelectEvent<T> event, Emitter<NsgControllerSnapshot<T>> emit) async {
@@ -98,9 +119,12 @@ class NsgDataBloc<T extends NsgDataItem> extends Bloc<NsgDataBlocEvent<T>, NsgCo
     emit(event.snapshot);
   }
 
+  /// Cancels the snapshot subscription before closing so in-flight stream
+  /// events cannot call [add] on an already-closed bloc.
   @override
   Future<void> close() async {
     await _subscription?.cancel();
+    _subscription = null;
     if (disposeControllerOnClose) {
       await controller.dispose();
     }

@@ -55,7 +55,7 @@ class NsgDataRequestParams {
     if (top != 0) filter['Top'] = jsonEncode(top); //.toString();
     if (count != 0) filter['Count'] = jsonEncode(count); //.toString();
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
-    if (referenceList != null) filter['ReadReferences'] = referenceList;
+    if (referenceList != null && referenceList!.isNotEmpty) filter['ReadReferences'] = referenceList;
     if (fieldsToRead != null) filter['FieldsToRead'] = fieldsToRead.toString();
     if (neededFields != null) filter['NeededFields'] = neededFields;
     if (groupBy != null) filter['GroupBy'] = groupBy;

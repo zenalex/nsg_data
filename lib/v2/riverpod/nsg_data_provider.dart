@@ -9,6 +9,7 @@ class NsgDataStateNotifier<T extends NsgDataItem> extends StateNotifier<NsgContr
   final NsgViewControllerV2<T> controller;
   final bool disposeControllerOnDispose;
   StreamSubscription<NsgControllerSnapshot<T>>? _subscription;
+  bool _disposed = false;
 
   NsgDataStateNotifier({required this.controller, this.disposeControllerOnDispose = true}) : super(controller.snapshot) {
     _subscription = controller.itemsUpdates.listen((snapshot) {
@@ -46,9 +47,15 @@ class NsgDataStateNotifier<T extends NsgDataItem> extends StateNotifier<NsgContr
     await controller.deleteSelected();
   }
 
+  /// Riverpod calls [dispose] automatically when the [StateNotifierProvider] is
+  /// destroyed. A [_disposed] guard prevents double-dispose if this method is
+  /// ever invoked manually before the provider teardown.
   @override
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
     _subscription?.cancel();
+    _subscription = null;
     if (disposeControllerOnDispose) {
       unawaited(Future.sync(() => controller.dispose()));
     }
@@ -56,13 +63,21 @@ class NsgDataStateNotifier<T extends NsgDataItem> extends StateNotifier<NsgContr
   }
 }
 
+/// Creates an [AutoDisposeStateNotifierProvider] that owns the given
+/// [controller] and forwards its main-list [NsgControllerSnapshot] as
+/// Riverpod state.
+///
+/// Riverpod disposes the [StateNotifier] automatically — do **not** add
+/// `ref.onDispose(notifier.dispose)` inside the factory; that would cause a
+/// double-dispose.
 AutoDisposeStateNotifierProvider<NsgDataStateNotifier<T>, NsgControllerSnapshot<T>> nsgDataProvider<T extends NsgDataItem>({
   required NsgViewControllerV2<T> controller,
   bool disposeControllerOnDispose = true,
 }) {
   return StateNotifierProvider.autoDispose<NsgDataStateNotifier<T>, NsgControllerSnapshot<T>>((ref) {
     final notifier = NsgDataStateNotifier<T>(controller: controller, disposeControllerOnDispose: disposeControllerOnDispose);
-    ref.onDispose(notifier.dispose);
+    // Riverpod calls StateNotifier.dispose() automatically on provider teardown.
+    // Adding ref.onDispose(notifier.dispose) here would trigger a double-dispose.
     unawaited(notifier.init());
     return notifier;
   });

@@ -20,9 +20,9 @@ abstract interface class Controller {
 
 abstract interface class QueryController<T extends NsgDataItem> implements Controller {
   /// If [filter] is provided, the controller will refresh the items that match the filter, else it will refresh all items. Needs for partially update
-  /// If [loadReference] is provided, the controller will load the subitems, else it will pick loadReference from controller
-  /// use requestParams to filter items from the data source
-  FutureOr<void> refresh({bool Function(T item)? filter, Iterable<String>? loadReference});
+  /// If [loadReference] is provided, the controller will load the subitems, else it will pick loadReference from controller.
+  /// If [requestParams] is omitted, implementers should use [requestParams] from this controller (view layer merges filters into it).
+  FutureOr<void> refresh({Iterable<T>? items, Iterable<String>? loadReference, NsgDataRequestParams? requestParams});
 
   /// Load the items from the data source
   /// If [loadReference] is provided, the controller will load the subitems, else it will pick loadReference from controller
@@ -37,9 +37,9 @@ abstract interface class CommandController<T extends NsgDataItem> implements Con
   /// Save the items to the data source
   /// If [filter] is provided, the controller will save the items that match the filter, else it will save all items. Needs for partially update
   /// If [loadReference] is provided, the controller will save the subitems, else it will save all subitems that match loadReference from controller
-  FutureOr<Iterable<T>?> save({bool Function(T item)? filter, Iterable<String>? loadReference});
+  FutureOr<Iterable<T>?> save({Iterable<T>? items, Iterable<String>? loadReference});
 
   /// Delete the items from the data source
   /// If [loadReference] is provided, the controller will delete the subitems, else it will pick loadReference from controller
-  FutureOr<void> delete({bool Function(T item)? filter});
+  FutureOr<void> delete({Iterable<T>? items});
 }

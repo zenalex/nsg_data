@@ -87,11 +87,12 @@ mixin NsgDataUIV2<T extends NsgDataItem> on NsgViewQueryControllerV2<T> {
   );
 
   @override
-  FutureOr<void> refresh({bool Function(T item)? filter, Iterable<String>? loadReference}) {
+  FutureOr<void> refresh({Iterable<T>? items, Iterable<String>? loadReference, NsgDataRequestParams? requestParams}) async {
     scrollController.lastOffset = 0;
     scrollController.startUpdate();
 
-    return super.refresh(filter: filter, loadReference: loadReference);
+    await super.refresh(items: items, loadReference: loadReference, requestParams: requestParams);
+    scrollController.scheduleJumpToTopAfterRebuild();
   }
 
   /// Прокручивает список к текущему выбранному элементу контроллера `currentItem`.

@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/v2/abstract/snapshot.dart';
 import 'package:nsg_data/v2/abstract/store.dart';
-import 'package:nsg_data/v2/abstract/lifecycle.dart';
+import 'package:nsg_data/v2/base/nsg_lifecycle.dart';
 import 'package:nsg_data/v2/controller/nsg_controller_snapshot.dart';
 
-mixin NsgControllerStoreMixin<S extends Snapshot, T extends NsgDataItem> implements Lifecycle, Store {
+mixin NsgControllerStoreMixin<S extends Snapshot, T extends NsgDataItem> implements NsgLifecycle, Store {
   final StreamController<S> _streamController = StreamController<S>.broadcast();
   bool _disposed = false;
 

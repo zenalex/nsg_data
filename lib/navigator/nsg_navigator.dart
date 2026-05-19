@@ -8,8 +8,7 @@ class NsgNavigator {
 
   static String? initialRoute;
   static bool useSplashPage = true;
-  static BuildContext? get currentContext =>
-      navigatorKey?.currentContext ?? Get.context;
+  static BuildContext? get currentContext => navigatorKey?.currentContext ?? Get.context;
 
   static bool get isLastPage => (useSplashPage && previousRoute == (initialRoute ?? "/")) || currentRoute == (initialRoute ?? "/");
 

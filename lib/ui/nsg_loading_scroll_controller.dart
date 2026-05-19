@@ -59,6 +59,8 @@ class NsgLoadingScrollController<T> extends ScrollController {
   /// Схлопывает несколько scheduleRestoreScrollOffsetAfterRebuild подряд (per-frame obx).
   int _restoreScrollSeq = 0;
 
+  int _jumpToTopSeq = 0;
+
   T? _value;
 
   T? get value => _value;
@@ -88,6 +90,24 @@ class NsgLoadingScrollController<T> extends ScrollController {
     _errCount = 0;
     _attCount = 0;
     _status = NsgLoadingScrollStatus.init;
+  }
+
+  /// Прокрутить в начало после перестроения списка (например, смена фильтра при [refresh]).
+  /// Двойной [addPostFrameCallback]: первый ждёт кадра с новыми [items], второй — layout с новым [maxScrollExtent].
+  void scheduleJumpToTopAfterRebuild() {
+    final seq = ++_jumpToTopSeq;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.microtask(() {
+          if (seq != _jumpToTopSeq) return;
+          try {
+            if (!hasClients || positions.length != 1) return;
+            jumpTo(0);
+            lastOffset = 0;
+          } catch (_) {}
+        });
+      });
+    });
   }
 
   /// Восстановить [lastOffset] после пересборки списка. Без [position] при 0/2+ Scrollable; один jumpTo на серию rebuild.

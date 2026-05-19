@@ -2,15 +2,19 @@ import 'dart:async';
 import 'package:async/async.dart';
 
 import 'package:flutter/material.dart';
+import 'package:nsg_data/controllers/nsg_controller_regime.dart';
 import 'package:nsg_data/nsg_data.dart';
-import 'package:nsg_data/v2/abstract/lifecycle.dart';
 import 'package:nsg_data/v2/abstract/controller.dart';
+import 'package:nsg_data/v2/abstract/metrica.dart';
+import 'package:nsg_data/v2/base/nsg_lifecycle.dart';
 import 'package:nsg_data/v2/controller/nsg_controller_snapshot.dart';
 import 'package:nsg_data/v2/controller/data/nsg_data_controller.dart';
 import 'package:nsg_data/v2/controller/nsg_controller_status.dart';
 import 'package:nsg_data/v2/controller/nsg_controller_store.dart';
+import 'package:nsg_data/v2/controller/nsg_metrica_mixin.dart';
+import 'package:nsg_data/v2/metrica/nsg_metrica_events.dart';
 
-mixin ViewController<T extends NsgDataItem> implements Lifecycle, Controller {
+mixin ViewController<T extends NsgDataItem> implements NsgLifecycle, Controller, NsgMetricaMixin {
   /// Full data controller (query + command). One getter avoids conflicting
   /// overrides in [NsgViewQueryControllerV2] vs [NsgViewCommandControllerV2].
   NsgDataControllerV2<T> get dataController;
@@ -52,6 +56,11 @@ mixin ViewController<T extends NsgDataItem> implements Lifecycle, Controller {
     backupStore.update(backupSnapshot.copyWith(items: item == null ? <T>[] : <T>[item], totalCount: item == null ? 0 : 1));
   }
 
+  NsgControllerRegime get regime;
+
+  bool _metricaInitTracked = false;
+  bool _metricaDisposeTracked = false;
+
   bool get isModified {
     final selected = selectedItem;
     final backup = backupItem;
@@ -65,6 +74,13 @@ mixin ViewController<T extends NsgDataItem> implements Lifecycle, Controller {
     selectedItem = item;
     if (saveAsBackup) {
       backupItem = item == null ? null : (item.clone() as T);
+    }
+    if (item != null) {
+      trackEvent(NsgMetricaUserActionEvent(
+        action: 'select',
+        target: metricaControllerKey,
+        extraParams: {'item_id': item.id},
+      ));
     }
   }
 
@@ -82,12 +98,23 @@ mixin ViewController<T extends NsgDataItem> implements Lifecycle, Controller {
   }
 
   @override
-  FutureOr<void> init() async {}
+  FutureOr<void> init() async {
+    if (_metricaInitTracked) {
+      return;
+    }
+    _metricaInitTracked = true;
+    trackMetricaInit();
+  }
 
   @override
   FutureOr<void> dispose() async {
     await selectedStore.dispose();
     await backupStore.dispose();
+    if (_metricaDisposeTracked) {
+      return;
+    }
+    _metricaDisposeTracked = true;
+    trackMetricaDispose();
   }
 
   Widget observeStatus({
@@ -105,7 +132,7 @@ mixin ViewController<T extends NsgDataItem> implements Lifecycle, Controller {
 
 mixin NsgViewQueryControllerV2<T extends NsgDataItem> on ViewController<T> implements QueryController<T> {
   bool _initialized = false;
-  bool refreshOnInit = false;
+  bool get refreshOnInit;
 
   @override
   FutureOr<void> init() async {
@@ -131,8 +158,8 @@ mixin NsgViewQueryControllerV2<T extends NsgDataItem> on ViewController<T> imple
   }
 
   @override
-  FutureOr<void> refresh({bool Function(T item)? filter, Iterable<String>? loadReference}) async {
-    return dataController.refresh(filter: filter, loadReference: loadReference ?? this.loadReference);
+  FutureOr<void> refresh({Iterable<T>? items, Iterable<String>? loadReference, NsgDataRequestParams? requestParams}) async {
+    return dataController.refresh(items: items, loadReference: loadReference ?? this.loadReference, requestParams: requestParams ?? this.requestParams);
   }
 }
 
@@ -158,12 +185,16 @@ mixin NsgViewCommandControllerV2<T extends NsgDataItem> on ViewController<T> imp
     if (saveAsBackup) {
       backupItem = selectedItem == null ? null : (selectedItem!.clone() as T);
     }
+    trackEvent(NsgMetricaUserActionEvent(
+      action: 'create_and_select',
+      target: metricaControllerKey,
+    ));
     return created;
   }
 
   @override
-  FutureOr<Iterable<T>?> save({bool Function(T item)? filter, Iterable<String>? loadReference}) async {
-    return dataController.save(filter: filter, loadReference: loadReference ?? this.loadReference);
+  FutureOr<Iterable<T>?> save({Iterable<T>? items, Iterable<String>? loadReference}) async {
+    return dataController.save(items: items, loadReference: loadReference ?? this.loadReference);
   }
 
   FutureOr<T?> saveSelected({Iterable<String>? loadReference}) async {
@@ -182,7 +213,7 @@ mixin NsgViewCommandControllerV2<T extends NsgDataItem> on ViewController<T> imp
     }
     dataController.store.update(dataController.snapshot.copyWith(items: mergedItems, totalCount: mergedItems.length));
 
-    final saved = await save(filter: (item) => item.id == selected.id, loadReference: loadReference);
+    final saved = await save(items: [selected], loadReference: loadReference);
     if (saved == null || saved.isEmpty) {
       return null;
     }
@@ -193,8 +224,8 @@ mixin NsgViewCommandControllerV2<T extends NsgDataItem> on ViewController<T> imp
   }
 
   @override
-  FutureOr<void> delete({bool Function(T item)? filter}) async {
-    dataController.delete(filter: filter);
+  FutureOr<void> delete({Iterable<T>? items}) async {
+    await dataController.delete(items: items);
   }
 
   FutureOr<void> deleteSelected() async {
@@ -202,13 +233,13 @@ mixin NsgViewCommandControllerV2<T extends NsgDataItem> on ViewController<T> imp
     if (selected == null) {
       return;
     }
-    await delete(filter: (item) => item.id == selected.id);
+    await delete(items: [selected]);
     selectedItem = null;
     backupItem = null;
   }
 }
 
-class NsgViewControllerV2<T extends NsgDataItem> with ViewController<T>, NsgViewQueryControllerV2<T>, NsgViewCommandControllerV2<T> {
+class NsgViewControllerV2<T extends NsgDataItem> with ViewController<T>, NsgViewQueryControllerV2<T>, NsgViewCommandControllerV2<T>, NsgMetricaMixin {
   @override
   final NsgControllerStore<T> backupStore;
 
@@ -218,7 +249,27 @@ class NsgViewControllerV2<T extends NsgDataItem> with ViewController<T>, NsgView
   @override
   final NsgDataControllerV2<T> dataController;
 
-  NsgViewControllerV2({required this.dataController, required this.selectedStore, required this.backupStore, bool refreshOnInit = false}) {
-    this.refreshOnInit = refreshOnInit;
-  }
+  @override
+  final bool refreshOnInit;
+
+  @override
+  NsgControllerRegime regime;
+
+  /// Analytics service. When `null`, tracking is silently disabled.
+  /// Defaults to [dataController.metrica] so that a single [Metrica]
+  /// instance covers both the data and view layers.
+  @override
+  Metrica? get metrica => _metrica ?? dataController.metrica;
+  final Metrica? _metrica;
+
+  NsgViewControllerV2({
+    required this.dataController,
+    NsgControllerStore<T>? selectedStore,
+    NsgControllerStore<T>? backupStore,
+    this.refreshOnInit = false,
+    this.regime = NsgControllerRegime.view,
+    Metrica? metrica,
+  })  : selectedStore = selectedStore ?? NsgControllerStore<T>(),
+        backupStore = backupStore ?? NsgControllerStore<T>(),
+        _metrica = metrica;
 }

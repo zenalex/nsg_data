@@ -40,7 +40,7 @@ class NsgControllerSnapshot<T extends NsgDataItem> implements Snapshot {
     Iterable<T>? items,
     int? totalCount,
     bool keepCount = true,
-    Enum? status,
+    NsgControllerStatus? status,
     Object? error,
     bool keepError = false,
     NsgDataRequestParams? requestParams,
@@ -50,7 +50,7 @@ class NsgControllerSnapshot<T extends NsgDataItem> implements Snapshot {
     return NsgControllerSnapshot(
       items: items ?? this.items,
       totalCount: keepCount ? (totalCount ?? this.totalCount) : totalCount,
-      status: (status as NsgControllerStatus?) ?? this.status,
+      status: status ?? this.status,
       error: keepError ? (error ?? this.error) : error,
       requestParams: requestParams ?? this.requestParams,
       loadReference: loadReference ?? this.loadReference,
