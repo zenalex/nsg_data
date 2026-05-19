@@ -299,10 +299,36 @@ class NsgDataProvider {
       }
       if (e.response?.statusCode == 400) {
         //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
-        throw NsgApiException(NsgApiError(code: 400, message: e.response?.data, errorType: e.type));
+        throw NsgApiException(
+          NsgApiError(code: 400, message: e.response == null ? 'Error with Empty server response' : e.response!.data['message'], errorType: e.type),
+        );
       }
       if (e.response?.statusCode == 401) {
         throw NsgApiException(NsgApiError(code: 401, message: 'Authorization error', errorType: e.type));
+      }
+      if (e.response?.statusCode == 409) {
+        // 409 Conflict - объект временно недоступен для записи (edit-lock на сервере).
+        // Повтор запроса осмыслен; верхний слой может решить ретраить.
+        String? msg;
+        String? serverCode;
+        int? retryAfterMs;
+        final data = e.response?.data;
+        if (data is Map) {
+          if (data['message'] is String) msg = data['message'] as String;
+          if (data['code'] is String) serverCode = data['code'] as String;
+          if (data['retryAfterMs'] is int) {
+            retryAfterMs = data['retryAfterMs'] as int;
+          } else if (data['retryAfterMs'] is num) {
+            retryAfterMs = (data['retryAfterMs'] as num).toInt();
+          }
+        }
+        throw NsgApiException(NsgApiError(
+          code: 409,
+          message: msg ?? 'Объект временно недоступен',
+          errorType: e.type,
+          serverCode: serverCode,
+          retryAfterMs: retryAfterMs,
+        ));
       }
       if (e.response?.statusCode == 500) {
         var msg = 'ERROR 500';

@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 
 ///Подробное описание ошибки связи с сервером
 class NsgApiError {
-  NsgApiError({this.code, this.message, this.errorType});
+  NsgApiError({this.code, this.message, this.errorType, this.serverCode, this.retryAfterMs});
 
   ///Тип ошибки (из пакета Dio)
   final DioExceptionType? errorType;
@@ -13,9 +13,17 @@ class NsgApiError {
   ///400 - сервер вернул ошибку. Подробности в message. Повтор запроса смысла не имеет
   ///401 - отказано в доступе
   ///404 - вызываемая функция не найдена на сервере
+  ///409 - конфликт состояния (например, объект залочен другой операцией). Повтор запроса осмыслен
   ///500 - сервер вернул ошибку. Подробности в message
   final int? code;
 
   ///Подробное описание ошибки. В случае ошибки 400 или 500 должна содержать информацию для отображения польщователю
   final String? message;
+
+  ///Машиночитаемый код ошибки от сервера (из тела ответа), напр. "object_locked".
+  ///Для 409 используется потребителями, чтобы решить, ретраить ли запрос.
+  final String? serverCode;
+
+  ///Рекомендованная сервером пауза перед повтором (мс). Заполняется для 409 при наличии в теле.
+  final int? retryAfterMs;
 }
