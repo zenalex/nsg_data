@@ -13,6 +13,7 @@ import 'package:retry/retry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsg_login_model.dart';
 import 'authorize/nsg_login_response.dart';
+import 'nsgApiPermissionException.dart';
 
 class NsgDataProvider {
   ///Token saved after authorization
@@ -330,12 +331,34 @@ class NsgDataProvider {
           retryAfterMs: retryAfterMs,
         ));
       }
+      if (e.response?.statusCode == 403) {
+        // 403 Forbidden — отказ по правам (каноничный код после серверного fix).
+        // Backward compat: старый сервер возвращал 500 + текстовый маркер (блок ниже).
+        final body = e.response!.data is String
+            ? e.response!.data as String
+            : (e.response!.data?.toString() ?? 'Permission denied');
+        throw NsgApiPermissionException(
+          error: NsgApiError(code: 403, message: body, errorType: e.type),
+          friendlyMessage: body,
+        );
+      }
       if (e.response?.statusCode == 500) {
         var msg = 'ERROR 500';
         if (e.response!.data is Map && (e.response!.data as Map).containsKey('message')) {
           var msgParts = e.response!.data['message'].split('---> ');
           //TODO_FUTURE: в нулевом параметре функция, вызвавшая ишибку - надо где-то показывать
           msg = msgParts.last;
+        }
+        // Backward compat: пока сервер не перешёл на 403, ловим по тексту.
+        // Через 1-2 релиза после серверного fix этот блок можно убрать.
+        final msgLower = msg.toLowerCase();
+        if (msgLower.contains('не хватает прав') ||
+            msgLower.contains('not enough rights') ||
+            msgLower.contains('insufficient permissions')) {
+          throw NsgApiPermissionException(
+            error: NsgApiError(code: 500, message: msg, errorType: e.type),
+            friendlyMessage: msg,
+          );
         }
         throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));
       } else if (e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
