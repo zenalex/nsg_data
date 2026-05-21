@@ -12,22 +12,23 @@ class NsgApiException implements Exception {
   ///Также, ее можно задать для каждого конкретного контроллера
   static void Function(NsgApiException)? showExceptionDefault;
 
-  /// `true`, если серверная ошибка — это бизнес-сообщение «нет прав на запись»,
-  /// а не сбой инфраструктуры. Клиент-консьюмер (например, footballers_diary_app)
-  /// может использовать этот геттер, чтобы не репортить такие ошибки как fatal в
-  /// Sentry/GlitchTip, а показывать пользователю обычный snackbar.
+  /// `true`, если серверная ошибка — это бизнес-ограничение прав на запись,
+  /// а не сбой инфраструктуры. Предпочтительный способ проверки в коде —
+  /// `e is NsgApiPermissionException` (subclass всегда переопределяет этот геттер).
   ///
-  /// Сейчас детектируется по тексту сообщения сервера (`не хватает прав на запись`,
-  /// англ. вариант `not enough rights to write`). Дополнено маркером кода 500 —
-  /// 400/401/403 идут отдельной веткой и обычно уже не fatal.
+  /// Базовая реализация покрывает два backward-compat случая:
+  /// - HTTP 403 (каноничный код «нет прав» после серверного fix).
+  /// - HTTP 500 + текстовый маркер прав (старый сервер до миграции).
+  ///
+  /// После полной миграции сервера на 403 оставить только проверку кода.
   ///
   /// См. NSG-SOFT/futbolista-tasks#27.
   bool get isPermissionError {
+    if (error.code == 403) return true;
     if (error.code != 500) return false;
     final msg = (error.message ?? '').toLowerCase();
-    return msg.contains('не хватает прав на запись') ||
-        msg.contains('не хватает прав') ||
-        msg.contains('not enough rights to write') ||
+    return msg.contains('не хватает прав') ||
+        msg.contains('not enough rights') ||
         msg.contains('insufficient permissions');
   }
 

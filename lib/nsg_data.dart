@@ -29,6 +29,7 @@ export 'package:nsg_data/nsg_data_request.dart';
 export 'package:nsg_data/serverpod/nsg_serverpod_adapter.dart';
 export 'package:nsg_data/serverpod/nsg_serverpod_data_item.dart';
 export 'package:nsg_data/nsgApiException.dart';
+export 'package:nsg_data/nsgApiPermissionException.dart';
 export 'package:nsg_data/controllers/nsgDataController.dart';
 export 'package:nsg_data/controllers/nsgBaseController.dart';
 export 'package:nsg_data/controllers/nsgBaseControllerData.dart';
