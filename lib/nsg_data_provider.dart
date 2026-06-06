@@ -1095,7 +1095,12 @@ class NsgDataProvider {
         method: 'GET',
         params: params,
         autoRepeate: true,
-        autoRepeateCount: 1000,
+        // Проверка версии информационная и не должна надолго блокировать старт.
+        // Раньше было 1000 попыток (× до 5 c backoff ≈ до ~80 минут блокировки
+        // connect() на мёртвой сети, плюс спам ошибок в консоли). Ограничиваем
+        // несколькими попытками: при неуспехе _checkVersion вернёт 0 («обновление
+        // не требуется»), и старт продолжится. Авторизация ретраится отдельно.
+        autoRepeateCount: 10,
         onRetry: onRetry,
       ));
       var loginResponse = NsgLoginResponse.fromJson(response);
