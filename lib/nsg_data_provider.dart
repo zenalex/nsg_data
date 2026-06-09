@@ -1107,6 +1107,8 @@ class NsgDataProvider {
         url: '$serverUri/$authorizationApi/CheckVersion',
         method: 'GET',
         params: params,
+        // fail-fast вместо PR #4 (autoRepeate:true, count:10): version-check вынесен
+        // в фон в connect() (unawaited), один заход + timeout(10s) + catch(_) ниже.
         autoRepeate: false,
         autoRepeateCount: 1,
         onRetry: onRetry,
