@@ -1,5 +1,6 @@
 // ignore_for_file: file_names
 
+import 'package:dio/dio.dart';
 import 'package:nsg_data/nsgDataApiError.dart';
 
 ///Ошибка обмена данными с сервером
@@ -30,6 +31,25 @@ class NsgApiException implements Exception {
     return msg.contains('не хватает прав') ||
         msg.contains('not enough rights') ||
         msg.contains('insufficient permissions');
+  }
+
+  /// `true` если ошибка транспортная (обрыв соединения, таймаут) —
+  /// в отличие от прикладной ошибки сервера (400/403/500).
+  ///
+  /// Позволяет отличить «нет интернета» от «сервер вернул ошибку»
+  /// и показать соответствующее сообщение в UI.
+  ///
+  /// code == 1: connection error (SocketException, Connection reset by peer, …)
+  /// code == 2: timeout (receiveTimeout / sendTimeout из DioExceptionType)
+  ///
+  /// См. NSG-SOFT/futbolista-tasks#407.
+  bool get isNetworkError {
+    if (error.code == 1 || error.code == 2) return true;
+    final t = error.errorType;
+    return t == DioExceptionType.connectionError ||
+        t == DioExceptionType.connectionTimeout ||
+        t == DioExceptionType.receiveTimeout ||
+        t == DioExceptionType.sendTimeout;
   }
 
   @override
