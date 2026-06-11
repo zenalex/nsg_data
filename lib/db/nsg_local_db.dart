@@ -13,6 +13,11 @@ class NsgLocalDb {
   Map<String, CollectionBox<Map>> tables = {};
 
   static bool initialized = false;
+
+  /// #600: true только после успешного BoxCollection.open. Защищает от чтения
+  /// late-поля [collection], когда инициализация исчерпала ретраи и локальная БД
+  /// недоступна (иначе LateInitializationError на старте).
+  static bool _collectionReady = false;
   static int _currentIteration = 0;
   static String _currentDatabaseName = '';
   static bool _reinitInProgress = false;
@@ -70,13 +75,17 @@ class NsgLocalDb {
         if (iteration < 10) {
           continue;
         }
-        // Если все итерации провалились, инициализируем без локальной БД
+        // Если все итерации провалились — локальная БД недоступна. Помечаем
+        // initialized, но collection НЕ готова (#600): чтение/запись деградируют,
+        // не падают LateInitializationError.
         initialized = true;
+        _collectionReady = false;
         return;
       }
       break;
     }
     initialized = true;
+    _collectionReady = true;
   }
 
   /// Переинициализация базы данных с новой итерацией при ошибках
@@ -107,6 +116,7 @@ class NsgLocalDb {
         print('Maximum database iterations reached, disabling local storage');
       }
       initialized = false; // Отключаем локальную БД
+      _collectionReady = false;
       tables.clear();
       _reinitInProgress = false;
       _lastReinitTime = DateTime.now();
@@ -130,6 +140,7 @@ class NsgLocalDb {
       collection.close();
 
       collection = newCollection;
+      _collectionReady = true;
       tables.clear(); // Очищаем кэш боксов
 
       if (kDebugMode) {
@@ -183,6 +194,9 @@ class NsgLocalDb {
   }
 
   Future<List<NsgDataItem>> requestItems(NsgDataItem dataItem, NsgDataRequestParams params, {String tag = ''}) async {
+    // #600: локальная БД недоступна (collection не открылась) — отдаём пусто,
+    // данные подтянутся с сервера (BaseSyncController после локального чтения).
+    if (!_collectionReady) return [];
     try {
       var box = await getTable(dataItem.typeName);
       var items = <NsgDataItem>[];
@@ -256,6 +270,7 @@ class NsgLocalDb {
     if (itemsToPost.isEmpty) {
       return;
     }
+    if (!_collectionReady) return; // #600: локальная БД недоступна — тихо выходим
     var firstItem = itemsToPost.first;
     var box = await getTable(firstItem.typeName);
 
@@ -339,6 +354,7 @@ class NsgLocalDb {
     if (itemsToDelete.isEmpty) {
       return;
     }
+    if (!_collectionReady) return; // #600: локальная БД недоступна — тихо выходим
     var firstItem = itemsToDelete.first;
     var box = await getTable(firstItem.typeName);
     var ids = <String>[];
