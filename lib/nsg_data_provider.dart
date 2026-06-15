@@ -583,13 +583,19 @@ class NsgDataProvider {
           debugPrint('[NsgDataProvider] Token exists after connect: length=${token.length}');
         }
       }
-      var checkResult = await _checkVersion(onRetry);
-      if (checkResult == 2) {
-        NsgBaseController.showErrorByString('Application update required');
-        //сменить на диалог и запретить работу при наличии обязательного обновления
-      } else if (checkResult == 1) {
-        NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
-      }
+      // Проверка версии информационная и НЕ должна блокировать старт. Раньше она
+      // была await ПЕРЕД loadProviderData и на дёрганом сервере (обрывы соединения)
+      // ретраилась (autoRepeate), держа сплеш «вечно». Гоняем её в фоне, fail-fast;
+      // сообщение об обновлении показываем, когда/если ответ придёт. Сетевой сбой
+      // проглатываем — старт продолжается без задержки.
+      unawaited(_checkVersion(onRetry).then((checkResult) {
+        if (checkResult == 2) {
+          NsgBaseController.showErrorByString('Application update required');
+          //сменить на диалог и запретить работу при наличии обязательного обновления
+        } else if (checkResult == 1) {
+          NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
+        }
+      }).catchError((Object _) {}));
       if (token == '') {
         await _anonymousLogin(onRetry);
       } else {
@@ -1011,7 +1017,10 @@ class NsgDataProvider {
       method: 'GET',
       params: {},
       autoRepeate: true,
-      autoRepeateCount: 1000,
+      // Было 1000 (× до 5с backoff ≈ до ~80 мин блокировки старта на дёрганом
+      // сервере → «вечный» сплеш). Ограничиваем: после ~10 попыток (~30с) connect
+      // бросает ошибку и сплеш показывает onError «проверьте интернет» + ретрай.
+      autoRepeateCount: 10,
       onRetry: onRetry,
     ));
 
@@ -1032,7 +1041,9 @@ class NsgDataProvider {
       method: 'GET',
       params: params,
       autoRepeate: true,
-      autoRepeateCount: 1000,
+      // Было 1000 (≈ до ~80 мин блокировки старта на дёрганом сервере). Ограничиваем
+      // ~10 попытками (~30с) → дальше connect бросает ошибку, сплеш показывает onError.
+      autoRepeateCount: 10,
       onRetry: onRetry,
     ));
 
@@ -1088,22 +1099,29 @@ class NsgDataProvider {
     params['version'] = applicationVersion;
 
     try {
+      // fail-fast: один заход + жёсткий timeout. Раньше autoRepeateCount: 1000 на
+      // мёртвой/дёрганой сети превращался в ~бесконечную блокировку старта.
       var response = await (baseRequest(
         function: 'CheckVersion',
         headers: getAuthorizationHeader(),
         url: '$serverUri/$authorizationApi/CheckVersion',
         method: 'GET',
         params: params,
-        autoRepeate: true,
-        autoRepeateCount: 1000,
+        // fail-fast вместо PR #4 (autoRepeate:true, count:10): version-check вынесен
+        // в фон в connect() (unawaited), один заход + timeout(10s) + catch(_) ниже.
+        autoRepeate: false,
+        autoRepeateCount: 1,
         onRetry: onRetry,
-      ));
+      )).timeout(const Duration(seconds: 10));
       var loginResponse = NsgLoginResponse.fromJson(response);
       return loginResponse.errorCode;
     } on NsgApiException catch (e) {
       if (e.error.code == 404) {
         return 0;
       }
+      // прочие серверные ошибки версии — не критично, старт продолжаем
+    } catch (_) {
+      // сетевой/CORS/timeout сбой — версия не проверена, старт НЕ блокируем
     }
     return 0;
   }

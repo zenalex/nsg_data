@@ -8,9 +8,13 @@ class NsgNavigator {
 
   static String? initialRoute;
   static bool useSplashPage = true;
+
+  /// Метод для действия при возврате назад с самой ранней страницы
+  /// когда в навигации больше нет страницы, на которую можно было бы вернуться
+  void Function()? globalActionIfLast;
   static BuildContext? get currentContext => navigatorKey?.currentContext ?? Get.context;
 
-  static bool get isLastPage => (useSplashPage && previousRoute == (initialRoute ?? "/")) || currentRoute == (initialRoute ?? "/");
+  static bool get isLastPage => previousRoute.isEmpty || (useSplashPage && previousRoute == (initialRoute ?? "/")) || currentRoute == (initialRoute ?? "/");
 
   static String get currentRoute => Get.currentRoute;
   static String get previousRoute => Get.previousRoute;
@@ -29,7 +33,7 @@ class NsgNavigator {
   }
 
   static void pop({String? routeIfLast, void Function()? actionIfLast}) {
-    instance.back(routeIfLast: routeIfLast, actionIfLast: actionIfLast);
+    instance.back(routeIfLast: routeIfLast, actionIfLast: actionIfLast ?? instance.globalActionIfLast);
   }
 
   Future toPage(String pageName, {String? id, String? widgetId}) async {

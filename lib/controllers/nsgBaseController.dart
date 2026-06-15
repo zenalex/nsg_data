@@ -454,8 +454,8 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
     if (masterController != null &&
         masterController!.selectedItem != null &&
+        dataBinding != null &&
         masterController!.selectedItem!.fieldList.fields.containsKey(dataBinding!.masterFieldName)) {
-      assert(dataBinding != null, 'dataBinding == null, необходимо задать этот параметр в настройках контроллера');
       var masterValue = masterController!.selectedItem!.fieldValues.fields[dataBinding!.masterFieldName];
       cmp.add(name: dataBinding!.slaveFieldName, value: masterValue);
     }
