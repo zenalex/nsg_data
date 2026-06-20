@@ -28,17 +28,45 @@ class NsgNavigator {
     await instance.offAndToPage(pageName, id: id, widgetId: widgetId);
   }
 
-  static Future push(String pageName, {String? id, String? widgetId}) async {
-    await instance.toPage(pageName, id: id, widgetId: widgetId);
+  static Future push(
+    String pageName, {
+    String? id,
+    String? widgetId,
+    Transition? transition,
+    Widget Function()? page,
+  }) async {
+    await instance.toPage(pageName, id: id, widgetId: widgetId, transition: transition, page: page);
   }
 
   static void pop({String? routeIfLast, void Function()? actionIfLast}) {
     instance.back(routeIfLast: routeIfLast, actionIfLast: actionIfLast ?? instance.globalActionIfLast);
   }
 
-  Future toPage(String pageName, {String? id, String? widgetId}) async {
+  Future toPage(
+    String pageName, {
+    String? id,
+    String? widgetId,
+    Transition? transition,
+    Widget Function()? page,
+  }) async {
     var arg = _buildParameters(id: id, widgetId: widgetId);
-    await Get.toNamed(pageName, parameters: arg);
+    if (transition == null) {
+      await Get.toNamed(pageName, parameters: arg);
+      return;
+    }
+
+    if (page == null) {
+      await Get.toNamed(pageName, parameters: arg);
+      return;
+    }
+
+    final routeName = _buildRouteName(pageName: pageName, parameters: arg);
+    await Get.to(
+      page,
+      routeName: routeName,
+      arguments: Get.arguments,
+      transition: transition,
+    );
   }
 
   Future offAndToPage(String pageName, {String? id, String? widgetId}) async {
@@ -68,5 +96,12 @@ class NsgNavigator {
       arg['widgetId'] = widgetId;
     }
     return arg;
+  }
+
+  static String _buildRouteName({required String pageName, required Map<String, String> parameters}) {
+    if (parameters.isEmpty) {
+      return pageName;
+    }
+    return Uri(path: pageName, queryParameters: parameters).toString();
   }
 }

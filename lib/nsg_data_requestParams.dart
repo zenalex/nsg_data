@@ -71,6 +71,10 @@ class NsgDataRequestParams {
     return filter;
   }
 
+  String fromJson() {
+    return jsonEncode(toJson());
+  }
+
   ///Заменить действующее условие на новое
   void replaceCompare(NsgCompare newCompare) {
     _compare = newCompare;
