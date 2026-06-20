@@ -52,6 +52,16 @@ class NsgControllerFilter {
 
   NsgControllerFilter({required this.controller});
 
+  final Map<String, dynamic> fields = {};
+
+  T? get<T>(FilterField<T> field) {
+    return fields[field.key] as T?;
+  }
+
+  void set<T>(FilterField<T> field, T? value) {
+    fields[field.key] = value;
+  }
+
   ///Обновить данные в контроллере c задержкой по времени
   ///Каждый новый вызов этого метода отменяет предыдущий и сбрасывает время ожидание на ноль
   void refreshControllerWithDelay({NsgDataRequestParams? filter}) {
@@ -65,4 +75,10 @@ class NsgControllerFilter {
   void _updateTick({NsgDataRequestParams? filter}) {
     controller.refreshData(filter: filter);
   }
+}
+
+abstract class FilterField<T> {
+  final String key;
+
+  const FilterField(this.key);
 }

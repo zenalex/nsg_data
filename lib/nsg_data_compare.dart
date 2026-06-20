@@ -75,6 +75,10 @@ class NsgCompare {
     paramList.clear();
   }
 
+  String fromJson() {
+    return jsonEncode(toJson());
+  }
+
   /// Создает глубокую копию объекта NsgCompare
   NsgCompare clone() {
     var cloned = NsgCompare();
@@ -161,7 +165,7 @@ class NsgCompareParam {
   /// Создает глубокую копию объекта NsgCompareParam
   NsgCompareParam clone() {
     dynamic clonedValue;
-    
+
     if (parameterValue is NsgCompare) {
       clonedValue = (parameterValue as NsgCompare).clone();
     } else if (parameterValue is List) {
@@ -172,12 +176,8 @@ class NsgCompareParam {
       // так как они либо immutable, либо мы не хотим их глубоко клонировать
       clonedValue = parameterValue;
     }
-    
-    return NsgCompareParam(
-      parameterName: parameterName,
-      parameterValue: clonedValue,
-      comparisonOperator: comparisonOperator,
-    );
+
+    return NsgCompareParam(parameterName: parameterName, parameterValue: clonedValue, comparisonOperator: comparisonOperator);
   }
 
   Map<String, dynamic> toJson() {
