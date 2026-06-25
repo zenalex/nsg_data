@@ -73,17 +73,22 @@ class NsgDataTable<T extends NsgDataItem> {
     return allRows.remove(row);
   }
 
-  ///Очистить табличную часть.
-  ///Семантика идентична построчному вызову [removeRow] для каждой строки:
-  /// - при newTableLogic уже сохранённые строки помечаются docState=deleted
-  ///   (остаются в allRows и будут удалены из БД при сохранении владельца);
-  /// - новые (несохранённые) строки и режим без newTableLogic — удаляются физически.
-  ///Это важно: при newTableLogic простое опустошение списка приводило к тому,
-  ///что сервер не получал команды на удаление и старые строки оставались в БД
-  ///(в т.ч. при copyFieldValues табличной части).
+  ///Удалить все строки из табличной чатси
+  ///При этом, строки не будут удалены из БД
+  ///Для удаление строк из БД следует использовать removeRow
   void clear() {
-    // for (var row in allRows.toList()) {
-    //   removeRow(row);
+    var allRows = ((owner.getFieldValue(fieldName, allowNullValue: true) as List?) ?? <T>[]).cast<List<T>?>();
+    // if (allRows.any((element) => element != null && element.any((element1) => element1.newTableLogic))) {
+    //   for (var list in allRows) {
+    //     list?.forEach((element) {
+    //       if (element.newTableLogic && element.docState == NsgDataItemDocState.saved) {
+    //         element.docState = NsgDataItemDocState.deleted;
+    //       } else {
+    //         allRows.remove(element);
+    //       }
+    //     });
+    //   }
+    //   return;
     // }
     allRows.clear();
   }
