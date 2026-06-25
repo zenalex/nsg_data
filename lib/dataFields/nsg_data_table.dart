@@ -82,8 +82,9 @@ class NsgDataTable<T extends NsgDataItem> {
   ///что сервер не получал команды на удаление и старые строки оставались в БД
   ///(в т.ч. при copyFieldValues табличной части).
   void clear() {
-    for (var row in rows.toList()) {
-      removeRow(row);
-    }
+    // for (var row in allRows.toList()) {
+    //   removeRow(row);
+    // }
+    allRows.clear();
   }
 }
