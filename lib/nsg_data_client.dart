@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data_itemList.dart';
 import 'nsg_data.dart';
 import 'nsg_data_paramList.dart';
@@ -31,6 +32,12 @@ class NsgDataClient {
 
   ///Re-initializing enums. For example for changing localization
   void initializeEnums() {
+    // #1000: на раннем boot / в async-окне Get.context бывает null, а геттеры enum
+    // резолвят локализованные имена через AppLocalizations.of(Get.context!) → Null
+    // check operator on null. Имена уже выставлены при регистрации (registerDataItem);
+    // здесь это лишь ре-инициализация под смену локали — пропускаем, переразрешится
+    // при следующем вызове, когда контекст готов.
+    if (Get.context == null) return;
     for (var item in _registeredItems.values) {
       if (item is NsgEnum) {
         item.initialize();
