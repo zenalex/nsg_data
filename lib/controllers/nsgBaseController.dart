@@ -662,7 +662,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   ///Close item page and restore current (selectedItem) item from backup
-  void itemPageCancel({bool useValidation = true, required BuildContext context}) async {
+  void itemPageCancel({bool useValidation = true, required BuildContext context, VoidCallback? onBack}) async {
     if (useValidation) {
       if (isModified) {
         // Use the existing callback pattern instead of direct call
@@ -692,6 +692,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       Navigator.of(context).pop();
     } else {
       Get.back();
+    }
+    if (onBack != null) {
+      onBack();
     }
   }
 
