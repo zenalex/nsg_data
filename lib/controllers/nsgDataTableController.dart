@@ -117,7 +117,7 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Close row page and restore current (selectedItem) item from backup
   @override
-  Future<void> itemPageCancel({bool useValidation = true, BuildContext? context}) async {
+  Future<void> itemPageCancel({bool useValidation = true, BuildContext? context, VoidCallback? onBack}) async {
     if (useValidation) {
       if (isModified) {
         if (NsgBaseController.saveOrCancelDefaultDialog == null) {
