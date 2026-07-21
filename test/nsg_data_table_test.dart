@@ -45,9 +45,33 @@ class TestRow extends NsgDataItem {
   set name(String value) => setFieldValue(nameName, value);
 }
 
+///Строка без поля ownerId — addRow/insertRow не должны пытаться его проставить
+class TestRowNoOwner extends NsgDataItem {
+  static const nameId = 'id';
+  static const nameName = 'name';
+
+  @override
+  String get typeName => 'TestRowNoOwner';
+
+  @override
+  void initialize() {
+    addField(NsgDataStringField(nameId), primaryKey: true);
+    addField(NsgDataStringField(nameName), primaryKey: false);
+  }
+
+  @override
+  NsgDataItem getNewObject() => TestRowNoOwner();
+
+  @override
+  String get id => getFieldValue(nameId).toString();
+  @override
+  set id(String value) => setFieldValue(nameId, value);
+}
+
 class TestOwner extends NsgDataItem {
   static const nameId = 'id';
   static const nameTable = 'table';
+  static const nameTableNoOwner = 'tableNoOwner';
 
   @override
   String get typeName => 'TestOwner';
@@ -56,6 +80,7 @@ class TestOwner extends NsgDataItem {
   void initialize() {
     addField(NsgDataStringField(nameId), primaryKey: true);
     addField(NsgDataReferenceListField<TestRow>(nameTable), primaryKey: false);
+    addField(NsgDataReferenceListField<TestRowNoOwner>(nameTableNoOwner), primaryKey: false);
   }
 
   @override
@@ -67,6 +92,7 @@ class TestOwner extends NsgDataItem {
   set id(String value) => setFieldValue(nameId, value);
 
   NsgDataTable<TestRow> get table => NsgDataTable<TestRow>(owner: this, fieldName: nameTable);
+  NsgDataTable<TestRowNoOwner> get tableNoOwner => NsgDataTable<TestRowNoOwner>(owner: this, fieldName: nameTableNoOwner);
 }
 
 void main() {
@@ -83,6 +109,9 @@ void main() {
     );
     if (!NsgDataClient.client.isRegistered(TestRow)) {
       NsgDataClient.client.registerDataItem(TestRow(), remoteProvider: provider);
+    }
+    if (!NsgDataClient.client.isRegistered(TestRowNoOwner)) {
+      NsgDataClient.client.registerDataItem(TestRowNoOwner(), remoteProvider: provider);
     }
     if (!NsgDataClient.client.isRegistered(TestOwner)) {
       NsgDataClient.client.registerDataItem(TestOwner(), remoteProvider: provider);
@@ -126,6 +155,59 @@ void main() {
       final owner = ownerWith('o1', [savedRow('r1', 'A', 'o1')]);
       expect(owner.table.rows.length, 1);
       expect(owner.table.allRows.length, 1);
+    });
+
+    test('новой строке проставляется ownerId владельца', () {
+      final owner = TestOwner()..id = 'o1';
+      final row = TestRow()..name = 'A';
+      expect(row.ownerId, isEmpty);
+
+      owner.table.addRow(row);
+
+      expect(row.ownerId, 'o1');
+    });
+
+    test('строка с чужим ownerId перепривязывается к новому владельцу', () {
+      // на это поведение полагается прикладной код (копирование строк между объектами)
+      final owner = TestOwner()..id = 'o2';
+      final row = savedRow('r1', 'A', 'o1');
+
+      owner.table.addRow(row);
+
+      expect(row.ownerId, 'o2');
+    });
+
+    test('строка без поля ownerId добавляется без ошибок', () {
+      final owner = TestOwner()..id = 'o1';
+      final row = TestRowNoOwner();
+      row.setFieldValue(TestRowNoOwner.nameName, 'A');
+
+      owner.tableNoOwner.addRow(row);
+
+      expect(owner.tableNoOwner.length, 1);
+      expect(row.fieldValues.fields.containsKey(NsgDataItem.nameOwnerId), false, reason: 'несуществующее поле не должно появиться');
+    });
+  });
+
+  group('insertRow', () {
+    test('вставляет по индексу и проставляет ownerId', () {
+      final owner = ownerWith('o1', [savedRow('r1', 'A', 'o1'), savedRow('r2', 'B', 'o1')]);
+      final row = TestRow()..name = 'C';
+
+      owner.table.insertRow(1, row);
+
+      expect(owner.table.rows.map((e) => e.name), ['A', 'C', 'B']);
+      expect(row.ownerId, 'o1');
+      expect(row.isNotEmpty, true, reason: 'новой строке должен присвоиться id');
+    });
+
+    test('строка без поля ownerId вставляется без ошибок', () {
+      final owner = TestOwner()..id = 'o1';
+      final row = TestRowNoOwner();
+
+      owner.tableNoOwner.insertRow(0, row);
+
+      expect(owner.tableNoOwner.length, 1);
     });
   });
 

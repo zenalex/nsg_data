@@ -36,7 +36,8 @@ class NsgDataTable<T extends NsgDataItem> {
     if (row.isEmpty) {
       row.setFieldValue(row.primaryKeyField, Guid.newGuid());
     }
-    if (row.ownerId.isNotEmpty) {
+    //ownerId проставляется только типам, у которых есть это поле, иначе setFieldValue упадет на assert
+    if (row.fieldList.fields.containsKey(NsgDataItem.nameOwnerId)) {
       row.ownerId = owner.id;
     }
     allRows.add(row);
@@ -54,7 +55,8 @@ class NsgDataTable<T extends NsgDataItem> {
     if (row.isEmpty) {
       row.setFieldValue(row.primaryKeyField, Guid.newGuid());
     }
-    if (row.ownerId.isNotEmpty) {
+    //ownerId проставляется только типам, у которых есть это поле, иначе setFieldValue упадет на assert
+    if (row.fieldList.fields.containsKey(NsgDataItem.nameOwnerId)) {
       row.ownerId = owner.id;
     }
     allRows.insert(index, row);
