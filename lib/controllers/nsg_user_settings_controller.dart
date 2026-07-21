@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер для управления настройками пользователя
-class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController<T> {
+class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataController<T> {
   NsgUserSettingsController({
     super.requestOnInit,
     super.useUpdate,
@@ -56,7 +56,7 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
   }
 
   ///Получить настройку по имени. Если не существует, вернет null
-  dynamic getSettingItem(String settingName) {
+  T? getSettingItem(String settingName) {
     return userSettings[settingName];
   }
 
@@ -279,6 +279,23 @@ class NsgUserSettingsController<T extends NsgDataItem> extends NsgDataController
       _errorsPostUserSettings = 0;
       _postingUserSettings();
     }
+  }
+
+  E? getSettings<E>(String name, {E? defaultValue}) {
+    var setItem = getSettingItem(name);
+    if (setItem == null) {
+      return defaultValue;
+    }
+    try {
+      var ans = jsonDecode(setItem.settings);
+      return ans is E ? ans : defaultValue;
+    } catch (e) {
+      return defaultValue;
+    }
+  }
+
+  Future<void> setSettings(String name, dynamic value) async {
+    await setSettingItem(name, jsonEncode(value));
   }
 
   @override

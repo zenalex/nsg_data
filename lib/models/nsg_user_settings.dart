@@ -1,7 +1,6 @@
 import 'package:nsg_data/nsg_data.dart';
 
-mixin NsgUserSettings {
-  String get id;
+mixin NsgUserSettings on NsgDataItem {
   String get userId;
   set userId(String value);
   String get name;
