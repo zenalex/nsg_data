@@ -110,7 +110,7 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
   @override
   Future afterRequestItems(List<NsgDataItem> newItemsList) async {
     await super.afterRequestItems(newItemsList);
-    if (singleItemMode) {
+    if (!singleItemMode) {
       return;
     }
     if (newItemsList.isNotEmpty) {
