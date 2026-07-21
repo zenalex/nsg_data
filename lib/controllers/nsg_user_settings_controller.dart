@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер для управления настройками пользователя
@@ -22,9 +23,14 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
     super.controllerMode,
     this.maxFavotrites = 100,
     this.maxRecent = 25,
+    this.singleItemMode = true,
   }) : super() {
     assert(NsgDataClient.client.getNewObject(T) is NsgUserSettings);
   }
+
+  ///Режим работы с одним элементом. По умолчанию = true. Если true, то все настройки пользователя хранятся в одном элементе. Если false, то настройки пользователя хранятся в отдельных элементах.
+  @Deprecated('Use singleItemMode instead')
+  final bool singleItemMode;
 
   Map<String, dynamic> settingsMap = {};
 
@@ -44,20 +50,24 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
       item.name = name;
       item.settings = value;
       (item as T).storageType = storageType ?? controllerMode.storageType;
-      userSettings[item.name] = item as T;
+      userSettings[item.name] = item;
       await postUserSettings(userSettings[item.name]!);
     } else {
       var item = getSettingItem(name) as NsgUserSettings;
       item.settings = value;
       (item as T).storageType = storageType ?? controllerMode.storageType;
-      userSettings[item.name] = item as T;
+      userSettings[item.name] = item;
       await postUserSettings(userSettings[item.name]!);
     }
   }
 
   ///Получить настройку по имени. Если не существует, вернет null
   T? getSettingItem(String settingName) {
-    return userSettings[settingName];
+    if (!singleItemMode) {
+      return items.firstWhereOrNull((item) => item.name == settingName);
+    } else {
+      return userSettings[settingName];
+    }
   }
 
   ///Удалить настройку по имени.
@@ -100,6 +110,9 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
   @override
   Future afterRequestItems(List<NsgDataItem> newItemsList) async {
     await super.afterRequestItems(newItemsList);
+    if (singleItemMode) {
+      return;
+    }
     if (newItemsList.isNotEmpty) {
       currentItem = newItemsList.first as T;
     } else {
@@ -108,7 +121,7 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
     }
     if ((currentItem as NsgUserSettings).settings.isNotEmpty) {
       try {
-        settingsMap = jsonDecode((currentItem as NsgUserSettings).settings);
+        settingsMap = jsonDecode((currentItem).settings);
       } catch (e) {
         debugPrint('Ошибка загрузки настроек пользователя');
       }
