@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:nsg_data/authorize/nsg_login_model.dart';
 
 class NsgSocialLoginResponse {
@@ -19,7 +21,17 @@ class NsgSocialLoginResponse {
       code = json['code'] ?? '';
       deviceId = json['device_id'] ?? '';
       loginType = json['loginType'] ?? '';
-      payload = json['payload'];
+      final rawPayload = json['payload'];
+      if (rawPayload is Map<String, dynamic>) {
+        payload = rawPayload;
+      } else if (rawPayload is String && rawPayload.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(rawPayload);
+          payload = decoded is Map<String, dynamic> ? decoded : null;
+        } catch (_) {
+          payload = null;
+        }
+      }
     }
   }
 
