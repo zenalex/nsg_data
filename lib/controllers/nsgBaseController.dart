@@ -1220,7 +1220,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       if (newIds != ids.join(',')) {
         var objFavorite = userSetiingsController.getFavoriteObject(dataItem.typeName);
         objFavorite.settings = newIds;
-        await userSettingsController!.postUserSettings(objFavorite as NsgDataItem);
+        await userSettingsController!.postUserSettings(objFavorite);
       }
     }
     return answerList;
