@@ -1,4 +1,3 @@
-import 'package:nsg_data/controllers/nsg_controller_filter.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/v2/abstract/snapshot.dart';
 
@@ -30,4 +29,10 @@ class NsgControllerFilterV2 implements Snapshot {
   void set<T>(FilterField<T> field, T? value) {
     fields[field.key] = value;
   }
+}
+
+abstract class FilterField<T> {
+  final String key;
+
+  const FilterField(this.key);
 }
