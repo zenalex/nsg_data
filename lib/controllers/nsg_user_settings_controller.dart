@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 
@@ -23,14 +22,14 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
     super.controllerMode,
     this.maxFavotrites = 100,
     this.maxRecent = 25,
-    this.singleItemMode = true,
+    //this.singleItemMode = true,
   }) : super() {
     assert(NsgDataClient.client.getNewObject(T) is NsgUserSettings);
   }
 
   ///Режим работы с одним элементом. По умолчанию = true. Если true, то все настройки пользователя хранятся в одном элементе. Если false, то настройки пользователя хранятся в отдельных элементах.
-  @Deprecated('Use singleItemMode instead')
-  final bool singleItemMode;
+  //@Deprecated('Use singleItemMode instead')
+  //final bool singleItemMode;
 
   Map<String, dynamic> settingsMap = {};
 
@@ -41,33 +40,27 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
   final int maxRecent;
 
   ///Настройки пользователя в виде MAP
-  var userSettings = <String, T>{};
+  //var userSettings = <String, T>{};
 
   ///Сохранить настройку по имени. Если не существует, создаст новую запись.
   Future<void> setSettingItem(String name, String value, {NsgDataStorageType? storageType}) async {
     if (getSettingItem(name) == null) {
-      var item = await doCreateNewItem() as NsgUserSettings;
+      var item = await doCreateNewItem() as T;
       item.name = name;
       item.settings = value;
-      (item as T).storageType = storageType ?? controllerMode.storageType;
-      userSettings[item.name] = item;
-      await postUserSettings(userSettings[item.name]!);
+      item.storageType = storageType ?? controllerMode.storageType;
+      await postUserSettings(item);
     } else {
-      var item = getSettingItem(name) as NsgUserSettings;
+      var item = getSettingItem(name) as T;
       item.settings = value;
-      (item as T).storageType = storageType ?? controllerMode.storageType;
-      userSettings[item.name] = item;
-      await postUserSettings(userSettings[item.name]!);
+      item.storageType = storageType ?? controllerMode.storageType;
+      await postUserSettings(item);
     }
   }
 
   ///Получить настройку по имени. Если не существует, вернет null
   T? getSettingItem(String settingName) {
-    if (!singleItemMode) {
-      return items.firstWhereOrNull((item) => item.name == settingName);
-    } else {
-      return userSettings[settingName];
-    }
+    return items.firstWhereOrNull((item) => item.name == settingName);
   }
 
   ///Удалить настройку по имени.
@@ -76,8 +69,12 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
   }
 
   ///Удалить все настройки пользователя, сохраненные отдельными записями.
-  void removeAllSettings() {
-    unawaited(_removeSettingsByNames(userSettings.keys.toList()));
+  Future<void> removeAllSettings() async {
+    NsgDataRequest<T> request = NsgDataRequest<T>(dataItemType: T);
+    NsgDataRequestParams params = NsgDataRequestParams();
+
+    var ans = await request.requestItems(filter: params);
+    await deleteItems(ans);
   }
 
   Future<void> _removeSettingsByNames(List<String> settingNames) async {
@@ -87,7 +84,7 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
 
     final itemsToDelete = <T>[];
     for (final name in settingNames.toSet()) {
-      final item = userSettings.remove(name);
+      final item = getSettingItem(name);
       if (item == null) {
         continue;
       }
@@ -107,27 +104,27 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
     await deleteItems(itemsToDelete);
   }
 
-  @override
-  Future afterRequestItems(List<NsgDataItem> newItemsList) async {
-    await super.afterRequestItems(newItemsList);
-    if (!singleItemMode) {
-      return;
-    }
-    if (newItemsList.isNotEmpty) {
-      currentItem = newItemsList.first as T;
-    } else {
-      selectedItem = currentItem;
-      newItemsList.add(selectedItem as T);
-    }
-    if ((currentItem as NsgUserSettings).settings.isNotEmpty) {
-      try {
-        settingsMap = jsonDecode((currentItem).settings);
-      } catch (e) {
-        debugPrint('Ошибка загрузки настроек пользователя');
-      }
-    }
-    return;
-  }
+  // @override
+  // Future afterRequestItems(List<NsgDataItem> newItemsList) async {
+  //   await super.afterRequestItems(newItemsList);
+  //   if (!singleItemMode) {
+  //     return;
+  //   }
+  //   if (newItemsList.isNotEmpty) {
+  //     currentItem = newItemsList.first as T;
+  //   } else {
+  //     selectedItem = currentItem;
+  //     newItemsList.add(selectedItem as T);
+  //   }
+  //   if ((currentItem as NsgUserSettings).settings.isNotEmpty) {
+  //     try {
+  //       settingsMap = jsonDecode((currentItem).settings);
+  //     } catch (e) {
+  //       debugPrint('Ошибка загрузки настроек пользователя');
+  //     }
+  //   }
+  //   return;
+  // }
 
   @override
   Future<bool> itemPagePost({bool goBack = true, bool useValidation = true, bool enableShowException = true}) async {
@@ -317,13 +314,13 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
     //Проверка на наличие одинаковых записей
     //В случае обнаружения, дубликаты удаляем
     var itemsToRemove = <T>[];
+    List<T> clearItems = [];
     for (var item in items) {
-      var nus = item as NsgUserSettings;
-      if (userSettings.containsKey(nus.name)) {
+      if (clearItems.contains(item)) {
         itemsToRemove.add(item);
         continue;
       }
-      userSettings[nus.name] = item;
+      clearItems.add(item);
     }
     if (itemsToRemove.isNotEmpty) {
       await itemsRemove(itemsToRemove);
@@ -331,5 +328,6 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
         items.remove(i);
       }
     }
+    clearItems.clear();
   }
 }
