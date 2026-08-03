@@ -35,6 +35,16 @@ class NsgDataProvider {
   ///Версия приложения. Проверяется на сервере для требования или рекомендации обновления
   String applicationVersion;
 
+  ///Текст сообщения об ОБЯЗАТЕЛЬНОМ обновлении приложения (результат проверки версии == 2).
+  ///Библиотека не знает про локализацию приложения, поэтому текст вынесен в перезаписываемое
+  ///поле: приложение может присвоить сюда свою локализованную строку при инициализации.
+  ///Значение по умолчанию — прежний английский текст, поэтому без настройки поведение не меняется.
+  static String messageUpdateRequired = 'Application update required';
+
+  ///Текст сообщения о РЕКОМЕНДУЕМОМ обновлении приложения (результат проверки версии == 1).
+  ///См. комментарий к [messageUpdateRequired].
+  static String messageUpdateRecommended = 'A newer version is available. It is recommended to update the application';
+
   ///Используется ли стандартная система авторизации NSG для получения и хранения токена пользователя
   bool useNsgAuthorization = true;
 
@@ -590,10 +600,10 @@ class NsgDataProvider {
       // проглатываем — старт продолжается без задержки.
       unawaited(_checkVersion(onRetry).then((checkResult) {
         if (checkResult == 2) {
-          NsgBaseController.showErrorByString('Application update required');
+          NsgBaseController.showErrorByString(messageUpdateRequired);
           //сменить на диалог и запретить работу при наличии обязательного обновления
         } else if (checkResult == 1) {
-          NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
+          NsgBaseController.showErrorByString(messageUpdateRecommended);
         }
       }).catchError((Object _) {}));
       if (token == '') {
