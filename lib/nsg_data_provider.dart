@@ -15,6 +15,34 @@ import 'authorize/nsg_login_model.dart';
 import 'authorize/nsg_login_response.dart';
 import 'nsgApiPermissionException.dart';
 
+/// Достать текст ошибки, который прислал СЕРВЕР, из тела ответа Dio.
+///
+/// Зачем: при ответе с кодом ошибки (400, 500, …) Dio кладёт тело в
+/// `e.response.data`, а `e.error` оставляет **null**. Код, писавший
+/// `e.error?.toString() ?? 'Internet connection error'`, поэтому всегда
+/// показывал «нет интернета» — хотя связь была в порядке, а сервер прислал
+/// конкретную причину отказа. Пользователь видел заведомо ложное сообщение
+/// и не мог понять, что от него хотят (жалоба от организаторов, 04.08.2026:
+/// «400 ||| Internet connection error» при регистрации команд).
+///
+/// Возвращает null, если сервер ничего внятного не прислал — тогда
+/// вызывающий откатывается на прежний текст.
+String? nsgExtractServerMessage(dynamic data) {
+  if (data == null) return null;
+  if (data is String) {
+    final s = data.trim();
+    return s.isEmpty ? null : s;
+  }
+  if (data is Map) {
+    // Разные слои сервера отвечают по-разному, поэтому смотрим несколько ключей.
+    for (final key in const ['message', 'Message', 'error', 'Error', 'error_description', 'title']) {
+      final v = data[key];
+      if (v is String && v.trim().isNotEmpty) return v.trim();
+    }
+  }
+  return null;
+}
+
 class NsgDataProvider {
   ///Token saved after authorization
   String token = '';
@@ -377,7 +405,10 @@ class NsgDataProvider {
         debugPrint('###');
         debugPrint('### Error: ${e.error}, type: ${e.type}');
         debugPrint('###');
-        throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
+        throw NsgApiException(NsgApiError(
+          code: 1,
+          message: nsgExtractServerMessage(e.response?.data) ?? e.error?.toString() ?? 'Internet connection error',
+          errorType: e.type));
       }
     } catch (e) {
       debugPrint(
@@ -464,7 +495,11 @@ class NsgDataProvider {
       return curData;
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
+      throw NsgApiException(NsgApiError(
+          code: e.response?.statusCode,
+          // Сначала — то, что сказал сервер; 'нет интернета' только если он молчит.
+          message: nsgExtractServerMessage(e.response?.data) ?? e.error?.toString() ?? 'Internet connection error',
+          errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -523,7 +558,10 @@ class NsgDataProvider {
       return Image.memory(response.data!);
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
+      throw NsgApiException(NsgApiError(
+          code: 1,
+          message: nsgExtractServerMessage(e.response?.data) ?? e.error?.toString() ?? 'Internet connection error',
+          errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
