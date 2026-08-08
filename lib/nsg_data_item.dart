@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'nsg_data_delete.dart';
@@ -229,13 +230,19 @@ class NsgDataItem {
   ///Если значение не присваивалось, то будет возвращено значение по умолчению, если
   ///allowNullValue == false или null, если allowNullValue == true
   dynamic getFieldValue(String name, {bool allowNullValue = false}) {
+    //#1394: сбор фактических обращений к полям. В release ветка вырезается по kDebugMode.
+    if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.record(typeName, name);
     if (fieldValues.fields.containsKey(name)) {
       return fieldValues.fields[name];
     } else {
       //Проверка на наличие поля в списке полей объекта
       assert(fieldList.fields.containsKey(name), '!!! Не существует поля с именем: $name в объекте: $typeName');
       //Проверка не является ли поле пустым (умышленно не читалось из БД, следовательно, нельзя брать значение из него)
-      assert(!fieldValues.emptyFields.contains(name));
+      //В debug это падение, в release — молчаливый defaultValue, поэтому рядом хук телеметрии (#1394).
+      if (fieldValues.emptyFields.contains(name)) {
+        NsgFieldUsage.reportEmptyFieldAccess(typeName, name);
+        assert(false, '!!! Чтение незапрошенного поля: $name в объекте: $typeName');
+      }
       if (allowNullValue) return null;
       if (fieldList.fields[name] is NsgDataReferenceListField) {
         var newvalue = fieldList.fields[name]!.defaultValue;

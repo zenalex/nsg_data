@@ -291,6 +291,22 @@ class NsgDataRequest<T extends NsgDataItem> {
     return items;
   }
 
+  ///Список полей, которые были явно запрошены у сервера (fieldsToRead и/или neededFields).
+  ///null — сужения не было, читались все поля.
+  Set<String>? _requestedFieldNames(NsgDataRequestParams? filter) {
+    if (filter == null) return null;
+    final names = <String>{};
+    final legacy = filter.fieldsToRead;
+    if (legacy != null && legacy.isNotEmpty) {
+      names.addAll(legacy.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    }
+    final needed = filter.neededFields;
+    if (needed != null && needed.isNotEmpty) {
+      names.addAll(needed.map((e) => e.trim()).where((e) => e.isNotEmpty));
+    }
+    return names.isEmpty ? null : names;
+  }
+
   ///Загружает данные из response, представляющего из себя Map.
   ///основные объекты лежат в results, кэшируемые по названию полей основного объекта
   Future<List> loadDataAndReferences(Map response, List<String> loadReference, String tag, {NsgDataRequestParams? filter}) async {
@@ -300,14 +316,18 @@ class NsgDataRequest<T extends NsgDataItem> {
     //Все новые элементы, включая дочитанные объекты для поиска строк табличных частей
     var allItems = <NsgDataItem>[];
     var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty);
+    //#1394: сужение может быть задано и устаревшим fieldsToRead, и neededFields.
+    //Разметка emptyFields раньше учитывала только первый, поэтому на neededFields
+    //обращение к незапрошенному полю молча отдавало defaultValue даже в debug.
+    final requestedFields = _requestedFieldNames(filter);
     maps.forEach((name, data) {
       if (name == '_results_' || name == 'results') {
         newItems = _fromJsonList(data);
         allItems.addAll(newItems);
-        if (newItems.isNotEmpty && filter != null && filter.fieldsToRead != null && filter.fieldsToRead!.isNotEmpty) {
+        if (newItems.isNotEmpty && requestedFields != null) {
           //Проставить полям из списка признак того, что она пустые - не прочитаны с БД
           for (var fieldName in newItems.first.fieldList.fields.keys) {
-            if (filter.fieldsToRead!.contains(fieldName)) continue;
+            if (requestedFields.contains(fieldName)) continue;
             for (var item in newItems) {
               item.setFieldEmpty(fieldName);
             }
