@@ -326,8 +326,13 @@ class NsgDataRequest<T extends NsgDataItem> {
         allItems.addAll(newItems);
         if (newItems.isNotEmpty && requestedFields != null) {
           //Проставить полям из списка признак того, что она пустые - не прочитаны с БД
-          for (var fieldName in newItems.first.fieldList.fields.keys) {
+          final fields = newItems.first.fieldList.fields;
+          for (var fieldName in fields.keys) {
             if (requestedFields.contains(fieldName)) continue;
+            //Табличные части - не колонки строки, их наличие определяется не сужением
+            //полей, а дочитыванием (referenceList/readTableParts). Пометить их пустыми
+            //означало бы ложную тревогу на каждом запросе с сужением.
+            if (fields[fieldName] is NsgDataReferenceListField) continue;
             for (var item in newItems) {
               item.setFieldEmpty(fieldName);
             }
