@@ -372,9 +372,13 @@ class NsgDataProvider {
       if (e.response?.statusCode == 403) {
         // 403 Forbidden — отказ по правам (каноничный код после серверного fix).
         // Backward compat: старый сервер возвращал 500 + текстовый маркер (блок ниже).
-        final body = e.response!.data is String
-            ? e.response!.data as String
-            : (e.response!.data?.toString() ?? 'Permission denied');
+        //
+        // Тело от NsgServerExceptionHandler — JSON-объект вида {message, code,
+        // field, ...}, а не строка. Через toString() он уезжал пользователю
+        // дампом Map ({message: ..., code: ...}) прямо в friendlyMessage,
+        // который показывается в snackbar/диалоге. Достаём message тем же
+        // хелпером, что и остальные ветки.
+        final body = nsgExtractServerMessage(e.response?.data) ?? 'Permission denied';
         throw NsgApiPermissionException(
           error: NsgApiError(code: 403, message: body, errorType: e.type),
           friendlyMessage: body,
