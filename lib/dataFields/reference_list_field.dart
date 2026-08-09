@@ -45,6 +45,10 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
     } else {
       fieldValues.fields[name] = defaultValue;
     }
+    //Содержимое положили явно - значит таблица загружена. Материализация пустого
+    //списка в getFieldValue идёт мимо setValue и признак не ставит, поэтому
+    //«не загружена» остаётся отличима от «загружена и пуста».
+    fieldValues.loadedTables.add(name);
   }
 
   List<T> fromJsonList(List<dynamic> maps) {

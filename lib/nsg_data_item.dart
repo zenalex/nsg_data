@@ -304,6 +304,11 @@ class NsgDataItem {
     fieldValues.setValue(this, name, value);
   }
 
+  ///Клали ли в табличную часть содержимое — с сервера или руками.
+  ///Пустая таблица, которую ни разу не загружали, отличается от загруженной и пустой:
+  ///первую при слиянии трогать нельзя, иначе она обнулится (#1394).
+  bool isTableLoaded(String name) => fieldValues.loadedTables.contains(name);
+
   ///Пометить поле пустым, т.е. что оно не загружалось из БД
   void setFieldEmpty(String name) {
     if (!fieldList.fields.containsKey(name)) {
@@ -771,6 +776,9 @@ class NsgDataItem {
             }
           }
           if (fieldList.fields[key] is NsgDataReferenceListField) {
+            //Таблицу, в которую у источника ничего не клали, не трогаем: она не
+            //«пустая», а «не загруженная», и приёмник обнулять из-за неё нельзя.
+            if (!oldItem.isTableLoaded(key)) return;
             var newTable = NsgDataTable(owner: this, fieldName: translateKey);
             var curTable = NsgDataTable(owner: oldItem, fieldName: key);
             newTable.clear();
@@ -781,6 +789,9 @@ class NsgDataItem {
               }
               newTable.addRow(newRow);
             }
+            //Пустая, но загруженная таблица тоже должна остаться загруженной:
+            //addRow выше не вызывался, значит признак сам не проставится.
+            fieldValues.loadedTables.add(translateKey);
           } else if (oldItem.fieldValues.emptyFields.contains(key)) {
             //Поле в источнике не читалось из БД - значения нет, копировать нечего.
             //Переносим сам признак, но только если в приёмнике значения ещё нет:
