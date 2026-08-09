@@ -257,8 +257,11 @@ class NsgDataItem {
       //Проверка не является ли поле пустым (умышленно не читалось из БД, следовательно, нельзя брать значение из него)
       //В debug это падение, в release — молчаливый defaultValue, поэтому рядом хук телеметрии (#1394).
       if (fieldValues.emptyFields.contains(name)) {
+        //Сначала лог (и телеметрия), и только потом — падение, если строгость включена.
+        //Assert обрывает поддерево на первом нарушении и прячет остальные, поэтому для
+        //ПОИСКА промахов он не годится: список собирается логом за один прогон.
         NsgFieldUsage.reportEmptyFieldAccess(typeName, name);
-        assert(false, '!!! Чтение незапрошенного поля: $name в объекте: $typeName');
+        assert(!NsgFieldUsage.strictEmptyFields, '!!! Чтение незапрошенного поля: $name в объекте: $typeName');
       }
       if (allowNullValue) return null;
       if (fieldList.fields[name] is NsgDataReferenceListField) {
