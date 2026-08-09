@@ -182,4 +182,61 @@ void main() {
       expect(target.isTableLoaded(CacheItem.nameRows), isTrue);
     });
   });
+
+  group('слияние строк табличной части', () {
+    test('строка с тем же id сохраняет поля, которых нет в источнике', () {
+      final target = CacheItem()..id = 'E';
+      target.rows.addRow(CacheRow()
+        ..id = 'R1'
+        ..setFieldValue(CacheRow.nameText, 'дочитано раньше'));
+      final keptRow = target.rows.rows.first;
+
+      // Источник ту же строку прочитал узко: text не запрашивал.
+      final freshRow = CacheRow()..id = 'R1';
+      freshRow.setFieldEmpty(CacheRow.nameText);
+      final source = CacheItem()..id = 'E';
+      source.rows.addRow(freshRow);
+
+      target.copyFieldValues(source);
+
+      expect(target.rows.rows.length, 1);
+      expect(target.rows.rows.first.getFieldValue(CacheRow.nameText), 'дочитано раньше',
+          reason: 'та же строка: поле, которого нет в свежей версии, теряться не должно');
+      expect(identical(target.rows.rows.first, keptRow), isTrue,
+          reason: 'экземпляр строки сохраняется — на него могут ссылаться виджеты');
+    });
+
+    test('состав строк задаёт источник: лишние не остаются, новые приходят', () {
+      final target = CacheItem()..id = 'F';
+      target.rows.addRow(CacheRow()..id = 'R1');
+      target.rows.addRow(CacheRow()..id = 'R2');
+
+      final source = CacheItem()..id = 'F';
+      source.rows.addRow(CacheRow()
+        ..id = 'R2'
+        ..setFieldValue(CacheRow.nameText, 'осталась'));
+      source.rows.addRow(CacheRow()..id = 'R3');
+
+      target.copyFieldValues(source);
+
+      expect(target.rows.rows.map((e) => e.id).toList(), ['R2', 'R3']);
+      expect(target.rows.rows.first.getFieldValue(CacheRow.nameText), 'осталась');
+    });
+
+    test('свежее значение строки выигрывает у прежнего', () {
+      final target = CacheItem()..id = 'G';
+      target.rows.addRow(CacheRow()
+        ..id = 'R1'
+        ..setFieldValue(CacheRow.nameText, 'старое'));
+
+      final source = CacheItem()..id = 'G';
+      source.rows.addRow(CacheRow()
+        ..id = 'R1'
+        ..setFieldValue(CacheRow.nameText, 'новое'));
+
+      target.copyFieldValues(source);
+
+      expect(target.rows.rows.first.getFieldValue(CacheRow.nameText), 'новое');
+    });
+  });
 }

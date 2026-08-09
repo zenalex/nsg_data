@@ -242,6 +242,13 @@ class NsgDataItem {
   dynamic getFieldValue(String name, {bool allowNullValue = false}) {
     //#1394: сбор фактических обращений к полям. В release ветка вырезается по kDebugMode.
     if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.record(typeName, name);
+    //Чтение табличной части, которую не загружали. Проверяем ДО выхода по containsKey:
+    //первое же чтение материализует туда пустой список, и дальше отличить будет нечем.
+    if (NsgFieldUsage.reportUnloadedTables &&
+        !fieldValues.loadedTables.contains(name) &&
+        fieldList.fields[name] is NsgDataReferenceListField) {
+      _reportUnloadedTable(name);
+    }
     if (fieldValues.fields.containsKey(name)) {
       return fieldValues.fields[name];
     } else {
@@ -302,6 +309,20 @@ class NsgDataItem {
       }
     }
     fieldValues.setValue(this, name, value);
+  }
+
+  ///Чтение табличной части, которую не загружали, — такой же промах, как чтение
+  ///незапрошенного поля: экран получает пустой список и молча рисует пустоту.
+  ///
+  ///Объекты, созданные на клиенте, исключены: у нового документа таблицы пусты
+  ///законно, а не «не прочитаны». Их отличаем по [isReadFromServer] и состоянию —
+  ///иначе сторож завалил бы ложными срабатываниями каждое создание объекта.
+  void _reportUnloadedTable(String name) {
+    if (!isReadFromServer) return;
+    if (state == NsgDataItemState.create) return;
+    if (docState == NsgDataItemDocState.created) return;
+    NsgFieldUsage.reportEmptyFieldAccess(typeName, name);
+    assert(!NsgFieldUsage.strictUnloadedTables, '!!! Чтение незагруженной табличной части: $name в объекте: $typeName');
   }
 
   ///Клали ли в табличную часть содержимое — с сервера или руками.
@@ -781,8 +802,25 @@ class NsgDataItem {
             if (!oldItem.isTableLoaded(key)) return;
             var newTable = NsgDataTable(owner: this, fieldName: translateKey);
             var curTable = NsgDataTable(owner: oldItem, fieldName: key);
+            //Состав строк задаёт источник, но строка с тем же id - это та же строка:
+            //в ней могли быть дочитаны поля, которых в источнике нет. Поэтому берём
+            //прежнюю за основу и накладываем сверху свежую - те же правила слияния,
+            //что и для объектов. При cloneAsCopy сопоставлять не по чему: там строкам
+            //раздаются новые id.
+            final previousRows = <String, NsgDataItem>{};
+            if (!cloneAsCopy && isTableLoaded(translateKey)) {
+              for (var row in newTable.allRows) {
+                previousRows[row.id] = row;
+              }
+            }
             newTable.clear();
             for (var row in curTable.allRows) {
+              var previous = previousRows[row.id];
+              if (previous != null) {
+                previous.copyFieldValues(row);
+                newTable.addRow(previous);
+                continue;
+              }
               var newRow = row.clone(cloneAsCopy: cloneAsCopy);
               if (cloneAsCopy) {
                 newRow.copyRecordFill();
