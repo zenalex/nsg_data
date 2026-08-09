@@ -713,9 +713,19 @@ class NsgDataItem {
   /// ```
   ///For copy `only specials fields`, use `includeFields`.
   ///For `exclude` one or more fields, use `excludeFields`.
-  ///If you want copy `only not empty fields`, use `copyEmptyFields` parametr.
   ///For copy fields values in other NsgDataItem type obj, use `translateMap` for set fields dependensies:
   ///{oldObjKey: thisObjKey}.
+  ///
+  ///Поля, которые в источнике **не читались из БД** (`emptyFields`), не копируются
+  ///никогда — их значения там нет, есть только `defaultValue`. Раньше они копировались,
+  ///и это тихо портило данные: клон узко прочитанного объекта выглядел полным и отдавал
+  ///умолчания вместо «поле не запрашивалось», а слияние узкой версии в полную затирало
+  ///нормальные значения нулями (#1394).
+  ///
+  ///[copyEmptyFields] теперь управляет только тем, переносить ли в приёмник сам **признак**
+  ///«не читалось». По умолчанию переносим — иначе приёмник молча отдаёт `defaultValue`
+  ///и промах не поймать ни assert'ом, ни телеметрией. Признак ставится, лишь если в
+  ///приёмнике значения ещё нет: имеющееся значение затирать нельзя.
   void copyFieldValues(
     NsgDataItem oldItem, {
     bool cloneAsCopy = false,
@@ -771,10 +781,15 @@ class NsgDataItem {
               }
               newTable.addRow(newRow);
             }
-          } else {
-            if (copyEmptyFields || !oldItem.fieldValues.emptyFields.contains(key)) {
-              setFieldValue(translateKey, oldItem.getFieldValue(key));
+          } else if (oldItem.fieldValues.emptyFields.contains(key)) {
+            //Поле в источнике не читалось из БД - значения нет, копировать нечего.
+            //Переносим сам признак, но только если в приёмнике значения ещё нет:
+            //иначе слияние узко прочитанной версии затрёт нормальные значения.
+            if (copyEmptyFields && !fieldValues.fields.containsKey(translateKey)) {
+              setFieldEmpty(translateKey);
             }
+          } else {
+            setFieldValue(translateKey, oldItem.getFieldValue(key));
           }
         }
       }
