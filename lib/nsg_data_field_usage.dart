@@ -68,8 +68,24 @@ class NsgFieldUsage {
     if (logFirstAccess) debugPrint('NSGFIELD --- scenario: $value');
   }
 
+  /// Глубина подавления сбора. Механические обходы всех полей (копирование
+  /// объекта, сериализация) читают поле за полем, но это не «экрану нужно
+  /// поле» — это перекладывание значений. Если их считать, набор любого экрана
+  /// сходится ко «всем полям»: достаточно один раз влить в объект списка
+  /// полностью прочитанную карточку.
+  static int _internalDepth = 0;
+
+  /// Начать участок, где обращения к полям не считаются нуждами экрана.
+  static void beginInternalAccess() => _internalDepth++;
+
+  /// Закончить такой участок. Вызывать в `finally`.
+  static void endInternalAccess() {
+    if (_internalDepth > 0) _internalDepth--;
+  }
+
   /// Зафиксировать обращение к полю. Вызывать только под `kDebugMode`.
   static void record(String typeName, String fieldName) {
+    if (_internalDepth > 0) return;
     final current = _currentScenario;
     final byType = _usage.putIfAbsent(current, () => <String, Set<String>>{});
     final fields = byType.putIfAbsent(typeName, () => <String>{});

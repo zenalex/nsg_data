@@ -140,6 +140,16 @@ class NsgDataItem {
 
   ///Запись полей объекта в JSON
   Map<String, dynamic> toJson({List<String> excludeFields = const []}) {
+    //#1394: сериализация читает все заполненные поля - это не нужды экрана.
+    if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.beginInternalAccess();
+    try {
+      return _toJsonBody(excludeFields);
+    } finally {
+      if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.endInternalAccess();
+    }
+  }
+
+  Map<String, dynamic> _toJsonBody(List<String> excludeFields) {
     var map = <String, dynamic>{};
 
     if (remoteProvider.newTableLogic && docState == NsgDataItemDocState.deleted) {
@@ -721,6 +731,24 @@ class NsgDataItem {
         includeFields.add(element);
       }
     }
+    //#1394: перекладывание значений - не «экрану нужно поле». Иначе одно вливание
+    //полностью прочитанной карточки в объект списка запишет в нужды списка все поля.
+    if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.beginInternalAccess();
+    try {
+      _copyFieldValuesBody(oldItem, cloneAsCopy, excludeFields, includeFields, translateMap, copyEmptyFields);
+    } finally {
+      if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.endInternalAccess();
+    }
+  }
+
+  void _copyFieldValuesBody(
+    NsgDataItem oldItem,
+    bool cloneAsCopy,
+    List<String>? excludeFields,
+    List<String>? includeFields,
+    Map<String, String>? translateMap,
+    bool copyEmptyFields,
+  ) {
     fieldList.fields.forEach((key, value) {
       if (includeFields == null || includeFields.contains(key)) {
         if ((excludeFields == null || !excludeFields.contains(key))) {
