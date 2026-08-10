@@ -28,8 +28,16 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
       return NsgDataClient.client.getNewObject(T) as T;
     }
     if (useCache) {
-      var item = NsgDataClient.client.getItemsFromCache(T, id, allowNull: allowNull) as T?;
-      return item;
+      //Спрашиваем кэш с allowNull, даже если вызывающий хочет пустышку: так промах
+      //виден здесь, а не подменяется молча новым объектом внутри кэша.
+      var item = NsgDataClient.client.getItemsFromCache(T, id, allowNull: true) as T?;
+      if (item != null) return item;
+      //Ссылка задана, а объекта нет — его не дочитали. Экран получит пустышку и
+      //нарисует пустоту без единой ошибки. В удачном пути мы сюда не заходим,
+      //поэтому диагностика ничего не стоит и работает в том числе в релизе.
+      NsgFieldUsage.reportMissingReferent(dataItem.typeName, name);
+      if (allowNull) return null;
+      return NsgDataClient.client.getNewObject(T) as T;
     } else {
       return null;
     }

@@ -245,7 +245,15 @@ class NsgDataItem {
     if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.record(typeName, name);
     //Чтение табличной части, которую не загружали. Проверяем ДО выхода по containsKey:
     //первое же чтение материализует туда пустой список, и дальше отличить будет нечем.
-    if (NsgFieldUsage.reportUnloadedTables &&
+    //
+    //Только не в релизе. getFieldValue зовёт каждый сгенерированный геттер — это самый
+    //горячий метод слоя данных, и два лишних lookup'а на каждое чтение поля стоят дороже,
+    //чем всё, что мы выигрывали сужением (замер к #1383: выигрыша в скорости выборки нет,
+    //объём снимает сжатие ответов). Промах, который действительно нужно ловить в проде, —
+    //ненайденный референт, и он проверяется в своей ветке, бесплатно для удачного пути
+    //(NsgDataReferenceField.getReferent).
+    if (!kReleaseMode &&
+        NsgFieldUsage.reportUnloadedTables &&
         !fieldValues.loadedTables.contains(name) &&
         fieldList.fields[name] is NsgDataReferenceListField) {
       _reportUnloadedTable(name);
@@ -834,7 +842,7 @@ class NsgDataItem {
             //Пустая, но загруженная таблица тоже должна остаться загруженной:
             //addRow выше не вызывался, значит признак сам не проставится.
             fieldValues.loadedTables.add(translateKey);
-          } else if (oldItem.fieldValues.emptyFields.contains(key)) {
+          } else if (oldItem.fieldValues.emptyFields.contains(key) && !oldItem.fieldValues.fields.containsKey(key)) {
             //Поле в источнике не читалось из БД - значения нет, копировать нечего.
             //Переносим сам признак, но только если в приёмнике значения ещё нет:
             //иначе слияние узко прочитанной версии затрёт нормальные значения.
