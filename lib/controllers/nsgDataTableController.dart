@@ -226,7 +226,20 @@ class NsgDataTableController<T extends NsgDataItem> extends NsgDataController<T>
 
   ///Фильтрует строки из мастер и удовлетворяющие фильтру добавляет в контроллер
   Future filterData({NsgDataRequestParams? filterParam}) async {
-    var dataTable = NsgDataTable(owner: masterController!.selectedItem!, fieldName: tableFieldName);
+    final master = masterController!.selectedItem!;
+    // Табличную часть, которую ещё не читали, не трогаем. Строк в ней всё равно
+    // нет, а обращение к незагруженной таблице — диагностический сигнал: поднимать
+    // его на ровном месте значит приучать на него не смотреть. Контроллер наполнится
+    // сам, когда мастера перечитают вместе с этой таблицей — мы подписаны на смену
+    // его текущего элемента.
+    //
+    // Новый объект под это не подпадает: строка, добавленная на клиенте, идёт через
+    // setValue, а он помечает таблицу загруженной.
+    if (!master.isTableLoaded(tableFieldName)) {
+      dataItemList = [];
+      return;
+    }
+    var dataTable = NsgDataTable(owner: master, fieldName: tableFieldName);
     var filter = filterParam ?? getRequestFilter;
     dataItemList = [];
     for (var row in dataTable.rows) {
