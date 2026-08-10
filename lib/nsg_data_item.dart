@@ -141,11 +141,11 @@ class NsgDataItem {
   ///Запись полей объекта в JSON
   Map<String, dynamic> toJson({List<String> excludeFields = const []}) {
     //#1394: сериализация читает все заполненные поля - это не нужды экрана.
-    if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.beginInternalAccess();
+    if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.beginInternalAccess();
     try {
       return _toJsonBody(excludeFields);
     } finally {
-      if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.endInternalAccess();
+      if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.endInternalAccess();
     }
   }
 
@@ -240,8 +240,9 @@ class NsgDataItem {
   ///Если значение не присваивалось, то будет возвращено значение по умолчению, если
   ///allowNullValue == false или null, если allowNullValue == true
   dynamic getFieldValue(String name, {bool allowNullValue = false}) {
-    //#1394: сбор фактических обращений к полям. В release ветка вырезается по kDebugMode.
-    if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.record(typeName, name);
+    //#1394: сбор фактических обращений к полям. В release ветка вырезается по kReleaseMode;
+    //profile оставлен намеренно — замеры делаются в нём, debug-веб для этого слишком медленный.
+    if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.record(typeName, name);
     //Чтение табличной части, которую не загружали. Проверяем ДО выхода по containsKey:
     //первое же чтение материализует туда пустой список, и дальше отличить будет нечем.
     if (NsgFieldUsage.reportUnloadedTables &&
@@ -772,11 +773,11 @@ class NsgDataItem {
     }
     //#1394: перекладывание значений - не «экрану нужно поле». Иначе одно вливание
     //полностью прочитанной карточки в объект списка запишет в нужды списка все поля.
-    if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.beginInternalAccess();
+    if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.beginInternalAccess();
     try {
       _copyFieldValuesBody(oldItem, cloneAsCopy, excludeFields, includeFields, translateMap, copyEmptyFields);
     } finally {
-      if (kDebugMode && NsgFieldUsage.collect) NsgFieldUsage.endInternalAccess();
+      if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.endInternalAccess();
     }
   }
 

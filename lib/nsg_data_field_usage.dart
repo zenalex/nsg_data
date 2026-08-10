@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 ///
 /// 1. **Сбор обращений** ([collect]) — какие поля объектов реально читаются на
 ///    экране. Включается приложением ЯВНО и работает только в debug: в release
-///    вызов вырезается по `kDebugMode` (это компайл-тайм константа), так что
+///    вызов вырезается по `kReleaseMode` (это компайл-тайм константа), так что
 ///    накладных расходов в проде нет. Нужен, чтобы список `neededFields`
 ///    получался замером, а не чтением вёрстки: обращения из сортировок, поиска,
 ///    шаринга и аналитики глазами не находятся.
@@ -89,7 +89,7 @@ class NsgFieldUsage {
 
   /// Сменить метку сценария (и залогировать переход).
   static void setScenario(String value) {
-    if (!kDebugMode || !collect) return;
+    if (kReleaseMode || !collect) return;
     if (scenario == value) return;
     scenario = value;
     if (logFirstAccess) debugPrint('NSGFIELD --- scenario: $value');
@@ -110,7 +110,7 @@ class NsgFieldUsage {
     if (_internalDepth > 0) _internalDepth--;
   }
 
-  /// Зафиксировать обращение к полю. Вызывать только под `kDebugMode`.
+  /// Зафиксировать обращение к полю. Вызывать только под `!kReleaseMode`.
   static void record(String typeName, String fieldName) {
     if (_internalDepth > 0) return;
     final current = _currentScenario;
@@ -123,7 +123,7 @@ class NsgFieldUsage {
 
   /// Сообщить о чтении поля, которое не запрашивалось из БД.
   static void reportEmptyFieldAccess(String typeName, String fieldName) {
-    if (kDebugMode && collect) {
+    if (!kReleaseMode && collect) {
       final byType = _usage.putIfAbsent('!empty:$_currentScenario', () => <String, Set<String>>{});
       byType.putIfAbsent(typeName, () => <String>{}).add(fieldName);
     }
