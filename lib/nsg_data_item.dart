@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'nsg_data_delete.dart';
@@ -139,6 +140,16 @@ class NsgDataItem {
 
   ///Запись полей объекта в JSON
   Map<String, dynamic> toJson({List<String> excludeFields = const []}) {
+    //#1394: сериализация читает все заполненные поля - это не нужды экрана.
+    if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.beginInternalAccess();
+    try {
+      return _toJsonBody(excludeFields);
+    } finally {
+      if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.endInternalAccess();
+    }
+  }
+
+  Map<String, dynamic> _toJsonBody(List<String> excludeFields) {
     var map = <String, dynamic>{};
 
     if (remoteProvider.newTableLogic && docState == NsgDataItemDocState.deleted) {
@@ -229,13 +240,30 @@ class NsgDataItem {
   ///Если значение не присваивалось, то будет возвращено значение по умолчению, если
   ///allowNullValue == false или null, если allowNullValue == true
   dynamic getFieldValue(String name, {bool allowNullValue = false}) {
+    //#1394: сбор фактических обращений к полям. В release ветка вырезается по kReleaseMode;
+    //profile оставлен намеренно — замеры делаются в нём, debug-веб для этого слишком медленный.
+    if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.record(typeName, name);
+    //Чтение табличной части, которую не загружали. Проверяем ДО выхода по containsKey:
+    //первое же чтение материализует туда пустой список, и дальше отличить будет нечем.
+    if (NsgFieldUsage.reportUnloadedTables &&
+        !fieldValues.loadedTables.contains(name) &&
+        fieldList.fields[name] is NsgDataReferenceListField) {
+      _reportUnloadedTable(name);
+    }
     if (fieldValues.fields.containsKey(name)) {
       return fieldValues.fields[name];
     } else {
       //Проверка на наличие поля в списке полей объекта
       assert(fieldList.fields.containsKey(name), '!!! Не существует поля с именем: $name в объекте: $typeName');
       //Проверка не является ли поле пустым (умышленно не читалось из БД, следовательно, нельзя брать значение из него)
-      assert(!fieldValues.emptyFields.contains(name));
+      //В debug это падение, в release — молчаливый defaultValue, поэтому рядом хук телеметрии (#1394).
+      if (fieldValues.emptyFields.contains(name)) {
+        //Сначала лог (и телеметрия), и только потом — падение, если строгость включена.
+        //Assert обрывает поддерево на первом нарушении и прячет остальные, поэтому для
+        //ПОИСКА промахов он не годится: список собирается логом за один прогон.
+        NsgFieldUsage.reportEmptyFieldAccess(typeName, name);
+        assert(!NsgFieldUsage.strictEmptyFields, '!!! Чтение незапрошенного поля: $name в объекте: $typeName');
+      }
       if (allowNullValue) return null;
       if (fieldList.fields[name] is NsgDataReferenceListField) {
         var newvalue = fieldList.fields[name]!.defaultValue;
@@ -286,6 +314,25 @@ class NsgDataItem {
     }
     fieldValues.setValue(this, name, value);
   }
+
+  ///Чтение табличной части, которую не загружали, — такой же промах, как чтение
+  ///незапрошенного поля: экран получает пустой список и молча рисует пустоту.
+  ///
+  ///Объекты, созданные на клиенте, исключены: у нового документа таблицы пусты
+  ///законно, а не «не прочитаны». Их отличаем по [isReadFromServer] и состоянию —
+  ///иначе сторож завалил бы ложными срабатываниями каждое создание объекта.
+  void _reportUnloadedTable(String name) {
+    if (!isReadFromServer) return;
+    if (state == NsgDataItemState.create) return;
+    if (docState == NsgDataItemDocState.created) return;
+    NsgFieldUsage.reportEmptyFieldAccess(typeName, name);
+    assert(!NsgFieldUsage.strictUnloadedTables, '!!! Чтение незагруженной табличной части: $name в объекте: $typeName');
+  }
+
+  ///Клали ли в табличную часть содержимое — с сервера или руками.
+  ///Пустая таблица, которую ни разу не загружали, отличается от загруженной и пустой:
+  ///первую при слиянии трогать нельзя, иначе она обнулится (#1394).
+  bool isTableLoaded(String name) => fieldValues.loadedTables.contains(name);
 
   ///Пометить поле пустым, т.е. что оно не загружалось из БД
   void setFieldEmpty(String name) {
@@ -696,9 +743,19 @@ class NsgDataItem {
   /// ```
   ///For copy `only specials fields`, use `includeFields`.
   ///For `exclude` one or more fields, use `excludeFields`.
-  ///If you want copy `only not empty fields`, use `copyEmptyFields` parametr.
   ///For copy fields values in other NsgDataItem type obj, use `translateMap` for set fields dependensies:
   ///{oldObjKey: thisObjKey}.
+  ///
+  ///Поля, которые в источнике **не читались из БД** (`emptyFields`), не копируются
+  ///никогда — их значения там нет, есть только `defaultValue`. Раньше они копировались,
+  ///и это тихо портило данные: клон узко прочитанного объекта выглядел полным и отдавал
+  ///умолчания вместо «поле не запрашивалось», а слияние узкой версии в полную затирало
+  ///нормальные значения нулями (#1394).
+  ///
+  ///[copyEmptyFields] теперь управляет только тем, переносить ли в приёмник сам **признак**
+  ///«не читалось». По умолчанию переносим — иначе приёмник молча отдаёт `defaultValue`
+  ///и промах не поймать ни assert'ом, ни телеметрией. Признак ставится, лишь если в
+  ///приёмнике значения ещё нет: имеющееся значение затирать нельзя.
   void copyFieldValues(
     NsgDataItem oldItem, {
     bool cloneAsCopy = false,
@@ -714,6 +771,24 @@ class NsgDataItem {
         includeFields.add(element);
       }
     }
+    //#1394: перекладывание значений - не «экрану нужно поле». Иначе одно вливание
+    //полностью прочитанной карточки в объект списка запишет в нужды списка все поля.
+    if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.beginInternalAccess();
+    try {
+      _copyFieldValuesBody(oldItem, cloneAsCopy, excludeFields, includeFields, translateMap, copyEmptyFields);
+    } finally {
+      if (!kReleaseMode && NsgFieldUsage.collect) NsgFieldUsage.endInternalAccess();
+    }
+  }
+
+  void _copyFieldValuesBody(
+    NsgDataItem oldItem,
+    bool cloneAsCopy,
+    List<String>? excludeFields,
+    List<String>? includeFields,
+    Map<String, String>? translateMap,
+    bool copyEmptyFields,
+  ) {
     fieldList.fields.forEach((key, value) {
       if (includeFields == null || includeFields.contains(key)) {
         if ((excludeFields == null || !excludeFields.contains(key))) {
@@ -726,20 +801,48 @@ class NsgDataItem {
             }
           }
           if (fieldList.fields[key] is NsgDataReferenceListField) {
+            //Таблицу, в которую у источника ничего не клали, не трогаем: она не
+            //«пустая», а «не загруженная», и приёмник обнулять из-за неё нельзя.
+            if (!oldItem.isTableLoaded(key)) return;
             var newTable = NsgDataTable(owner: this, fieldName: translateKey);
             var curTable = NsgDataTable(owner: oldItem, fieldName: key);
+            //Состав строк задаёт источник, но строка с тем же id - это та же строка:
+            //в ней могли быть дочитаны поля, которых в источнике нет. Поэтому берём
+            //прежнюю за основу и накладываем сверху свежую - те же правила слияния,
+            //что и для объектов. При cloneAsCopy сопоставлять не по чему: там строкам
+            //раздаются новые id.
+            final previousRows = <String, NsgDataItem>{};
+            if (!cloneAsCopy && isTableLoaded(translateKey)) {
+              for (var row in newTable.allRows) {
+                previousRows[row.id] = row;
+              }
+            }
             newTable.clear();
             for (var row in curTable.allRows) {
+              var previous = previousRows[row.id];
+              if (previous != null) {
+                previous.copyFieldValues(row);
+                newTable.addRow(previous);
+                continue;
+              }
               var newRow = row.clone(cloneAsCopy: cloneAsCopy);
               if (cloneAsCopy) {
                 newRow.copyRecordFill();
               }
               newTable.addRow(newRow);
             }
-          } else {
-            if (copyEmptyFields || !oldItem.fieldValues.emptyFields.contains(key)) {
-              setFieldValue(translateKey, oldItem.getFieldValue(key));
+            //Пустая, но загруженная таблица тоже должна остаться загруженной:
+            //addRow выше не вызывался, значит признак сам не проставится.
+            fieldValues.loadedTables.add(translateKey);
+          } else if (oldItem.fieldValues.emptyFields.contains(key)) {
+            //Поле в источнике не читалось из БД - значения нет, копировать нечего.
+            //Переносим сам признак, но только если в приёмнике значения ещё нет:
+            //иначе слияние узко прочитанной версии затрёт нормальные значения.
+            if (copyEmptyFields && !fieldValues.fields.containsKey(translateKey)) {
+              setFieldEmpty(translateKey);
             }
+          } else {
+            setFieldValue(translateKey, oldItem.getFieldValue(key));
           }
         }
       }
