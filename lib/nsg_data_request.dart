@@ -303,6 +303,13 @@ class NsgDataRequest<T extends NsgDataItem> {
     final needed = filter.neededFields;
     if (needed != null && needed.isNotEmpty) {
       names.addAll(needed.map((e) => e.trim()).where((e) => e.isNotEmpty));
+      //Точечный путь `teamHomeId.name` сужает референт, но саму колонку `teamHomeId`
+      //сервер при этом читает — он выводит её из пути сам (NarrowRefFields). Клиент
+      //обязан выводить так же, иначе пометит ссылку непрочитанной, хотя она пришла:
+      //чтение вернёт значение (оно выигрывает у пометки), а вот слияние в кэше уже
+      //посчитает поле пустым. Сейчас не стреляет только потому, что вызывающий
+      //перечисляет и плоское поле тоже, — но это его удача, а не свойство кода.
+      names.addAll(needed.map((e) => e.trim().split('.').first).where((e) => e.isNotEmpty));
     }
     return names.isEmpty ? null : names;
   }
