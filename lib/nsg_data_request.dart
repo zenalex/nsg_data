@@ -279,6 +279,83 @@ class NsgDataRequest<T extends NsgDataItem> {
     return items;
   }
 
+  ///Список полей, которые были явно запрошены у сервера (fieldsToRead и/или neededFields).
+  ///null — сужения не было, читались все поля.
+  Set<String>? _requestedFieldNames(NsgDataRequestParams? filter) {
+    if (filter == null) return null;
+    final names = <String>{};
+    final legacy = filter.fieldsToRead;
+    if (legacy != null && legacy.isNotEmpty) {
+      names.addAll(legacy.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    }
+    final needed = filter.neededFields;
+    if (needed != null && needed.isNotEmpty) {
+      names.addAll(needed.map((e) => e.trim()).where((e) => e.isNotEmpty));
+      //Точечный путь `teamHomeId.name` сужает референт, но саму колонку `teamHomeId`
+      //сервер при этом читает — он выводит её из пути сам (NarrowRefFields). Клиент
+      //обязан выводить так же, иначе пометит ссылку непрочитанной, хотя она пришла:
+      //чтение вернёт значение (оно выигрывает у пометки), а вот слияние в кэше уже
+      //посчитает поле пустым. Сейчас не стреляет только потому, что вызывающий
+      //перечисляет и плоское поле тоже, — но это его удача, а не свойство кода.
+      names.addAll(needed.map((e) => e.trim().split('.').first).where((e) => e.isNotEmpty));
+    }
+    return names.isEmpty ? null : names;
+  }
+
+  ///#1383: поля, запрошенные у ДОЧИТЫВАЕМЫХ объектов: тип -> имена полей.
+  ///
+  ///Точечная запись в neededFields (`teamHomeId.name`) сужает не основной объект, а референт,
+  ///и сервер по ней отдаёт урезанные объекты. Здесь считается то же самое на клиенте, чтобы
+  ///непришедшие поля были помечены пустыми, а не молча отдавали defaultValue.
+  ///
+  ///Тип определяется проходом по пути от корня (поле-ссылка -> её referentElementType), а не
+  ///поиском по глобальному реестру: путь и так задаёт тип однозначно, а реестр потребовал бы
+  ///уникальности имён.
+  ///
+  ///Тип, до которого ведёт хотя бы один путь БЕЗ точечных полей, из карты исключается: по
+  ///такому пути сервер пришлёт объект целиком, и разметка пустых была бы ложной.
+  Map<Type, Set<String>> _requestedReferentFields(NsgDataRequestParams? filter, List<String> loadReference) {
+    final needed = filter?.neededFields;
+    if (needed == null || needed.isEmpty) return const {};
+
+    final result = <Type, Set<String>>{};
+    for (final entry in needed) {
+      final path = entry.trim().split('.');
+      if (path.length < 2) continue;
+      final type = _typeByPath(path.sublist(0, path.length - 1));
+      if (type == null) continue;
+      (result[type] ??= <String>{}).add(path.last);
+    }
+    if (result.isEmpty) return const {};
+
+    //Пути дочитывания без сужения: по ним приедет весь объект
+    for (final reference in loadReference) {
+      final path = reference.trim().split('.');
+      final type = _typeByPath(path);
+      if (type == null || !result.containsKey(type)) continue;
+      final prefix = '${path.join('.')}.';
+      if (!needed.any((e) => e.trim().startsWith(prefix))) result.remove(type);
+    }
+    return result;
+  }
+
+  ///Тип объекта, до которого ведёт путь ссылочных полей от dataItemType. null, если путь
+  ///обрывается (не ссылка, неизвестное поле).
+  Type? _typeByPath(List<String> path) {
+    Type current = dataItemType;
+    for (final segment in path) {
+      final field = NsgDataClient.client.getFieldList(current).fields[segment];
+      if (field is NsgDataReferenceField) {
+        current = field.referentElementType;
+      } else if (field is NsgDataReferenceListField) {
+        current = field.referentElementType;
+      } else {
+        return null;
+      }
+    }
+    return current;
+  }
+
   ///Загружает данные из response, представляющего из себя Map.
   ///основные объекты лежат в results, кэшируемые по названию полей основного объекта
   Future<List> loadDataAndReferences(Map response, List<String> loadReference, String tag, {NsgDataRequestParams? filter}) async {
@@ -288,14 +365,25 @@ class NsgDataRequest<T extends NsgDataItem> {
     //Все новые элементы, включая дочитанные объекты для поиска строк табличных частей
     var allItems = <NsgDataItem>[];
     var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty);
+    //#1394: сужение может быть задано и устаревшим fieldsToRead, и neededFields.
+    //Разметка emptyFields раньше учитывала только первый, поэтому на neededFields
+    //обращение к незапрошенному полю молча отдавало defaultValue даже в debug.
+    final requestedFields = _requestedFieldNames(filter);
+    //#1383: то же для дочитываемых объектов - они и есть основная часть ответа
+    final requestedReferentFields = _requestedReferentFields(filter, loadReference);
     maps.forEach((name, data) {
       if (name == '_results_' || name == 'results') {
         newItems = _fromJsonList(data);
         allItems.addAll(newItems);
-        if (newItems.isNotEmpty && filter != null && filter.fieldsToRead != null && filter.fieldsToRead!.isNotEmpty) {
+        if (newItems.isNotEmpty && requestedFields != null) {
           //Проставить полям из списка признак того, что она пустые - не прочитаны с БД
-          for (var fieldName in newItems.first.fieldList.fields.keys) {
-            if (filter.fieldsToRead!.contains(fieldName)) continue;
+          final fields = newItems.first.fieldList.fields;
+          for (var fieldName in fields.keys) {
+            if (requestedFields.contains(fieldName)) continue;
+            //Табличные части - не колонки строки, их наличие определяется не сужением
+            //полей, а дочитыванием (referenceList/readTableParts). Пометить их пустыми
+            //означало бы ложную тревогу на каждом запросе с сужением.
+            if (fields[fieldName] is NsgDataReferenceListField) continue;
             for (var item in newItems) {
               item.setFieldEmpty(fieldName);
             }
@@ -340,10 +428,20 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
           if (NsgDataClient.client.isRegisteredByServerName(name)) {
             var refItems = <NsgDataItem>[];
+            final refType = NsgDataClient.client.getTypeByServerName(name);
+            final refRequested = requestedReferentFields[refType];
             data.forEach((m) {
-              var elem = NsgDataClient.client.getNewObject(NsgDataClient.client.getTypeByServerName(name));
+              var elem = NsgDataClient.client.getNewObject(refType);
               elem.fromJson(m as Map<String, dynamic>);
               elem.state = NsgDataItemState.fill;
+              if (refRequested != null) {
+                for (var fieldName in elem.fieldList.fields.keys) {
+                  if (refRequested.contains(fieldName)) continue;
+                  //Табличные части приезжают дочитыванием, а не колонкой - см. основной объект
+                  if (elem.fieldList.fields[fieldName] is NsgDataReferenceListField) continue;
+                  elem.setFieldEmpty(fieldName);
+                }
+              }
               refItems.add(elem);
             });
             if (useCache) {

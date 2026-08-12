@@ -15,6 +15,34 @@ import 'authorize/nsg_login_model.dart';
 import 'authorize/nsg_login_response.dart';
 import 'nsgApiPermissionException.dart';
 
+/// Достать текст ошибки, который прислал СЕРВЕР, из тела ответа Dio.
+///
+/// Зачем: при ответе с кодом ошибки (400, 500, …) Dio кладёт тело в
+/// `e.response.data`, а `e.error` оставляет **null**. Код, писавший
+/// `e.error?.toString() ?? 'Internet connection error'`, поэтому всегда
+/// показывал «нет интернета» — хотя связь была в порядке, а сервер прислал
+/// конкретную причину отказа. Пользователь видел заведомо ложное сообщение
+/// и не мог понять, что от него хотят (жалоба от организаторов, 04.08.2026:
+/// «400 ||| Internet connection error» при регистрации команд).
+///
+/// Возвращает null, если сервер ничего внятного не прислал — тогда
+/// вызывающий откатывается на прежний текст.
+String? nsgExtractServerMessage(dynamic data) {
+  if (data == null) return null;
+  if (data is String) {
+    final s = data.trim();
+    return s.isEmpty ? null : s;
+  }
+  if (data is Map) {
+    // Разные слои сервера отвечают по-разному, поэтому смотрим несколько ключей.
+    for (final key in const ['message', 'Message', 'error', 'Error', 'error_description', 'title']) {
+      final v = data[key];
+      if (v is String && v.trim().isNotEmpty) return v.trim();
+    }
+  }
+  return null;
+}
+
 class NsgDataProvider {
   ///Token saved after authorization
   String token = '';
@@ -34,6 +62,16 @@ class NsgDataProvider {
 
   ///Версия приложения. Проверяется на сервере для требования или рекомендации обновления
   String applicationVersion;
+
+  ///Текст сообщения об ОБЯЗАТЕЛЬНОМ обновлении приложения (результат проверки версии == 2).
+  ///Библиотека не знает про локализацию приложения, поэтому текст вынесен в перезаписываемое
+  ///поле: приложение может присвоить сюда свою локализованную строку при инициализации.
+  ///Значение по умолчанию — прежний английский текст, поэтому без настройки поведение не меняется.
+  static String messageUpdateRequired = 'Application update required';
+
+  ///Текст сообщения о РЕКОМЕНДУЕМОМ обновлении приложения (результат проверки версии == 1).
+  ///См. комментарий к [messageUpdateRequired].
+  static String messageUpdateRecommended = 'A newer version is available. It is recommended to update the application';
 
   ///Используется ли стандартная система авторизации NSG для получения и хранения токена пользователя
   bool useNsgAuthorization = true;
@@ -334,9 +372,13 @@ class NsgDataProvider {
       if (e.response?.statusCode == 403) {
         // 403 Forbidden — отказ по правам (каноничный код после серверного fix).
         // Backward compat: старый сервер возвращал 500 + текстовый маркер (блок ниже).
-        final body = e.response!.data is String
-            ? e.response!.data as String
-            : (e.response!.data?.toString() ?? 'Permission denied');
+        //
+        // Тело от NsgServerExceptionHandler — JSON-объект вида {message, code,
+        // field, ...}, а не строка. Через toString() он уезжал пользователю
+        // дампом Map ({message: ..., code: ...}) прямо в friendlyMessage,
+        // который показывается в snackbar/диалоге. Достаём message тем же
+        // хелпером, что и остальные ветки.
+        final body = nsgExtractServerMessage(e.response?.data) ?? 'Permission denied';
         throw NsgApiPermissionException(
           error: NsgApiError(code: 403, message: body, errorType: e.type),
           friendlyMessage: body,
@@ -367,7 +409,10 @@ class NsgDataProvider {
         debugPrint('###');
         debugPrint('### Error: ${e.error}, type: ${e.type}');
         debugPrint('###');
-        throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
+        throw NsgApiException(NsgApiError(
+          code: 1,
+          message: nsgExtractServerMessage(e.response?.data) ?? e.error?.toString() ?? 'Internet connection error',
+          errorType: e.type));
       }
     } catch (e) {
       debugPrint(
@@ -454,7 +499,11 @@ class NsgDataProvider {
       return curData;
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(NsgApiError(code: e.response?.statusCode, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
+      throw NsgApiException(NsgApiError(
+          code: e.response?.statusCode,
+          // Сначала — то, что сказал сервер; 'нет интернета' только если он молчит.
+          message: nsgExtractServerMessage(e.response?.data) ?? e.error?.toString() ?? 'Internet connection error',
+          errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -513,7 +562,10 @@ class NsgDataProvider {
       return Image.memory(response.data!);
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      throw NsgApiException(NsgApiError(code: 1, message: e.error?.toString() ?? 'Internet connection error', errorType: e.type));
+      throw NsgApiException(NsgApiError(
+          code: 1,
+          message: nsgExtractServerMessage(e.response?.data) ?? e.error?.toString() ?? 'Internet connection error',
+          errorType: e.type));
     } catch (e) {
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
@@ -590,10 +642,10 @@ class NsgDataProvider {
       // проглатываем — старт продолжается без задержки.
       unawaited(_checkVersion(onRetry).then((checkResult) {
         if (checkResult == 2) {
-          NsgBaseController.showErrorByString('Application update required');
+          NsgBaseController.showErrorByString(messageUpdateRequired);
           //сменить на диалог и запретить работу при наличии обязательного обновления
         } else if (checkResult == 1) {
-          NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
+          NsgBaseController.showErrorByString(messageUpdateRecommended);
         }
       }).catchError((Object _) {}));
       if (token == '') {

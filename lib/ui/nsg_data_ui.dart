@@ -32,18 +32,28 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 
   /// Загружает часть элементов из источника данных с учётом фильтра и ссылок.
   /// `top` — смещение; `count` — сколько элементов загрузить.
-  Future<List<T>> _loadItems(int top, int count, {NsgDataRequestParams? filter}) async {
+  Future<List<T>> _loadItems(
+    int top,
+    int count, {
+    NsgDataRequestParams? filter,
+  }) async {
     if (controllerMode.storageType == NsgDataStorageType.local) {
       return [];
     }
-    var matches = NsgDataRequest<T>(dataItemType: T, storageType: controllerMode.storageType);
+    var matches = NsgDataRequest<T>(
+      dataItemType: dataType,
+      storageType: controllerMode.storageType,
+    );
     filter ??= getRequestFilter;
     filter.top = top;
     filter.count = count;
     // printWarning("top - $top");
     // printWarning("count - $count");
     // printWarning("last - ${top + count}");
-    List<T> ans = await matches.requestItems(filter: filter, loadReference: referenceList);
+    List<T> ans = await matches.requestItems(
+      filter: filter,
+      loadReference: referenceList,
+    );
     return ans;
   }
 
@@ -55,7 +65,10 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
     NsgSorting sort = NsgSorting();
 
     if (groupFieldName != null && groupFieldName!.isNotEmpty) {
-      NsgSortingParam sortingParam = NsgSortingParam(parameterName: groupFieldName!, direction: sortDirection ?? NsgSortingDirection.ascending);
+      NsgSortingParam sortingParam = NsgSortingParam(
+        parameterName: groupFieldName!,
+        direction: sortDirection ?? NsgSortingDirection.ascending,
+      );
       sort.paramList.add(sortingParam);
     }
 
@@ -83,7 +96,9 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
     sendNotify();
     //было items.length + 1 < (totalCount ?? 1000) - но это неправильно, потому что если остался 1 элемент, мы его не догрузим
     if (items.length < (totalCount ?? 1000)) {
-      items.addAll(await _loadItems(items.length, loadStepCountUi, filter: filter));
+      items.addAll(
+        await _loadItems(items.length, loadStepCountUi, filter: filter),
+      );
     }
     status = GetStatus.success(NsgBaseController.emptyData);
     sendNotify();
@@ -106,7 +121,9 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 
   /// Прокручивает список к текущему выбранному элементу контроллера `currentItem`.
   void scrollToCurrentItem() {
-    scrollController.scrollToIndex(scrollController.dataGroups.getIndexByItem(currentItem));
+    scrollController.scrollToIndex(
+      scrollController.dataGroups.getIndexByItem(currentItem),
+    );
   }
 
   // void scrollToCurrentItem2() {
@@ -117,7 +134,11 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
   ///
   /// - `itemBuilder` — билдер элемента списка.
   /// - `dividerBuilder` — опциональный билдер разделителя группы (например, заголовок с датой).
-  Widget getListWidgetInData(Widget? Function(T item) itemBuilder, {Widget Function(dynamic groupValue)? dividerBuilder, Widget? onEmptyList}) {
+  Widget getListWidgetInData(
+    Widget? Function(T item) itemBuilder, {
+    Widget Function(dynamic groupValue)? dividerBuilder,
+    Widget? onEmptyList,
+  }) {
     return obx((state) {
       if (items.isEmpty) {
         if (onEmptyList != null) {
@@ -126,7 +147,9 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
         return const SizedBox.shrink();
       }
 
-      scrollController.dataGroups = DataGroupList([DataGroup(data: items, groupFieldName: groupFieldName ?? '')], needDivider: dividerBuilder != null);
+      scrollController.dataGroups = DataGroupList([
+        DataGroup(data: items, groupFieldName: groupFieldName ?? ''),
+      ], needDivider: dividerBuilder != null);
 
       return ListView.builder(
         controller: scrollController,
@@ -149,8 +172,12 @@ mixin NsgDataUI<T extends NsgDataItem> on NsgDataController<T> {
 /// Хранит сами элементы, имя поля группировки и ключи для точной прокрутки к элементам.
 class DataGroup {
   // GlobalKey на индекс строки, не на item: при повторе одного NsgDataItem в data карта давала один ключ на две строки → Duplicate GlobalKey.
-  DataGroup({required this.data, required this.groupFieldName, this.dividerBuilder, this.partOfDate})
-    : rowKeys = List<GlobalKey>.generate(data.length, (_) => GlobalKey()) {
+  DataGroup({
+    required this.data,
+    required this.groupFieldName,
+    this.dividerBuilder,
+    this.partOfDate,
+  }) : rowKeys = List<GlobalKey>.generate(data.length, (_) => GlobalKey()) {
     for (var i = 0; i < data.length; i++) {
       _itemsKeys[data[i]] = rowKeys[i];
     }
@@ -181,7 +208,11 @@ class DataGroup {
     if (groupValue != null) {
       try {
         if (groupValue is DateTime && partOfDate != null) {
-          return NsgDateFormat.dateFormat(groupValue, format: partOfDate!.formatTime, locale: Localizations.localeOf(Get.context!).languageCode);
+          return NsgDateFormat.dateFormat(
+            groupValue,
+            format: partOfDate!.formatTime,
+            locale: Localizations.localeOf(Get.context!).languageCode,
+          );
         }
         return groupValue.toString();
       } catch (ex) {
@@ -198,7 +229,8 @@ class DataGroup {
       try {
         if (data.first.getField(groupFieldName) is NsgDataReferenceField) {
           return data.first.getReferent(groupFieldName);
-        } else if (data.first.getField(groupFieldName) is NsgDataEnumReferenceField) {
+        } else if (data.first.getField(groupFieldName)
+            is NsgDataEnumReferenceField) {
           return data.first.getReferent(groupFieldName);
         } else if (data.first.getField(groupFieldName) is NsgDataBoolField) {
           return data.first.getFieldValue(groupFieldName);
@@ -228,7 +260,12 @@ class DataGroupList {
     Map<DataGroup, ({int first, int last})> map = {};
     int firstIndex = 0;
     for (var gr in groups) {
-      map.addAll({gr: (first: firstIndex, last: firstIndex + gr.data.length - 1 + (needDivider ? 1 : 0))});
+      map.addAll({
+        gr: (
+          first: firstIndex,
+          last: firstIndex + gr.data.length - 1 + (needDivider ? 1 : 0),
+        ),
+      });
       // _length должен содержать ОБЩЕЕ количество элементов (включая divider),
       // а не индекс последнего элемента. Поэтому прибавляем 1, когда есть divider.
       _length = firstIndex + gr.data.length + (needDivider ? 1 : 0);
@@ -258,8 +295,12 @@ class DataGroupList {
   /// Возвращает описание элемента по индексу.
   /// Если это разделитель — `isDivider == true` и `value` содержит значение группы (например, дату).
   /// Если это обычный элемент — `isDivider == false` и `value` содержит сам `NsgDataItem`.
-  ({dynamic value, DataGroup group, bool isDivider, GlobalKey? key}) getElemet(int index) {
-    var group = _sizes.entries.firstWhereOrNull((i) => i.value.first <= index && index <= i.value.last);
+  ({dynamic value, DataGroup group, bool isDivider, GlobalKey? key}) getElemet(
+    int index,
+  ) {
+    var group = _sizes.entries.firstWhereOrNull(
+      (i) => i.value.first <= index && index <= i.value.last,
+    );
     if (group != null) {
       if (index - group.value.first > 0 || !needDivider) {
         final rowIndex = index - group.value.first - (needDivider ? 1 : 0);
@@ -267,10 +308,17 @@ class DataGroupList {
           value: group.key.data[rowIndex],
           group: group.key,
           isDivider: false,
-          key: group.key.rowKeys[rowIndex], // не _itemsKeys[item]: см. коммент. у конструктора DataGroup
+          key: group
+              .key
+              .rowKeys[rowIndex], // не _itemsKeys[item]: см. коммент. у конструктора DataGroup
         );
       }
-      return (value: group.key.groupValue, group: group.key, isDivider: true, key: group.key.dividerKey);
+      return (
+        value: group.key.groupValue,
+        group: group.key,
+        isDivider: true,
+        key: group.key.dividerKey,
+      );
     }
     throw (RangeError("index $index out of range"));
   }
