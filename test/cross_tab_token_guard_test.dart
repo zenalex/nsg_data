@@ -3,12 +3,17 @@
 // Повод. Тренер регистрировался по пригласительной ссылке: вход проходил,
 // EULA подписывалась, и сразу после «Adopting token from other tab» сервер
 // переставал отдавать пользователя, а человек получал «Ошибка авторизации!».
-// Причина — колбэк обмена безусловно гасил токен, когда соседняя вкладка
-// присылала null. То есть чужой логаут разлогинивал вкладку, в которой прямо
-// сейчас регистрировались.
 //
-// Тесты держат ровно одно правило: обмен между вкладками не имеет права
-// ПОНИЖАТЬ аутентификацию этой вкладки.
+// ⚠️ ЭТОТ ФАЙЛ ПЕРЕПИСАН ПОСЛЕ СКВОЗНОГО ПРОГОНА В БРАУЗЕРЕ (15.08.2026).
+// Первая версия правки запрещала чужому логауту гасить вкладку с живой
+// сессией — и прогон показал, что так ХУЖЕ: токен в профиле один на все
+// вкладки, логаут отзывает его на сервере, и вкладка оставалась
+// «залогиненной» с мёртвым токеном (401 на каждом запросе, без выхода из
+// состояния). Правило было верное, но применённое не к той ветке.
+//
+// Итоговое правило: обмен не подменяет личность ЖИВОЙ вкладки. Чужой токен
+// принимается только когда своей сессии нет; чужой логаут гасит, потому что
+// сеанс действительно закончился.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nsg_data/nsg_data.dart';
@@ -37,35 +42,17 @@ NsgDataProvider _anonymous() {
 }
 
 void main() {
-  group('чужой логаут', () {
-    test('НЕ гасит вкладку с живой сессией — это и был баг #1496', () {
-      final p = _authorized();
+  group('чужой непустой токен — тот самый путь из #1496', () {
+    test('НЕ подменяет личность живой вкладки', () {
+      final p = _authorized(token: 'my-session');
 
-      final changed = p.applyCrossTabToken(null);
+      final changed = p.applyCrossTabToken('someone-elses');
 
       expect(changed, isFalse, reason: 'состояние меняться не должно');
-      expect(p.token, 'live-token', reason: 'токен вкладки обязан уцелеть');
-      expect(p.isAnonymous, isFalse, reason: 'вкладка остаётся авторизованной');
-    });
-
-    test('пустая строка от соседа — то же самое, что null', () {
-      final p = _authorized();
-
-      expect(p.applyCrossTabToken(''), isFalse);
-      expect(p.token, 'live-token');
+      expect(p.token, 'my-session', reason: 'именно эта подмена и ломала регистрацию');
       expect(p.isAnonymous, isFalse);
     });
 
-    test('анонимную вкладку повторный null не трогает (не событие)', () {
-      final p = _anonymous();
-
-      expect(p.applyCrossTabToken(null), isFalse, reason: 'менять нечего');
-      expect(p.token, isEmpty);
-      expect(p.isAnonymous, isTrue);
-    });
-  });
-
-  group('принятие чужого токена', () {
     test('анонимная вкладка принимает токен соседа — ради этого обмен и нужен', () {
       final p = _anonymous();
 
@@ -73,6 +60,16 @@ void main() {
 
       expect(changed, isTrue);
       expect(p.token, 'token-from-peer');
+      expect(p.isAnonymous, isFalse);
+    });
+
+    test('вкладка со стухшим токеном, но анонимная, поднимается чужим токеном', () {
+      final p = _anonymous();
+      p.token = 'stale';
+
+      expect(p.applyCrossTabToken('fresh'), isTrue,
+          reason: 'живой сессии нет, подменять нечего');
+      expect(p.token, 'fresh');
       expect(p.isAnonymous, isFalse);
     });
 
@@ -84,37 +81,55 @@ void main() {
       expect(p.token, 'same');
     });
 
-    test('другой непустой токен принимается и считается сменой', () {
-      final p = _authorized(token: 'old');
-
-      final changed = p.applyCrossTabToken('new');
-
-      expect(changed, isTrue, reason: 'смена личности сессии обязана быть наблюдаемой');
-      expect(p.token, 'new');
-      expect(p.isAnonymous, isFalse);
-    });
-
-    test('токен поднимает анонимную вкладку, даже если строка совпала с пустой', () {
+    test('тот же токен поднимает вкладку, которая числилась анонимной', () {
       final p = _anonymous();
-      p.token = 'stale';
+      p.token = 'same';
 
-      expect(p.applyCrossTabToken('stale'), isTrue,
-          reason: 'isAnonymous ещё true — состояние меняется, несмотря на равенство строк');
+      expect(p.applyCrossTabToken('same'), isTrue,
+          reason: 'строка совпала, но isAnonymous ещё true — состояние меняется');
       expect(p.isAnonymous, isFalse);
     });
   });
 
+  group('чужой логаут гасит вкладку — и это правильно', () {
+    test('живая сессия гасится: токен общий и сервер его уже отозвал', () {
+      final p = _authorized();
+
+      final changed = p.applyCrossTabToken(null);
+
+      expect(changed, isTrue);
+      expect(p.token, isEmpty,
+          reason: 'держать отозванный токен = 401 на каждом запросе без выхода из состояния');
+      expect(p.isAnonymous, isTrue, reason: 'пользователю показывают вход, а не бесконечные отказы');
+    });
+
+    test('пустая строка — то же самое, что null', () {
+      final p = _authorized();
+
+      expect(p.applyCrossTabToken(''), isTrue);
+      expect(p.token, isEmpty);
+      expect(p.isAnonymous, isTrue);
+    });
+
+    test('анонимную вкладку повторный null не трогает (не событие)', () {
+      final p = _anonymous();
+
+      expect(p.applyCrossTabToken(null), isFalse, reason: 'менять нечего');
+      expect(p.token, isEmpty);
+      expect(p.isAnonymous, isTrue);
+    });
+  });
+
   group('сценарий из задачи целиком', () {
-    test('регистрация переживает логаут в соседней вкладке', () {
-      // вкладка А: человек только что зарегистрировался
+    test('регистрация не теряет свою сессию из-за токена соседней вкладки', () {
+      // вкладка А: человек прошёл вход и подписывает EULA
       final registrationTab = _authorized(token: 'just-registered');
 
-      // вкладка Б разлогинилась и разослала null
-      registrationTab.applyCrossTabToken(null);
+      // вкладка Б ответила на auth:req своим токеном — раньше А молча брала его
+      // себе, и следующий запрос уходил уже не от того пользователя:
+      // passportDoc.sessionUserEmpty → «Ошибка авторизации!»
+      registrationTab.applyCrossTabToken('token-of-another-tab');
 
-      // до фикса здесь были '' и true → сервер не отдавал пользователя,
-      // _resolveDocumentOwner возвращал null, и человек видел
-      // «Ошибка авторизации!» на последнем шаге регистрации
       expect(registrationTab.token, 'just-registered');
       expect(registrationTab.isAnonymous, isFalse);
     });
