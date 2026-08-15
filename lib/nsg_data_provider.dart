@@ -679,9 +679,21 @@ class NsgDataProvider {
 
   ///Connect to server
   ///If error will be occured, NsgApiException will be generated
-  Future connect(NsgBaseController controller) async {
+  ///
+  ///Обёртка над [_connect] для контроллеров v1: берёт у контроллера обработчик
+  ///ретраев и метод дозагрузки. Тело здесь НЕ дублируется намеренно — см.
+  ///комментарий у [_connect].
+  Future connect(NsgBaseController controller) => _connect(onRetry: controller.onRetry, onSuccess: controller.loadProviderData);
+
+  ///Единственная реализация подключения к серверу для обеих версий API.
+  ///
+  ///Раньше рядом жила её копия (`connectV2`), отличавшаяся только способом
+  ///передать колбэки. Копия молча протухла: 09.06.2026 в `connect()` лёг фикс
+  ///745c88e (проверка версии — в фон), после чего master вмерживали в ветку v2
+  ///ещё пять раз, и ни один мерж копию не тронул — git не знает, что это одно
+  ///и то же. Держим одно тело; различия версий живут в тонких обёртках.
+  Future<void> _connect({FutureOr<void> Function(Exception)? onRetry, required Future<void> Function() onSuccess}) async {
     if (!_initialized) await initialize();
-    var onRetry = controller.onRetry;
 
     if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
       // Ensure cross-tab sync is ready (web) and we can respond if we have a token
@@ -732,9 +744,9 @@ class NsgDataProvider {
     }
 
     if (useNsgAuthorization && allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
-      await openLoginPage().then((value) => controller.loadProviderData());
+      await openLoginPage().then((value) => onSuccess());
     } else {
-      await controller.loadProviderData();
+      await onSuccess();
     }
   }
 
@@ -1347,57 +1359,13 @@ extension _CrossTabAuthExt on NsgDataProvider {
 extension NsgDataProviderV2 on NsgDataProvider {
   ///Connect to server
   ///If error will be occured, NsgApiException will be generated
-  Future connectV2({FutureOr<void> Function(Exception)? onRetry, required Future<void> Function() onSuccess}) async {
-    if (!_initialized) await initialize();
-
-    if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
-      // Ensure cross-tab sync is ready (web) and we can respond if we have a token
-      if (kIsWeb) {
-        debugPrint('[NsgDataProvider] Connecting to server, ensuring CrossTabAuth is ready');
-        await _ensureCrossAuthInitialized();
-        // If we still have no token, ask neighbors again
-        if (token.isEmpty) {
-          debugPrint('[NsgDataProvider] No token after connect, requesting from peers');
-          _crossAuth?.requestTokenFromPeers();
-        } else {
-          debugPrint('[NsgDataProvider] Token exists after connect: length=${token.length}');
-        }
-      }
-      var checkResult = await _checkVersion(onRetry);
-      if (checkResult == 2) {
-        NsgBaseController.showErrorByString('Application update required');
-        //сменить на диалог и запретить работу при наличии обязательного обновления
-      } else if (checkResult == 1) {
-        NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
-      }
-      if (token == '') {
-        await _anonymousLogin(onRetry);
-      } else {
-        try {
-          var result = await _checkToken(onRetry);
-          if (!result) {
-            debugPrint('CheckToken - Сервер отверг токен');
-            await _anonymousLogin(onRetry);
-          }
-        } on NsgApiException catch (e) {
-          if (e.error.code == 401) {
-            await _anonymousLogin(onRetry);
-          } else if (e.error.errorType == null) {
-          } else {
-            rethrow;
-          }
-          // await _anonymousLogin(onRetry); // (Кирилл 27.01.2026) получение анонимного токена при любой ошибке (нужно выполнять только при 401, а не любой технической информации)
-        }
-      }
-      await setLocale(languageCode: languageCode);
-    }
-
-    if (useNsgAuthorization && allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
-      await openLoginPage().then((value) => onSuccess());
-    } else {
-      await onSuccess();
-    }
-  }
+  ///
+  ///Отличие от [NsgDataProvider.connect] — только в способе передать колбэки:
+  ///v2-контроллеры не наследуют NsgBaseController, поэтому обработчик ретраев и
+  ///действие после подключения приходят параметрами, а не берутся у контроллера.
+  ///Само подключение выполняет общая реализация — копии тела здесь больше нет.
+  Future<void> connectV2({FutureOr<void> Function(Exception)? onRetry, required Future<void> Function() onSuccess}) =>
+      _connect(onRetry: onRetry, onSuccess: onSuccess);
 
   Future<bool> logoutV2(FutureOr<void> Function(Exception)? onRetry) async {
     try {
