@@ -135,6 +135,67 @@ class NsgDataProvider {
   Stream<String?> get tokenChanges => _tokenController.stream;
   void Function(String?)? onTokenChanged;
 
+  /// Применить токен, пришедший из соседней вкладки. true — состояние изменилось.
+  ///
+  /// ## Правило: обмен между вкладками не подменяет личность живой вкладки
+  ///
+  /// Разбор NSG-SOFT/futbolista-tasks#1496 (рецидив #1263). Тренер
+  /// регистрировался по пригласительной ссылке, вход проходил успешно
+  /// (`submit.login.done errorCode: 0`), EULA подписывалась — и сразу после
+  /// `Adopting token from other tab` сервер переставал отдавать пользователя
+  /// (`passportDoc.sessionUserEmpty`), а человек видел «Ошибка авторизации!».
+  ///
+  /// Ломает именно ЭТА ветка: сосед прислал непустой токен, и вкладка
+  /// безусловно бралa его вместо своего — прямо посреди регистрации. Поэтому
+  /// чужой токен принимается, только когда своей живой сессии нет.
+  ///
+  /// Цена гарда нулевая: [CrossTabAuth.publishToken] зовётся ТОЛЬКО из логина
+  /// (`phoneLogin`, `phoneLoginPassword`, `requestSocialMethod`) — продления
+  /// токена по этому каналу не рассылаются, так что блокировать нечего, кроме
+  /// самого сбойного случая. Новая вкладка при этом анонимна и сессию соседа
+  /// подхватывает как раньше — ради этого обмен и заведён.
+  ///
+  /// ## Почему пустой токен ГАСИТ вкладку, хотя это выглядит как понижение
+  ///
+  /// Первая версия правки (14.08) не давала чужому логауту гасить вкладку с
+  /// живой сессией. Сквозной прогон в браузере показал, что это делает хуже:
+  /// токен в профиле ОДИН на все вкладки, а логаут дёргает серверный
+  /// `/Api/Auth/Logout` и отзывает его. Вкладка оставалась `isAnonymous = false`
+  /// с мёртвым токеном — 401 на каждом запросе и без выхода из этого
+  /// состояния. Прежнее поведение честнее: сеанс правда закончился, и
+  /// пользователю показывают вход, а не бесконечные отказы.
+  ///
+  /// Развязать это по-настоящему можно только на уровне протокола (токен на
+  /// вкладку либо логаут своей сессии) — здесь такой правки нет.
+  @visibleForTesting
+  bool applyCrossTabToken(String? incoming) {
+    final hasIncoming = incoming != null && incoming.isNotEmpty;
+
+    if (!hasIncoming) {
+      if (token.isEmpty && isAnonymous) return false;
+      debugPrint('[NsgDataProvider] Сосед вышел: токен общий и уже отозван, гасим сессию');
+      token = '';
+      isAnonymous = true;
+      return true;
+    }
+
+    if (incoming == token) {
+      if (!isAnonymous) return false;
+      isAnonymous = false;
+      return true;
+    }
+
+    if (!isAnonymous && token.isNotEmpty) {
+      debugPrint('[NsgDataProvider] Чужой токен отклонён: своя сессия жива');
+      return false;
+    }
+
+    debugPrint('[NsgDataProvider] Adopting token from other tab');
+    token = incoming;
+    isAnonymous = false;
+    return true;
+  }
+
   NsgDataProvider({
     this.name,
     required this.applicationName,
@@ -1236,21 +1297,15 @@ extension _CrossTabAuthExt on NsgDataProvider {
       channelName: channel,
       scope: scope,
       onTokenChanged: (tok) async {
-        // Adopt token from other tab
         debugPrint('[NsgDataProvider] onTokenChanged callback received token: ${tok != null ? 'length=${tok.length}' : 'null'}');
-        final got = (tok != null && tok.isNotEmpty);
-        if (got) {
-          debugPrint('[NsgDataProvider] Adopting token from other tab');
-          token = tok;
-          isAnonymous = false;
-          if (saveToken) {
-            await saveCurrentServerToken();
-          }
-        } else {
-          debugPrint('[NsgDataProvider] Token from other tab is null or empty');
-          token = '';
-          isAnonymous = true;
+        if (!applyCrossTabToken(tok)) return;
+
+        if (token.isNotEmpty && saveToken) {
+          await saveCurrentServerToken();
         }
+        // Смена личности сессии обязана быть наблюдаемой: раньше этот путь был
+        // единственным из одиннадцати, который менял token молча.
+        _notifyTokenChanged();
       },
       getCurrentToken: () {
         if (!isAnonymous && token.isNotEmpty) return token;
