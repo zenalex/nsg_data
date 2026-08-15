@@ -135,6 +135,58 @@ class NsgDataProvider {
   Stream<String?> get tokenChanges => _tokenController.stream;
   void Function(String?)? onTokenChanged;
 
+  /// Применить токен, пришедший из соседней вкладки. true — состояние изменилось.
+  ///
+  /// ## Главное правило: обмен между вкладками не имеет права ПОНИЖАТЬ
+  /// аутентификацию этой вкладки.
+  ///
+  /// Разбор NSG-SOFT/futbolista-tasks#1496 (рецидив #1263). Тренер
+  /// регистрировался по пригласительной ссылке, вход проходил успешно
+  /// (`submit.login.done errorCode: 0`), EULA подписывалась — и сразу после
+  /// `Adopting token from other tab` сервер переставал отдавать пользователя
+  /// (`passportDoc.sessionUserEmpty`), а человек видел «Ошибка авторизации!»
+  /// на последнем шаге.
+  ///
+  /// Причина была в двух строках: соседняя вкладка присылала `null` (там
+  /// разлогинились или закрылась сессия), а этот колбэк безусловно делал
+  /// `token = ''; isAnonymous = true`. То есть чужой логаут гасил вкладку, в
+  /// которой человек только что зарегистрировался.
+  ///
+  /// Отсюда правила:
+  /// * пустой токен от соседа НЕ гасит нас, если своя сессия жива — логаут
+  ///   одной вкладки не должен разлогинивать остальные;
+  /// * тот же самый токен — не событие, молчим (иначе лишние уведомления и
+  ///   перезаписи хранилища на каждый peer-ответ);
+  /// * чужой непустой токен принимаем — ради этого обмен и заводился, — но
+  ///   теперь об этом сообщается через [_notifyTokenChanged].
+  ///
+  /// Вынесено отдельным методом ровно для того, чтобы это можно было проверить
+  /// тестом: сам колбэк живёт в замыкании внутри `CrossTabAuth` и в тесте
+  /// недосягаем, а браузер для проверки правил не нужен.
+  @visibleForTesting
+  bool applyCrossTabToken(String? incoming) {
+    final hasIncoming = incoming != null && incoming.isNotEmpty;
+
+    if (!hasIncoming) {
+      if (!isAnonymous && token.isNotEmpty) {
+        debugPrint('[NsgDataProvider] Игнорируем чужой логаут: своя сессия жива');
+        return false;
+      }
+      if (token.isEmpty && isAnonymous) return false;
+      debugPrint('[NsgDataProvider] Token from other tab is null or empty');
+      token = '';
+      isAnonymous = true;
+      return true;
+    }
+
+    if (incoming == token && !isAnonymous) return false;
+
+    debugPrint('[NsgDataProvider] Adopting token from other tab');
+    token = incoming;
+    isAnonymous = false;
+    return true;
+  }
+
   NsgDataProvider({
     this.name,
     required this.applicationName,
@@ -1236,21 +1288,15 @@ extension _CrossTabAuthExt on NsgDataProvider {
       channelName: channel,
       scope: scope,
       onTokenChanged: (tok) async {
-        // Adopt token from other tab
         debugPrint('[NsgDataProvider] onTokenChanged callback received token: ${tok != null ? 'length=${tok.length}' : 'null'}');
-        final got = (tok != null && tok.isNotEmpty);
-        if (got) {
-          debugPrint('[NsgDataProvider] Adopting token from other tab');
-          token = tok;
-          isAnonymous = false;
-          if (saveToken) {
-            await saveCurrentServerToken();
-          }
-        } else {
-          debugPrint('[NsgDataProvider] Token from other tab is null or empty');
-          token = '';
-          isAnonymous = true;
+        if (!applyCrossTabToken(tok)) return;
+
+        if (token.isNotEmpty && saveToken) {
+          await saveCurrentServerToken();
         }
+        // Смена личности сессии обязана быть наблюдаемой: раньше этот путь был
+        // единственным из одиннадцати, который менял token молча.
+        _notifyTokenChanged();
       },
       getCurrentToken: () {
         if (!isAnonymous && token.isNotEmpty) return token;
