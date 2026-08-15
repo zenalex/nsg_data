@@ -1,0 +1,32 @@
+name: nsg_data_riverpod
+description: Riverpod-адаптер к контроллерам nsg_data v2
+version: 1.0.0
+homepage: https://github.com/zenalex/nsg_data
+publish_to: "none"
+
+# Отдельный пакет, а не часть nsg_data, намеренно: зависимость riverpod иначе
+# доставалась бы КАЖДОМУ потребителю nsg_data, включая тех, кто живёт на GetX.
+# Подключается тем, кому нужен:
+#
+#   nsg_data_riverpod:
+#     git:
+#       url: https://github.com/zenalex/nsg_data.git
+#       ref: master
+#       path: nsg_data_riverpod
+#
+# Схема та же, что у подпакетов cached_network_image* в репозитории nsg_controls.
+
+environment:
+  sdk: ">=3.8.1 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Относительный путь внутри репозитория — так же связаны подпакеты в nsg_controls.
+  nsg_data:
+    path: ../
+  riverpod: ^2.6.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

@@ -135,6 +135,67 @@ class NsgDataProvider {
   Stream<String?> get tokenChanges => _tokenController.stream;
   void Function(String?)? onTokenChanged;
 
+  /// Применить токен, пришедший из соседней вкладки. true — состояние изменилось.
+  ///
+  /// ## Правило: обмен между вкладками не подменяет личность живой вкладки
+  ///
+  /// Разбор NSG-SOFT/futbolista-tasks#1496 (рецидив #1263). Тренер
+  /// регистрировался по пригласительной ссылке, вход проходил успешно
+  /// (`submit.login.done errorCode: 0`), EULA подписывалась — и сразу после
+  /// `Adopting token from other tab` сервер переставал отдавать пользователя
+  /// (`passportDoc.sessionUserEmpty`), а человек видел «Ошибка авторизации!».
+  ///
+  /// Ломает именно ЭТА ветка: сосед прислал непустой токен, и вкладка
+  /// безусловно бралa его вместо своего — прямо посреди регистрации. Поэтому
+  /// чужой токен принимается, только когда своей живой сессии нет.
+  ///
+  /// Цена гарда нулевая: [CrossTabAuth.publishToken] зовётся ТОЛЬКО из логина
+  /// (`phoneLogin`, `phoneLoginPassword`, `requestSocialMethod`) — продления
+  /// токена по этому каналу не рассылаются, так что блокировать нечего, кроме
+  /// самого сбойного случая. Новая вкладка при этом анонимна и сессию соседа
+  /// подхватывает как раньше — ради этого обмен и заведён.
+  ///
+  /// ## Почему пустой токен ГАСИТ вкладку, хотя это выглядит как понижение
+  ///
+  /// Первая версия правки (14.08) не давала чужому логауту гасить вкладку с
+  /// живой сессией. Сквозной прогон в браузере показал, что это делает хуже:
+  /// токен в профиле ОДИН на все вкладки, а логаут дёргает серверный
+  /// `/Api/Auth/Logout` и отзывает его. Вкладка оставалась `isAnonymous = false`
+  /// с мёртвым токеном — 401 на каждом запросе и без выхода из этого
+  /// состояния. Прежнее поведение честнее: сеанс правда закончился, и
+  /// пользователю показывают вход, а не бесконечные отказы.
+  ///
+  /// Развязать это по-настоящему можно только на уровне протокола (токен на
+  /// вкладку либо логаут своей сессии) — здесь такой правки нет.
+  @visibleForTesting
+  bool applyCrossTabToken(String? incoming) {
+    final hasIncoming = incoming != null && incoming.isNotEmpty;
+
+    if (!hasIncoming) {
+      if (token.isEmpty && isAnonymous) return false;
+      debugPrint('[NsgDataProvider] Сосед вышел: токен общий и уже отозван, гасим сессию');
+      token = '';
+      isAnonymous = true;
+      return true;
+    }
+
+    if (incoming == token) {
+      if (!isAnonymous) return false;
+      isAnonymous = false;
+      return true;
+    }
+
+    if (!isAnonymous && token.isNotEmpty) {
+      debugPrint('[NsgDataProvider] Чужой токен отклонён: своя сессия жива');
+      return false;
+    }
+
+    debugPrint('[NsgDataProvider] Adopting token from other tab');
+    token = incoming;
+    isAnonymous = false;
+    return true;
+  }
+
   NsgDataProvider({
     this.name,
     required this.applicationName,
@@ -618,9 +679,21 @@ class NsgDataProvider {
 
   ///Connect to server
   ///If error will be occured, NsgApiException will be generated
-  Future connect(NsgBaseController controller) async {
+  ///
+  ///Обёртка над [_connect] для контроллеров v1: берёт у контроллера обработчик
+  ///ретраев и метод дозагрузки. Тело здесь НЕ дублируется намеренно — см.
+  ///комментарий у [_connect].
+  Future connect(NsgBaseController controller) => _connect(onRetry: controller.onRetry, onSuccess: controller.loadProviderData);
+
+  ///Единственная реализация подключения к серверу для обеих версий API.
+  ///
+  ///Раньше рядом жила её копия (`connectV2`), отличавшаяся только способом
+  ///передать колбэки. Копия молча протухла: 09.06.2026 в `connect()` лёг фикс
+  ///745c88e (проверка версии — в фон), после чего master вмерживали в ветку v2
+  ///ещё пять раз, и ни один мерж копию не тронул — git не знает, что это одно
+  ///и то же. Держим одно тело; различия версий живут в тонких обёртках.
+  Future<void> _connect({FutureOr<void> Function(Exception)? onRetry, required Future<void> Function() onSuccess}) async {
     if (!_initialized) await initialize();
-    var onRetry = controller.onRetry;
 
     if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
       // Ensure cross-tab sync is ready (web) and we can respond if we have a token
@@ -671,9 +744,9 @@ class NsgDataProvider {
     }
 
     if (useNsgAuthorization && allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
-      await openLoginPage().then((value) => controller.loadProviderData());
+      await openLoginPage().then((value) => onSuccess());
     } else {
-      await controller.loadProviderData();
+      await onSuccess();
     }
   }
 
@@ -1236,21 +1309,15 @@ extension _CrossTabAuthExt on NsgDataProvider {
       channelName: channel,
       scope: scope,
       onTokenChanged: (tok) async {
-        // Adopt token from other tab
         debugPrint('[NsgDataProvider] onTokenChanged callback received token: ${tok != null ? 'length=${tok.length}' : 'null'}');
-        final got = (tok != null && tok.isNotEmpty);
-        if (got) {
-          debugPrint('[NsgDataProvider] Adopting token from other tab');
-          token = tok;
-          isAnonymous = false;
-          if (saveToken) {
-            await saveCurrentServerToken();
-          }
-        } else {
-          debugPrint('[NsgDataProvider] Token from other tab is null or empty');
-          token = '';
-          isAnonymous = true;
+        if (!applyCrossTabToken(tok)) return;
+
+        if (token.isNotEmpty && saveToken) {
+          await saveCurrentServerToken();
         }
+        // Смена личности сессии обязана быть наблюдаемой: раньше этот путь был
+        // единственным из одиннадцати, который менял token молча.
+        _notifyTokenChanged();
       },
       getCurrentToken: () {
         if (!isAnonymous && token.isNotEmpty) return token;
@@ -1292,57 +1359,13 @@ extension _CrossTabAuthExt on NsgDataProvider {
 extension NsgDataProviderV2 on NsgDataProvider {
   ///Connect to server
   ///If error will be occured, NsgApiException will be generated
-  Future connectV2({FutureOr<void> Function(Exception)? onRetry, required Future<void> Function() onSuccess}) async {
-    if (!_initialized) await initialize();
-
-    if (useNsgAuthorization && allowConnect && serverUri.isNotEmpty) {
-      // Ensure cross-tab sync is ready (web) and we can respond if we have a token
-      if (kIsWeb) {
-        debugPrint('[NsgDataProvider] Connecting to server, ensuring CrossTabAuth is ready');
-        await _ensureCrossAuthInitialized();
-        // If we still have no token, ask neighbors again
-        if (token.isEmpty) {
-          debugPrint('[NsgDataProvider] No token after connect, requesting from peers');
-          _crossAuth?.requestTokenFromPeers();
-        } else {
-          debugPrint('[NsgDataProvider] Token exists after connect: length=${token.length}');
-        }
-      }
-      var checkResult = await _checkVersion(onRetry);
-      if (checkResult == 2) {
-        NsgBaseController.showErrorByString('Application update required');
-        //сменить на диалог и запретить работу при наличии обязательного обновления
-      } else if (checkResult == 1) {
-        NsgBaseController.showErrorByString('A newer version is available. It is recommended to update the application');
-      }
-      if (token == '') {
-        await _anonymousLogin(onRetry);
-      } else {
-        try {
-          var result = await _checkToken(onRetry);
-          if (!result) {
-            debugPrint('CheckToken - Сервер отверг токен');
-            await _anonymousLogin(onRetry);
-          }
-        } on NsgApiException catch (e) {
-          if (e.error.code == 401) {
-            await _anonymousLogin(onRetry);
-          } else if (e.error.errorType == null) {
-          } else {
-            rethrow;
-          }
-          // await _anonymousLogin(onRetry); // (Кирилл 27.01.2026) получение анонимного токена при любой ошибке (нужно выполнять только при 401, а не любой технической информации)
-        }
-      }
-      await setLocale(languageCode: languageCode);
-    }
-
-    if (useNsgAuthorization && allowConnect && isAnonymous && loginRequired && serverUri.isNotEmpty) {
-      await openLoginPage().then((value) => onSuccess());
-    } else {
-      await onSuccess();
-    }
-  }
+  ///
+  ///Отличие от [NsgDataProvider.connect] — только в способе передать колбэки:
+  ///v2-контроллеры не наследуют NsgBaseController, поэтому обработчик ретраев и
+  ///действие после подключения приходят параметрами, а не берутся у контроллера.
+  ///Само подключение выполняет общая реализация — копии тела здесь больше нет.
+  Future<void> connectV2({FutureOr<void> Function(Exception)? onRetry, required Future<void> Function() onSuccess}) =>
+      _connect(onRetry: onRetry, onSuccess: onSuccess);
 
   Future<bool> logoutV2(FutureOr<void> Function(Exception)? onRetry) async {
     try {

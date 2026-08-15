@@ -65,6 +65,7 @@ class NsgRemoteDataSource implements NsgDataSource, NsgLifecycle {
     FutureOr<bool> Function(Exception)? retryIf,
     FutureOr<void> Function(Exception)? onRetry,
   }) async {
+    _invalidateCountCache();
     item.storageType = NsgDataStorageType.server;
     final post = NsgDataPost<T>(dataItemType: T)..itemsToPost = [item];
     final saved = await (retryOptions ?? this.retryOptions).retry(
@@ -86,6 +87,7 @@ class NsgRemoteDataSource implements NsgDataSource, NsgLifecycle {
     FutureOr<bool> Function(Exception)? retryIf,
     FutureOr<void> Function(Exception)? onRetry,
   }) async {
+    _invalidateCountCache();
     for (final item in items) {
       item.storageType = NsgDataStorageType.server;
     }
@@ -107,6 +109,7 @@ class NsgRemoteDataSource implements NsgDataSource, NsgLifecycle {
     if (items.isEmpty) {
       return;
     }
+    _invalidateCountCache();
     final delete = NsgDataDelete<T>(dataItemType: T, itemsToDelete: items.toList());
     await (retryOptions ?? this.retryOptions).retry(() => delete.deleteItems(), retryIf: retryIf ?? this.retryIf, onRetry: onRetry ?? this.onRetry);
   }
@@ -123,6 +126,19 @@ class NsgRemoteDataSource implements NsgDataSource, NsgLifecycle {
       await deleteMany<T>([item], retryOptions: retryOptions, retryIf: retryIf ?? this.retryIf, onRetry: onRetry ?? this.onRetry);
     }
   }
+
+  /// Сбрасывает запомненные totalCount.
+  ///
+  /// Зовётся из любой записи: одна сохранённая или удалённая строка меняет
+  /// количество для произвольного набора фильтров, поэтому вычислить
+  /// затронутые ключи нельзя — чистим всё. Худшее последствие — один лишний
+  /// запрос счётчика; альтернатива (оставить как было) — молча неверное число
+  /// на экране до следующего fetchItems с тем же фильтром.
+  ///
+  /// Зовётся ДО обращения к хранилищу намеренно: если запись упадёт на
+  /// полпути, состояние на сервере уже могло измениться, и держать прежний
+  /// счётчик нельзя.
+  void _invalidateCountCache() => _cachedRequests.clear();
 
   @override
   Future<int> selectCount<T extends NsgDataItem>({

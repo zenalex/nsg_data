@@ -1,0 +1,33 @@
+name: nsg_data_bloc
+description: Bloc-адаптер к контроллерам nsg_data v2
+version: 1.0.0
+homepage: https://github.com/zenalex/nsg_data
+publish_to: "none"
+
+# Отдельный пакет, а не часть nsg_data, намеренно: зависимость bloc иначе
+# доставалась бы КАЖДОМУ потребителю nsg_data, включая тех, кто живёт на GetX.
+# Отдельный от nsg_data_riverpod — иначе тот, кому нужен только один адаптер,
+# всё равно тянул бы оба фреймворка.
+#
+#   nsg_data_bloc:
+#     git:
+#       url: https://github.com/zenalex/nsg_data.git
+#       ref: master
+#       path: nsg_data_bloc
+#
+# Схема та же, что у подпакетов cached_network_image* в репозитории nsg_controls.
+
+environment:
+  sdk: ">=3.8.1 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Относительный путь внутри репозитория — так же связаны подпакеты в nsg_controls.
+  nsg_data:
+    path: ../
+  bloc: ^9.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
