@@ -12,7 +12,6 @@
 // чинится в неправильную сторону. Тогда ошибка залипает на экране навсегда.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsg_data/models/nsg_server_params.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/v2/controller/nsg_controller_snapshot.dart';
 import 'package:nsg_data/v2/controller/nsg_controller_status.dart';

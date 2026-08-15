@@ -66,6 +66,7 @@ class NsgLocalDataSource implements NsgDataSource, NsgLifecycle {
     FutureOr<bool> Function(Exception)? retryIf,
     FutureOr<void> Function(Exception)? onRetry,
   }) async {
+    _invalidateCountCache();
     item.storageType = NsgDataStorageType.local;
     await (retryOptions ?? this.retryOptions).retry(
       () async {
@@ -86,6 +87,7 @@ class NsgLocalDataSource implements NsgDataSource, NsgLifecycle {
     FutureOr<bool> Function(Exception)? retryIf,
     FutureOr<void> Function(Exception)? onRetry,
   }) async {
+    _invalidateCountCache();
     for (final item in items) {
       item.storageType = NsgDataStorageType.local;
     }
@@ -110,6 +112,7 @@ class NsgLocalDataSource implements NsgDataSource, NsgLifecycle {
     if (items.isEmpty) {
       return;
     }
+    _invalidateCountCache();
     await (retryOptions ?? this.retryOptions).retry(
       () async {
         await NsgLocalDb.instance.deleteItems(items.cast<NsgDataItem>().toList());
@@ -137,6 +140,19 @@ class NsgLocalDataSource implements NsgDataSource, NsgLifecycle {
       );
     }
   }
+
+  /// Сбрасывает запомненные totalCount.
+  ///
+  /// Зовётся из любой записи: одна сохранённая или удалённая строка меняет
+  /// количество для произвольного набора фильтров, поэтому вычислить
+  /// затронутые ключи нельзя — чистим всё. Худшее последствие — один лишний
+  /// запрос счётчика; альтернатива (оставить как было) — молча неверное число
+  /// на экране до следующего fetchItems с тем же фильтром.
+  ///
+  /// Зовётся ДО обращения к хранилищу намеренно: если запись упадёт на
+  /// полпути, состояние на сервере уже могло измениться, и держать прежний
+  /// счётчик нельзя.
+  void _invalidateCountCache() => _cachedRequests.clear();
 
   @override
   Future<int> selectCount<T extends NsgDataItem>({
