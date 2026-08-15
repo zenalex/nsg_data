@@ -15,7 +15,11 @@ class NsgDI implements DI<NsgLifecycle> {
 
   @override
   FutureOr<void> unbind<T extends NsgLifecycle>([String? qualifier]) async {
-    final instance = find<T>();
+    // Квалификатор обязателен и при поиске: раньше здесь стоял find<T>() без
+    // него, а удаление шло по ключу (T, qualifier). Из-за этого dispose
+    // доставался безымянному экземпляру вместо запрошенного, а если
+    // безымянного не было — падало TypeError на приведении null.
+    final instance = find<T>(qualifier);
     await instance.dispose();
     bindings.remove((T, qualifier));
   }
