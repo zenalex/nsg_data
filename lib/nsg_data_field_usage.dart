@@ -179,7 +179,13 @@ class NsgFieldUsage {
     if (refs.length > 120) refs = '${refs.substring(0, 120)}…';
     // Только путь: хост во всех записях один и тот же, а место в событии не резиновое.
     final path = Uri.tryParse(function)?.path ?? function;
-    _recentRequests.add('$typeName ${path.isEmpty ? function : path} [ref: $refs]');
+    final entry = '$typeName ${path.isEmpty ? function : path} [ref: $refs]';
+    // Повтор подряд не пишем. Точка съёма стоит внутри тела, которое переигрывает
+    // RetryOptions.retry вплоть до autoRepeateCount (по умолчанию 10): один обрыв
+    // связи иначе забьёт буфер на 12 слотов одинаковыми строками и вытеснит того,
+    // кто на самом деле грузил объект.
+    if (_recentRequests.isNotEmpty && _recentRequests.last == entry) return;
+    _recentRequests.add(entry);
     if (_recentRequests.length > recentRequestsLimit) {
       _recentRequests.removeRange(0, _recentRequests.length - recentRequestsLimit);
     }
