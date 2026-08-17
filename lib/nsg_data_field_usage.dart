@@ -150,6 +150,45 @@ class NsgFieldUsage {
   /// отдельная группа, а не подмешивалось к чтениям полей.
   static void reportMissingReferent(String typeName, String fieldName) => reportEmptyFieldAccess(typeName, '$fieldName:referent');
 
+  /// Сколько последних запросов помнить. Глубина «что грузилось перед этим
+  /// экраном»: одного мало (объект часто грузят раньше, чем читают поле),
+  /// а длинный хвост уводит в предыдущие экраны.
+  static const int recentRequestsLimit = 12;
+
+  static final List<String> _recentRequests = <String>[];
+
+  /// Запомнить выполненный запрос вместе с набором дочитываемых ссылок.
+  ///
+  /// Зачем: промах вида `PlayerStats.teamPlayerId:referent` сам по себе
+  /// НЕАДРЕСУЕМ. Известно, чего не дочитали, но не известно, какой запрос грузил
+  /// объект, — а значит и какому контроллеру править `referenceList`. Роут
+  /// сужает круг, но у популярных типов на одном экране работает несколько
+  /// контроллеров сразу; ровно на этом встали #1429, #1430 и #1479.
+  ///
+  /// Снимок делается в точке, где `referenceList` уже окончательный, то есть
+  /// пишется именно тот набор, из-за отсутствия поля в котором промах и
+  /// случился. Починка после этого — сверка двух списков, а не чтение вёрстки.
+  ///
+  /// Работает в ЛЮБОМ режиме сборки: события приходят из релиза, там буфер и
+  /// нужен. Цена — одна строка на сетевой запрос, на фоне самого запроса
+  /// неизмерима. В консоль ничего не пишется: крошки Sentry — дефицитный ресурс
+  /// (окно ~100 записей), поэтому буфер прикладывается к событию целиком и
+  /// только в момент отправки.
+  static void noteRequest(String typeName, String function, List<String>? referenceList) {
+    var refs = (referenceList == null || referenceList.isEmpty) ? '—' : referenceList.join(',');
+    if (refs.length > 120) refs = '${refs.substring(0, 120)}…';
+    // Только путь: хост во всех записях один и тот же, а место в событии не резиновое.
+    final path = Uri.tryParse(function)?.path ?? function;
+    _recentRequests.add('$typeName ${path.isEmpty ? function : path} [ref: $refs]');
+    if (_recentRequests.length > recentRequestsLimit) {
+      _recentRequests.removeRange(0, _recentRequests.length - recentRequestsLimit);
+    }
+  }
+
+  /// Последние запросы — от старого к новому. Приложение прикладывает их к
+  /// отчёту о промахе.
+  static List<String> get recentRequests => List<String>.unmodifiable(_recentRequests);
+
   /// Снятая статистика: сценарий -> тип -> отсортированный список полей.
   static Map<String, Map<String, List<String>>> report() {
     final result = <String, Map<String, List<String>>>{};
@@ -180,5 +219,6 @@ class NsgFieldUsage {
   static void reset() {
     _usage.clear();
     _reportedEmpty.clear();
+    _recentRequests.clear();
   }
 }
