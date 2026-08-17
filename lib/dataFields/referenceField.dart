@@ -32,11 +32,23 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
       //виден здесь, а не подменяется молча новым объектом внутри кэша.
       var item = NsgDataClient.client.getItemsFromCache(T, id, allowNull: true) as T?;
       if (item != null) return item;
-      //Ссылка задана, а объекта нет — его не дочитали. Экран получит пустышку и
-      //нарисует пустоту без единой ошибки. В удачном пути мы сюда не заходим,
-      //поэтому диагностика ничего не стоит и работает в том числе в релизе.
-      NsgFieldUsage.reportMissingReferent(dataItem.typeName, name);
+      //Вызывающий готов к отсутствию — отсутствие для него не дефект, и молчаливой
+      //пустоты на экране не будет: formattedValue напечатает сырой id, а
+      //getReferentOrNull отдаст null, который вызывающий обработает сам.
+      //
+      //Сообщать здесь НЕЛЬЗЯ, и это не мелочь. С allowNull кэш щупает сам
+      //загрузчик, решая, что дочитывать (nsg_data_request.dart, nsg_data_item.dart —
+      //ветки loadAllReferents). Такая проба заведомо срабатывает раньше, чем данные
+      //дойдут до экрана, а дедуп в NsgFieldUsage пропускает только ПЕРВОЕ событие
+      //пары «тип.поле» за сессию. В итоге диагностика рапортовала о собственной
+      //пробе, а настоящий промах экрана глотала как дубль — и в отчёт уезжало поле,
+      //которое в referenceList присутствует. На этом встали 42 задачи (#1547).
       if (allowNull) return null;
+      //Ссылка задана, объекта нет, и сейчас мы вернём ПУСТЫШКУ: экран нарисует
+      //пустоту без единой ошибки. Ровно этот случай диагностика и ловит.
+      //В удачном пути сюда не заходим, поэтому она ничего не стоит и работает
+      //в том числе в релизе.
+      NsgFieldUsage.reportMissingReferent(dataItem.typeName, name);
       return NsgDataClient.client.getNewObject(T) as T;
     } else {
       return null;
