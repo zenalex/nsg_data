@@ -27,6 +27,9 @@ class NsgDataClient {
     _registeredServerNames[item.typeName] = item.runtimeType.toString();
     _fieldList[item.runtimeType.toString()] = NsgFieldList();
     _predefinedList[item.runtimeType.toString()] = <String>[];
+    // Появился новый тип — карта наследников устарела. Регистрация идёт на
+    // старте и один раз, так что сброс ничего не стоит.
+    _subtypeBuckets.clear();
     item.initialize();
   }
 
@@ -123,6 +126,59 @@ class NsgDataClient {
       _itemList[type.toString()] = NsgItemList();
     }
     return _itemList[type.toString()];
+  }
+
+  /// Имена вёдер зарегистрированных наследников [T] (без самого [T]).
+  ///
+  /// Строится сканированием реестра: он хранит по экземпляру на тип, а `is T`
+  /// с настоящим параметром типа работает и без reflection, которого во
+  /// Flutter нет. Результат запоминается — сканирование идёт один раз на тип,
+  /// а не на каждый промах.
+  final _subtypeBuckets = <String, List<String>>{};
+
+  List<String> _subtypeBucketNames<T extends NsgDataItem>() {
+    final key = T.toString();
+    final cached = _subtypeBuckets[key];
+    if (cached != null) return cached;
+    final names = <String>[];
+    for (final registered in _registeredItems.values) {
+      final name = registered.runtimeType.toString();
+      if (name == key) continue;
+      if (registered is T) names.add(name);
+    }
+    _subtypeBuckets[key] = names;
+    return names;
+  }
+
+  /// Чтение кэша, знающее про наследование (#1548).
+  ///
+  /// Ведро выбирается при записи по ФАКТИЧЕСКОМУ типу объекта
+  /// ([addItemsToCache]), а ссылка читает по ОБЪЯВЛЕННОМУ — `T` из
+  /// `NsgDataReferenceField<T>`. Пока это один и тот же тип, всё сходится.
+  /// Расходятся они там, где `_fromJsonList` подменил объект наследником по
+  /// `extensionTypeField`: фото приезжает как `ImageFileItem` и ложится в его
+  /// ведро, а `photoId` объявлен ссылкой на `FileItem` и смотрит в ведро
+  /// `FileItem` — там пусто.
+  ///
+  /// Промах при этом ПОСТОЯННЫЙ: «ремонт» в `loadAllReferents` идёт тем же
+  /// путём и снова кладёт в ведро наследника. То есть такие объекты не
+  /// кэшируются вовсе и перезапрашиваются при каждом обращении.
+  ///
+  /// Поэтому при промахе в ведре [T] заглядываем в вёдра его наследников.
+  /// Выбран именно фолбэк на чтении, а не запись в оба ведра: объект остаётся
+  /// в одном экземпляре, и два ведра не могут разъехаться молча. Цена — только
+  /// на промахе, в удачном пути не платим ничего.
+  T? getItemsFromCacheTyped<T extends NsgDataItem>(String id, {bool allowNull = false}) {
+    var item = _getItemsCacheByType(T)!.getItem(id);
+    if (item == null) {
+      for (final bucket in _subtypeBucketNames<T>()) {
+        item = _itemList[bucket]?.getItem(id);
+        if (item != null) break;
+      }
+    }
+    // Приведение безопасно: смотрим только ведро самого T и вёдра тех типов,
+    // чей зарегистрированный экземпляр прошёл `is T`.
+    return item == null ? (allowNull ? null : getNewObject(T) as T) : item.dataItem as T;
   }
 
   NsgDataItem? getItemsFromCache(Type type, String id, {bool allowNull = false}) {

@@ -30,7 +30,10 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
     if (useCache) {
       //Спрашиваем кэш с allowNull, даже если вызывающий хочет пустышку: так промах
       //виден здесь, а не подменяется молча новым объектом внутри кэша.
-      var item = NsgDataClient.client.getItemsFromCache(T, id, allowNull: true) as T?;
+      //Читаем с учётом наследования (#1548): объект мог лечь в ведро наследника,
+      //если сервер вернул расширенный тип. Обычный getItemsFromCache смотрит
+      //только ведро T и посчитал бы это промахом — с постоянным перезапросом.
+      var item = NsgDataClient.client.getItemsFromCacheTyped<T>(id, allowNull: true);
       if (item != null) return item;
       //Вызывающий готов к отсутствию — отсутствие для него не дефект, и молчаливой
       //пустоты на экране не будет: formattedValue напечатает сырой id, а
