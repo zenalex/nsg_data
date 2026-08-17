@@ -162,6 +162,9 @@ class NsgDataRequest<T extends NsgDataItem> {
       function = dataItem.remoteProvider.serverUri + function;
     }
     var url = function;
+    //Кто и с каким набором ссылок грузил объект. Без этого промах дочитывания
+    //неадресуем — см. NsgFieldUsage.noteRequest.
+    NsgFieldUsage.noteRequest(dataItem.typeName, url, filter.referenceList);
     var response = await dataItem.remoteProvider.baseRequestList(
       function: url,
       headers: dataItem.remoteProvider.getAuthorizationHeader(),
