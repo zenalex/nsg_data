@@ -295,7 +295,14 @@ class NsgLocalDb {
           if (tableFields.contains(name)) {
             var ls = <String>[];
             for (var row in item[name] as List<NsgDataItem>) {
-              row.ownerId = item.id;
+              //ownerId проставляется только типам, у которых есть это поле,
+              //иначе setFieldValue упадет на assert — та же проверка, что и в
+              //NsgDataTable.addRow. Без неё запись объекта с табличной частью
+              //без ownerId (например, Address с AddressZone) роняла postItems
+              //целиком, и локальный кеш не сохранялся вовсе.
+              if (row.fieldList.fields.containsKey(NsgDataItem.nameOwnerId)) {
+                row.ownerId = item.id;
+              }
               ls.add(row.id);
             }
             //Читаем старый объект, извлекаем из него идентификаторы строк таб частей
