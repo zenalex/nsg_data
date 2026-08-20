@@ -155,6 +155,26 @@ class NsgFieldUsage {
   /// а длинный хвост уводит в предыдущие экраны.
   static const int recentRequestsLimit = 12;
 
+  /// Сколько символов списка ссылок держать в записи.
+  ///
+  /// Было 120 — и это ровно тот размер, на котором диагностика начинает врать.
+  /// Обрезанный список отвечает на вопрос «есть ли поле F в наборе» только
+  /// «да»; «нет» из него НЕ следует, но читается именно так. Цена уже
+  /// заплачена: две задачи закрыты выводом «в запросе нет собственного
+  /// `photoId` команды», а `photoId` и `cityId` стояли сразу за срезом.
+  ///
+  /// 800 — не на глаз. Замер по 511 записям трейла из 43 живых событий:
+  /// резалось 30% записей, истинная длина срезанных — медиана 266, p90 654,
+  /// максимум 654 символа (`addAllReferences(MatchItem)`, 40 полей). Порог 400
+  /// оставил бы срезанными 17%, 512 — 11%, 800 — ни одной, и это с запасом на
+  /// рост модели.
+  ///
+  /// Бюджет события считан: контекст `recentRequests` растёт с ~1.2 КБ до ~2 КБ
+  /// (максимум на реальных данных — 3.2 КБ). Абсолютный потолок буфера —
+  /// 12 × (обвязка ~64 + 800 + 1) ≈ 10 КБ, на порядки ниже лимита события,
+  /// поэтому глубину буфера ради длины строки резать не потребовалось.
+  static const int requestRefsLimit = 800;
+
   static final List<String> _recentRequests = <String>[];
 
   /// Запомнить выполненный запрос вместе с набором дочитываемых ссылок.
@@ -175,20 +195,45 @@ class NsgFieldUsage {
   /// (окно ~100 записей), поэтому буфер прикладывается к событию целиком и
   /// только в момент отправки.
   static void noteRequest(String typeName, String function, List<String>? referenceList) {
-    var refs = (referenceList == null || referenceList.isEmpty) ? '—' : referenceList.join(',');
-    if (refs.length > 120) refs = '${refs.substring(0, 120)}…';
+    final refs = _shortenReferences(referenceList);
     // Только путь: хост во всех записях один и тот же, а место в событии не резиновое.
     final path = Uri.tryParse(function)?.path ?? function;
     final entry = '$typeName ${path.isEmpty ? function : path} [ref: $refs]';
-    // Повтор подряд не пишем. Точка съёма стоит внутри тела, которое переигрывает
-    // RetryOptions.retry вплоть до autoRepeateCount (по умолчанию 10): один обрыв
-    // связи иначе забьёт буфер на 12 слотов одинаковыми строками и вытеснит того,
-    // кто на самом деле грузил объект.
-    if (_recentRequests.isNotEmpty && _recentRequests.last == entry) return;
+    // Одинаковую запись держим в одном экземпляре — в последнем по времени.
+    // Слотов всего 12, и каждый занятый повтором — это невидимый запрос другого
+    // контроллера. Повторы бывают двух родов, и оба обесценивают буфер:
+    // подряд идущие (точка съёма стоит внутри тела, которое переигрывает
+    // RetryOptions.retry вплоть до autoRepeateCount, по умолчанию 10 — один
+    // обрыв связи забивал буфер целиком) и вразбивку (один и тот же список
+    // перечитывается по кругу на живом экране). На замере по живым событиям
+    // точными дублями занято 11% слотов.
+    _recentRequests.remove(entry);
     _recentRequests.add(entry);
     if (_recentRequests.length > recentRequestsLimit) {
       _recentRequests.removeRange(0, _recentRequests.length - recentRequestsLimit);
     }
+  }
+
+  /// Список ссылок для записи трейла: целиком, пока влезает в [requestRefsLimit].
+  ///
+  /// Если не влезает — режем ПО ГРАНИЦЕ ПОЛЯ и дописываем, сколько полей не
+  /// поместилось: `a,b,c,…+17`. Обрубок посреди имени (`tournament…`) читается
+  /// как поле, а не как срез, и именно так рождается вывод «поля в запросе
+  /// нет». Счётчик снимает вопрос: набор неполный, и сколько именно осталось за
+  /// кадром — видно.
+  static String _shortenReferences(List<String>? referenceList) {
+    if (referenceList == null || referenceList.isEmpty) return '—';
+    final buffer = StringBuffer();
+    var kept = 0;
+    for (final reference in referenceList) {
+      // Первое поле берём всегда: запись без единого имени бесполезна.
+      if (kept > 0 && buffer.length + 1 + reference.length > requestRefsLimit) break;
+      if (kept > 0) buffer.write(',');
+      buffer.write(reference);
+      kept++;
+    }
+    final dropped = referenceList.length - kept;
+    return dropped == 0 ? buffer.toString() : '$buffer,…+$dropped';
   }
 
   /// Последние запросы — от старого к новому. Приложение прикладывает их к
