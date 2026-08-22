@@ -44,6 +44,10 @@ String? nsgExtractServerMessage(dynamic data) {
 }
 
 class NsgDataProvider {
+  ///Версия протокола nsg_data. Передаётся серверу в заголовке X-Nsg-Protocol-Version.
+  ///Сервер без поддержки трактует отсутствие заголовка как version=0 (legacy).
+  static const int protocolVersion = 1;
+
   ///Token saved after authorization
   String token = '';
 
@@ -72,6 +76,13 @@ class NsgDataProvider {
   ///Текст сообщения о РЕКОМЕНДУЕМОМ обновлении приложения (результат проверки версии == 1).
   ///См. комментарий к [messageUpdateRequired].
   static String messageUpdateRecommended = 'A newer version is available. It is recommended to update the application';
+
+  ///Хеш схемы GeneratorConfig, под которую собран клиент.
+  ///Передаётся серверу в заголовке X-Nsg-Schema-Hash как ИНФОРМАЦИОННЫЙ маркер.
+  ///Сервер использует его только для логов/телеметрии — НЕ для блокировки запросов.
+  ///Совместимость DTO обеспечивается толерантным чтением. Заполняется кодом nsg_generator.
+  ///Пустое значение — заголовок не отправляется.
+  String schemaHash;
 
   ///Используется ли стандартная система авторизации NSG для получения и хранения токена пользователя
   bool useNsgAuthorization = true;
@@ -205,6 +216,7 @@ class NsgDataProvider {
     this.allowConnect = true,
     required this.firebaseToken,
     required this.applicationVersion,
+    this.schemaHash = '',
     // NsgLoginParamsInterface Function()? widgetLoginParams,
     this.eventOpenLoginPage,
     required this.availableServers,
@@ -1265,9 +1277,13 @@ class NsgDataProvider {
     return 0;
   }
 
+  ///Возвращает стандартные заголовки nsg-запроса: авторизация + версия протокола + хеш схемы.
+  ///Имя сохранено для обратной совместимости с 24+ местами вызова.
   Map<String, String> getAuthorizationHeader() {
     var map = <String, String>{};
     if (token != '') map['Authorization'] = token;
+    map['X-Nsg-Protocol-Version'] = '$protocolVersion';
+    if (schemaHash.isNotEmpty) map['X-Nsg-Schema-Hash'] = schemaHash;
     return map;
   }
 
