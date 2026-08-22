@@ -1,46 +1,66 @@
 # nsg_data
 
-Data object model and data exchange with C# server for Flutter applications.
+Core-библиотека данных NSG для Flutter: модели предметной области, транспорт к API, контроллеры загрузки/фильтрации/сохранения, локальное хранилище и авторизация.
 
-## Features
+## Что решает пакет
 
-- **Data Object Model**: Complete data object model with support for various field types
-- **Server Communication**: Built-in HTTP client for C# server communication
-- **Local Database**: Hive-based local database for offline data storage
-- **Authentication**: Phone-based authentication system with SMS verification
-- **Password Validation**: Password strength checking and validation
-- **Barcode Scanning**: Built-in barcode reader functionality
-- **Table Management**: Advanced table data handling with CRUD operations
-- **Reference Fields**: Support for typed and untyped reference fields
-- **Image Handling**: Image upload and management capabilities
-- **Localization**: Multi-language support with locale management
-- **Error Handling**: Comprehensive error handling and user feedback
+- описывает data model через `NsgDataItem` и типизированные поля;
+- выполняет сетевые запросы и авторизацию через `NsgDataProvider`;
+- предоставляет контроллеры (`NsgBaseController`, `NsgDataController`) для страниц списков/карточек;
+- поддерживает серверный и локальный (`NsgLocalDb`) режимы хранения;
+- дает общие утилиты для фильтрации, сортировки, навигации и ошибок API.
 
-## Installation
+## Установка
 
-Add this to your package's `pubspec.yaml` file:
+### Локально (mono-repo)
 
 ```yaml
 dependencies:
-  nsg_data: ^0.3.0-beta.1
+  nsg_data:
+    path: ../nsg_data
 ```
 
-## Usage
+### Hosted package
+
+```yaml
+dependencies:
+  nsg_data: ^1.0.0
+```
+
+Затем:
+
+```bash
+flutter pub get
+```
+
+## Архитектура (коротко)
+
+- `NsgDataProvider` — подключение к серверу, токены, login/logout, базовые HTTP-запросы.
+- `NsgDataClient.client` — реестр типов данных и фабрика новых объектов.
+- `NsgDataItem` — базовый класс доменной модели.
+- `NsgBaseController` / `NsgDataController<T>` — state + запросы + фильтрация + CRUD.
+- `NsgDataRequest` / `NsgDataPost` — низкоуровневые операции чтения/записи.
+
+## Быстрый старт
+
+### 1) Создайте `NsgDataProvider`
 
 ```dart
 import 'package:nsg_data/nsg_data.dart';
 
-// Initialize the data provider
-final provider = NsgDataProvider();
-await provider.initialize();
-
-// Create a data item
-final item = NsgDataItem();
-item.setValue('name', 'John Doe');
-item.setValue('age', 30);
-
-// Save to server
-await provider.postItem(item);
+final provider = NsgDataProvider(
+  applicationName: 'footballers_diary_app',
+  applicationVersion: '1.0.0',
+  firebaseToken: '',
+  availableServers: NsgServerParams(
+    {
+      'https://your-main-server.com': 'main',
+      'https://your-test-server.com': 'test',
+    },
+    'https://your-main-server.com',
+  ),
+  // eventOpenLoginPage: () async { ... }, // если нужен кастомный экран логина
+);
 ```
 
 ## Serverpod
@@ -86,25 +106,77 @@ final provider = NsgDataProvider(
 For per-entity customization you can override `serverpodAdapter` directly in a concrete `NsgDataItem`.
 
 ## Dependencies
+### 2) Инициализируйте и подключитесь
 
-This package depends on `nsg_controls` which should be published first due to circular dependency.
+```dart
+await provider.initialize();
+// Обычно connect вызывается из контроллера:
+// await provider.connect(controller);
+```
 
-## Publishing Instructions
+### 3) Зарегистрируйте типы данных в `NsgDataClient`
 
-Due to circular dependency with `nsg_controls`, follow these steps:
+```dart
+NsgDataClient.client.registerDataItem(YourDataItem()..remoteProvider = provider);
+```
 
-1. First publish `nsg_controls` package
-2. Update `nsg_data` to use hosted version of `nsg_controls`
-3. Publish `nsg_data` package
+### 4) Используйте контроллер данных
 
-## Version History
+```dart
+final controller = NsgDataController<YourDataItem>(
+  dataType: YourDataItem,
+  requestOnInit: true,
+);
+```
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+## Авторизация и токены
 
-## License
+`NsgDataProvider` поддерживает:
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- анонимный вход (`AnonymousLogin`);
+- вход по телефону/e-mail и SMS (`phoneLoginRequestSMS`, `phoneLogin`);
+- парольный сценарий (`phoneLoginPassword`);
+- logout (`logout`) и сброс токена (`resetUserToken`);
+- уведомления о смене токена (`tokenChanges`, `onTokenChanged`);
+- web sync токена между вкладками (через `CrossTabAuth`).
 
-## Author
+## Работа с серверами
 
-Aleksei Zenkov (zenkov25@gmail.com)
+Через `NsgServerParams` можно:
+
+- хранить набор адресов окружений (main/test/etc);
+- сохранять и восстанавливать выбранный сервер;
+- хранить токены отдельно для разных групп серверов.
+
+## Запросы и фильтры
+
+Основные инструменты:
+
+- `NsgCompare` + `NsgComparisonOperator` — построение условий;
+- `NsgDataRequestParams` — параметры запроса;
+- `NsgSorting` — сортировка;
+- `controller.getRequestFilter` — сбор итогового фильтра в контроллере.
+
+## Локальное хранение
+
+Для offline/кэш-сценариев можно использовать `NsgLocalDb` и переключать `controllerMode.storageType`.
+
+## Публичный API
+
+Главная точка входа: `package:nsg_data/nsg_data.dart`.
+
+Экспортируются:
+
+- data fields (`stringField`, `dateField`, `referenceField`, и др.);
+- контроллеры (`nsgDataController`, `nsgBaseController`, `nsgDataTableController`);
+- provider/request/post API;
+- навигация (`NsgNavigator`, middleware/page helpers);
+- вспомогательные типы (`NsgPeriod`, validate/result, sorting, exceptions).
+
+## Замечание про публикацию
+
+В монорепе `nsg_data` обычно используется вместе с `nsg_controls` и `nsg_login`; при публикации на pub.dev учитывайте версии зависимостей между пакетами.
+
+## Лицензия
+
+MIT, подробнее в `LICENSE`.

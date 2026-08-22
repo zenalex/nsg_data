@@ -1091,7 +1091,7 @@ class NsgDataItem {
       filter: countFilter,
       autoRepeate: autoRepeateCount > 0,
       autoRepeateCount: autoRepeateCount,
-      loadReference: [],
+      loadReference: filter.referenceList,
       cancelToken: cancelToken,
     );
     return request.totalCount ?? 0;
