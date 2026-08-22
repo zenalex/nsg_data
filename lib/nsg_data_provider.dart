@@ -3,9 +3,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:get/get.dart' as getx;
 //import 'package:nsg_data/authorize/nsg_social_login_response.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:nsg_data/web/cross_tab_auth.dart';
@@ -47,6 +45,15 @@ class NsgDataProvider {
   ///Версия протокола nsg_data. Передаётся серверу в заголовке X-Nsg-Protocol-Version.
   ///Сервер без поддержки трактует отсутствие заголовка как version=0 (legacy).
   static const int protocolVersion = 1;
+
+  ///Показать пользователю сообщение об ошибке.
+  ///
+  ///Слой данных не рисует UI сам: раньше здесь стоял getx.Get.snackbar с
+  ///Colors.red[200] прямо в провайдере. Теперь это хук — nsg_controls
+  ///подменяет его на NsgErrorWidget.showErrorByString (см. ControlOptions),
+  ///а без визуального пакета сообщение просто уходит в лог.
+  static Future Function(String errorMessage) showError =
+      (errorMessage) async => debugPrint(errorMessage);
 
   ///Token saved after authorization
   String token = '';
@@ -583,7 +590,11 @@ class NsgDataProvider {
     }
   }
 
-  Future<Image> imageRequest({
+  ///Загрузить изображение с сервера как сырые байты.
+  ///
+  ///Возвращает именно Uint8List, а не виджет Image: собрать из байтов
+  ///Image.memory — дело визуального слоя (см. nsg_login).
+  Future<Uint8List> imageRequest({
     final String? function,
     final Map<String, dynamic>? params,
     final Map<String, String?>? headers,
@@ -632,7 +643,7 @@ class NsgDataProvider {
         //print(response.data);
       }
 
-      return Image.memory(response.data!);
+      return response.data!;
     } on DioException catch (e) {
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       throw NsgApiException(NsgApiError(
@@ -750,7 +761,8 @@ class NsgDataProvider {
     }
   }
 
-  Future<Image> getCaptcha() async {
+  ///Капча с сервера в виде сырых байтов PNG/JPEG.
+  Future<Uint8List> getCaptcha() async {
     var response = await imageRequest(
       debug: isDebug,
       function: 'GetCaptcha',
@@ -885,15 +897,7 @@ class NsgDataProvider {
 
       return loginResponse;
     } catch (e) {
-      getx.Get.snackbar(
-        'ERROR',
-        'An error occurred. Please try again.',
-        isDismissible: true,
-        duration: const Duration(seconds: 5),
-        backgroundColor: Colors.red[200],
-        colorText: Colors.black,
-        snackPosition: getx.SnackPosition.bottom,
-      );
+      showError('An error occurred. Please try again.');
     }
     return NsgLoginResponse(isError: true, errorCode: 500);
   }
@@ -925,15 +929,7 @@ class NsgDataProvider {
       return loginResponse;
     } catch (e) {
       debugPrint('requestSocialMethod error: $e');
-      getx.Get.snackbar(
-        'ERROR',
-        'An error occurred. Please try again.',
-        isDismissible: true,
-        duration: const Duration(seconds: 5),
-        backgroundColor: Colors.red[200],
-        colorText: Colors.black,
-        snackPosition: getx.SnackPosition.bottom,
-      );
+      showError('An error occurred. Please try again.');
     }
     return NsgLoginResponse(isError: true, errorCode: 500);
   }

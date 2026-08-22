@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
 

@@ -21,8 +21,6 @@ class NsgDataController<T extends NsgDataItem> extends NsgBaseController {
   ///Установка текущего элемента для контроллера
   set currentItem(T item) => selectedItem = item;
 
-  bool get withUi => this is NsgDataUI;
-
   NsgDataController({
     super.requestOnInit = true,
     super.useUpdate,
