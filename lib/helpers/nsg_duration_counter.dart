@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 class NsgDurationCounter {
   DateTime startTime = DateTime(0);

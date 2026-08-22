@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:retry/retry.dart';
@@ -732,7 +732,7 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   String _localizedServerpodReadErrorMessage(Object error) {
-    final languageCode = WidgetsBinding.instance.platformDispatcher.locale.languageCode.toLowerCase();
+    final languageCode = PlatformDispatcher.instance.locale.languageCode.toLowerCase();
     final text = error.toString().toLowerCase();
     final isRu = languageCode.startsWith('ru');
     if (text.contains('timed out') || text.contains('timeout')) {
