@@ -119,6 +119,20 @@ class NsgDataItem {
     });
     if (json.containsKey('state')) {
       state = NsgDataItemState.values[json['state']];
+    } else if (isNotEmpty) {
+      //Сервер не прислал состояние объекта. Так вела себя узкая выборка (neededFields)
+      //до фикса NsgServerClasses#3: она возвращает строки таблицы в памяти, у которых
+      //состояния нет, и ключа в ответе не было вовсе.
+      //
+      //Объект при этом приехал из выдачи сервера и его идентификатор заполнен — значит
+      //на сервере он есть и это не создание. Оставить умолчание unknown нельзя: сервер
+      //выбирает INSERT/UPDATE по состоянию, пришедшему от клиента, и, получив unknown,
+      //не делает ни того, ни другого — POST возвращает 200 и молча ничего не пишет
+      //(NSG-SOFT/futbolista-tasks#1602).
+      //
+      //Собственную сериализацию это не задевает: toJson всегда пишет state, поэтому
+      //объекты из локальной БД и клиентские копии сюда не попадают.
+      state = NsgDataItemState.fill;
     }
     if (json.containsKey('docState')) {
       docState = NsgDataItemDocState.values[json['docState']];
