@@ -90,19 +90,39 @@ class NsgDataClient {
     return getNewObjectByTypeName(type.toString());
   }
 
+  /// #1557 (GT-4134): здесь и в двух методах ниже был `assert` + `[typeName]!`.
+  /// В релизе assert вырезан, поэтому обращение к незарегистрированному типу
+  /// падало голым `Null check operator used on a null value` — без имени типа.
+  /// В GlitchTip такие события неотличимы ни друг от друга, ни от любого другого
+  /// `!` в пакете, и разбор каждый раз начинается с нуля. Кидаем ArgumentError в
+  /// том же стиле, что getFieldList/getPredefinedList выше.
+  ///
+  /// Количество зарегистрированных типов в сообщении отличает два разных диагноза:
+  /// 0 — регистрация ещё не прошла (тип запросили до конца NsgDataClient.registerDataItem,
+  /// обычно из биндинга маршрута на холодном старте); не 0 — потерян конкретный тип.
   NsgDataItem getNewObjectByTypeName(String typeName) {
-    assert(_registeredItems.containsKey(typeName), typeName);
-    return _registeredItems[typeName]!.getNewObject();
+    final item = _registeredItems[typeName];
+    if (item == null) {
+      throw ArgumentError('getNewObjectByTypeName: $typeName not registered (registered types: $registeredDataItemsCount)');
+    }
+    return item.getNewObject();
   }
 
   Type getTypeByName(String typeName) {
-    assert(_registeredItems.containsKey(typeName), 'typeName = $typeName');
-    return _registeredItems[typeName]!.runtimeType;
+    final item = _registeredItems[typeName];
+    if (item == null) {
+      throw ArgumentError('getTypeByName: $typeName not registered (registered types: $registeredDataItemsCount)');
+    }
+    return item.runtimeType;
   }
 
   Type getTypeByServerName(String typeName) {
-    assert(_registeredServerNames.containsKey(typeName), 'typeName = $typeName');
-    return _registeredItems[_registeredServerNames[typeName]]!.runtimeType;
+    final registeredName = _registeredServerNames[typeName];
+    final item = registeredName == null ? null : _registeredItems[registeredName];
+    if (item == null) {
+      throw ArgumentError('getTypeByServerName: $typeName not registered (registered types: $registeredDataItemsCount)');
+    }
+    return item.runtimeType;
   }
 
   NsgParamList getParamList(Type itemType) {
