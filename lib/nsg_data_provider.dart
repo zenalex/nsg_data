@@ -927,11 +927,30 @@ class NsgDataProvider {
       _notifyTokenChanged();
 
       return loginResponse;
+    } on NsgApiException catch (e) {
+      // Отдаём НАСТОЯЩИЙ код и текст сервера.
+      //
+      // Раньше здесь стоял литерал `errorCode: 500` и пустое сообщение. Из-за
+      // этого вызывающая сторона не могла отличить осознанный отказ сервера от
+      // обрыва связи и показывала выдуманный текст: в трекер приезжало
+      // «Authorization request failed (PhoneLoginRequestGoogle, errorCode 500)»,
+      // тогда как сервер отвечал 403 с внятным объяснением, почему вход этим
+      // способом недоступен, а в другом случае вообще ничего не отвечал —
+      // соединение рвалось по таймауту. Обе причины выглядели одинаково.
+      //
+      // `code == null` бывает у сетевых ошибок Dio: сервер не ответил, значит
+      // серверного кода нет. Ставим 0 — «код неизвестен», а не 500, потому что
+      // 500 означает «сервер ответил ошибкой», и это ложь.
+      debugPrint('requestSocialMethod error: code=${e.error.code} type=${e.error.errorType} ${e.error.message}');
+      return NsgLoginResponse(
+        isError: true,
+        errorCode: e.error.code ?? 0,
+        errorMessage: e.error.message ?? '',
+      );
     } catch (e) {
       debugPrint('requestSocialMethod error: $e');
-      showError('An error occurred. Please try again.');
+      return NsgLoginResponse(isError: true, errorCode: 0, errorMessage: e.toString());
     }
-    return NsgLoginResponse(isError: true, errorCode: 500);
   }
 
   // Future<NsgLoginResponse> requestVK() async {
