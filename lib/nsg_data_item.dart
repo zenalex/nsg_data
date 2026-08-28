@@ -140,16 +140,50 @@ class NsgDataItem {
     // if (json.containsKey('newTableLogic')) {
     //   newTableLogic |= json.containsKey('newTableLogic') && json['newTableLogic'] == 'true';
     // }
-    //Чтение дополнительных полей
-    if (allowExtend && json.containsKey(additionalDataField)) {
-      (jsonDecode(json[additionalDataField])).forEach((name, jsonValue) {
-        if (fieldList.fields.containsKey(name)) {
-          setFieldValue(name, jsonValue);
-        }
-      });
+    //Чтение дополнительных полей расширяемого типа
+    if (allowExtend && additionalDataField.isNotEmpty) {
+      _readAdditionalData(json[additionalDataField]);
     }
     //Проставляем время чтения объекта для определения версии и срока жизни
     loadTime = DateTime.now().microsecondsSinceEpoch;
+  }
+
+  ///Разбор поля дополнительных свойств расширяемого типа (allowExtend).
+  ///
+  ///Значение — JSON-документ, лежащий в строковом поле. Пустое или
+  ///отсутствующее значение означает «дополнительных полей нет», а не ошибку:
+  ///сервер такое поле просто не отдаёт — он вообще не присылает поля со
+  ///значением по умолчанию. Своя же сериализация до фикса писала здесь пустую
+  ///строку, и такие записи уже лежат в локальной БД и в клиентских снимках —
+  ///их надо уметь прочитать, а не падать на них.
+  ///
+  ///⚠️ Ошибка разбора гасится ЗДЕСЬ, на объекте, и это принципиально. Одно
+  ///нечитаемое значение обязано стоить дополнительных полей одного объекта, а
+  ///не всей выборки: общий catch выше по стеку превращает один битый объект в
+  ///«данных нет вовсе» (zenalex/footballers_diary_app#655 — на пустом поле у
+  ///логотипа команды молча разваливался весь снимок стартового экрана).
+  void _readAdditionalData(dynamic raw) {
+    if (raw == null) return;
+    Object? decoded;
+    if (raw is Map) {
+      decoded = raw;
+    } else {
+      var text = raw.toString().trim();
+      if (text.isEmpty) return;
+      try {
+        decoded = jsonDecode(text);
+      } catch (e) {
+        debugPrint('$typeName.$additionalDataField: значение не является JSON, дополнительные поля пропущены ($e)');
+        return;
+      }
+    }
+    if (decoded is! Map) return;
+    decoded.forEach((name, jsonValue) {
+      var fieldName = name.toString();
+      if (fieldList.fields.containsKey(fieldName)) {
+        setFieldValue(fieldName, jsonValue);
+      }
+    });
   }
 
   ///Запись полей объекта в JSON
@@ -173,7 +207,14 @@ class NsgDataItem {
         if (excludeFields.contains(name)) continue;
         var value = fieldList.fields[name];
         if (fieldValues.fields.containsKey(name)) {
-          map[name] = value!.convertToJson(getFieldValue(name));
+          var jsonValue = value!.convertToJson(getFieldValue(name));
+          //Незаполненное поле дополнительных свойств не пишем вовсе — ровно
+          //так его отдаёт сервер. Пустая строка здесь не «пустой документ», а
+          //невалидный JSON: разбор своего же вывода на ней падал.
+          if (allowExtend && name == additionalDataField && (jsonValue == null || jsonValue.toString().trim().isEmpty)) {
+            continue;
+          }
+          map[name] = jsonValue;
         }
       }
     }
