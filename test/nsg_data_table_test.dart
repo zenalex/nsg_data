@@ -10,6 +10,8 @@
 // перечитывании/обновлении объекта через copyFieldValues в нём копятся
 // строки-надгробия и «подтягиваются удалённые строки».
 
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nsg_data/models/nsg_server_params.dart';
 import 'package:nsg_data/nsg_data.dart';
@@ -277,6 +279,75 @@ void main() {
 
       final tableJson = owner.toJson()[TestOwner.nameTable] as List;
       expect(tableJson.length, 2, reason: 'и удалённая, и оставшаяся строка уходят в POST');
+    });
+  });
+
+  group('чтение своей сериализации (restoreFromJson)', () {
+    // NSG-SOFT/futbolista-tasks#1837. Свой round-trip терял пометку «строка
+    // удалена»: fromJsonList ставил docState = saved БЕЗУСЛОВНО, сразу после
+    // fromJson, который состояние из json уже прочитал. Удалённая строка
+    // возвращалась живой — и пустой, потому что toJson пишет у неё один ключ.
+
+    /// Владелец с двумя строками, одна из которых убрана, прогнанный через
+    /// jsonEncode/jsonDecode — как это делает снимок или черновик на клиенте.
+    Map<String, dynamic> roundTrip(TestOwner owner) => jsonDecode(jsonEncode(owner.toJson())) as Map<String, dynamic>;
+
+    TestOwner ownerWithRemovedRow() {
+      final owner = ownerWith('o1', [savedRow('r1', 'A', 'o1'), savedRow('r2', 'B', 'o1')]);
+      owner.table.removeRow(owner.table.allRows.firstWhere((e) => e.id == 'r1'));
+      return owner;
+    }
+
+    test('удалённая строка остаётся удалённой', () {
+      final json = roundTrip(ownerWithRemovedRow());
+      final restored = TestOwner()..restoreFromJson(json);
+
+      expect(restored.table.allRows.length, 2, reason: 'обе строки на месте: удалённая уедет на сервер пометкой');
+      expect(
+        restored.table.allRows.firstWhere((e) => e.id == 'r1').docState,
+        NsgDataItemDocState.deleted,
+        reason: 'без пометки удаление не уедет на сервер — строка останется в БД',
+      );
+      expect(restored.table.rows.map((e) => e.id), ['r2'], reason: 'удалённой строки не должно быть среди живых');
+    });
+
+    test('живые строки не теряют полей', () {
+      final json = roundTrip(ownerWithRemovedRow());
+      final restored = TestOwner()..restoreFromJson(json);
+
+      final alive = restored.table.rows.single;
+      expect(alive.id, 'r2');
+      expect(alive.name, 'B', reason: 'режим касается только состояния строк, данные читаются как обычно');
+      expect(alive.docState, NsgDataItemDocState.saved);
+    });
+
+    test('обычный fromJson по-прежнему затирает состояние строк', () {
+      // Гард на ответы сервера. Затирание держит удаление строк: своего
+      // состояния сервер в общем случае не присылает, а без saved строку потом
+      // не удалить. И его Marked = 2 численно совпадает с нашим deleted —
+      // «сохранять docState, если он есть» показало бы помеченные на сервере
+      // строки удалёнными во всех табличных частях.
+      final json = roundTrip(ownerWithRemovedRow());
+      final restored = TestOwner()..fromJson(json);
+
+      expect(
+        restored.table.allRows.every((e) => e.docState == NsgDataItemDocState.saved),
+        isTrue,
+        reason: 'поведение чтения ответа сервера меняться не должно',
+      );
+    });
+
+    test('режим не протекает на следующее чтение', () {
+      final json = roundTrip(ownerWithRemovedRow());
+      final owner = TestOwner();
+      owner.restoreFromJson(json);
+      owner.fromJson(json);
+
+      expect(
+        owner.table.allRows.every((e) => e.docState == NsgDataItemDocState.saved),
+        isTrue,
+        reason: 'флаг обязан сниматься по выходе, иначе один снимок влиял бы на все последующие чтения объекта',
+      );
     });
   });
 
