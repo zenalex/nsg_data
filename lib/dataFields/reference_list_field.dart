@@ -41,7 +41,7 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
     if (value is List<NsgDataItem>) {
       fieldValues.fields[name] = value;
     } else if (value is List) {
-      fieldValues.fields[name] = fromJsonList(value);
+      fieldValues.fields[name] = fromJsonList(value, keepDocState: fieldValues.keepRowDocState);
     } else {
       fieldValues.fields[name] = defaultValue;
     }
@@ -51,23 +51,41 @@ class NsgDataReferenceListField<T extends NsgDataItem> extends NsgDataBaseRefere
     fieldValues.loadedTables.add(name);
   }
 
-  List<T> fromJsonList(List<dynamic> maps) {
+  ///[keepDocState] — читаем свою сериализацию: строки сохраняют прочитанный
+  ///`docState`. Ставится не руками, а режимом [NsgDataItem.restoreFromJson];
+  ///там же объяснено, почему по умолчанию состояние затирается.
+  List<T> fromJsonList(List<dynamic> maps, {bool keepDocState = false}) {
     var items = <T>[];
     for (var m in maps) {
       var elem = NsgDataClient.client.getNewObject(referentElementType);
       if (m is Map<String, dynamic>) {
-        elem.fromJson(m);
+        if (keepDocState) {
+          elem.restoreFromJson(m);
+        } else {
+          elem.fromJson(m);
+        }
         //этот признак определфет то что строка пришла из БД, без него она не удалится из базы данных
         //Другое дело, возможно, надо различать зачем мы проводим десериализацию
         //или присто отправлять на удаление с сервера все строки, удаляемые на объекте, независимо от того что они помечены как загруженные с сервера
         //Сервер их проигнорирует. В противном случае, удаление строки из табличной части не будет работать
-        elem.docState = NsgDataItemDocState.saved;
+        //
+        //Различать «зачем десериализуем» и стали: в режиме своей сериализации
+        //(NsgDataItem.restoreFromJson) состояние в json есть и оно значимое —
+        //затерев его, теряем пометку «строка удалена». Если состояния в json
+        //всё же нет, ведём себя как раньше: без `saved` строку потом не удалить.
+        if (!keepDocState || !m.containsKey('docState')) {
+          elem.docState = NsgDataItemDocState.saved;
+        }
         if (elem.allowExtend) {
           var extTypeName = elem[elem.extensionTypeField].toString();
           if (extTypeName.isNotEmpty && extTypeName != elem.typeName) {
             try {
               elem = NsgDataClient.client.getNewObject(NsgDataClient.client.getTypeByServerName(extTypeName));
-              elem.fromJson(m);
+              if (keepDocState) {
+                elem.restoreFromJson(m);
+              } else {
+                elem.fromJson(m);
+              }
             } on AssertionError catch (ex) {
               if (ex.message == extTypeName) {
                 debugPrint('Unknown type $extTypeName');
