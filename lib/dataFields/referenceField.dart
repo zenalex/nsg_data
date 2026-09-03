@@ -52,6 +52,16 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
       //В удачном пути сюда не заходим, поэтому она ничего не стоит и работает
       //в том числе в релизе.
       NsgFieldUsage.reportMissingReferent(dataItem.typeName, name);
+      //Строгий режим ронял только чтение незапрошенного ПОЛЯ
+      //(nsg_data_item.dart, ветка emptyFields), а промах референта проходил
+      //мимо — хотя это тот же класс дефекта и заметить его труднее: поле хотя бы
+      //пустое, а здесь возвращается валидный с виду объект с нулевыми полями.
+      //
+      //Порядок тот же, что у поля: сначала отчёт, потом падение. Assert обрывает
+      //поддерево на первом нарушении и прячет остальные, поэтому для ПОИСКА
+      //промахов годится лог, а не он (NSG-SOFT/futbolista-tasks#1751).
+      assert(!NsgFieldUsage.strictEmptyFields,
+          '!!! Промах референта: ссылка $name задана, объекта нет в кэше. Объект: ${dataItem.typeName}');
       return NsgDataClient.client.getNewObject(T) as T;
     } else {
       return null;

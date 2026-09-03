@@ -115,6 +115,36 @@ void main() {
       expect(reported, isEmpty, reason: 'пустая ссылка — законное состояние, а не непрочитанные данные');
     });
 
+    test('строгий режим роняет промах референта, как и промах поля', () {
+      // Асимметрия, которую закрывает #1751: strictEmptyFields ронял только
+      // чтение незапрошенного ПОЛЯ (nsg_data_item.dart, ветка emptyFields), а
+      // промах референта проходил мимо. Между тем заметить его труднее: поле
+      // хотя бы пустое, а здесь возвращается валидный с виду объект с нулевыми
+      // полями, и экран молча рисует пустоту.
+      NsgFieldUsage.strictEmptyFields = true;
+      addTearDown(() => NsgFieldUsage.strictEmptyFields = false);
+
+      var match = MrMatch();
+      match.id = 'm6';
+      match.setFieldValue(MrMatch.nameTeamId, 'нет-такого');
+
+      expect(() => match.team, throwsA(isA<AssertionError>()),
+          reason: 'в строгом режиме промах обязан падать, иначе флаг ничего не значит');
+    });
+
+    test('без строгого режима промах по-прежнему отдаёт пустышку', () {
+      // Парная проверка: правка не должна превращать обычный debug-прогон в
+      // падение. Строгость — opt-in, по умолчанию поведение прежнее.
+      var match = MrMatch();
+      match.id = 'm7';
+      match.setFieldValue(MrMatch.nameTeamId, 'нет-и-тут');
+
+      var team = match.team;
+
+      expect(team.isEmpty, isTrue, reason: 'по умолчанию возвращается пустышка, как и раньше');
+      expect(reported, isNotEmpty, reason: 'но отчёт о промахе остаётся');
+    });
+
     test('об одном поле сообщаем один раз за сессию', () {
       var first = MrMatch();
       first.id = 'm4';
