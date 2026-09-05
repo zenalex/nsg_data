@@ -155,6 +155,28 @@ void main() {
     expect(warned, isEmpty);
   });
 
+  testWidgets('хук работает и с выключенным логом — он для release, где лога нет', (tester) async {
+    // Лог видит только разработчик у себя, а нарушение живёт в проде. Поэтому
+    // хук НЕ привязан к флагу лога (и к режиму сборки — но kReleaseMode это
+    // компайл-тайм константа, в тесте её не подменить; здесь закрепляется
+    // независимость от флага, форма кода та же).
+    NsgFieldUsage.warnAsyncReferentDuringBuild = false;
+    addTearDown(() => NsgFieldUsage.warnAsyncReferentDuringBuild = true);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (_) {
+            owner('b-6').typeAsync().ignore();
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+
+    expect(warned, ['BuildRefOwner.typeId@persistentCallbacks']);
+  });
+
   testWidgets('строгий режим роняет вызов — но ОТКАЗОМ FUTURE, а не throw из build', (tester) async {
     // Важная разница с strictEmptyFields: тот сидит в СИНХРОННОМ геттере и
     // валит сборку на месте. Здесь метод `async`, и синхронный throw из его тела

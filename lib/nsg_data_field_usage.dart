@@ -151,9 +151,9 @@ class NsgFieldUsage {
   /// отдельная группа, а не подмешивалось к чтениям полей.
   static void reportMissingReferent(String typeName, String fieldName) => reportEmptyFieldAccess(typeName, '$fieldName:referent');
 
-  /// Предупреждать, когда асинхронное дочитывание ссылки запрошено ВО ВРЕМЯ
-  /// СБОРКИ КАДРА. Только debug/profile — в release [reportAsyncReferentDuringBuild]
-  /// выходит сразу.
+  /// Печатать в консоль, когда асинхронное дочитывание ссылки запрошено ВО ВРЕМЯ
+  /// СБОРКИ КАДРА. Только лог и только не-release; хук
+  /// [onAsyncReferentDuringBuild] работает в ЛЮБОМ режиме сборки.
   ///
   /// Зачем: до NSG-SOFT/futbolista-tasks#1921 `getReferentAsync` не ходил в сеть
   /// вообще (ветка загрузки была мертва), поэтому вызвать его из `build()` было
@@ -178,6 +178,15 @@ class NsgFieldUsage {
   static bool strictAsyncReferentDuringBuild = false;
 
   /// Хук для приложения: то же событие можно увести в телеметрию.
+  ///
+  /// Работает в ЛЮБОМ режиме сборки, и это принципиально — ровно как у
+  /// [onEmptyFieldAccess]. Лог виден только разработчику на своей машине, а
+  /// нарушение живёт в проде: в release `assert` вырезан, `debugPrint` никто не
+  /// читает, и единственный способ узнать о вызове — событие отсюда.
+  ///
+  /// Здесь на этом уже спотыкались: сначала весь метод выходил по `kReleaseMode`,
+  /// а Sentry в приложении поднимается наоборот, ТОЛЬКО в release. Окна не
+  /// пересекались, и подключённый хук не дал бы ни одного события.
   static void Function(String typeName, String fieldName, String phase)? onAsyncReferentDuringBuild;
 
   /// Пары `тип.поле`, о которых уже предупредили.
@@ -213,20 +222,24 @@ class NsgFieldUsage {
   /// вызова от этого не перестаёт быть неверным — на холодном кэше тот же код
   /// пойдёт в сеть. Предупреждать надо о call-site, а не о везении.
   static void reportAsyncReferentDuringBuild(String typeName, String fieldName) {
-    if (kReleaseMode) return;
-    if (!warnAsyncReferentDuringBuild && onAsyncReferentDuringBuild == null && !strictAsyncReferentDuringBuild) return;
+    final hook = onAsyncReferentDuringBuild;
+    // Лог и строгость — не-release, хук — всегда. Если не нужно ничего, выходим
+    // до опроса фазы: это единственная работа, которую метод делает в проде у
+    // приложения, не подключившего хук.
+    final wantsLog = !kReleaseMode && warnAsyncReferentDuringBuild;
+    if (hook == null && !wantsLog && !(!kReleaseMode && strictAsyncReferentDuringBuild)) return;
     final phase = currentFramePhase();
     if (phase == null) return;
     // Один раз на пару «тип.поле»: перестраивающийся виджет иначе даст шторм
     // по 60 сообщений в секунду. Дедуп общий с остальной диагностикой — его
     // чистит reset().
     if (!_reportedAsyncDuringBuild.add('$typeName.$fieldName')) return;
-    if (warnAsyncReferentDuringBuild) {
+    if (wantsLog) {
       debugPrint('[FIELDS] !!! $typeName.$fieldName: getReferentAsync во время сборки кадра ($phase). '
           'Результат здесь не дождаться, а Future без await всплывёт необработанным. '
           'Для «возьму, если загружено» есть синхронный getReferent; для списка — referenceList запроса.');
     }
-    onAsyncReferentDuringBuild?.call(typeName, fieldName, phase);
+    hook?.call(typeName, fieldName, phase);
     assert(!strictAsyncReferentDuringBuild,
         '!!! getReferentAsync во время сборки кадра ($phase). Объект: $typeName, поле: $fieldName');
   }
