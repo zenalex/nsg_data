@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 
 /// Диагностика фактического использования полей объектов (#1394, пилот к #1383).
 ///
@@ -150,6 +151,86 @@ class NsgFieldUsage {
   /// отдельная группа, а не подмешивалось к чтениям полей.
   static void reportMissingReferent(String typeName, String fieldName) => reportEmptyFieldAccess(typeName, '$fieldName:referent');
 
+  /// Предупреждать, когда асинхронное дочитывание ссылки запрошено ВО ВРЕМЯ
+  /// СБОРКИ КАДРА. Только debug/profile — в release [reportAsyncReferentDuringBuild]
+  /// выходит сразу.
+  ///
+  /// Зачем: до NSG-SOFT/futbolista-tasks#1921 `getReferentAsync` не ходил в сеть
+  /// вообще (ветка загрузки была мертва), поэтому вызвать его из `build()` было
+  /// безобидно. Теперь это сетевой запрос, и у такого вызова два исхода, оба
+  /// плохих: результат в сборке всё равно не дождаться, а `Future` без `await`
+  /// при обрыве связи всплывает в `PlatformDispatcher.onError` необработанным.
+  ///
+  /// Генерируемые обёртки `xxxAsync()` есть у каждой ссылки каждой модели и
+  /// выглядят как безопасная замена синхронному геттеру — поэтому предупреждение
+  /// включено по умолчанию.
+  static bool warnAsyncReferentDuringBuild = true;
+
+  /// Дополнительно ронять debug на таком вызове. Отдельным флагом и по той же
+  /// причине, что у [strictEmptyFields]: сначала снимают список мест логом, и
+  /// только потом включают строгость.
+  ///
+  /// ⚠️ Падает НЕ так, как [strictEmptyFields]. Тот сидит в синхронном геттере и
+  /// валит сборку на месте. Здесь метод `async`, и синхронный throw из его тела
+  /// Dart заворачивает в возвращаемый `Future` — то есть нарушение прилетит
+  /// обработчику ошибки, а `typeAsync().ignore()` проглотит его молча. Громким
+  /// сигналом остаётся лог; assert полезен там, где вызов всё-таки `await`-ится.
+  static bool strictAsyncReferentDuringBuild = false;
+
+  /// Хук для приложения: то же событие можно увести в телеметрию.
+  static void Function(String typeName, String fieldName, String phase)? onAsyncReferentDuringBuild;
+
+  /// Пары `тип.поле`, о которых уже предупредили.
+  static final Set<String> _reportedAsyncDuringBuild = <String>{};
+
+  /// Фаза кадра, если сейчас идёт работа над кадром, иначе `null`.
+  ///
+  /// `postFrameCallbacks` СОЗНАТЕЛЬНО не считается нарушением: это законное
+  /// место, чтобы запустить дочитывание после отрисовки. `idle` — тем более.
+  static String? currentFramePhase() {
+    try {
+      switch (SchedulerBinding.instance.schedulerPhase) {
+        case SchedulerPhase.transientCallbacks:
+          return 'transientCallbacks';
+        case SchedulerPhase.midFrameMicrotasks:
+          return 'midFrameMicrotasks';
+        case SchedulerPhase.persistentCallbacks:
+          return 'persistentCallbacks';
+        case SchedulerPhase.idle:
+        case SchedulerPhase.postFrameCallbacks:
+          return null;
+      }
+    } catch (_) {
+      // Биндинг не поднят (чистый unit-тест, изолят без Flutter) — фазы нет.
+      return null;
+    }
+  }
+
+  /// Асинхронное дочитывание ссылки запрошено во время сборки кадра.
+  ///
+  /// Зовётся из `getReferentAsync` НА ВХОДЕ, а не перед самим запросом, и это
+  /// намеренно: при тёплом кэше запрос не уходит и вызов «работает», но место
+  /// вызова от этого не перестаёт быть неверным — на холодном кэше тот же код
+  /// пойдёт в сеть. Предупреждать надо о call-site, а не о везении.
+  static void reportAsyncReferentDuringBuild(String typeName, String fieldName) {
+    if (kReleaseMode) return;
+    if (!warnAsyncReferentDuringBuild && onAsyncReferentDuringBuild == null && !strictAsyncReferentDuringBuild) return;
+    final phase = currentFramePhase();
+    if (phase == null) return;
+    // Один раз на пару «тип.поле»: перестраивающийся виджет иначе даст шторм
+    // по 60 сообщений в секунду. Дедуп общий с остальной диагностикой — его
+    // чистит reset().
+    if (!_reportedAsyncDuringBuild.add('$typeName.$fieldName')) return;
+    if (warnAsyncReferentDuringBuild) {
+      debugPrint('[FIELDS] !!! $typeName.$fieldName: getReferentAsync во время сборки кадра ($phase). '
+          'Результат здесь не дождаться, а Future без await всплывёт необработанным. '
+          'Для «возьму, если загружено» есть синхронный getReferent; для списка — referenceList запроса.');
+    }
+    onAsyncReferentDuringBuild?.call(typeName, fieldName, phase);
+    assert(!strictAsyncReferentDuringBuild,
+        '!!! getReferentAsync во время сборки кадра ($phase). Объект: $typeName, поле: $fieldName');
+  }
+
   /// Сколько последних запросов помнить. Глубина «что грузилось перед этим
   /// экраном»: одного мало (объект часто грузят раньше, чем читают поле),
   /// а длинный хвост уводит в предыдущие экраны.
@@ -270,6 +351,7 @@ class NsgFieldUsage {
   static void reset() {
     _usage.clear();
     _reportedEmpty.clear();
+    _reportedAsyncDuringBuild.clear();
     _recentRequests.clear();
   }
 }
