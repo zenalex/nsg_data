@@ -82,6 +82,10 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
   ///два дефекта, которые до сих пор были не видны, потому что код был мёртв.
   ///Оба исправлены здесь же, см. комментарии ниже.
   Future<T> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
+    //Сетевой вызов из сборки кадра — предупредить в debug. На входе, а не перед
+    //запросом: при тёплом кэше запрос не уйдёт и вызов «сработает», но место
+    //вызова от этого верным не станет.
+    NsgFieldUsage.reportAsyncReferentDuringBuild(dataItem.typeName, name);
     var id = dataItem.getFieldValue(name).toString();
     //Пустая ссылка — законное состояние, а не непрочитанные данные: идти за ней
     //на сервер незачем. Ровно та же ветка, что и в getReferent.

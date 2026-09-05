@@ -83,6 +83,7 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
   ///(NSG-SOFT/futbolista-tasks#1921).
   @override
   Future<NsgDataItem> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
+    NsgFieldUsage.reportAsyncReferentDuringBuild(dataItem.typeName, name);
     if (useCache) {
       //allowNull: true — иначе промах кэша возвращает пустышку, а не null, и
       //ветка ниже недостижима. Плюс #1547: проба загрузчика не должна
