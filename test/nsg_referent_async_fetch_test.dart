@@ -78,6 +78,36 @@ class AsyncRefOwner extends NsgDataItem {
   Future<AsyncRefType> typeAsync() => getReferentAsync<AsyncRefType>(nameTypeId);
 }
 
+/// Владелец с НЕТИПИЗИРОВАННОЙ ссылкой. У неё свой override `getReferentAsync`
+/// с ровно теми же тремя дефектами — а `notificationObjId` из #1921, с которого
+/// всё началось, как раз такой.
+class AsyncRefUntypedOwner extends NsgDataItem {
+  static const nameId = 'id';
+  static const nameObjId = 'objId';
+
+  @override
+  String get typeName => 'AsyncRefUntypedOwner';
+
+  @override
+  void initialize() {
+    addField(NsgDataStringField(nameId), primaryKey: true);
+    addField(NsgDataUntypedReferenceField(nameObjId, defaultReferentType: AsyncRefType), primaryKey: false);
+  }
+
+  @override
+  String get apiRequestItems => '/Api/AsyncRefUntypedOwner';
+
+  @override
+  NsgDataItem getNewObject() => AsyncRefUntypedOwner();
+
+  @override
+  String get id => getFieldValue(nameId).toString();
+  @override
+  set id(String value) => setFieldValue(nameId, value);
+
+  Future<NsgDataItem> objAsync() => getReferentAsync<NsgDataItem>(nameObjId);
+}
+
 /// Провайдер, который никуда не ходит: запоминает запросы и отдаёт заготовку.
 class _RecordingProvider extends NsgDataProvider {
   _RecordingProvider()
@@ -121,7 +151,7 @@ void main() {
 
   setUpAll(() {
     provider = _RecordingProvider();
-    for (final item in <NsgDataItem>[AsyncRefType(), AsyncRefOwner()]) {
+    for (final item in <NsgDataItem>[AsyncRefType(), AsyncRefOwner(), AsyncRefUntypedOwner()]) {
       if (!NsgDataClient.client.isRegistered(item.runtimeType)) {
         NsgDataClient.client.registerDataItem(item, remoteProvider: provider);
       }
@@ -224,6 +254,64 @@ void main() {
       await owner('o-6', 't-6').typeAsync();
 
       expect(reportedMisses, isEmpty, reason: 'загрузчик щупает кэш с allowNull — это не промах экрана');
+    });
+  });
+
+  // У NsgDataUntypedReferenceField свой override getReferentAsync, и он нёс те
+  // же три дефекта. Мимо этого легко пройти: типизированную версию починил, а
+  // untyped осталась — при том что поле из #1921 (`notificationObjId`) именно
+  // такое, и тип референта у него живёт в самом значении («<guid>.<Тип>»).
+  group('getReferentAsync у нетипизированной ссылки', () {
+    AsyncRefUntypedOwner untypedOwner(String ownerId, String objId) {
+      final o = AsyncRefUntypedOwner();
+      o.id = ownerId;
+      o.setFieldValue(AsyncRefUntypedOwner.nameObjId, objId);
+      return o;
+    }
+
+    test('объекта нет в кэше — запрос уходит и объект возвращается', () async {
+      provider.rows = [
+        {'id': 'u-1', 'name': 'Цель'},
+      ];
+
+      final obj = await untypedOwner('uo-1', 'u-1.AsyncRefType').objAsync();
+
+      expect(provider.calls, hasLength(1), reason: 'ветка загрузки была мертва и здесь тоже');
+      expect(obj.getFieldValue(AsyncRefType.nameName), 'Цель');
+    });
+
+    test('фильтр — по первичному ключу референта, а не по имени поля владельца', () async {
+      provider.rows = [
+        {'id': 'u-2', 'name': 'Ещё цель'},
+      ];
+
+      await untypedOwner('uo-2', 'u-2.AsyncRefType').objAsync();
+
+      final sent = jsonEncode(provider.calls.single['postData']);
+      expect(sent, isNot(contains(AsyncRefUntypedOwner.nameObjId)), reason: 'поля владельца у референта нет');
+      expect(sent, contains('u-2'), reason: 'фильтруем по guid из untyped-значения');
+      expect(sent, isNot(contains('u-2.AsyncRefType')), reason: 'в фильтр идёт guid, а не значение с суффиксом типа');
+    });
+
+    test('пустой ответ сервера — пустышка, а не падение', () async {
+      provider.rows = <Map<String, dynamic>>[];
+
+      final obj = await untypedOwner('uo-3', 'u-нет.AsyncRefType').objAsync();
+
+      expect(provider.calls, hasLength(1));
+      expect(obj.isEmpty, isTrue);
+    });
+
+    test('объект в кэше — на сервер не ходим', () async {
+      final cached = AsyncRefType();
+      cached.id = 'u-4';
+      cached.setFieldValue(AsyncRefType.nameName, 'Из кэша');
+      NsgDataClient.client.addItemsToCache(items: [cached]);
+
+      final obj = await untypedOwner('uo-4', 'u-4.AsyncRefType').objAsync();
+
+      expect(provider.calls, isEmpty);
+      expect(identical(obj, cached), isTrue);
     });
   });
 }

@@ -75,22 +75,43 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
     return NsgDataClient.client.getNewObject(uid.referentType!);
   }
 
+  ///Референт по нетипизированной ссылке; если объекта нет в кэше — дочитывает.
+  ///
+  ///Те же три дефекта, что и у типизированной версии, и по той же причине —
+  ///ветка загрузки была мертва, поэтому внутри неё никто ничего не проверял.
+  ///Разбор целиком — в NsgDataReferenceField.getReferentAsync
+  ///(NSG-SOFT/futbolista-tasks#1921).
   @override
   Future<NsgDataItem> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
-    var item = getReferent(dataItem, useCache: useCache);
-    if (item == null) {
-      var id = dataItem.getFieldValue(name).toString();
-      var uid = UntypedId(id);
-      assert(uid.referentType != null, 'Запрос getReferent у untypedReference с невыбранным типом');
-
-      var cmp = NsgCompare();
-      cmp.add(name: name, value: uid.guid);
-      var filter = NsgDataRequestParams(compare: cmp);
-      var request = NsgDataRequest(dataItemType: uid.referentType!);
-      await request.requestItems(filter: filter);
-      item = NsgDataClient.client.getItemsFromCache(uid.referentType!, uid.guid);
+    if (useCache) {
+      //allowNull: true — иначе промах кэша возвращает пустышку, а не null, и
+      //ветка ниже недостижима. Плюс #1547: проба загрузчика не должна
+      //расходовать единственное событие промаха на пару «тип.поле».
+      var cached = getReferent(dataItem, allowNull: true);
+      if (cached != null) return cached;
     }
-    return item!;
+
+    var uid = UntypedId(dataItem.getFieldValue(name).toString());
+    //Тип не выбран — дочитывать нечего и негде: у нетипизированной ссылки тип
+    //живёт в самом значении. В релизе assert молчит, и здесь стояло
+    //`uid.referentType!` — то есть падение вместо пустого объекта.
+    assert(uid.referentType != null, 'Запрос getReferent у untypedReference с невыбранным типом');
+    if (uid.referentType == null) return NsgDataClient.client.getNewObject(realDefaultReferentType);
+
+    //По первичному ключу РЕФЕРЕНТА. Стояло имя поля ВЛАДЕЛЬЦА: для
+    //`NotificationItem.notificationObjId` это давало условие по
+    //`Objective.notificationObjId` — поля с таким именем у референта нет.
+    var referent = NsgDataClient.client.getNewObject(uid.referentType!);
+    var cmp = NsgCompare();
+    cmp.add(name: referent.primaryKeyField, value: uid.guid);
+    var filter = NsgDataRequestParams(compare: cmp);
+    var request = NsgDataRequest(dataItemType: uid.referentType!);
+    var loaded = await request.requestItems(filter: filter, loadReference: []);
+
+    var item = NsgDataClient.client.getItemsFromCache(uid.referentType!, uid.guid, allowNull: true) ?? loaded.firstOrNull;
+    //Объекта может не быть и после запроса. Пустышка, а не `item!`, который
+    //ронял `Null check operator used on a null value`.
+    return item ?? NsgDataClient.client.getNewObject(uid.referentType!);
   }
 
   @override
