@@ -39,8 +39,26 @@ class NsgDataUntypedReferenceField extends NsgDataReferenceField {
       return NsgDataClient.client.getNewObject(uid.referentType!);
     }
     if (useCache) {
-      var item = NsgDataClient.client.getItemsFromCache(uid.referentType!, uid.guid, allowNull: allowNull);
-      return item;
+      var item = NsgDataClient.client.getItemsFromCache(uid.referentType!, uid.guid, allowNull: true);
+      if (item != null) return item;
+      //Вызывающий готов к отсутствию — отсутствие для него не дефект. Сообщать
+      //здесь НЕЛЬЗЯ: с allowNull кэш щупает сам загрузчик, решая что дочитывать,
+      //и такая проба заведомо раньше экрана. Дедуп NsgFieldUsage пропускает
+      //только ПЕРВОЕ событие пары «тип.поле» за сессию, поэтому проба съедала бы
+      //слот настоящего промаха — на этом уже встали 42 задачи (#1547). Разбор —
+      //в NsgDataReferenceField.getReferent, здесь ровно тот же случай.
+      if (allowNull) return null;
+      //Ссылка задана, объекта нет, и сейчас вернётся ПУСТЫШКА.
+      //
+      //До #1751 отсюда не уходило НИЧЕГО: типизированная ссылка звала
+      //reportMissingReferent, а этот override — нет, он получал пустышку прямо
+      //из getItemsFromCache(allowNull: false) и молча её возвращал. То есть у
+      //нетипизированных ссылок промах не оставлял ни лога в debug, ни события в
+      //релизе, хотя это тот же дефект выборки и заметить его ровно так же нечем.
+      NsgFieldUsage.reportMissingReferent(dataItem.typeName, name);
+      assert(!NsgFieldUsage.strictEmptyFields,
+          '!!! Промах референта: ссылка $name задана, объекта нет в кэше. Объект: ${dataItem.typeName}');
+      return NsgDataClient.client.getNewObject(uid.referentType!);
     } else {
       if (allowNull) {
         return null;

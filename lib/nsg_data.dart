@@ -20,6 +20,7 @@ export 'package:nsg_data/nsg_data_enum.dart';
 export 'package:nsg_data/nsg_data_fieldlist.dart';
 export 'package:nsg_data/nsg_data_field_usage.dart';
 export 'package:nsg_data/nsg_data_item.dart';
+export 'package:nsg_data/nsg_referent_state.dart';
 export 'package:nsg_data/nsg_data_provider.dart';
 export 'package:nsg_data/nsg_data_requestParams.dart';
 export 'package:nsg_data/nsg_data_request.dart';

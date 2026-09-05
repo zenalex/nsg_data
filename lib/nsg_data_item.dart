@@ -514,6 +514,62 @@ class NsgDataItem {
     throw Exception('field $name is not ReferencedField');
   }
 
+  ///В каком из трёх состояний ссылочное поле [name]: ссылка не задана, задана но
+  ///объект не дочитан, или дочитан ([NsgReferentState]).
+  ///
+  ///Зачем это отдельным методом: [getReferent] на промахе отдаёт ПУСТЫШКУ, и она
+  ///неотличима от честного «ссылка не заполнена». Решение вида «переопределено
+  ///здесь или унаследовано» по объектам принимать нельзя — сравнение с пустышкой
+  ///даёт ложное «не совпало», и код молча уходит в ветку «нет данных».
+  ///
+  ///Различается по СТРОКЕ-ссылке, которую пустышка не подменяет. Побочных
+  ///эффектов нет: кэш читается с allowNull, поэтому пустышка не создаётся и в
+  ///диагностику ничего не уходит. Сообщает [referentIfLoaded].
+  NsgReferentState referentState(String name) {
+    return nsgReferentStateOf(
+      rawReference: getFieldValue(name).toString(),
+      referentResolved: _resolveReferentOrNull(name) != null,
+    );
+  }
+
+  ///Референт, только если он дочитан. Иначе null — и промах уходит в диагностику
+  ///под тем же именем, под которым он приходит из релиза (NsgFieldUsage, метка
+  ///`:referent`).
+  ///
+  ///Зачем null вместо пустышки: гард, написанный на пустышке, глушит промах
+  ///дважды. Он убирает мусор с экрана — и вместе с ним убирает то, что объект не
+  ///дочитан. Внешне такой гард неотличим от исправного кода, и найти его можно
+  ///только перечитав вёрстку.
+  ///
+  ///[T] — ожидаемый тип. Нетипизированная ссылка может законно указывать на
+  ///другой тип, поэтому несовпадение типа — это null БЕЗ сообщения о промахе:
+  ///объект дочитан, просто он не тот.
+  ///
+  ///Звать из кода экрана или бизнес-логики. Из загрузчика — нельзя: дедуп
+  ///NsgFieldUsage пропускает лишь ПЕРВОЕ событие пары «тип.поле» за сессию, и
+  ///проба, сделанная до того как данные доехали, съест слот настоящего промаха
+  ///(#1547).
+  T? referentIfLoaded<T extends NsgDataItem>(String name) {
+    var referent = _resolveReferentOrNull(name);
+    var state = nsgReferentStateOf(rawReference: getFieldValue(name).toString(), referentResolved: referent != null);
+    if (state != NsgReferentState.loaded) {
+      if (state == NsgReferentState.missing) {
+        NsgFieldUsage.reportMissingReferent(typeName, name);
+      }
+      return null;
+    }
+    return referent is T ? referent : null;
+  }
+
+  ///Чтение кэша с allowNull: на промахе отдаёт null, а не пустышку, и намеренно
+  ///ничего не сообщает — сообщает [referentIfLoaded], когда промах уже
+  ///квалифицирован по строке-ссылке.
+  NsgDataItem? _resolveReferentOrNull(String name) {
+    assert(fieldList.fields[name] is NsgDataReferenceField,
+        '!!! $typeName.$name — не ссылка на объект. У перечислений значение целое, у табличных частей — список; промаха кэша там не бывает');
+    return getReferentOrNull<NsgDataItem>(name);
+  }
+
   ///В случае ссылочного поля позвращает объект, на который ссылается данное поле. Если поле не прочитано из БД, читает его асинхронно
   Future<T> getReferentAsync<T extends NsgDataItem>(String name, {bool useCache = true}) async {
     assert(fieldValues.fields.containsKey(name));
