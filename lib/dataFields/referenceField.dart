@@ -68,18 +68,59 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
     }
   }
 
+  ///Референт по ссылке; если объекта нет в кэше — дочитывает его с сервера.
+  ///
+  ///⚠️ До NSG-SOFT/futbolista-tasks#1921 метод не дочитывал НИЧЕГО, вопреки имени.
+  ///Ветка загрузки стояла под `if (item == null)`, а `getReferent` звался без
+  ///`allowNull`, то есть с `allowNull: false` — при котором промах кэша
+  ///возвращает не null, а пустышку `getNewObject(T)`. Условие не выполнялось
+  ///никогда, запрос не уходил, и вызывающий получал тот же пустой объект, что и
+  ///от синхронного геттера, плюс событие промаха в диагностике. Метод был
+  ///синхронным геттером в обёртке `Future`.
+  ///
+  ///Чинить это по частям нельзя: оживи одну только ветку — и заработали бы ещё
+  ///два дефекта, которые до сих пор были не видны, потому что код был мёртв.
+  ///Оба исправлены здесь же, см. комментарии ниже.
   Future<T> getReferentAsync(NsgDataItem dataItem, {bool useCache = true}) async {
-    var item = getReferent(dataItem, useCache: useCache);
-    if (item == null) {
-      var id = dataItem.getFieldValue(name).toString();
-      var cmp = NsgCompare();
-      cmp.add(name: name, value: id);
-      var filter = NsgDataRequestParams(compare: cmp);
-      var request = NsgDataRequest<T>();
-      await request.requestItems(filter: filter);
-      item = NsgDataClient.client.getItemsFromCache(T, id) as T?;
+    var id = dataItem.getFieldValue(name).toString();
+    //Пустая ссылка — законное состояние, а не непрочитанные данные: идти за ней
+    //на сервер незачем. Ровно та же ветка, что и в getReferent.
+    if (id == '' || id == Guid.Empty) return NsgDataClient.client.getNewObject(T) as T;
+
+    if (useCache) {
+      //allowNull: true, и это принципиально. Здесь кэш щупает ЗАГРУЗЧИК, решая,
+      //надо ли дочитывать, — а такую пробу #1547 запретил превращать в отчёт о
+      //промахе: дедуп в NsgFieldUsage пропускает только ПЕРВОЕ событие пары
+      //«тип.поле» за сессию, и проба съедала его раньше, чем промах случался на
+      //экране. Заодно это и есть то самое null, ради которого ветка ниже писалась.
+      var cached = getReferent(dataItem, allowNull: true);
+      if (cached != null) return cached;
     }
-    return item!;
+
+    //Фильтр — по ПЕРВИЧНОМУ КЛЮЧУ типа референта. Здесь стояло имя поля
+    //ВЛАДЕЛЬЦА (`cmp.add(name: name, ...)`): для `Objective.objectiveTypeId` это
+    //давало условие по `ObjectiveType.objectiveTypeId` — поля с таким именем у
+    //референта нет вовсе, — а у самоссылки `Tournament.mainTournamentId`
+    //отбирало ДЕТЕЙ искомого турнира вместо него самого.
+    //`loadReference: []` — дочитывать ссылки САМОГО референта нас не просили;
+    //без него requestItems тянет весь первый уровень (тот же приём, что в
+    //NsgDataItem.loadAllReferents).
+    var referent = NsgDataClient.client.getNewObject(T);
+    var cmp = NsgCompare();
+    cmp.add(name: referent.primaryKeyField, value: id);
+    var filter = NsgDataRequestParams(compare: cmp);
+    var request = NsgDataRequest<T>();
+    var loaded = await request.requestItems(filter: filter, loadReference: []);
+
+    //Из кэша, а не из ответа: там объект уже слит с ранее известным экземпляром,
+    //и вызывающий получит тот же instance, что и синхронный геттер (#1548 —
+    //читаем с учётом наследования, объект мог лечь в ведро наследника).
+    var item = NsgDataClient.client.getItemsFromCacheTyped<T>(id, allowNull: true) ?? loaded.firstOrNull;
+    //Объекта может не быть и после запроса: удалён, скрыт правами, чужой id.
+    //Отдаём пустышку — тот же контракт, что у getReferent. Здесь стоял `item!`,
+    //и этот случай падал `Null check operator used on a null value`, не называя
+    //ни типа, ни поля.
+    return item ?? NsgDataClient.client.getNewObject(T) as T;
   }
 
   @override
