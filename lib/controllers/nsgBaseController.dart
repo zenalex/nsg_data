@@ -9,6 +9,7 @@ import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data_delete.dart';
 import 'nsg_controller_regime.dart';
+import 'nsg_posted_items_merge.dart';
 
 class NsgBaseController extends GetxController with StateMixin<NsgBaseControllerData> {
   Type dataType;
@@ -1053,17 +1054,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       var p = NsgDataPost(dataItemType: dataType);
       p.itemsToPost = itemsToPost;
       var newItems = await p.postItems(loadReference: NsgDataRequest.addAllReferences(dataType));
-      for (var item in newItems) {
-        var old = itemsToPost.firstWhereOrNull((e) => e.id == item.id);
-        if (old != null) {
-          old.copyFieldValues(item);
-          old.state = NsgDataItemState.fill;
-        }
-        old = dataItemList.firstWhereOrNull((e) => e.id == item.id);
-        if (old != null) {
-          old.copyFieldValues(item);
-          old.state = NsgDataItemState.fill;
-        }
+      // #1703: раньше здесь обновлялись только элементы, которые в
+      // dataItemList УЖЕ были, — созданный приложением объект сохранялся на
+      // сервере и в items не попадал вовсе. При том, что itemPagePost рядом
+      // новый элемент в список кладёт, а deleteItems из него удаляет.
+      // Разбор и инварианты — в applyPostedItems.
+      var added = applyPostedItems(postedItems: itemsToPost, serverItems: newItems, dataItemList: dataItemList);
+      if (added.isNotEmpty) {
+        sortDataItemList();
       }
     } else {
       await NsgLocalDb.instance.postItems(itemsToPost);
