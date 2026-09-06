@@ -49,6 +49,36 @@ void main() {
         reason: 'уложились в собственный бюджет, а не в страховку теста');
   }, timeout: const Timeout(Duration(seconds: 40)));
 
+  test('baseRequest БЕЗ явного timeout всё равно ограничен', () async {
+    // Отдельно от вызовов авторизации: те бюджет передают сами. Здесь проверяем
+    // умолчание самого _baseRequest — до фикса `timeout: null` уходил в dio как
+    // есть и означал «ждать без ограничения», а таких вызовов в классе много
+    // (входы, регистрация, Logout).
+    provider.connectDuration = 1000;
+    provider.requestDuration = 1000;
+    final sw = Stopwatch()..start();
+
+    var threw = false;
+    try {
+      await provider
+          .baseRequest(
+            function: 'PhoneLoginRequestSMS',
+            headers: provider.getAuthorizationHeader(),
+            url: '${provider.serverUri}/Api/Auth/PhoneLoginRequestSMS',
+            method: 'GET',
+            params: <String, dynamic>{},
+            // timeout НЕ передаём — ровно так это делает почти весь класс.
+          )
+          .timeout(const Duration(seconds: 20),
+              onTimeout: () => fail('запрос без явного timeout снова ждёт без ограничения'));
+    } on NsgApiException {
+      threw = true;
+    }
+
+    expect(threw, isTrue);
+    expect(sw.elapsed.inSeconds, lessThan(15), reason: 'сработало умолчание, а не страховка теста');
+  }, timeout: const Timeout(Duration(seconds: 40)));
+
   test('CheckToken отваливается по бюджету и повторяет попытки', () async {
     provider.token = 'stale-token';
     final sw = Stopwatch()..start();
