@@ -136,6 +136,22 @@ class NsgDataProvider {
   int requestDuration = 120000;
   int connectDuration = 15000;
 
+  ///Бюджет одной попытки для служебных запросов авторизации, milliseconds.
+  ///
+  ///Отдельный от [requestDuration] потому, что эти вызовы стоят на критическом
+  ///пути запуска: `connect` ждёт `CheckToken`/`AnonymousLogin`/`SetLocale`, и
+  ///пока они не ответили, приложение не показывает вообще ничего. Ответ здесь —
+  ///маленький JSON (замер на проде: 0.1-0.3 с), так что 15 с — это заведомо
+  ///«сервер не ответит», а не «сервер медленный».
+  ///
+  ///Смысл бюджета не «сдаться быстрее», а **перестать ждать мёртвый сокет**:
+  ///по таймауту `autoRepeate` открывает новое соединение, и именно это выводит
+  ///из полуоткрытого TCP после смены сети. См. NSG-SOFT/futbolista-tasks#1822.
+  int authRequestDuration = 15000;
+
+  ///Бюджет одной попытки запроса авторизации.
+  Duration get authRequestTimeout => Duration(milliseconds: authRequestDuration);
+
   static String defaultSecurityCode = 'security';
 
   String languageCode;
@@ -547,9 +563,15 @@ class NsgDataProvider {
         method: method,
         responseType: ResponseType.json,
         contentType: 'application/json',
-        connectTimeout: timeout,
-        // connectTimeout: timeout,
-        receiveTimeout: timeout,
+        // У dio `null` означает «ждать без ограничения» — а `timeout` не
+        // передавал НИ ОДИН вызов, так что запрос авторизации к серверу,
+        // который принял соединение и не ответил, висел, пока ОС не порвёт
+        // сокет: замерено до 3005 с (NSG-SOFT/futbolista-tasks#1822). Повтора
+        // при этом не происходило ни разу — `RetryOptions` повторяет по
+        // исключению, а зависший future его не бросает.
+        // Умолчание берём из тех же полей, что и `baseRequestList`.
+        connectTimeout: timeout ?? Duration(milliseconds: connectDuration),
+        receiveTimeout: timeout ?? Duration(milliseconds: requestDuration),
       ),
     );
 
@@ -1156,6 +1178,8 @@ class NsgDataProvider {
       url: '$serverUri/$authorizationApi/AnonymousLogin',
       method: 'GET',
       params: {},
+      // Без бюджета попытки повтор недостижим: см. authRequestDuration.
+      timeout: authRequestTimeout,
       autoRepeate: true,
       // Было 1000 (× до 5с backoff ≈ до ~80 мин блокировки старта на дёрганом
       // сервере → «вечный» сплеш). Ограничиваем: после ~10 попыток (~30с) connect
@@ -1180,6 +1204,8 @@ class NsgDataProvider {
       url: '$serverUri/$authorizationApi/CheckToken',
       method: 'GET',
       params: params,
+      // Без бюджета попытки повтор недостижим: см. authRequestDuration.
+      timeout: authRequestTimeout,
       autoRepeate: true,
       // Было 1000 (≈ до ~80 мин блокировки старта на дёрганом сервере). Ограничиваем
       // ~10 попытками (~30с) → дальше connect бросает ошибку, сплеш показывает onError.
@@ -1277,6 +1303,10 @@ class NsgDataProvider {
         url: '$serverUri/$authorizationApi/SetLocale',
         method: 'GET',
         params: params,
+        // Одна попытка и БЕЗ бюджета означало «сплеш навсегда»: 13 % зависаний
+        // старта приходилось именно на этот вызов (#1822). Ошибку метод и так
+        // проглатывает — старт поедет дальше без установленной локали.
+        timeout: authRequestTimeout,
         //добавить реакцию на 404
         autoRepeate: false,
         autoRepeateCount: 1000,
