@@ -51,7 +51,7 @@ class NsgDataReferenceField<T extends NsgDataItem> extends NsgDataBaseReferenceF
       //пустоту без единой ошибки. Ровно этот случай диагностика и ловит.
       //В удачном пути сюда не заходим, поэтому она ничего не стоит и работает
       //в том числе в релизе.
-      NsgFieldUsage.reportMissingReferent(dataItem.typeName, name);
+      NsgFieldUsage.reportMissingReferent(dataItem.typeName, name, owner: dataItem);
       //Строгий режим ронял только чтение незапрошенного ПОЛЯ
       //(nsg_data_item.dart, ветка emptyFields), а промах референта проходил
       //мимо — хотя это тот же класс дефекта и заметить его труднее: поле хотя бы
