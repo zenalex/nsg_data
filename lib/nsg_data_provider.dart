@@ -84,6 +84,75 @@ class NsgDataProvider {
   ///См. комментарий к [messageUpdateRequired].
   static String messageUpdateRecommended = 'A newer version is available. It is recommended to update the application';
 
+  // --- Политика проверки TLS-сертификата ---------------------------------
+  //
+  // До 09.2026 сетевой слой на всех не-веб платформах молча отключал проверку
+  // сертификата: в трёх местах (`baseRequestList`, `_baseRequest`, `imageRequest`)
+  // стоял `badCertificateCallback = (...) => true` под условием `!kIsWeb`.
+  // Отладочного гарда не было, поэтому РЕЛИЗНЫЕ мобильные и десктопные сборки
+  // принимали любой предъявленный сертификат — включая запросы авторизации,
+  // где уходит токен. Блок добавлен коммитом 7e8e592 «Builder fix» (16.11.2022)
+  // без объяснения; ни один боевой или тестовый стенд Futbolista в нём не
+  // нуждается (разбор: NSG-SOFT/futbolista-tasks#2000).
+  //
+  // Теперь по умолчанию сертификат проверяется как обычно, а отключить проверку
+  // можно двумя явными способами — оба задаёт приложение, а не библиотека.
+
+  ///Хосты, которым разрешено предъявлять непроверяемый сертификат
+  ///(самоподписанный, просроченный, выписанный на другое имя).
+  ///
+  ///Пусто по умолчанию. Приложение со стендом на самоподписанном сертификате
+  ///перечисляет здесь ИМЕННО его хосты — тогда проверка отключается точечно,
+  ///а боевой адрес продолжает проверяться в том же самом релизе.
+  ///Сравнение по имени хоста без учёта регистра; порт не участвует.
+  ///
+  ///```dart
+  ///NsgDataProvider.allowBadCertificateHosts.add('stand.local');
+  ///```
+  static final Set<String> allowBadCertificateHosts = <String>{};
+
+  ///Принимать любой сертификат в ОТЛАДОЧНОЙ сборке.
+  ///
+  ///Сохраняет привычный режим разработки (поднял стенд — работает сразу),
+  ///но в релиз это послабление не попадает: [kDebugMode] там false.
+  ///Поставьте false, если проверка нужна и на отладочных сборках.
+  static bool allowBadCertificateInDebug = true;
+
+  ///Подмена признака отладочной сборки. ТОЛЬКО для тестов: под `flutter test`
+  ///[kDebugMode] всегда true, и без подмены релизное поведение не проверить.
+  ///null — брать настоящий [kDebugMode].
+  @visibleForTesting
+  static bool? debugBuildOverride;
+
+  static bool get _isDebugBuild => debugBuildOverride ?? kDebugMode;
+
+  ///Принять ли сертификат, НЕ прошедший штатную проверку, для хоста [host].
+  ///
+  ///Вызывается только когда обычная проверка уже дала отказ: `false` здесь
+  ///означает «рвём соединение», как и должно быть по умолчанию.
+  @visibleForTesting
+  static bool shouldAcceptBadCertificate(String host, {bool? isDebugBuild}) {
+    if (allowBadCertificateHosts.contains(host.toLowerCase())) return true;
+    return (isDebugBuild ?? _isDebugBuild) && allowBadCertificateInDebug;
+  }
+
+  ///HttpClient с описанной выше политикой.
+  static HttpClient _createHttpClient() {
+    final client = HttpClient();
+    client.badCertificateCallback = (X509Certificate cert, String host, int port) => shouldAcceptBadCertificate(host);
+    return client;
+  }
+
+  ///Навесить политику на адаптер dio.
+  ///
+  ///Один хелпер вместо трёх одинаковых копий: раньше правку приходилось бы
+  ///вносить в три места, и любое пропущенное осталось бы дырой.
+  ///На вебе проверку выполняет браузер — трогать нечего.
+  static void applyCertificatePolicy(Dio dio) {
+    if (kIsWeb) return;
+    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = _createHttpClient;
+  }
+
   ///Хеш схемы GeneratorConfig, под которую собран клиент.
   ///Передаётся серверу в заголовке X-Nsg-Schema-Hash как ИНФОРМАЦИОННЫЙ маркер.
   ///Сервер использует его только для логов/телеметрии — НЕ для блокировки запросов.
@@ -400,14 +469,7 @@ class NsgDataProvider {
     late Response<dynamic> response;
 
     try {
-      if (!kIsWeb) {
-        (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-          final client = HttpClient();
-
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-          return client;
-        };
-      }
+      applyCertificatePolicy(dio);
 
       //Для отладки рассчитаем время выполнения функции
       var counter = NsgDurationCounter();
@@ -578,15 +640,7 @@ class NsgDataProvider {
     late Response<Map<String, dynamic>> response;
 
     try {
-      //BrowserHttpClientAdapter
-      if (!kIsWeb) {
-        (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-          final client = HttpClient();
-
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-          return client;
-        };
-      }
+      applyCertificatePolicy(dio);
       debugPrint('BASE REQUEST: $url, url: $url!, params: $params');
       if (method == 'GET') {
         response = await dio.get(url!, queryParameters: params);
@@ -639,14 +693,7 @@ class NsgDataProvider {
     late Response<Uint8List> response;
 
     try {
-      if (!kIsWeb) {
-        (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-          final client = HttpClient();
-
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-          return client;
-        };
-      }
+      applyCertificatePolicy(dio);
       if (method == 'GET') {
         response = await dio.get<Uint8List>(
           url!,
