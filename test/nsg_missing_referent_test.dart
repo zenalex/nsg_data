@@ -73,6 +73,7 @@ void main() {
 
   tearDownAll(() {
     NsgFieldUsage.onEmptyFieldAccess = null;
+    NsgFieldUsage.onEmptyFieldAccessWithOwner = null;
   });
 
   group('ненайденный референт', () {
@@ -159,6 +160,101 @@ void main() {
       first.team;
 
       expect(reported, hasLength(1), reason: 'дедупликация по паре тип.поле, иначе список из тысячи строк даст шторм');
+    });
+  });
+
+  group('хук с объектом (NSG-SOFT/futbolista-tasks#1954)', () {
+    // Приложение перепроверяет промах через паузу: гонку с ленивой дочиткой
+    // чинить нельзя, пробел в наборе запроса — нужно. Зная только «тип.поле»,
+    // перепроверить можно лишь обходом всего ведра кэша, а рядом всегда лежат
+    // объекты, приехавшие референтом чужого запроса и не собирающиеся
+    // резолвиться. С объектом перепроверка становится точечной.
+
+    test('хук получает тот самый объект, у которого промахнулась ссылка', () {
+      NsgDataItem? owner;
+      NsgFieldUsage.onEmptyFieldAccessWithOwner = (typeName, fieldName, item) => owner = item;
+      addTearDown(() => NsgFieldUsage.onEmptyFieldAccessWithOwner = null);
+
+      var match = MrMatch();
+      match.id = 'm10';
+      match.setFieldValue(MrMatch.nameTeamId, 'нет-такой');
+
+      match.team;
+
+      expect(identical(owner, match), isTrue, reason: 'нужен именно этот экземпляр — по нему и перепроверяют ссылку');
+    });
+
+    test('той же ссылкой у того же объекта промах перепроверяется точечно', () {
+      // Ровно то, ради чего хук и заведён: соседний объект с неразрешимой
+      // ссылкой не мешает увидеть, что НАША ссылка разрешилась.
+      NsgDataItem? owner;
+      NsgFieldUsage.onEmptyFieldAccessWithOwner = (typeName, fieldName, item) => owner = item;
+      addTearDown(() => NsgFieldUsage.onEmptyFieldAccessWithOwner = null);
+
+      var noise = MrMatch();
+      noise.id = 'm11-шум';
+      noise.setFieldValue(MrMatch.nameTeamId, 'никогда-не-приедет');
+      NsgDataClient.client.addItemsToCache(items: [noise]);
+
+      var match = MrMatch();
+      match.id = 'm11';
+      match.setFieldValue(MrMatch.nameTeamId, 'приедет-позже');
+      NsgDataClient.client.addItemsToCache(items: [match]);
+
+      match.team;
+      expect(owner, isNotNull);
+
+      // «Дочитка приехала» — команда легла в кэш уже после промаха.
+      var team = MrTeam();
+      team.id = 'приедет-позже';
+      NsgDataClient.client.addItemsToCache(items: [team]);
+
+      final field = NsgDataClient.client.getFieldList(MrMatch).fields[MrMatch.nameTeamId] as NsgDataReferenceField;
+      expect(field.getReferent(owner!, allowNull: true), isNotNull, reason: 'наша ссылка разрешилась — это гонка, а не пробел');
+      expect(field.getReferent(noise, allowNull: true), isNull, reason: 'соседний объект так и не разрешился — и раньше он маскировал вывод');
+    });
+
+    test('старый хук не вызывается, когда задан новый', () {
+      NsgFieldUsage.onEmptyFieldAccessWithOwner = (typeName, fieldName, item) {};
+      addTearDown(() => NsgFieldUsage.onEmptyFieldAccessWithOwner = null);
+
+      var match = MrMatch();
+      match.id = 'm12';
+      match.setFieldValue(MrMatch.nameTeamId, 'нет-такой');
+
+      match.team;
+
+      expect(reported, isEmpty, reason: 'два события на один промах — это дубль в трекере');
+    });
+
+    test('без нового хука поведение прежнее', () {
+      // Совместимость: потребители пакета, которые про новый хук не знают,
+      // продолжают получать ровно то же, что и раньше.
+      var match = MrMatch();
+      match.id = 'm13';
+      match.setFieldValue(MrMatch.nameTeamId, 'нет-такой');
+
+      match.team;
+
+      expect(reported, ['MrMatch.${MrMatch.nameTeamId}:referent']);
+    });
+
+    test('дедупликация одна на оба хука', () {
+      var seen = 0;
+      NsgFieldUsage.onEmptyFieldAccessWithOwner = (typeName, fieldName, item) => seen++;
+      addTearDown(() => NsgFieldUsage.onEmptyFieldAccessWithOwner = null);
+
+      var first = MrMatch();
+      first.id = 'm14';
+      first.setFieldValue(MrMatch.nameTeamId, 'нет-1');
+      var second = MrMatch();
+      second.id = 'm15';
+      second.setFieldValue(MrMatch.nameTeamId, 'нет-2');
+
+      first.team;
+      second.team;
+
+      expect(seen, 1, reason: 'шторм из ListView.builder гасится там же, где и раньше');
     });
   });
 }

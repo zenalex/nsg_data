@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'nsg_data_item.dart';
+
 /// Диагностика фактического использования полей объектов (#1394, пилот к #1383).
 ///
 /// Две независимые вещи:
@@ -85,6 +87,30 @@ class NsgFieldUsage {
   /// Хук обращения к незапрошенному полю. Вызывается и в release.
   static void Function(String typeName, String fieldName)? onEmptyFieldAccess;
 
+  /// То же самое, но с ОБЪЕКТОМ, у которого промахнулась ссылка. Если задан —
+  /// вызывается вместо [onEmptyFieldAccess], а не вместе с ним.
+  ///
+  /// `owner` заполнен только для промаха референта
+  /// ([reportMissingReferent]); у обычного промаха поля его нет.
+  ///
+  /// Зачем понадобился (NSG-SOFT/futbolista-tasks#1954). Приложение
+  /// перепроверяет промах через паузу, чтобы отличить «пусто навсегда» от
+  /// «пусто 200 мс»: гонку с ленивой дочиткой чинить нельзя, а пробел в наборе
+  /// запроса — нужно. Зная только «тип.поле», перепроверить можно лишь обходом
+  /// ВСЕГО ведра кэша: «не осталось ли неразрешённых ссылок этого поля вообще».
+  /// Для популярного типа это условие не выполняется никогда — рядом всегда
+  /// лежат десятки объектов, приехавших референтом чужого запроса и не
+  /// собирающихся резолвиться. Замер по проду: у `MatchItem.teamAwayId` в кэше
+  /// 50 ссылок, из них 35 неразрешённых — и настоящая гонка в этом шуме
+  /// неотличима от настоящего пробела.
+  ///
+  /// С объектом перепроверка становится точечной: спросить ТУ ЖЕ ссылку у ТОГО
+  /// ЖЕ объекта. Заодно она дешевле — один `getReferent` вместо обхода ведра.
+  ///
+  /// Обходной путь без объекта невозможен в принципе: снаружи промахи
+  /// неразличимы, а пометки происхождения на объектах в кэше нет.
+  static void Function(String typeName, String fieldName, NsgDataItem? owner)? onEmptyFieldAccessWithOwner;
+
   /// Пары `тип.поле`, о которых уже сообщили — чтобы не слать дубли.
   static final Set<String> _reportedEmpty = <String>{};
 
@@ -123,15 +149,28 @@ class NsgFieldUsage {
   }
 
   /// Сообщить о чтении поля, которое не запрашивалось из БД.
-  static void reportEmptyFieldAccess(String typeName, String fieldName) {
+  ///
+  /// `owner` — объект, у которого промахнулась ссылка; доезжает до
+  /// [onEmptyFieldAccessWithOwner] и нужен приложению для точечной
+  /// перепроверки. Дедупликация и порядок проверок от него не зависят: старый
+  /// хук получает ровно то же, что и раньше.
+  static void reportEmptyFieldAccess(String typeName, String fieldName, {NsgDataItem? owner}) {
     if (!kReleaseMode && collect) {
       final byType = _usage.putIfAbsent('!empty:$_currentScenario', () => <String, Set<String>>{});
       byType.putIfAbsent(typeName, () => <String>{}).add(fieldName);
     }
+    final hookWithOwner = onEmptyFieldAccessWithOwner;
     final hook = onEmptyFieldAccess;
-    if (hook == null) return;
+    if (hookWithOwner == null && hook == null) return;
+    // Пометку «об этой паре уже сообщили» ставим ПОСЛЕ проверки хуков и до
+    // вызова — как и было. Иначе снятый на время хук (так приложение гасит
+    // собственную пробу кэша, #1547) съедал бы первое настоящее событие.
     if (!_reportedEmpty.add('$typeName.$fieldName')) return;
-    hook(typeName, fieldName);
+    if (hookWithOwner != null) {
+      hookWithOwner(typeName, fieldName, owner);
+      return;
+    }
+    hook!(typeName, fieldName);
   }
 
   /// Ссылка задана, а объекта по ней в кэше нет — его не дочитали.
@@ -149,7 +188,11 @@ class NsgFieldUsage {
   ///
   /// Метка поля отличается от обычного промаха, чтобы в GlitchTip это была
   /// отдельная группа, а не подмешивалось к чтениям полей.
-  static void reportMissingReferent(String typeName, String fieldName) => reportEmptyFieldAccess(typeName, '$fieldName:referent');
+  /// `owner` — объект, у которого ссылка не разрешилась. Нужен приложению,
+  /// чтобы перепроверить ИМЕННО ЭТУ ссылку, а не всё ведро кэша: см.
+  /// [onEmptyFieldAccessWithOwner].
+  static void reportMissingReferent(String typeName, String fieldName, {NsgDataItem? owner}) =>
+      reportEmptyFieldAccess(typeName, '$fieldName:referent', owner: owner);
 
   /// Печатать в консоль, когда асинхронное дочитывание ссылки запрошено ВО ВРЕМЯ
   /// СБОРКИ КАДРА. Только лог и только не-release; хук
