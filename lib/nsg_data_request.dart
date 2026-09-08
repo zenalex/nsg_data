@@ -18,11 +18,54 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (dataItemType == NsgDataItem) dataItemType = T;
   }
 
-  List<NsgDataItem> _fromJsonList(List<dynamic> maps) {
+  ///Код ошибки «ответ не той формы». Номер из того же непротокольного ряда,
+  ///что 1 (нет связи) и 2 (таймаут) в NsgApiError, — HTTP-статус здесь не при
+  ///чём: сервер ответил 200, не той формой (NSG-SOFT/futbolista-tasks#1922).
+  static const int _codeMalformedResponse = 3;
+
+  ///Максимум символов тела ответа, попадающих в текст ошибки. Начала хватает,
+  ///чтобы опознать источник (страница captive-portal, HTML-заглушка шлюза,
+  ///текст ошибки), а всё тело в сообщении об ошибке — и мусор, и утечка данных.
+  static const int _bodyPreviewLimit = 200;
+
+  ///Однострочное начало значения для сообщения об ошибке.
+  static String _preview(dynamic value) {
+    final text = value.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (text.length <= _bodyPreviewLimit) return text;
+    return '${text.substring(0, _bodyPreviewLimit)}...';
+  }
+
+  ///Ответ пришёл не той формы: на месте JSON-массива объектов оказалось что-то
+  ///другое. Раньше такой ответ заворачивался в список и падал голым
+  ///`TypeError: type 'String' is not a subtype of type 'Map<String, dynamic>'`
+  ///в `_fromJsonList` — без адреса запроса, без типа данных и без единого
+  ///признака, что именно приехало (NSG-SOFT/futbolista-tasks#1922, GT-4675).
+  ///
+  ///`TypeError` — это `Error`, а не `Exception`: его не ловит ни `retry`, ни
+  ///`on Exception` в `NsgBaseController._requestItems`. Экран не получал статус
+  ///ошибки и оставался в бесконечной загрузке, а в телеметрию улетало событие
+  ///уровня fatal, неотличимое от любого другого промаха каста в пакете.
+  NsgApiException _malformedResponse({required String url, required String what, required dynamic got}) {
+    final cause = got is NsgApiException ? ' Ошибка запроса: ${got.error.code} ${got.error.message}.' : '';
+    return NsgApiException(NsgApiError(
+      code: _codeMalformedResponse,
+      message: 'Сервер вернул ответ неожиданной формы. $what '
+          'Запрос: $url. Тип данных: ${NsgDataClient.client.getNewObject(dataItemType).typeName}. '
+          'Тип ответа: ${got.runtimeType}.$cause Начало ответа: ${_preview(got)}',
+    ));
+  }
+
+  List<NsgDataItem> _fromJsonList(List<dynamic> maps, {String url = ''}) {
     var items = <T>[];
-    for (var m in maps) {
+    for (var i = 0; i < maps.length; i++) {
+      final m = maps[i];
+      //Элемент массива обязан быть объектом. Сервер, отдавший массив строк
+      //(или массив с null), до #1922 ронял тот же безымянный TypeError.
+      if (m is! Map<String, dynamic>) {
+        throw _malformedResponse(url: url, what: 'Элемент [$i] массива — не объект.', got: m);
+      }
       var elem = NsgDataClient.client.getNewObject(dataItemType);
-      elem.fromJson(m as Map<String, dynamic>);
+      elem.fromJson(m);
       if (elem.allowExtend) {
         var extTypeName = elem[elem.extensionTypeField].toString();
         if (extTypeName.isNotEmpty && extTypeName != elem.typeName) {
@@ -181,10 +224,16 @@ class NsgDataRequest<T extends NsgDataItem> {
         if (response is Map) {
           items = (await loadDataAndReferences(response, filter.referenceList!, tag, filter: filter)).cast();
         } else {
+          //Здесь стояло `if (response is! List) response = <dynamic>[response];`
+          //— заворачивание скаляра в список из одного элемента. Успешно
+          //разобраться такой список не мог никогда: скаляр не Map, и
+          //следующая же строка падала кастом. На проде сюда приезжала HTML-
+          //страница (перехват соединения на Wi-Fi), и пользователь получал
+          //вечную загрузку вместо ошибки — NSG-SOFT/futbolista-tasks#1922.
           if (response is! List) {
-            response = <dynamic>[response];
+            throw _malformedResponse(url: url, what: 'Ожидался массив объектов.', got: response);
           }
-          items = _fromJsonList(response).cast();
+          items = _fromJsonList(response, url: url).cast();
           NsgDataClient.client.addItemsToCache(items: items, tag: tag);
 
           //Check referent field list
@@ -705,6 +754,14 @@ class NsgDataRequest<T extends NsgDataItem> {
   FutureOr<bool> _retryIfInternal(Exception ex) async {
     //400 - код ошибки сервера, не предполагающий повторного запроса данных
     if (ex is NsgApiException && (ex.error.code == 400 || ex.error.code == 401 || ex.error.code == 500)) {
+      return false;
+    }
+    //Ответ не той формы повтором не лечится: тело уже получено, и получено
+    //целиком. Повторять его 10 раз с паузой до 15 секунд — значит держать
+    //экран в загрузке минутами вместо того, чтобы показать ошибку сразу.
+    //До #1922 здесь падал TypeError, который retry не ловил вовсе, — быстрый
+    //отказ и есть поведение, которое надо сохранить.
+    if (ex is NsgApiException && ex.error.code == _codeMalformedResponse) {
       return false;
     }
     if (retryIf != null) return (await retryIf!(ex));
