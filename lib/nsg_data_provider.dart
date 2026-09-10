@@ -265,6 +265,10 @@ class NsgDataProvider {
     if (useNsgAuthorization) {
       await getCurrentServerToken();
       if (token.isEmpty) {
+        //Ключ старого формата, до разделения токенов по группам серверов. Перестать
+        //его читать пока нельзя: клиенты ещё пишут токен сюда (у futbolista —
+        //openLoginPage на Windows и по диплинку), и такие пользователи теряли бы
+        //вход на каждом старте. Выход чистит и его — см. resetCurrentServerToken.
         var prefs = await SharedPreferences.getInstance();
         if (prefs.containsKey(applicationName)) {
           token = prefs.getString(applicationName) ?? '';
@@ -334,9 +338,17 @@ class NsgDataProvider {
     await prefs.setString(paramName, serverAddress);
   }
 
+  ///Ключ, под которым на устройстве хранится токен текущего сервера.
+  ///
+  ///Токен общий для всех адресов одной группы серверов (main/test), поэтому ключ
+  ///строится по имени группы, а не по адресу. Чтение, запись и сброс берут ключ
+  ///только отсюда: сброс, собиравший его сам по адресу сервера, с 8748f77
+  ///(01.2025) удалял ключ, которого никто не писал, — выход не забывал токен.
+  String get _currentServerTokenKey => '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
+
   ///Прочитать сохраненный токен для текущего сервера
   Future getCurrentServerToken() async {
-    var tokenName = '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
+    var tokenName = _currentServerTokenKey;
     var prefs = await SharedPreferences.getInstance();
     token = '';
     if (prefs.containsKey(tokenName)) {
@@ -349,16 +361,24 @@ class NsgDataProvider {
   Future saveCurrentServerToken() async {
     var prefs = await SharedPreferences.getInstance();
     if (token.isEmpty) return;
-    var tokenName = '${paramName}_${availableServers.groupNameByAddress(availableServers.currentServer)}';
-    await prefs.setString(tokenName, token);
+    await prefs.setString(_currentServerTokenKey, token);
   }
 
-  ///Удалить токен для текущего сервера (например, при logout)
+  ///Удалить сохранённый токен текущего сервера (например, при logout).
+  ///
+  ///Удаляет безусловно, не глядя на [token] в памяти: сохранённое на устройстве от
+  ///него не зависит. Прежняя проверка `token.isEmpty` стояла после await, а logout
+  ///и resetUserToken звали сброс без await и тут же чистили token — проверка видела
+  ///пустую строку и выходила, ничего не удалив.
+  ///
+  ///Удаляет и ключ старого формата [applicationName]: [initialize] читает его
+  ///запасным, когда ключа группы нет, а клиенты до сих пор умеют в него писать.
+  ///Без этого токен «воскресал» на следующем старте через запасной путь.
   Future resetCurrentServerToken() async {
+    var tokenName = _currentServerTokenKey;
     var prefs = await SharedPreferences.getInstance();
-    if (token.isEmpty) return;
-    var tokenName = '${paramName}_${availableServers.currentServer}';
     await prefs.remove(tokenName);
+    await prefs.remove(applicationName);
   }
 
   ///Установить адрес сервера по имени (admin/test)
@@ -1148,10 +1168,11 @@ class NsgDataProvider {
     } catch (ex) {
       debugPrint('ERROR logout: ${ex.toString()}');
     }
+    // Сохранённый токен забываем безусловно и дожидаясь удаления. Раньше сброс
+    // звался без await внутри `if (!isAnonymous)`, и токен оставался на
+    // устройстве: следующий старт поднимал его и слал в CheckToken.
+    await resetCurrentServerToken();
     if (!isAnonymous) {
-      resetCurrentServerToken();
-      // var _prefs = await SharedPreferences.getInstance();
-      // await _prefs.remove(applicationName);
       isAnonymous = true;
       token = '';
     }
@@ -1163,9 +1184,7 @@ class NsgDataProvider {
   }
 
   Future resetUserToken() async {
-    resetCurrentServerToken();
-    // var _prefs = await SharedPreferences.getInstance();
-    // await _prefs.remove(applicationName);
+    await resetCurrentServerToken();
     isAnonymous = true;
     token = '';
     _crossAuth?.broadcastLogout();
