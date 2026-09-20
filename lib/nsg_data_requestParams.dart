@@ -11,6 +11,10 @@ class NsgDataRequestParams {
   ///На стороне сервера задается еще одно ограничение, которое не может быть превышено за счет установки данного параметра
   int count;
 
+  /// Не запрашивать точное общее количество строк отдельным SQL-запросом.
+  /// Подходит для бесконечных лент, которые завершают догрузку по короткой странице.
+  bool skipTotalCount;
+
   ///Словарь передаваемых параметров
   Map<String, dynamic>? params;
 
@@ -54,6 +58,7 @@ class NsgDataRequestParams {
     var filter = <String, dynamic>{};
     if (top != 0) filter['Top'] = jsonEncode(top); //.toString();
     if (count != 0) filter['Count'] = jsonEncode(count); //.toString();
+    if (skipTotalCount) filter['SkipTotalCount'] = true;
     if (sorting != null) filter['Sorting'] = jsonEncode(sorting);
     if (referenceList != null) filter['ReadReferences'] = referenceList;
     if (fieldsToRead != null) filter['FieldsToRead'] = fieldsToRead.toString();
@@ -85,6 +90,7 @@ class NsgDataRequestParams {
     return NsgDataRequestParams(
         top: top,
         count: count,
+        skipTotalCount: skipTotalCount,
         params: params != null ? Map<String, dynamic>.from(params!) : null,
         sorting: sorting,
         referenceList: referenceList != null ? List<String>.from(referenceList!) : null,
@@ -98,7 +104,16 @@ class NsgDataRequestParams {
       ..requestId = requestId;
   }
 
-  NsgDataRequestParams({this.top = 0, this.count = 0, this.params, this.sorting, this.referenceList, this.showDeletedObjects = false, NsgCompare? compare}) {
+  NsgDataRequestParams({
+    this.top = 0,
+    this.count = 0,
+    this.skipTotalCount = false,
+    this.params,
+    this.sorting,
+    this.referenceList,
+    this.showDeletedObjects = false,
+    NsgCompare? compare,
+  }) {
     if (compare != null) {
       _compare = compare;
     }
