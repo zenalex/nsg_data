@@ -5,7 +5,8 @@ import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data.dart';
 
 ///Контроллер для управления настройками пользователя
-class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataController<T> {
+class NsgUserSettingsController<T extends NsgUserSettings>
+    extends NsgDataController<T> {
   NsgUserSettingsController({
     super.requestOnInit,
     super.useUpdate,
@@ -43,7 +44,11 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
   //var userSettings = <String, T>{};
 
   ///Сохранить настройку по имени. Если не существует, создаст новую запись.
-  Future<void> setSettingItem(String name, String value, {NsgDataStorageType? storageType}) async {
+  Future<void> setSettingItem(
+    String name,
+    String value, {
+    NsgDataStorageType? storageType,
+  }) async {
     if (getSettingItem(name) == null) {
       var item = await doCreateNewItem() as T;
       item.name = name;
@@ -127,10 +132,17 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
   // }
 
   @override
-  Future<bool> itemPagePost({bool goBack = true, bool useValidation = true, bool enableShowException = true}) async {
+  Future<bool> itemPagePost({
+    bool goBack = true,
+    bool useValidation = true,
+    bool enableShowException = true,
+  }) async {
     (currentItem as NsgUserSettings).settings = jsonEncode(settingsMap);
     currentItem.storageType = controllerMode.storageType;
-    return await super.itemPagePost(goBack: goBack, useValidation: useValidation);
+    return await super.itemPagePost(
+      goBack: goBack,
+      useValidation: useValidation,
+    );
   }
 
   static const String _favoriteSettingsName = '_favorites_';
@@ -180,9 +192,13 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
     if (objFavorite.settings.contains(id)) {
       return;
     }
-    var ids = objFavorite.settings.isEmpty ? [] : objFavorite.settings.split(',');
+    var ids = objFavorite.settings.isEmpty
+        ? []
+        : objFavorite.settings.split(',');
     if (ids.length >= maxFavotrites) {
-      throw Exception("Превышено максимальное число элементов в избранном ($maxFavotrites)");
+      throw Exception(
+        "Превышено максимальное число элементов в избранном ($maxFavotrites)",
+      );
     }
     ids.add(id);
     objFavorite.settings = ids.join(',');
@@ -263,6 +279,9 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
 
       for (var item in _settingsPostingItems) {
         item.state = NsgDataItemState.fill;
+        if (!items.contains(item)) {
+          items.add(item);
+        }
       }
       _settingsPostingItems.clear();
     } catch (e) {
@@ -309,7 +328,10 @@ class NsgUserSettingsController<T extends NsgUserSettings> extends NsgDataContro
   }
 
   @override
-  Future requestItems({List<NsgUpdateKey>? keys, NsgDataRequestParams? filter}) async {
+  Future requestItems({
+    List<NsgUpdateKey>? keys,
+    NsgDataRequestParams? filter,
+  }) async {
     await super.requestItems(keys: keys, filter: filter);
     //Проверка на наличие одинаковых записей
     //В случае обнаружения, дубликаты удаляем

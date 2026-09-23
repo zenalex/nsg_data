@@ -10,12 +10,14 @@
 // `baseRequestList` → асинхронная машинерия → обработчик зоны.
 //
 // Здесь закреплено:
-//  * 401 доходит до обработчика по умолчанию, а вызывающий получает то же
-//    исключение, что и раньше;
-//  * пачка 401 одной сессии — один вызов обработчика (обработчик nsg_controls
-//    рисует диалог на каждый вызов);
-//  * запоздавший ответ прежней сессии не трогает текущую;
-//  * `itemPagePost` не зовёт тот же обработчик второй раз.
+//  * 401 доходит до хука `NsgApiException.onSessionExpired`, а вызывающий
+//    получает то же исключение, что и раньше;
+//  * без хука пакет ведёт себя как до правки — `showExceptionDefault` (диалог
+//    nsg_controls) на загрузке не зовётся;
+//  * пачка 401 одной сессии — один вызов хука;
+//  * запоздавший ответ прежней сессии, анонимная сессия и пустой токен в хук
+//    не идут;
+//  * `itemPagePost` не показывает уже обработанный хуком 401 второй раз.
 
 import 'dart:io';
 
@@ -56,8 +58,11 @@ void main() {
   var status = 401;
   var hits = 0;
 
-  /// Что дошло до обработчика по умолчанию.
+  /// Что дошло до хука истёкшей сессии.
   final routed = <NsgApiException>[];
+
+  /// Что дошло до обработчика по умолчанию (в приложениях — диалог nsg_controls).
+  final shown = <NsgApiException>[];
 
   setUpAll(() async {
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -89,13 +94,16 @@ void main() {
     status = 401;
     hits = 0;
     routed.clear();
+    shown.clear();
     provider.token = 'user-token';
     provider.isAnonymous = false;
     NsgUnauthorizedDispatch.resetForTesting();
-    NsgApiException.showExceptionDefault = routed.add;
+    NsgApiException.onSessionExpired = routed.add;
+    NsgApiException.showExceptionDefault = shown.add;
   });
 
   tearDown(() {
+    NsgApiException.onSessionExpired = null;
     NsgApiException.showExceptionDefault = null;
     NsgUnauthorizedDispatch.resetForTesting();
   });
@@ -116,16 +124,66 @@ void main() {
   }
 
   group('401 из baseRequestList', () {
-    test('доходит до обработчика по умолчанию, а вызывающий получает то же исключение', () async {
+    test('доходит до хука, а вызывающий получает то же исключение', () async {
       final error = await load();
 
       expect(error, isA<NsgApiException>(), reason: 'контракт вызывающих не меняется: 401 по-прежнему бросается');
       expect((error as NsgApiException).error.code, 401);
       expect(routed, hasLength(1), reason: 'до правки обработчик на этом пути не вызывался вовсе');
       expect(identical(routed.single, error), isTrue);
+      expect(shown, isEmpty, reason: 'обработчик по умолчанию сетевой слой не зовёт никогда');
     });
 
-    test('загрузка через NsgDataRequest: один вызов обработчика и без повторов запроса', () async {
+    test('хук не задан — на загрузке не вызывается ничего, как до правки', () async {
+      // showExceptionDefault в nsg_controls — диалог «ERROR 401». Приложения,
+      // которые хук не ставили, не должны начать видеть его при загрузке.
+      NsgApiException.onSessionExpired = null;
+
+      final error = await load();
+
+      expect(error, isA<NsgApiException>());
+      expect((error as NsgApiException).error.code, 401);
+      expect(shown, isEmpty);
+      expect(NsgUnauthorizedDispatch.isRouted(error), isFalse);
+    });
+
+    test('анонимная сессия в хук не идёт', () async {
+      provider.token = 'anon-token';
+      provider.isAnonymous = true;
+
+      final error = await load();
+
+      expect(error, isA<NsgApiException>());
+      expect(routed, isEmpty, reason: 'истекать нечему — это отказ анонимному доступу');
+      expect(NsgUnauthorizedDispatch.isRouted(error as NsgApiException), isFalse);
+    });
+
+    test('хук перевёл провайдер на анонимный токен — следующий 401 в хук не идёт', () async {
+      // Ровно так выходит из сессии приложение: сбрасывает токен и получает
+      // анонимный. 401 уже под ним — не «вторая истёкшая сессия», а повод для
+      // петли выходов.
+      NsgApiException.onSessionExpired = (ex) {
+        routed.add(ex);
+        provider.token = 'anon-token';
+        provider.isAnonymous = true;
+      };
+
+      await load();
+      await load();
+
+      expect(routed, hasLength(1));
+    });
+
+    test('пустой токен в хук не идёт', () async {
+      provider.token = '';
+
+      final error = await load();
+
+      expect(error, isA<NsgApiException>());
+      expect(routed, isEmpty);
+    });
+
+    test('загрузка через NsgDataRequest: один вызов хука и без повторов запроса', () async {
       Object? error;
       try {
         await NsgDataRequest<SessionItem>(dataItemType: SessionItem).requestItems(
@@ -141,16 +199,14 @@ void main() {
       expect(hits, 1, reason: '401 не ретраится — это поведение сохраняем');
     });
 
-    test('пачка параллельных 401 одной сессии — один вызов обработчика', () async {
-      // Экран шлёт запросы пачкой, и протухший токен роняет их все. Обработчик
-      // nsg_controls рисует диалог на каждый вызов — без гашения их было бы три.
+    test('пачка параллельных 401 одной сессии — один вызов хука', () async {
       final errors = await Future.wait([load(), load(), load()]);
 
       expect(errors, everyElement(isA<NsgApiException>()), reason: 'каждый вызывающий по-прежнему узнаёт об отказе');
       expect(routed, hasLength(1));
     });
 
-    test('после окна пачки 401 той же сессии снова доходит до обработчика', () async {
+    test('после окна пачки 401 той же сессии снова доходит до хука', () async {
       var now = DateTime(2026, 9, 14, 12);
       NsgUnauthorizedDispatch.clock = () => now;
 
@@ -167,7 +223,7 @@ void main() {
     test('запоздавший ответ прежней сессии текущую не трогает', () async {
       // Запрос ушёл со старым токеном, а за время ответа сессия сменилась —
       // обработчик первого 401 уже вышел и завёл новую. Отдать этот ответ в
-      // обработчик значило бы выйти из сессии, которая жива.
+      // хук значило бы выйти из сессии, которая жива.
       provider.token = 'new-token';
 
       final error = await load(headers: {'Authorization': 'old-token'});
@@ -175,8 +231,8 @@ void main() {
       expect(error, isA<NsgApiException>());
       expect((error as NsgApiException).error.code, 401);
       expect(routed, isEmpty);
-      expect(NsgUnauthorizedDispatch.isRouted(error), isTrue,
-          reason: 'судьбу этого 401 сетевой слой уже решил — верхний слой не должен переотправить его сам');
+      expect(NsgUnauthorizedDispatch.isRouted(error), isFalse,
+          reason: 'хук этот 401 не видел — верхний слой показывает его как до правки');
     });
 
     test('новая сессия получает свой вызов и внутри окна прежней', () async {
@@ -187,8 +243,8 @@ void main() {
       expect(routed, hasLength(2), reason: 'окно гасит повторы одного токена, а не любой 401');
     });
 
-    test('сбой обработчика не подменяет 401', () async {
-      NsgApiException.showExceptionDefault = (ex) => throw StateError('обработчик упал');
+    test('сбой хука не подменяет 401', () async {
+      NsgApiException.onSessionExpired = (ex) => throw StateError('обработчик упал');
 
       final error = await load();
 
@@ -196,10 +252,10 @@ void main() {
       expect((error as NsgApiException).error.code, 401);
     });
 
-    test('ошибка в async-обработчике не становится необработанной', () async {
-      // nsg_controls ставит сюда async-функцию, а тип поля — void Function:
-      // возвращённый Future иначе выбросился бы вместе со своей ошибкой.
-      NsgApiException.showExceptionDefault = (ex) async => throw StateError('обработчик упал позже');
+    test('ошибка в async-хуке не становится необработанной', () async {
+      // Возвращённый хуком Future иначе остался бы без слушателя, и его ошибка
+      // стала бы необработанной.
+      NsgApiException.onSessionExpired = (ex) async => throw StateError('обработчик упал позже');
 
       final error = await load();
       await pumpEventQueue();
@@ -210,7 +266,7 @@ void main() {
 
   group('другие коды', () {
     for (final code in [403, 500]) {
-      test('$code в обработчик сетевым слоем не отдаётся', () async {
+      test('$code в хук не отдаётся', () async {
         status = code;
 
         final error = await load();
@@ -233,11 +289,31 @@ void main() {
       }
     }
 
-    test('401 при сохранении — обработчик по умолчанию вызывается один раз, а не два', () async {
+    test('401 при сохранении — хук один раз, обработчик по умолчанию не зовётся', () async {
       final error = await post(NsgBaseController(dataType: SessionItem));
 
       expect(error, isA<NsgApiException>());
-      expect(routed, hasLength(1), reason: 'второй вызов дал бы второй диалог или второй выход из сессии');
+      expect(routed, hasLength(1));
+      expect(shown, isEmpty, reason: 'второй путь дал бы диалог «ERROR 401» поверх выхода из сессии');
+    });
+
+    test('хук не задан — 401 при сохранении идёт в обработчик по умолчанию, как до правки', () async {
+      NsgApiException.onSessionExpired = null;
+
+      await post(NsgBaseController(dataType: SessionItem));
+
+      expect(shown, hasLength(1));
+      expect(shown.single.error.code, 401);
+    });
+
+    test('401 анонимной сессии при сохранении идёт в обработчик по умолчанию', () async {
+      provider.token = 'anon-token';
+      provider.isAnonymous = true;
+
+      await post(NsgBaseController(dataType: SessionItem));
+
+      expect(routed, isEmpty);
+      expect(shown, hasLength(1), reason: 'хук этот 401 не видел — гасить его показ нельзя');
     });
 
     test('свой showException контроллера 401 получает как раньше', () async {
@@ -246,7 +322,7 @@ void main() {
 
       await post(controller);
 
-      expect(own, hasLength(1), reason: 'этот обработчик сетевой слой не звал — гасить его нельзя');
+      expect(own, hasLength(1), reason: 'свой обработчик контроллера гашением не затрагивается');
       expect(routed, hasLength(1));
     });
 
@@ -255,8 +331,9 @@ void main() {
 
       await post(NsgBaseController(dataType: SessionItem));
 
-      expect(routed, hasLength(1));
-      expect(routed.single.error.code, 500);
+      expect(routed, isEmpty);
+      expect(shown, hasLength(1));
+      expect(shown.single.error.code, 500);
     });
   });
 }

@@ -3,6 +3,19 @@ import 'package:hive_ce/hive.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// Hive CE on web can keep a stale IndexedDB connection whose schema does not
+/// contain a newly registered box. The browser reports that condition as a
+/// `NotFoundError` instead of a Hive compaction error, but the recovery is the
+/// same: reopen the collection with the current set of box names.
+@visibleForTesting
+bool isRecoverableLocalDbError(Object error) {
+  final message = error.toString().toLowerCase();
+  return message.contains('rename') ||
+      message.contains('compact') ||
+      message.contains('notfounderror') ||
+      message.contains('object store');
+}
+
 class NsgLocalDb {
   late BoxCollection collection;
 
@@ -175,10 +188,13 @@ class NsgLocalDb {
       if (kDebugMode) {
         print('Error opening box $tableName: $e');
       }
-      // If box opening fails due to compaction issues, try to reinitialize database
-      if (e.toString().contains('rename') || e.toString().contains('compact')) {
+      // A stale IndexedDB schema is recovered the same way as a failed Hive
+      // compaction: reopen the collection with the current box registry.
+      if (isRecoverableLocalDbError(e)) {
         if (kDebugMode) {
-          print('Compaction error opening box $tableName, trying to reinitialize database');
+          print(
+            'Recoverable local database error opening box $tableName, trying to reinitialize database',
+          );
         }
         var reinitialized = await _reinitializeDatabase();
         if (reinitialized) {
@@ -232,10 +248,11 @@ class NsgLocalDb {
       if (kDebugMode) {
         print('Error requesting items from database: $e');
       }
-      // If it's a compaction-related error, try to reinitialize database
-      if (e.toString().contains('compact') || e.toString().contains('rename')) {
+      if (isRecoverableLocalDbError(e)) {
         if (kDebugMode) {
-          print('Compaction error during requestItems, trying to reinitialize database');
+          print(
+            'Recoverable local database error during requestItems, trying to reinitialize database',
+          );
         }
         var reinitialized = await _reinitializeDatabase();
         if (reinitialized) {
@@ -338,10 +355,11 @@ class NsgLocalDb {
       if (kDebugMode) {
         print('Error posting items to database: $e');
       }
-      // If it's a compaction-related error, try to reinitialize database
-      if (e.toString().contains('compact') || e.toString().contains('rename')) {
+      if (isRecoverableLocalDbError(e)) {
         if (kDebugMode) {
-          print('Compaction error during postItems, trying to reinitialize database');
+          print(
+            'Recoverable local database error during postItems, trying to reinitialize database',
+          );
         }
         var reinitialized = await _reinitializeDatabase();
         if (reinitialized) {
@@ -377,10 +395,11 @@ class NsgLocalDb {
       if (kDebugMode) {
         print('Error deleting items from database: $e');
       }
-      // If it's a compaction-related error, try to reinitialize database
-      if (e.toString().contains('compact') || e.toString().contains('rename')) {
+      if (isRecoverableLocalDbError(e)) {
         if (kDebugMode) {
-          print('Compaction error during deleteItems, trying to reinitialize database');
+          print(
+            'Recoverable local database error during deleteItems, trying to reinitialize database',
+          );
         }
         var reinitialized = await _reinitializeDatabase();
         if (reinitialized) {

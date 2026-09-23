@@ -746,10 +746,11 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //если это NsgApiExceptuion, то отображаем ошибку пользователю
       if (ex is NsgApiException) {
         var func = showException ?? NsgApiException.showExceptionDefault;
-        // #176: 401 из сетевого слоя уже разведён в обработчик по умолчанию
-        // (NsgUnauthorizedDispatch). Второй вызов того же обработчика дал бы
-        // второй диалог или второй выход из сессии. Свой showException
-        // контроллера этот 401 ещё не видел — его зовём как раньше.
+        // #176: 401 истёкшей сессии сетевой слой уже отдал в хук
+        // NsgApiException.onSessionExpired (NsgUnauthorizedDispatch). Показать его
+        // ещё и обработчиком по умолчанию — второй диалог поверх выхода из
+        // сессии. Свой showException контроллера зовём как раньше; без хука
+        // isRouted всегда false, и всё работает как до #37.
         final alreadyRouted = identical(func, NsgApiException.showExceptionDefault) && NsgUnauthorizedDispatch.isRouted(ex);
 
         if (func != null && showExceptionDialog && enableShowException && !alreadyRouted) {

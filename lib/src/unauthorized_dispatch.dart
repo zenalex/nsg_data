@@ -1,15 +1,16 @@
-// Разводка ответа 401 из сетевого слоя в обработчик ошибок по умолчанию.
+// Разводка ответа 401 из сетевого слоя в хук истёкшей сессии.
 //
 // Файл лежит в `lib/src`: по соглашению Dart это внутренности пакета, из
-// `nsg_data.dart` он не экспортируется. Публичный API пакета правка не меняет —
-// работает только через уже существующий `NsgApiException.showExceptionDefault`.
+// `nsg_data.dart` он не экспортируется. Публичная часть — только хук
+// `NsgApiException.onSessionExpired`; пока он не задан, пакет ведёт себя как
+// до правки.
 
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:nsg_data/nsgApiException.dart';
 
-/// Отказ сервера по авторизации (401) доходит до обработчика по умолчанию.
+/// Отказ сервера по авторизации (401) доходит до хука истёкшей сессии.
 ///
 /// ## Зачем (NSG-SOFT/futbolista-tasks#176)
 ///
@@ -30,18 +31,23 @@ import 'package:nsg_data/nsgApiException.dart';
 /// того как исключение уйдёт вверх. Исключение бросается как и раньше: контракт
 /// вызывающих не меняется.
 ///
-/// ## Почему не на каждый 401
+/// ## Почему отдельный хук, а не `showExceptionDefault`
 ///
-/// Протухшая сессия даёт 401 на КАЖДОМ запросе, а экран обычно шлёт их пачкой.
-/// Обработчик по умолчанию из nsg_controls (`NsgErrorWidget.showError`) рисует
-/// диалог на каждый вызов, так что без гашения повторов получилась бы стопка
-/// диалогов. Поэтому:
+/// `showExceptionDefault` в nsg_controls — `NsgErrorWidget.showError`, диалог
+/// «ERROR 401». Отдать туда 401 загрузки значило бы поменять поведение всех
+/// NSG-приложений, которые своего обработчика сессии не ставили. Поэтому хук
+/// отдельный и по умолчанию выключен.
 ///
-///  * ответ на запрос, отправленный с токеном, который уже не текущий, в
-///    обработчик не идёт: той сессии уже нет, и о текущей такой ответ ничего не
-///    говорит. Иначе запоздавший ответ разлогинил бы сессию, заведённую уже ПОСЛЕ
-///    обработки первого 401;
-///  * 401 одного и того же токена в пределах [burstWindow] доходят один раз.
+/// ## Когда хук НЕ зовётся
+///
+///  * токен пустой или сессия анонимная: истекать нечему — это не «сессия
+///    пользователя кончилась», а отказ анонимному доступу;
+///  * запрос ушёл с токеном, который уже не текущий: той сессии уже нет, и о
+///    текущей такой ответ ничего не говорит. Иначе запоздавший ответ разлогинил
+///    бы сессию, заведённую уже ПОСЛЕ обработки первого 401. Раз токен тот же —
+///    и сессия та же, поэтому флаг `isAnonymous` в момент ответа относится к ней;
+///  * 401 того же токена в пределах [burstWindow] после предыдущего: протухшая
+///    сессия роняет пачку запросов экрана, а хук нужен один раз.
 class NsgUnauthorizedDispatch {
   NsgUnauthorizedDispatch._();
 
@@ -52,46 +58,51 @@ class NsgUnauthorizedDispatch {
   @visibleForTesting
   static DateTime Function() clock = DateTime.now;
 
-  /// Исключения, судьбу которых уже решил сетевой слой: отдал в обработчик по
-  /// умолчанию или сознательно не отдал (повтор пачки, устаревшая сессия).
+  /// Исключения, которые прошли через хук: отданы в него или погашены как
+  /// повтор пачки, которую хук уже получил.
   static final Expando<bool> _routed = Expando<bool>('nsgUnauthorizedRouted');
 
   static String? _lastToken;
   static DateTime? _lastAt;
 
-  /// `true`, если 401 уже прошёл через [route]. Верхний слой по этому признаку не
-  /// зовёт тот же обработчик по умолчанию второй раз.
+  /// `true`, если 401 уже обработан хуком [NsgApiException.onSessionExpired].
+  /// Верхний слой (`itemPagePost`) по этому признаку не показывает тот же 401
+  /// вторым путём. Без хука всегда `false`.
   static bool isRouted(NsgApiException ex) => _routed[ex] ?? false;
 
-  /// Отдать 401 в `NsgApiException.showExceptionDefault`.
+  /// Отдать 401 в [NsgApiException.onSessionExpired], если он задан.
   ///
-  /// [sentToken] — токен, с которым ушёл запрос; [currentToken] — токен
-  /// провайдера в момент ответа. Сбой самого обработчика — синхронный или в
+  /// [sentToken] — токен, с которым ушёл запрос; [currentToken] и [isAnonymous] —
+  /// состояние провайдера в момент ответа. Сбой самого хука — синхронный или в
   /// возвращённом им Future — не подменяет 401 и не становится необработанной
   /// ошибкой.
-  static void route(NsgApiException ex, {required String sentToken, required String currentToken}) {
-    _routed[ex] = true;
+  static void route(
+    NsgApiException ex, {
+    required String sentToken,
+    required String currentToken,
+    required bool isAnonymous,
+  }) {
+    final hook = NsgApiException.onSessionExpired;
+    if (hook == null) return;
+    if (sentToken.isEmpty) return;
 
     if (sentToken != currentToken) {
       debugPrint('[nsg_data] 401 на запрос прежней сессии — текущую не трогаем');
       return;
     }
+    if (isAnonymous) return;
 
+    _routed[ex] = true;
     final now = clock();
     final lastAt = _lastAt;
     if (_lastToken == sentToken && lastAt != null && now.difference(lastAt) < burstWindow) {
       return;
     }
-
-    final handler = NsgApiException.showExceptionDefault;
-    if (handler == null) return;
     _lastToken = sentToken;
     _lastAt = now;
 
     try {
-      // Тип обработчика — `void Function`, но nsg_controls ставит туда async-функцию.
-      // Её Future иначе выбросился бы, и ошибка в нём стала бы необработанной.
-      final Object? result = Function.apply(handler, <Object?>[ex]);
+      final result = hook(ex);
       if (result is Future) {
         unawaited(result.then<void>((_) {}, onError: (Object e, StackTrace s) {
           debugPrint('[nsg_data] обработчик 401 упал: $e\n$s');
