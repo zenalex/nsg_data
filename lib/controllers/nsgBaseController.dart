@@ -8,6 +8,7 @@ import 'package:nsg_data/controllers/nsg_controller_filter.dart';
 import 'package:nsg_data/nsg_data.dart';
 import 'package:get/get.dart';
 import 'package:nsg_data/nsg_data_delete.dart';
+import 'package:nsg_data/src/unauthorized_dispatch.dart';
 import 'nsg_controller_regime.dart';
 import 'nsg_posted_items_merge.dart';
 
@@ -745,8 +746,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //если это NsgApiExceptuion, то отображаем ошибку пользователю
       if (ex is NsgApiException) {
         var func = showException ?? NsgApiException.showExceptionDefault;
+        // #176: 401 истёкшей сессии сетевой слой уже отдал в хук
+        // NsgApiException.onSessionExpired (NsgUnauthorizedDispatch). Показать его
+        // ещё и обработчиком по умолчанию — второй диалог поверх выхода из
+        // сессии. Свой showException контроллера зовём как раньше; без хука
+        // isRouted всегда false, и всё работает как до #37.
+        final alreadyRouted = identical(func, NsgApiException.showExceptionDefault) && NsgUnauthorizedDispatch.isRouted(ex);
 
-        if (func != null && showExceptionDialog && enableShowException) {
+        if (func != null && showExceptionDialog && enableShowException && !alreadyRouted) {
           func(ex);
         }
       }

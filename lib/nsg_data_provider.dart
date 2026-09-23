@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'authorize/nsg_login_model.dart';
 import 'authorize/nsg_login_response.dart';
 import 'nsgApiPermissionException.dart';
+import 'src/unauthorized_dispatch.dart';
 
 /// Достать текст ошибки, который прислал СЕРВЕР, из тела ответа Dio.
 ///
@@ -561,13 +562,25 @@ class NsgDataProvider {
         );
       }
       if (e.response?.statusCode == 401) {
-        throw NsgApiException(
+        final ex = NsgApiException(
           NsgApiError(
             code: 401,
             message: 'Authorization error',
             errorType: e.type,
           ),
         );
+        // #176: 401 истёкшей сессии обязан дойти до обработчика и тогда, когда
+        // вызывающий его не ловит. На вебе необработанное исключение уходит в
+        // window.onerror мимо любого дартового хука — перехватить его выше по
+        // стеку нельзя. Хук NsgApiException.onSessionExpired по умолчанию не
+        // задан — тогда ничего не меняется. Подробности — NsgUnauthorizedDispatch.
+        NsgUnauthorizedDispatch.route(
+          ex,
+          sentToken: headers?['Authorization'] ?? '',
+          currentToken: token,
+          isAnonymous: isAnonymous,
+        );
+        throw ex;
       }
       if (e.response?.statusCode == 409) {
         // 409 Conflict - объект временно недоступен для записи (edit-lock на сервере).

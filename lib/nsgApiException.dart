@@ -1,5 +1,7 @@
 // ignore_for_file: file_names
 
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:nsg_data/nsgDataApiError.dart';
 
@@ -12,6 +14,15 @@ class NsgApiException implements Exception {
   ///Функция для отображения ошибок пользователю, используемая по-умолчанию. Задается в пакете nsg_controls
   ///Также, ее можно задать для каждого конкретного контроллера
   static void Function(NsgApiException)? showExceptionDefault;
+
+  /// Истёкшая сессия пользователя: 401 на запрос с НЕанонимным, непустым токеном,
+  /// который всё ещё текущий. null — пакет ничего не делает (поведение до #37).
+  ///
+  /// Вызывается сетевым слоем (`NsgDataProvider.baseRequestList`) на любом
+  /// запросе — загрузке, сохранении, удалении — до того, как 401 уйдёт
+  /// вызывающему. Пачка 401 одной сессии доходит сюда один раз. Исключение
+  /// вызывающему бросается как и раньше. См. NSG-SOFT/futbolista-tasks#176.
+  static FutureOr<void> Function(NsgApiException ex)? onSessionExpired;
 
   /// `true`, если серверная ошибка — это бизнес-ограничение прав на запись,
   /// а не сбой инфраструктуры. Предпочтительный способ проверки в коде —
