@@ -84,7 +84,7 @@ void main() {
     late String baseUrl;
 
     setUp(() async {
-      // Ниже — поведение ВКЛЮЧЁННОЙ проверки; выключенная (по умолчанию) —
+      // Ниже — поведение ВКЛЮЧЁННОЙ проверки (по умолчанию); выключенная —
       // в группе «проверка выключена».
       NsgDataProvider.verifyCertificates = true;
       final context = SecurityContext()
@@ -117,7 +117,7 @@ void main() {
       NsgDataProvider.allowBadCertificateHosts.clear();
       NsgDataProvider.debugBuildOverride = null;
       NsgDataProvider.allowBadCertificateInDebug = true;
-      NsgDataProvider.verifyCertificates = false;
+      NsgDataProvider.verifyCertificates = true;
     });
 
     /// Отказ должен быть именно сертификатным, а не «сервер не поднялся».
@@ -130,14 +130,14 @@ void main() {
       );
     }
 
-    group('проверка выключена (по умолчанию)', () {
+    group('проверка выключена (приложение отключило её у себя)', () {
       setUp(() {
         NsgDataProvider.verifyCertificates = false;
         NsgDataProvider.debugBuildOverride = false;
       });
 
-      test('по умолчанию проверка выключена', () {
-        expect(verifyByDefault, isFalse);
+      test('по умолчанию проверка включена', () {
+        expect(verifyByDefault, isTrue);
         expect(NsgDataProvider.shouldAcceptBadCertificate('data1.futbolista.me', isDebugBuild: false), isTrue);
       });
 
@@ -228,7 +228,7 @@ void main() {
       NsgDataProvider.allowBadCertificateHosts.clear();
       NsgDataProvider.debugBuildOverride = null;
       NsgDataProvider.allowBadCertificateInDebug = true;
-      NsgDataProvider.verifyCertificates = false;
+      NsgDataProvider.verifyCertificates = true;
     });
 
     test('релиз без списка — отказ (значение по умолчанию)', () {
