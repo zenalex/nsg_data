@@ -74,6 +74,9 @@ eLs0I47A5FC1QitWscsRqX7UrQ==
 ''';
 
 void main() {
+  // Снято до любых setUp — они переключают флаг.
+  final verifyByDefault = NsgDataProvider.verifyCertificates;
+
   group('проверка TLS-сертификата', () {
     late HttpServer server;
     late NsgDataProvider provider;
@@ -81,6 +84,9 @@ void main() {
     late String baseUrl;
 
     setUp(() async {
+      // Ниже — поведение ВКЛЮЧЁННОЙ проверки (по умолчанию); выключенная —
+      // в группе «проверка выключена».
+      NsgDataProvider.verifyCertificates = true;
       final context = SecurityContext()
         ..useCertificateChainBytes(utf8.encode(_selfSignedCert))
         ..usePrivateKeyBytes(utf8.encode(_selfSignedKey));
@@ -111,14 +117,37 @@ void main() {
       NsgDataProvider.allowBadCertificateHosts.clear();
       NsgDataProvider.debugBuildOverride = null;
       NsgDataProvider.allowBadCertificateInDebug = true;
+      NsgDataProvider.verifyCertificates = true;
     });
 
     /// Отказ должен быть именно сертификатным, а не «сервер не поднялся».
     void expectCertificateRefusal(NsgApiException e) {
       final message = e.error.message ?? '';
-      expect(message, matches(RegExp('handshake|certificate', caseSensitive: false)),
-          reason: 'ждали отказ по сертификату, а получили: $message');
+      expect(
+        message,
+        matches(RegExp('handshake|certificate', caseSensitive: false)),
+        reason: 'ждали отказ по сертификату, а получили: $message',
+      );
     }
+
+    group('проверка выключена (приложение отключило её у себя)', () {
+      setUp(() {
+        NsgDataProvider.verifyCertificates = false;
+        NsgDataProvider.debugBuildOverride = false;
+      });
+
+      test('по умолчанию проверка включена', () {
+        expect(verifyByDefault, isTrue);
+        expect(NsgDataProvider.shouldAcceptBadCertificate('data1.futbolista.me', isDebugBuild: false), isTrue);
+      });
+
+      test('релиз принимает самоподписанный сертификат, как до 09.2026', () async {
+        // Иначе на машинах без автообновления корней Windows приложение не
+        // подключается к серверу (АРМ Титан 112 0.3.7).
+        final result = await provider.baseRequest(url: '$baseUrl/ping', method: 'GET');
+        expect(result, {'ok': true});
+      });
+    });
 
     group('релизная сборка', () {
       setUp(() => NsgDataProvider.debugBuildOverride = false);
@@ -156,16 +185,18 @@ void main() {
         NsgDataProvider.allowBadCertificateHosts.add(host);
 
         final result = await provider.baseRequest(url: '$baseUrl/ping', method: 'GET');
-        expect(result, {'ok': true},
-            reason: 'стенд на самоподписанном сертификате остаётся рабочим — точечно');
+        expect(result, {'ok': true}, reason: 'стенд на самоподписанном сертификате остаётся рабочим — точечно');
       });
 
       test('послабление точечное: соседний хост не наследует доверие', () {
         NsgDataProvider.allowBadCertificateHosts.add(host);
 
         expect(NsgDataProvider.shouldAcceptBadCertificate(host, isDebugBuild: false), isTrue);
-        expect(NsgDataProvider.shouldAcceptBadCertificate('data1.futbolista.me', isDebugBuild: false), isFalse,
-            reason: 'боевой адрес проверяется в том же самом релизе');
+        expect(
+          NsgDataProvider.shouldAcceptBadCertificate('data1.futbolista.me', isDebugBuild: false),
+          isFalse,
+          reason: 'боевой адрес проверяется в том же самом релизе',
+        );
       });
     });
 
@@ -192,10 +223,12 @@ void main() {
   });
 
   group('shouldAcceptBadCertificate — решение по хосту', () {
+    setUp(() => NsgDataProvider.verifyCertificates = true);
     tearDown(() {
       NsgDataProvider.allowBadCertificateHosts.clear();
       NsgDataProvider.debugBuildOverride = null;
       NsgDataProvider.allowBadCertificateInDebug = true;
+      NsgDataProvider.verifyCertificates = true;
     });
 
     test('релиз без списка — отказ (значение по умолчанию)', () {
@@ -211,8 +244,11 @@ void main() {
       NsgDataProvider.allowBadCertificateHosts.add('stand.local');
 
       expect(NsgDataProvider.shouldAcceptBadCertificate('STAND.local', isDebugBuild: false), isTrue);
-      expect(NsgDataProvider.shouldAcceptBadCertificate('stand.local.evil.com', isDebugBuild: false), isFalse,
-          reason: 'совпадение целиком, а не по префиксу');
+      expect(
+        NsgDataProvider.shouldAcceptBadCertificate('stand.local.evil.com', isDebugBuild: false),
+        isFalse,
+        reason: 'совпадение целиком, а не по префиксу',
+      );
     });
 
     test('список пуст по умолчанию — молчаливого доверия нет ни у кого', () {
