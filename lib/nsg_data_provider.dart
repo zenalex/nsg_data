@@ -556,6 +556,11 @@ class NsgDataProvider {
           cancelToken: dioCancelToken,
         );
       }
+      NsgRequestOutcome.notify(
+        url: url,
+        function: function,
+        statusCode: response.statusCode,
+      );
       if (isDebug) {
         counter.difStart(
           paramName: 'baseRequestList, function=$function. ',
@@ -564,6 +569,7 @@ class NsgDataProvider {
       }
       return response.data;
     } on DioException catch (e) {
+      NsgRequestOutcome.notifyDio(e, url: url, function: function);
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       if (e.response != null) {
         debugPrint('statusCode: ${e.response?.statusCode}');
@@ -693,6 +699,7 @@ class NsgDataProvider {
         );
       }
     } catch (e) {
+      NsgRequestOutcome.notify(url: url, function: function, error: e);
       debugPrint(
         'network error. function: $function, error: $function + '
         ' + $e',
@@ -785,9 +792,15 @@ class NsgDataProvider {
       //   print('HTTP STATUS: ${response.statusCode}');
       //   print(response.data);
       // }
+      NsgRequestOutcome.notify(
+        url: url,
+        function: function,
+        statusCode: response.statusCode,
+      );
       var curData = response.data;
       return curData;
     } on DioException catch (e) {
+      NsgRequestOutcome.notifyDio(e, url: url, function: function);
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       throw NsgApiException(
         NsgApiError(
@@ -801,6 +814,7 @@ class NsgDataProvider {
         ),
       );
     } catch (e) {
+      NsgRequestOutcome.notify(url: url, function: function, error: e);
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
     }
@@ -847,6 +861,11 @@ class NsgDataProvider {
           options: Options(responseType: ResponseType.bytes),
         );
       }
+      NsgRequestOutcome.notify(
+        url: url,
+        function: function,
+        statusCode: response.statusCode,
+      );
       if (debug) {
         debugPrint('HTTP STATUS: ${response.statusCode}');
         //print(response.data);
@@ -854,6 +873,7 @@ class NsgDataProvider {
 
       return response.data!;
     } on DioException catch (e) {
+      NsgRequestOutcome.notifyDio(e, url: url, function: function);
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       throw NsgApiException(
         NsgApiError(
@@ -866,6 +886,7 @@ class NsgDataProvider {
         ),
       );
     } catch (e) {
+      NsgRequestOutcome.notify(url: url, function: function, error: e);
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
     }
