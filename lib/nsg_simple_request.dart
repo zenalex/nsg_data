@@ -75,7 +75,12 @@ class NsgSimpleRequest<T extends Object> {
     if (cancelToken != null && externalCancelToken != cancelToken && !cancelToken!.isCalceled) {
       cancelToken!.calcel();
     }
-    cancelToken ??= NsgCancelToken();
+    // Новый токен на КАЖДУЮ попытку. Раньше здесь стояло `??=`: повтор из
+    // autoRepeate отменял токен предыдущей попытки строкой выше и тут же брал
+    // его же, уже отменённый, — запрос падал отменой, не уходя на сервер, и
+    // вызывающий получал «Internet connection error» вместо ответа сервера
+    // (NSG-SOFT/futbolista-tasks#2438).
+    cancelToken = NsgCancelToken();
     var filterMap = <String, dynamic>{};
 
     filter ??= NsgDataRequestParams();
