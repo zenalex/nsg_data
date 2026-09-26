@@ -225,6 +225,7 @@ class NsgLocalDb {
         for (var mapKey in valueMap.keys) {
           var item = NsgDataClient.client.getNewObject(dataItem.runtimeType);
           item.fromJson(valueMap[mapKey]!.cast());
+          await _restoreTableRows(item);
           item.storageType = NsgDataStorageType.local;
           if (params.compare.isValid(item)) {
             items.add(item);
@@ -236,6 +237,7 @@ class NsgLocalDb {
           if (mapValue == null) continue;
           var item = NsgDataClient.client.getNewObject(dataItem.runtimeType);
           item.fromJson(mapValue.cast());
+          await _restoreTableRows(item);
           item.storageType = NsgDataStorageType.local;
           if (params.compare.isValid(item)) {
             items.add(item);
@@ -264,6 +266,33 @@ class NsgLocalDb {
         }
       }
       rethrow;
+    }
+  }
+
+  /// Local storage keeps table parts in their own boxes and stores only row
+  /// ids in the owner map. Hydrate those ids before returning the owner; a
+  /// caller must never receive correctly-sized but field-empty table rows.
+  Future<void> _restoreTableRows(NsgDataItem item) async {
+    for (final entry in item.fieldList.fields.entries) {
+      final field = entry.value;
+      if (field is! NsgDataReferenceListField) continue;
+
+      final placeholders = item.getFieldValue(entry.key, allowNullValue: true);
+      if (placeholders is! List || placeholders.isEmpty) continue;
+      final ids = placeholders.whereType<NsgDataItem>().map((row) => row.id).where((id) => id.isNotEmpty).toList();
+      if (ids.isEmpty) continue;
+
+      final rowBox = await getTable(field.referentElementType.toString());
+      final storedRows = await rowBox.getAll(ids);
+      final rowMaps = <Map<String, dynamic>>[];
+      for (final storedRow in storedRows) {
+        if (storedRow == null) continue;
+        rowMaps.add(storedRow.cast<String, dynamic>());
+      }
+      item.setFieldValue(entry.key, rowMaps);
+      for (final row in item.getFieldValue(entry.key) as List<NsgDataItem>) {
+        row.storageType = NsgDataStorageType.local;
+      }
     }
   }
 
@@ -346,7 +375,7 @@ class NsgLocalDb {
         for (var name in tableFields) {
           var list = item[name] as List<NsgDataItem>;
           if (list.isNotEmpty) {
-            postItems(list);
+            await postItems(list);
           }
         }
       }
