@@ -13,7 +13,29 @@ bool isRecoverableLocalDbError(Object error) {
   return message.contains('rename') ||
       message.contains('compact') ||
       message.contains('notfounderror') ||
-      message.contains('object store');
+      message.contains('object store') ||
+      message.contains('database connection is closing') ||
+      (message.contains('invalidstateerror') &&
+          message.contains('idbdatabase'));
+}
+
+/// Makes recovery single-flight: every operation that hits the same closing
+/// IndexedDB connection waits for one reopen attempt and retries afterwards.
+@visibleForTesting
+class LocalDbReinitializationGate {
+  Future<bool>? _active;
+
+  Future<bool> run(Future<bool> Function() reinitialize) {
+    final active = _active;
+    if (active != null) return active;
+
+    late final Future<bool> tracked;
+    tracked = reinitialize().whenComplete(() {
+      if (identical(_active, tracked)) _active = null;
+    });
+    _active = tracked;
+    return tracked;
+  }
 }
 
 class NsgLocalDb {
@@ -33,7 +55,7 @@ class NsgLocalDb {
   static bool _collectionReady = false;
   static int _currentIteration = 0;
   static String _currentDatabaseName = '';
-  static bool _reinitInProgress = false;
+  static final _reinitializationGate = LocalDbReinitializationGate();
   static DateTime? _lastReinitTime;
   static const Duration _reinitCooldown = Duration(milliseconds: 500);
   final Set<String> _additionalBoxNames = {};
@@ -102,27 +124,25 @@ class NsgLocalDb {
   }
 
   /// Переинициализация базы данных с новой итерацией при ошибках
-  Future<bool> _reinitializeDatabase() async {
+  Future<bool> _reinitializeDatabase() =>
+      _reinitializationGate.run(_performReinitialization);
+
+  Future<bool> _performReinitialization() async {
     if (!initialized || _currentDatabaseName.isEmpty) {
       return false;
     }
 
-    // Cooldown and concurrency guard
-    if (_reinitInProgress) {
-      if (kDebugMode) {
-        print('Reinitialization is already in progress, skipping');
-      }
-      return false;
-    }
+    // Cooldown prevents a broken store from starting an unbounded reopen loop.
+    // Concurrent callers are handled by [_reinitializeDatabase] and await the
+    // same attempt instead of continuing against the closing connection.
     final now = DateTime.now();
-    if (_lastReinitTime != null && now.difference(_lastReinitTime!) < _reinitCooldown) {
+    if (_lastReinitTime != null &&
+        now.difference(_lastReinitTime!) < _reinitCooldown) {
       if (kDebugMode) {
         print('Reinitialization cooldown active, skipping');
       }
       return false;
     }
-    _reinitInProgress = true;
-
     _currentIteration++;
     if (_currentIteration >= 10) {
       if (kDebugMode) {
@@ -131,7 +151,6 @@ class NsgLocalDb {
       initialized = false; // Отключаем локальную БД
       _collectionReady = false;
       tables.clear();
-      _reinitInProgress = false;
       _lastReinitTime = DateTime.now();
       return false;
     }
@@ -166,7 +185,6 @@ class NsgLocalDb {
       }
       return false;
     } finally {
-      _reinitInProgress = false;
       _lastReinitTime = DateTime.now();
     }
   }
@@ -316,7 +334,9 @@ class NsgLocalDb {
     if (itemsToPost.isEmpty) {
       return;
     }
-    if (!_collectionReady) return; // #600: локальная БД недоступна — тихо выходим
+    if (!_collectionReady) {
+      return; // #600: локальная БД недоступна — тихо выходим
+    }
     var firstItem = itemsToPost.first;
     var box = await getTable(firstItem.typeName);
 
@@ -408,7 +428,9 @@ class NsgLocalDb {
     if (itemsToDelete.isEmpty) {
       return;
     }
-    if (!_collectionReady) return; // #600: локальная БД недоступна — тихо выходим
+    if (!_collectionReady) {
+      return; // #600: локальная БД недоступна — тихо выходим
+    }
     var firstItem = itemsToDelete.first;
     var box = await getTable(firstItem.typeName);
     var ids = <String>[];
