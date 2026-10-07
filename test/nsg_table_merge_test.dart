@@ -162,6 +162,25 @@ void main() {
       expect(cached.pages.rows.map((e) => e.id).toList(), ['r1', 'r2']);
     });
 
+    test('строки без id не сливаются в одну', () {
+      //Так приходят строки из json: id сервер не выдал, addRow не вызывался.
+      MrgNews fromJsonRows(List<String> names) => MrgNews()
+        ..id = 'n1'
+        ..setFieldValue(MrgNews.nameTable, [
+          for (final n in names)
+            MrgRow()
+              ..name = n
+              ..state = NsgDataItemState.fill
+              ..docState = NsgDataItemDocState.saved,
+        ]);
+
+      final cached = fromJsonRows(['31.05', '27.05', '04.05']);
+      cached.copyFieldValues(fromJsonRows(['31.05', '27.05', '04.05']));
+
+      expect(cached.pages.rows.map((e) => e.name).toList(), ['31.05', '27.05', '04.05']);
+      expect(cached.pages.rows.toSet().length, 3, reason: 'одна и та же строка не должна повторяться');
+    });
+
     test('клон объекта с таблицей сохраняет все строки', () {
       final cached = newsWith('n1', [savedRow('r1', 'а', 'n1'), savedRow('r2', 'б', 'n1')]);
 

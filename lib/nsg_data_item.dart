@@ -978,15 +978,19 @@ class NsgDataItem {
             //прежнюю за основу и накладываем сверху свежую - те же правила слияния,
             //что и для объектов. При cloneAsCopy сопоставлять не по чему: там строкам
             //раздаются новые id.
+            //Строки без id (сервер не выдал, например вычисляемые строки истории
+            //баланса в ЛК Титана) сопоставлять тоже не по чему: все они попали бы
+            //в одну прежнюю строку, и на экране N раз повторилась бы последняя.
+            //По той же причине прежняя строка забирается из словаря один раз.
             final previousRows = <String, NsgDataItem>{};
             if (!cloneAsCopy && isTableLoaded(translateKey)) {
               for (var row in newTable.allRows) {
-                previousRows[row.id] = row;
+                if (row.isNotEmpty) previousRows[row.id] = row;
               }
             }
             newTable.clear();
             for (var row in curTable.allRows) {
-              var previous = previousRows[row.id];
+              var previous = row.isNotEmpty ? previousRows.remove(row.id) : null;
               if (previous != null) {
                 previous.copyFieldValues(row);
                 newTable.addRow(previous);
