@@ -234,7 +234,11 @@ class NsgDataRequest<T extends NsgDataItem> {
             throw _malformedResponse(url: url, what: 'Ожидался массив объектов.', got: response);
           }
           items = _fromJsonList(response, url: url).cast();
-          NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+          //#2253: readDetached — отвязанное чтение, кэш не трогаем, чтобы не
+          //затереть несохранённые правки в уже кэшированном объекте того же id.
+          if (!filter.readDetached) {
+            NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+          }
 
           //Check referent field list
           await loadAllReferents(items, filter.referenceList, tag: tag);
@@ -298,7 +302,9 @@ class NsgDataRequest<T extends NsgDataItem> {
       elem.isReadFromServer = true;
       items.add(elem as T);
     }
-    NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+    if (!filter.readDetached) {
+      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+    }
     await loadAllReferents(items, filter.referenceList, tag: tag);
     return items;
   }
@@ -342,7 +348,9 @@ class NsgDataRequest<T extends NsgDataItem> {
     items = (await NsgLocalDb.instance.requestItems(dataItem, filter)).cast();
 
     try {
-      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+      if (!filter.readDetached) {
+        NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+      }
 
       //Check referent field list
       await loadAllReferents(items, loadReference, tag: tag, readTableParts: true);
@@ -438,7 +446,8 @@ class NsgDataRequest<T extends NsgDataItem> {
     var newItems = <NsgDataItem>[];
     //Все новые элементы, включая дочитанные объекты для поиска строк табличных частей
     var allItems = <NsgDataItem>[];
-    var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty);
+    var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty) &&
+        !(filter?.readDetached ?? false);
     //#1394: сужение может быть задано и устаревшим fieldsToRead, и neededFields.
     //Разметка emptyFields раньше учитывала только первый, поэтому на neededFields
     //обращение к незапрошенному полю молча отдавало defaultValue даже в debug.
@@ -600,6 +609,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           referenceList: filter.referenceList,
           compare: filter.compare,
           showDeletedObjects: filter.showDeletedObjects,
+          readDetached: filter.readDetached,
         );
       }
     }
