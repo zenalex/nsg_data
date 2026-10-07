@@ -241,7 +241,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
 
           //Check referent field list
-          await loadAllReferents(items, filter.referenceList, tag: tag);
+          await loadAllReferents(items, filter.referenceList, tag: tag, readDetached: filter.readDetached);
         }
       }
     } catch (e) {
@@ -305,7 +305,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (!filter.readDetached) {
       NsgDataClient.client.addItemsToCache(items: items, tag: tag);
     }
-    await loadAllReferents(items, filter.referenceList, tag: tag);
+    await loadAllReferents(items, filter.referenceList, tag: tag, readDetached: filter.readDetached);
     return items;
   }
 
@@ -353,7 +353,7 @@ class NsgDataRequest<T extends NsgDataItem> {
       }
 
       //Check referent field list
-      await loadAllReferents(items, loadReference, tag: tag, readTableParts: true);
+      await loadAllReferents(items, loadReference, tag: tag, readTableParts: true, readDetached: filter.readDetached);
     } catch (e) {
       debugPrint(e.toString());
       rethrow;
@@ -536,7 +536,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
       }
     });
-    await loadAllReferents(newItems, loadReference, tag: tag);
+    await loadAllReferents(newItems, loadReference, tag: tag, readDetached: filter?.readDetached ?? false);
     return newItems;
   }
 
@@ -601,17 +601,13 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (filter == null) {
         newFilter = NsgDataRequestParams(count: 1);
       } else {
-        newFilter = NsgDataRequestParams(
-          top: filter.top,
-          count: 1,
-          params: filter.params,
-          sorting: filter.sorting,
-          referenceList: filter.referenceList,
-          compare: filter.compare,
-          showDeletedObjects: filter.showDeletedObjects,
-          readDetached: filter.readDetached,
-        );
+        //Клонируем, а не перечисляем поля вручную: ручная копия теряла
+        //neededFields/fieldsToRead/readDetached/requestId (#2253).
+        newFilter = filter.clone()..count = 1;
       }
+    } else {
+      //#2253: без addCount переданный фильтр раньше молча выбрасывался.
+      newFilter = filter;
     }
     var data = await requestItems(
       filter: newFilter,
@@ -633,7 +629,8 @@ class NsgDataRequest<T extends NsgDataItem> {
     return data[0];
   }
 
-  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference, {String tag = '', bool readTableParts = true}) async {
+  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference,
+      {String tag = '', bool readTableParts = true, bool readDetached = false}) async {
     if (items.isEmpty || loadReference == null || loadReference.isEmpty) {
       return;
     }
@@ -667,7 +664,7 @@ class NsgDataRequest<T extends NsgDataItem> {
               value: refList,
               comparisonOperator: NsgComparisonOperator.inList,
             );
-            var filter = NsgDataRequestParams(compare: cmp);
+            var filter = NsgDataRequestParams(compare: cmp, readDetached: readDetached);
             //print('field.referentElementType ${field.referentElementType}');
             if (storageType == NsgDataStorageType.server) {
               refItems = await request.requestItems(filter: filter, loadReference: []);
@@ -704,7 +701,7 @@ class NsgDataRequest<T extends NsgDataItem> {
               var request = NsgDataRequest(dataItemType: refType);
               var cmp = NsgCompare();
               cmp.add(name: NsgDataClient.client.getNewObject(refType).primaryKeyField, value: refList, comparisonOperator: NsgComparisonOperator.inList);
-              var filter = NsgDataRequestParams(compare: cmp);
+              var filter = NsgDataRequestParams(compare: cmp, readDetached: readDetached);
               if (storageType == NsgDataStorageType.server) {
                 refItems = await request.requestItems(filter: filter, loadReference: []);
               } else {
@@ -752,7 +749,7 @@ class NsgDataRequest<T extends NsgDataItem> {
             list.add(item);
           }
           for (var key in mapData.keys) {
-            await loadAllReferents(mapData[key]!, [splitedName.join('.')], tag: tag);
+            await loadAllReferents(mapData[key]!, [splitedName.join('.')], tag: tag, readDetached: readDetached);
           }
         }
       }

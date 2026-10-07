@@ -43,11 +43,37 @@ class DetRow extends NsgDataItem {
   set ownerId(String value) => setFieldValue(NsgDataItem.nameOwnerId, value);
 }
 
+class DetCoach extends NsgDataItem {
+  static const nameId = 'id';
+  static const nameName = 'name';
+
+  @override
+  String get typeName => 'DetCoach';
+
+  @override
+  String get apiRequestItems => '/Api/DetCoach';
+
+  @override
+  void initialize() {
+    addField(NsgDataStringField(nameId), primaryKey: true);
+    addField(NsgDataStringField(nameName), primaryKey: false);
+  }
+
+  @override
+  NsgDataItem getNewObject() => DetCoach();
+
+  @override
+  String get id => getFieldValue(nameId).toString();
+  @override
+  set id(String value) => setFieldValue(nameId, value);
+}
+
 class DetItem extends NsgDataItem {
   static const nameId = 'id';
   static const nameName = 'name';
   static const nameCity = 'city';
   static const nameRows = 'rows';
+  static const nameCoachId = 'coachId';
 
   @override
   String get typeName => 'DetItem';
@@ -61,6 +87,7 @@ class DetItem extends NsgDataItem {
     addField(NsgDataStringField(nameName), primaryKey: false);
     addField(NsgDataStringField(nameCity), primaryKey: false);
     addField(NsgDataReferenceListField<DetRow>(nameRows), primaryKey: false);
+    addField(NsgDataReferenceField<DetCoach>(nameCoachId), primaryKey: false);
   }
 
   @override
@@ -79,25 +106,40 @@ void main() {
   late NsgDataProvider provider;
 
   /// Ответ «сервера»: одна и та же версия объекта на каждый запрос.
-  List<Map<String, dynamic>> serverPayload() => [
+  /// Переопределяется в тестах, где нужен другой состав ответа.
+  var payload = <Map<String, dynamic>>[];
+  var coachPayload = <Map<String, dynamic>>[];
+
+  List<Map<String, dynamic>> defaultPayload() => [
         {
           'id': 'T1',
           'name': 'Спартак-сервер',
           'city': 'Москва-сервер',
+          'coachId': 'C1',
           'rows': [
             {'id': 'R1', 'ownerId': 'T1', 'text': 'строка-сервер'},
           ],
         },
       ];
 
+  List<Map<String, dynamic>> defaultCoachPayload() => [
+        {'id': 'C1', 'name': 'Тренер-сервер'},
+      ];
+
+  setUp(() {
+    payload = defaultPayload();
+    coachPayload = defaultCoachPayload();
+  });
+
   setUpAll(() async {
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     server.listen((request) async {
       await request.drain<void>();
+      final body = request.uri.path.endsWith('DetCoach') ? coachPayload : payload;
       request.response
         ..statusCode = 200
         ..headers.contentType = ContentType.json
-        ..write(jsonEncode(serverPayload()));
+        ..write(jsonEncode(body));
       await request.response.close();
     });
     final baseUrl = 'http://${InternetAddress.loopbackIPv4.address}:${server.port}';
@@ -112,6 +154,9 @@ void main() {
     }
     if (!NsgDataClient.client.isRegistered(DetRow)) {
       NsgDataClient.client.registerDataItem(DetRow(), remoteProvider: provider);
+    }
+    if (!NsgDataClient.client.isRegistered(DetCoach)) {
+      NsgDataClient.client.registerDataItem(DetCoach(), remoteProvider: provider);
     }
   });
 
@@ -184,6 +229,82 @@ void main() {
     final cachedAfter = NsgDataClient.client.getItemsFromCacheTyped<DetItem>('T1');
     expect(identical(cachedAfter, cached), isTrue);
     expect(cachedAfter!.getFieldValue(DetItem.nameName), 'КЭШ-МАРКЕР', reason: 'кэшированный экземпляр не затёрт');
+  });
+
+  test('requestItem(addCount: false) уважает readDetached', () async {
+    final cached = NsgDataClient.client.getItemsFromCacheTyped<DetItem>('T1')!;
+    cached.setFieldValue(DetItem.nameName, 'МАРКЕР-ADDCOUNT');
+
+    final cmp = NsgCompare();
+    cmp.add(name: DetItem.nameId, value: 'T1', comparisonOperator: NsgComparisonOperator.equal);
+    final request = NsgDataRequest<DetItem>(dataItemType: DetItem);
+    final item = await request.requestItem(
+      filter: NsgDataRequestParams(compare: cmp, readDetached: true),
+      addCount: false,
+      loadReference: [],
+    );
+
+    expect(item.getFieldValue(DetItem.nameName), 'Спартак-сервер');
+    expect(cached.getFieldValue(DetItem.nameName), 'МАРКЕР-ADDCOUNT',
+        reason: 'addCount:false не должен молча терять readDetached');
+  });
+
+  test('requestItem(addCount: true) клонирует фильтр целиком', () {
+    final filter = NsgDataRequestParams(readDetached: true)
+      ..neededFields = ['name']
+      ..transactionId = 'tr-1'
+      ..requestId = 'rq-1';
+    final clone = filter.clone()..count = 1;
+    expect(clone.readDetached, isTrue);
+    expect(clone.neededFields, ['name']);
+    expect(clone.transactionId, 'tr-1');
+    expect(clone.requestId, 'rq-1');
+  });
+
+  test('readDetached с тёплым референтом: кэш референта не мутирует, ссылка — общий экземпляр (root-only)', () async {
+    final coach = DetCoach()
+      ..id = 'C1'
+      ..setFieldValue(DetCoach.nameName, 'ЧЕРНОВИК-ТРЕНЕР');
+    NsgDataClient.client.addItemsToCache(items: [coach]);
+
+    final cmp = NsgCompare();
+    cmp.add(name: DetItem.nameId, value: 'T1', comparisonOperator: NsgComparisonOperator.equal);
+    final request = NsgDataRequest<DetItem>(dataItemType: DetItem);
+    final items = await request.requestItems(
+      filter: NsgDataRequestParams(compare: cmp, readDetached: true),
+      loadReference: ['coachId'],
+      autoRepeate: false,
+    );
+    final item = items.first;
+
+    final cachedCoach = NsgDataClient.client.getItemsFromCacheTyped<DetCoach>('C1');
+    expect(identical(cachedCoach, coach), isTrue, reason: 'дочитывание в detached-режиме не переписало кэш');
+    expect(cachedCoach!.getFieldValue(DetCoach.nameName), 'ЧЕРНОВИК-ТРЕНЕР',
+        reason: 'черновик референта не затёрт серверной версией');
+
+    // Документированный root-only режим: поля-ссылки возвращённого объекта
+    // резолвятся через общий кэш и НЕ являются независимыми копиями.
+    final field = item.fieldList.fields[DetItem.nameCoachId] as NsgDataReferenceField<DetCoach>;
+    expect(identical(field.getReferent(item), coach), isTrue);
+  });
+
+  test('readDetached с холодным референтом: дочитывание не пишет в кэш', () async {
+    payload = defaultPayload()..first['coachId'] = 'COLD9';
+    coachPayload = [
+      {'id': 'COLD9', 'name': 'Холодный тренер'},
+    ];
+
+    final cmp = NsgCompare();
+    cmp.add(name: DetItem.nameId, value: 'T1', comparisonOperator: NsgComparisonOperator.equal);
+    final request = NsgDataRequest<DetItem>(dataItemType: DetItem);
+    await request.requestItems(
+      filter: NsgDataRequestParams(compare: cmp, readDetached: true),
+      loadReference: ['coachId'],
+      autoRepeate: false,
+    );
+
+    expect(NsgDataClient.client.getItemsFromCacheTyped<DetCoach>('COLD9', allowNull: true), isNull,
+        reason: 'побочных записей в кэш быть не должно — референт читается отдельным detached-запросом');
   });
 
   test('readDetached не уходит в JSON фильтра на сервер', () {
