@@ -846,6 +846,9 @@ class NsgDataItem {
 
   ///Прочитать объект из БД по его идентификатору
   ///Можно использовать для обновления объекта из БД или для его дочитывания
+  ///[readDetached] — отвязанное чтение (#2253): свежие значения копируются в
+  ///этот объект, но кэш не трогается — другие экраны с несохранёнными правками
+  ///того же id не пострадают. По умолчанию false: чтение мержится в кэш (#1394).
   Future<NsgDataItem> getById({
     bool autoAuthorize = true,
     String tag = '',
@@ -859,8 +862,9 @@ class NsgDataItem {
     FutureOr<bool> Function(Exception)? retryIf,
     FutureOr<void> Function(Exception)? onRetry,
     NsgCancelToken? cancelToken,
+    bool readDetached = false,
   }) async {
-    var filter = NsgDataRequestParams();
+    var filter = NsgDataRequestParams(readDetached: readDetached);
     filter.compare.add(name: primaryKeyField, value: id, comparisonOperator: NsgComparisonOperator.equal);
     late NsgDataItem newItem;
     if (storageType == NsgDataStorageType.server) {

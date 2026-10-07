@@ -172,6 +172,20 @@ void main() {
         reason: 'default: свежие значения вливаются в прежний экземпляр, как и было');
   });
 
+  test('getById(readDetached: true) обновляет свой объект и не трогает кэш', () async {
+    final cached = NsgDataClient.client.getItemsFromCacheTyped<DetItem>('T1')!;
+    cached.setFieldValue(DetItem.nameName, 'КЭШ-МАРКЕР');
+
+    final own = DetItem()..id = 'T1';
+    final result = await own.getById(readDetached: true);
+
+    expect(identical(result, own), isTrue);
+    expect(own.getFieldValue(DetItem.nameName), 'Спартак-сервер', reason: 'свой объект получил свежие значения');
+    final cachedAfter = NsgDataClient.client.getItemsFromCacheTyped<DetItem>('T1');
+    expect(identical(cachedAfter, cached), isTrue);
+    expect(cachedAfter!.getFieldValue(DetItem.nameName), 'КЭШ-МАРКЕР', reason: 'кэшированный экземпляр не затёрт');
+  });
+
   test('readDetached не уходит в JSON фильтра на сервер', () {
     final json = NsgDataRequestParams(readDetached: true).toJson();
     expect(json.values.any((v) => v.toString().toLowerCase().contains('detached')), isFalse);

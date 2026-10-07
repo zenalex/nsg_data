@@ -262,7 +262,11 @@ class NsgLocalDb {
           }
         }
       }
-      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+      //#2253: readDetached — отвязанное чтение, кэш не трогаем, чтобы не
+      //затереть несохранённые правки в уже кэшированном объекте того же id.
+      if (!params.readDetached) {
+        NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+      }
       return items;
     } catch (e) {
       if (kDebugMode) {
