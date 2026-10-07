@@ -49,6 +49,24 @@ class NsgDataRequestParams {
   /// Идентификатор запроса. Имеет смысл при Post-запросах
   String? requestId;
 
+  /// «Отвязанное» чтение: свежие объекты возвращаются новыми инстансами и НЕ
+  /// вливаются в кэш — уже кэшированный объект того же id (а с ним и открытый
+  /// экран с несохранёнными правками) остаётся нетронутым
+  /// (NSG-SOFT/futbolista-tasks#2253). Дочитывание референтов идёт тем же
+  /// режимом, так что побочных записей в кэш нет ни на одном уровне.
+  ///
+  /// Режим root-only: независимыми являются только сами запрошенные объекты и
+  /// их табличные части. Поля-ссылки возвращённого объекта резолвятся через
+  /// общий кэш, как обычно, — это НЕ независимые копии; если нужен независимый
+  /// референт, читайте его отдельным запросом с readDetached. Следствие: при
+  /// холодном кэше референты из referenceList в этом режиме не закэшируются —
+  /// разрешайте их отдельным чтением.
+  ///
+  /// По умолчанию false — историческое слияние в кэше сохраняется: экземпляр
+  /// держится прежний, а сужение запроса не может сделать его беднее (#1394).
+  /// В JSON фильтра на сервер не уходит — это локальное поведение клиента.
+  bool readDetached;
+
   NsgCompare _compare = NsgCompare();
 
   ///Условие на запрашиваемые данные
@@ -95,6 +113,7 @@ class NsgDataRequestParams {
         sorting: sorting,
         referenceList: referenceList != null ? List<String>.from(referenceList!) : null,
         showDeletedObjects: showDeletedObjects,
+        readDetached: readDetached,
         compare: _compare.clone(),
       )
       ..fieldsToRead = fieldsToRead
@@ -112,6 +131,7 @@ class NsgDataRequestParams {
     this.sorting,
     this.referenceList,
     this.showDeletedObjects = false,
+    this.readDetached = false,
     NsgCompare? compare,
   }) {
     if (compare != null) {

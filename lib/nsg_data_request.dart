@@ -234,10 +234,14 @@ class NsgDataRequest<T extends NsgDataItem> {
             throw _malformedResponse(url: url, what: 'Ожидался массив объектов.', got: response);
           }
           items = _fromJsonList(response, url: url).cast();
-          NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+          //#2253: readDetached — отвязанное чтение, кэш не трогаем, чтобы не
+          //затереть несохранённые правки в уже кэшированном объекте того же id.
+          if (!filter.readDetached) {
+            NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+          }
 
           //Check referent field list
-          await loadAllReferents(items, filter.referenceList, tag: tag);
+          await loadAllReferents(items, filter.referenceList, tag: tag, readDetached: filter.readDetached);
         }
       }
     } catch (e) {
@@ -298,8 +302,10 @@ class NsgDataRequest<T extends NsgDataItem> {
       elem.isReadFromServer = true;
       items.add(elem as T);
     }
-    NsgDataClient.client.addItemsToCache(items: items, tag: tag);
-    await loadAllReferents(items, filter.referenceList, tag: tag);
+    if (!filter.readDetached) {
+      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+    }
+    await loadAllReferents(items, filter.referenceList, tag: tag, readDetached: filter.readDetached);
     return items;
   }
 
@@ -342,10 +348,12 @@ class NsgDataRequest<T extends NsgDataItem> {
     items = (await NsgLocalDb.instance.requestItems(dataItem, filter)).cast();
 
     try {
-      NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+      if (!filter.readDetached) {
+        NsgDataClient.client.addItemsToCache(items: items, tag: tag);
+      }
 
       //Check referent field list
-      await loadAllReferents(items, loadReference, tag: tag, readTableParts: true);
+      await loadAllReferents(items, loadReference, tag: tag, readTableParts: true, readDetached: filter.readDetached);
     } catch (e) {
       debugPrint(e.toString());
       rethrow;
@@ -438,7 +446,8 @@ class NsgDataRequest<T extends NsgDataItem> {
     var newItems = <NsgDataItem>[];
     //Все новые элементы, включая дочитанные объекты для поиска строк табличных частей
     var allItems = <NsgDataItem>[];
-    var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty);
+    var useCache = (filter == null || filter.fieldsToRead == null || filter.fieldsToRead!.isEmpty) &&
+        !(filter?.readDetached ?? false);
     //#1394: сужение может быть задано и устаревшим fieldsToRead, и neededFields.
     //Разметка emptyFields раньше учитывала только первый, поэтому на neededFields
     //обращение к незапрошенному полю молча отдавало defaultValue даже в debug.
@@ -527,7 +536,7 @@ class NsgDataRequest<T extends NsgDataItem> {
         }
       }
     });
-    await loadAllReferents(newItems, loadReference, tag: tag);
+    await loadAllReferents(newItems, loadReference, tag: tag, readDetached: filter?.readDetached ?? false);
     return newItems;
   }
 
@@ -592,16 +601,13 @@ class NsgDataRequest<T extends NsgDataItem> {
       if (filter == null) {
         newFilter = NsgDataRequestParams(count: 1);
       } else {
-        newFilter = NsgDataRequestParams(
-          top: filter.top,
-          count: 1,
-          params: filter.params,
-          sorting: filter.sorting,
-          referenceList: filter.referenceList,
-          compare: filter.compare,
-          showDeletedObjects: filter.showDeletedObjects,
-        );
+        //Клонируем, а не перечисляем поля вручную: ручная копия теряла
+        //neededFields/fieldsToRead/readDetached/requestId (#2253).
+        newFilter = filter.clone()..count = 1;
       }
+    } else {
+      //#2253: без addCount переданный фильтр раньше молча выбрасывался.
+      newFilter = filter;
     }
     var data = await requestItems(
       filter: newFilter,
@@ -623,7 +629,8 @@ class NsgDataRequest<T extends NsgDataItem> {
     return data[0];
   }
 
-  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference, {String tag = '', bool readTableParts = true}) async {
+  Future loadAllReferents(List<NsgDataItem> items, List<String>? loadReference,
+      {String tag = '', bool readTableParts = true, bool readDetached = false}) async {
     if (items.isEmpty || loadReference == null || loadReference.isEmpty) {
       return;
     }
@@ -657,7 +664,7 @@ class NsgDataRequest<T extends NsgDataItem> {
               value: refList,
               comparisonOperator: NsgComparisonOperator.inList,
             );
-            var filter = NsgDataRequestParams(compare: cmp);
+            var filter = NsgDataRequestParams(compare: cmp, readDetached: readDetached);
             //print('field.referentElementType ${field.referentElementType}');
             if (storageType == NsgDataStorageType.server) {
               refItems = await request.requestItems(filter: filter, loadReference: []);
@@ -694,7 +701,7 @@ class NsgDataRequest<T extends NsgDataItem> {
               var request = NsgDataRequest(dataItemType: refType);
               var cmp = NsgCompare();
               cmp.add(name: NsgDataClient.client.getNewObject(refType).primaryKeyField, value: refList, comparisonOperator: NsgComparisonOperator.inList);
-              var filter = NsgDataRequestParams(compare: cmp);
+              var filter = NsgDataRequestParams(compare: cmp, readDetached: readDetached);
               if (storageType == NsgDataStorageType.server) {
                 refItems = await request.requestItems(filter: filter, loadReference: []);
               } else {
@@ -715,7 +722,7 @@ class NsgDataRequest<T extends NsgDataItem> {
                 }
                 cmp.add(name: fieldValue[0].primaryKeyField, value: ids, comparisonOperator: NsgComparisonOperator.inList);
                 var request = NsgDataRequest(dataItemType: fieldValue[0].runtimeType, storageType: NsgDataStorageType.local);
-                var rows = await request.requestItems(filter: NsgDataRequestParams(compare: cmp));
+                var rows = await request.requestItems(filter: NsgDataRequestParams(compare: cmp, readDetached: readDetached));
                 for (var row in rows) {
                   var tr = fieldValue.firstWhereOrNull((e) => e.id == row.id);
                   if (tr != null) {
@@ -742,7 +749,7 @@ class NsgDataRequest<T extends NsgDataItem> {
             list.add(item);
           }
           for (var key in mapData.keys) {
-            await loadAllReferents(mapData[key]!, [splitedName.join('.')], tag: tag);
+            await loadAllReferents(mapData[key]!, [splitedName.join('.')], tag: tag, readDetached: readDetached);
           }
         }
       }
