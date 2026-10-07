@@ -722,7 +722,7 @@ class NsgDataRequest<T extends NsgDataItem> {
                 }
                 cmp.add(name: fieldValue[0].primaryKeyField, value: ids, comparisonOperator: NsgComparisonOperator.inList);
                 var request = NsgDataRequest(dataItemType: fieldValue[0].runtimeType, storageType: NsgDataStorageType.local);
-                var rows = await request.requestItems(filter: NsgDataRequestParams(compare: cmp));
+                var rows = await request.requestItems(filter: NsgDataRequestParams(compare: cmp, readDetached: readDetached));
                 for (var row in rows) {
                   var tr = fieldValue.firstWhereOrNull((e) => e.id == row.id);
                   if (tr != null) {

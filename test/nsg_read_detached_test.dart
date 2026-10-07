@@ -12,6 +12,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nsg_data/nsg_data.dart';
 
@@ -305,6 +306,66 @@ void main() {
 
     expect(NsgDataClient.client.getItemsFromCacheTyped<DetCoach>('COLD9', allowNull: true), isNull,
         reason: 'побочных записей в кэш быть не должно — референт читается отдельным detached-запросом');
+  });
+
+  test('getById(readDetached: true) на кэшированном приёмнике не затирает его, а возвращает свежий объект', () async {
+    final cached = NsgDataClient.client.getItemsFromCacheTyped<DetItem>('T1')!;
+    cached.setFieldValue(DetItem.nameName, 'ПРАВКА-НА-ЭКРАНЕ');
+
+    final result = await cached.getById(readDetached: true);
+
+    expect(identical(result, cached), isFalse, reason: 'кэшированный экземпляр нельзя перетирать — вернулся новый объект');
+    expect(result.getFieldValue(DetItem.nameName), 'Спартак-сервер');
+    expect(cached.getFieldValue(DetItem.nameName), 'ПРАВКА-НА-ЭКРАНЕ', reason: 'несохранённая правка на месте');
+  });
+
+  test('локальная БД: вложенное чтение строк табличной части при readDetached не мержит строки в кэш', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final temp = await Directory.systemTemp.createTemp('nsg-detached-local-');
+    const pathProviderChannel = MethodChannel('plugins.flutter.io/path_provider');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      pathProviderChannel,
+      (_) async => temp.path,
+    );
+    try {
+      await NsgLocalDb.instance.init('detached-${DateTime.now().microsecondsSinceEpoch}');
+
+      // Заполняем локальную БД обычной записью: инстансы попадают в кэш.
+      final doc = DetItem()
+        ..id = 'T-LOCAL'
+        ..setFieldValue(DetItem.nameName, 'Локальный');
+      doc.rows.addRow(DetRow()
+        ..id = 'R-LOCAL'
+        ..ownerId = 'T-LOCAL'
+        ..setFieldValue(DetRow.nameText, 'строка-локаль'));
+      await NsgLocalDb.instance.postItems([doc]);
+
+      // «Экран» правит строку кэшированного объекта.
+      final cachedRow = NsgDataClient.client.getItemsFromCacheTyped<DetRow>('R-LOCAL')!;
+      cachedRow.setFieldValue(DetRow.nameText, 'ЧЕРНОВИК-ЛОКАЛЬНЫЙ');
+
+      final cmp = NsgCompare();
+      cmp.add(name: DetItem.nameId, value: 'T-LOCAL', comparisonOperator: NsgComparisonOperator.equal);
+      final request = NsgDataRequest<DetItem>(dataItemType: DetItem, storageType: NsgDataStorageType.local);
+      final items = await request.requestItems(
+        filter: NsgDataRequestParams(compare: cmp, readDetached: true),
+        autoRepeate: false,
+      );
+
+      expect(items, hasLength(1));
+      expect(items.first.rows.rows.single.getFieldValue(DetRow.nameText), 'строка-локаль',
+          reason: 'возвращённые строки — свежие независимые инстансы');
+      expect(cachedRow.getFieldValue(DetRow.nameText), 'ЧЕРНОВИК-ЛОКАЛЬНЫЙ',
+          reason: 'вложенное чтение строк не затёрло черновик в кэше');
+
+      // Контроль: то же чтение БЕЗ readDetached мержит строки в кэш, как и было.
+      await request.requestItems(filter: NsgDataRequestParams(compare: cmp), autoRepeate: false);
+      expect(cachedRow.getFieldValue(DetRow.nameText), 'строка-локаль',
+          reason: 'default-путь локальной БД не изменился (#1394)');
+    } finally {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(pathProviderChannel, null);
+    }
   });
 
   test('readDetached не уходит в JSON фильтра на сервер', () {

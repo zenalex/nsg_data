@@ -848,7 +848,9 @@ class NsgDataItem {
   ///Можно использовать для обновления объекта из БД или для его дочитывания
   ///[readDetached] — отвязанное чтение (#2253): свежие значения копируются в
   ///этот объект, но кэш не трогается — другие экраны с несохранёнными правками
-  ///того же id не пострадают. По умолчанию false: чтение мержится в кэш (#1394).
+  ///того же id не пострадают. Если этот объект и есть кэшированный экземпляр,
+  ///он тоже не затирается: метод возвращает свежий объект, не копируя значения
+  ///в this. По умолчанию false: чтение мержится в кэш и в this (#1394).
   Future<NsgDataItem> getById({
     bool autoAuthorize = true,
     String tag = '',
@@ -886,6 +888,15 @@ class NsgDataItem {
       );
     } else {
       newItem = (await NsgLocalDb.instance.requestItems(this, filter)).first;
+    }
+    if (readDetached) {
+      //#2253: this — тот самый кэшированный экземпляр, который могут править на
+      //открытом экране. Отвязанное чтение не вправе затирать чужие правки:
+      //возвращаем свежий объект, this не трогаем.
+      final cached = NsgDataClient.client.getItemsFromCache(runtimeType, id, allowNull: true);
+      if (cached != null && identical(cached, this)) {
+        return newItem;
+      }
     }
     copyFieldValues(newItem);
     state = newItem.state;
