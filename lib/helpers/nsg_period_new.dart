@@ -319,6 +319,18 @@ extension NsgTypedPeriodExtension on NsgTypedPeriod {
     final period = NsgPeriod();
     period.beginDate = begin;
     period.endDate = end;
+    // Прокидываем granularity в старый `selectedType`, иначе он остаётся
+    // дефолтным `.week`, и внешний рендер (`NsgPeriod.getDateText`) не знает
+    // про `.custom` → теряет время у round-trip'нутого периода.
+    period.selectedType = switch (type) {
+      NsgPeriodGranularity.year => NsgPeriodType.year,
+      NsgPeriodGranularity.quarter => NsgPeriodType.quarter,
+      NsgPeriodGranularity.month => NsgPeriodType.month,
+      NsgPeriodGranularity.week => NsgPeriodType.week,
+      NsgPeriodGranularity.day => NsgPeriodType.day,
+      NsgPeriodGranularity.days => NsgPeriodType.period,
+      NsgPeriodGranularity.custom => NsgPeriodType.periodWidthTime,
+    };
     return period;
   }
 
