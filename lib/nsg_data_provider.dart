@@ -258,8 +258,8 @@ class NsgDataProvider {
   int authConnectDuration;
   int authConnectMaxAttempts;
   int authConnectRetryDelay;
-  bool _connecting = false;
-  bool get isConnecting => _connecting;
+  int _connectDepth = 0;
+  bool get isConnecting => _connectDepth > 0;
   Duration get authConnectTimeout => Duration(milliseconds: authConnectDuration);
 
   static const _connectAuthFunctions = {'CheckToken', 'AnonymousLogin', 'SetLocale', 'GetServerTime'};
@@ -986,12 +986,11 @@ class NsgDataProvider {
   ///Connect to server
   ///If error will be occured, NsgApiException will be generated
   Future connect(NsgBaseController controller) async {
-    final wasConnecting = _connecting;
-    _connecting = true;
+    _connectDepth++;
     try {
       return await _connect(controller);
     } finally {
-      _connecting = wasConnecting;
+      _connectDepth--;
     }
   }
 

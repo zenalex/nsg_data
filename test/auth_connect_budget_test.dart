@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -83,6 +84,22 @@ void main() {
       await expectLater(provider.connect(_Controller()), throwsA(isA<NsgApiException>()));
     }
     expect(hits['CheckToken'], 4);
+  });
+
+  test('overlapping connects keep startup scope until both calls finish', () async {
+    provider.useNsgAuthorization = false;
+    final first = Completer<void>();
+    final second = Completer<void>();
+    final a = provider.connect(_Controller(load: () => first.future));
+    final b = provider.connect(_Controller(load: () => second.future));
+    await Future<void>.delayed(Duration.zero);
+    first.complete();
+    await a;
+    final whileSecondIsPending = provider.isConnecting;
+    second.complete();
+    await b;
+    expect(whileSecondIsPending, true);
+    expect(provider.isConnecting, false);
   });
 
   for (final status in [400, 403, 409, 500, 503]) {
