@@ -87,6 +87,33 @@ For per-entity customization you can override `serverpodAdapter` directly in a c
 
 ## Dependencies
 
+### Startup authorization budget (#3337)
+
+`NsgDataProvider` accepts `authConnectDuration` (milliseconds, default 5000),
+`authConnectMaxAttempts` (total attempts including the first, default 3) and
+`authConnectRetryDelay` (milliseconds, default 500). They apply only while
+`connect()` runs, and only to CheckToken, AnonymousLogin, SetLocale and a
+GetServerTime request sent through `baseRequest` on that path. The package
+does not itself issue GetServerTime; host applications may have a separate
+clock-calibration client that is not affected.
+
+The deadline covers the whole HTTP attempt (connect/send/receive); expiry
+cancels the underlying request and closes its transport, not only its Future.
+Three silent attempts take about 16 seconds. SetLocale keeps its existing
+single best-effort attempt; 401 keeps the existing anonymous-login fallback.
+HTTP refusals (including 5xx) do not retry; only transport failures/timeouts do.
+Ordinary data/file requests, interactive login/logout and request budgets outside
+connect are unchanged. `authRequestDuration` remains the old independent value.
+
+Host providers that override `baseRequest` for endpoint rotation must honor
+`isConnecting`, `authConnectTimeout`, `authConnectMaxAttempts`,
+`authConnectRetryDelay` and `shouldRetryAuthConnect`: call `super.baseRequest`
+once per outer attempt, never nest two retry loops. A custom retry predicate
+may further restrict retries, but cannot turn a server refusal into a retry.
+
+Regression: `test/auth_connect_budget_test.dart` uses real `connect()` and a
+loopback HTTP fixture, including a wall-clock check of the default budget.
+
 This package depends on `nsg_controls` which should be published first due to circular dependency.
 
 ## Publishing Instructions

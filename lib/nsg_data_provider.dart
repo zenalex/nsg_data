@@ -253,6 +253,27 @@ class NsgDataProvider {
   Duration get authRequestTimeout =>
       Duration(milliseconds: authRequestDuration);
 
+  /// Startup-only transport/attempt deadline, milliseconds. Ordinary data,
+  /// files and interactive login retain their existing budgets.
+  int authConnectDuration;
+  int authConnectMaxAttempts;
+  int authConnectRetryDelay;
+  bool _connecting = false;
+  bool get isConnecting => _connecting;
+  Duration get authConnectTimeout => Duration(milliseconds: authConnectDuration);
+
+  static const _connectAuthFunctions = {'CheckToken', 'AnonymousLogin', 'SetLocale', 'GetServerTime'};
+
+  /// A response from the server is not a transport failure, even if a wrapper
+  /// also carries a network classification. Never retry authorization refusals.
+  bool shouldRetryAuthConnect(Object error) {
+    if (error is NsgApiException) {
+      if ((error.error.code ?? 0) >= 400) return false;
+      return error.isNetworkError;
+    }
+    return error is TimeoutException || error is SocketException;
+  }
+
   static String defaultSecurityCode = 'security';
 
   String languageCode;
@@ -351,7 +372,12 @@ class NsgDataProvider {
     this.onTokenChanged,
     this.providerKind = NsgRemoteProviderKind.rest,
     this.serverpodAdapter,
-  }) {
+    this.authConnectDuration = 5000,
+    this.authConnectMaxAttempts = 3,
+    this.authConnectRetryDelay = 500,
+  }) : assert(authConnectDuration > 0),
+       assert(authConnectMaxAttempts > 0),
+       assert(authConnectRetryDelay >= 0) {
     // widgetParams = widgetLoginParams ?? () => NsgBaseController.defaultLoginParams!;
   }
 
@@ -722,10 +748,14 @@ class NsgDataProvider {
     FutureOr<bool> Function(Exception)? retryIf,
     FutureOr<void> Function(Exception)? onRetry,
   }) async {
+    final startupAuth = isConnecting && _connectAuthFunctions.contains(function);
+    final effectiveTimeout = startupAuth && (timeout == null || timeout > authConnectTimeout) ? authConnectTimeout : timeout;
     if (autoRepeate) {
       final r = RetryOptions(
-        maxAttempts: autoRepeateCount,
-        maxDelay: Duration(seconds: maxRepeateDelay),
+        maxAttempts: startupAuth && autoRepeateCount > authConnectMaxAttempts ? authConnectMaxAttempts : autoRepeateCount,
+        maxDelay: startupAuth ? Duration(milliseconds: authConnectRetryDelay) : Duration(seconds: maxRepeateDelay),
+        delayFactor: startupAuth ? Duration(milliseconds: authConnectRetryDelay) : const Duration(milliseconds: 200),
+        randomizationFactor: startupAuth ? 0 : 0.25,
       );
       return await r.retry(
         () => _baseRequest(
@@ -733,10 +763,11 @@ class NsgDataProvider {
           params: params,
           headers: headers,
           url: url,
-          timeout: timeout,
+          timeout: effectiveTimeout,
+          attemptBudget: startupAuth ? effectiveTimeout : null,
           method: method,
         ),
-        retryIf: retryIf,
+        retryIf: startupAuth ? (e) async => shouldRetryAuthConnect(e) && (retryIf == null || await retryIf(e)) : retryIf,
         onRetry: onRetry,
       );
       // onRetry: (error) => _updateStatusError(error.toString()));
@@ -746,7 +777,8 @@ class NsgDataProvider {
         params: params,
         headers: headers,
         url: url,
-        timeout: timeout,
+        timeout: effectiveTimeout,
+        attemptBudget: startupAuth ? effectiveTimeout : null,
         method: method,
       );
     }
@@ -758,6 +790,7 @@ class NsgDataProvider {
     final Map<String, String?>? headers,
     final String? url,
     final Duration? timeout,
+    final Duration? attemptBudget,
     final String method = 'GET',
   }) async {
     final dio = Dio(
@@ -779,14 +812,20 @@ class NsgDataProvider {
     );
 
     late Response<Map<String, dynamic>> response;
+    final cancelToken = attemptBudget == null ? null : CancelToken();
+    var deadlineExpired = false;
+    final deadline = attemptBudget == null ? null : Timer(attemptBudget, () {
+      deadlineExpired = true;
+      cancelToken!.cancel('Startup authentication attempt deadline');
+    });
 
     try {
       applyCertificatePolicy(dio);
       debugPrint('BASE REQUEST: $url, url: $url!, params: $params');
       if (method == 'GET') {
-        response = await dio.get(url!, queryParameters: params);
+        response = await dio.get(url!, queryParameters: params, cancelToken: cancelToken);
       } else if (method == 'POST') {
-        response = await dio.post(url!, data: params);
+        response = await dio.post(url!, data: params, cancelToken: cancelToken);
       }
       // if (isDebug) {
       //   print('HTTP STATUS: ${response.statusCode}');
@@ -800,7 +839,12 @@ class NsgDataProvider {
       var curData = response.data;
       return curData;
     } on DioException catch (e) {
-      NsgRequestOutcome.notifyDio(e, url: url, function: function);
+      final failure = deadlineExpired ? DioException(
+        requestOptions: e.requestOptions,
+        type: DioExceptionType.receiveTimeout,
+        error: TimeoutException('Startup authentication attempt deadline', attemptBudget),
+      ) : e;
+      NsgRequestOutcome.notifyDio(failure, url: url, function: function);
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       throw NsgApiException(
         NsgApiError(
@@ -810,13 +854,16 @@ class NsgDataProvider {
               nsgExtractServerMessage(e.response?.data) ??
               e.error?.toString() ??
               'Internet connection error',
-          errorType: e.type,
+          errorType: deadlineExpired ? DioExceptionType.receiveTimeout : e.type,
         ),
       );
     } catch (e) {
       NsgRequestOutcome.notify(url: url, function: function, error: e);
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
+    } finally {
+      deadline?.cancel();
+      if (attemptBudget != null) dio.close(force: true);
     }
   }
 
@@ -939,6 +986,16 @@ class NsgDataProvider {
   ///Connect to server
   ///If error will be occured, NsgApiException will be generated
   Future connect(NsgBaseController controller) async {
+    final wasConnecting = _connecting;
+    _connecting = true;
+    try {
+      return await _connect(controller);
+    } finally {
+      _connecting = wasConnecting;
+    }
+  }
+
+  Future _connect(NsgBaseController controller) async {
     if (!_initialized) await initialize();
     var onRetry = controller.onRetry;
 
@@ -1442,10 +1499,8 @@ class NsgDataProvider {
       // Без бюджета попытки повтор недостижим: см. authRequestDuration.
       timeout: authRequestTimeout,
       autoRepeate: true,
-      // Было 1000 (× до 5с backoff ≈ до ~80 мин блокировки старта на дёрганом
-      // сервере → «вечный» сплеш). Ограничиваем: после ~10 попыток (~30с) connect
-      // бросает ошибку и сплеш показывает onError «проверьте интернет» + ретрай.
-      autoRepeateCount: 10,
+      // Startup is capped; logout/interactive anonymous login keeps its policy.
+      autoRepeateCount: isConnecting ? authConnectMaxAttempts : 10,
       onRetry: onRetry,
     ));
 
@@ -1468,9 +1523,8 @@ class NsgDataProvider {
       // Без бюджета попытки повтор недостижим: см. authRequestDuration.
       timeout: authRequestTimeout,
       autoRepeate: true,
-      // Было 1000 (≈ до ~80 мин блокировки старта на дёрганом сервере). Ограничиваем
-      // ~10 попытками (~30с) → дальше connect бросает ошибку, сплеш показывает onError.
-      autoRepeateCount: 10,
+      // Three startup attempts; the host can override the provider budget.
+      autoRepeateCount: isConnecting ? authConnectMaxAttempts : 10,
       onRetry: onRetry,
     ));
 
