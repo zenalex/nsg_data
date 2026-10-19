@@ -114,6 +114,10 @@ may further restrict retries, but cannot turn a server refusal into a retry.
 Regression: `test/auth_connect_budget_test.dart` uses real `connect()` and a
 loopback HTTP fixture, including a wall-clock check of the default budget.
 
+Startup may register models again when retrying after a connection failure.
+Registration rebuilds the primary-key marker with the fields, while preserving
+other type parameters and existing item values (`test/nsg_registration_retry_test.dart`).
+
 This package depends on `nsg_controls` which should be published first due to circular dependency.
 
 ## Publishing Instructions
