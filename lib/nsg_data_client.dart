@@ -27,6 +27,9 @@ class NsgDataClient {
     _registeredServerNames[item.typeName] = item.runtimeType.toString();
     _fieldList[item.runtimeType.toString()] = NsgFieldList();
     _predefinedList[item.runtimeType.toString()] = <String>[];
+    // Startup can register again after connect fails. The fields are rebuilt,
+    // so their primary-key marker must be rebuilt too; keep other parameters.
+    item.primaryKeyField = '';
     // Появился новый тип — карта наследников устарела. Регистрация идёт на
     // старте и один раз, так что сброс ничего не стоит.
     _subtypeBuckets.clear();
