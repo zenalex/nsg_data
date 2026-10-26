@@ -850,32 +850,53 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   }
 
   int _selectedRefreshGeneration = 0;
+  NsgDataItem? _selectedRefreshOwner;
+  String? _selectedRefreshOwnerId;
 
   Future<NsgDataItem> refreshCurrentItem({List<String>? referenceList}) async {
     final item = selectedItem;
     if (item == null) {
       return NsgDataClient.client.getNewObject(dataType);
     }
-    final generation = ++_selectedRefreshGeneration;
     final itemId = item.id;
-    var selectionChanged = false;
-    void onSelectionChanged(EventArgs? _) => selectionChanged = true;
-    bool ownsSelection() => !selectionChanged &&
-        generation == _selectedRefreshGeneration &&
-        identical(selectedItem, item) && selectedItem?.id == itemId;
-    // Смена A -> B -> A тоже отменяет прежний ответ A, даже без нового чтения.
-    selectedItemChanged.subscribe(onSelectionChanged);
+    if (!identical(_selectedRefreshOwner, item) || _selectedRefreshOwnerId != itemId) {
+      _selectedRefreshOwner = item;
+      _selectedRefreshOwnerId = itemId;
+      _selectedRefreshGeneration++;
+    }
+    final generation = _selectedRefreshGeneration;
+    bool ownsSelection() => generation == _selectedRefreshGeneration &&
+        (identical(selectedItem, item) || identical(selectedItem, _selectedRefreshOwner)) &&
+        selectedItem?.id == itemId;
+    void finishDiscarded() {
+      if (generation == _selectedRefreshGeneration) {
+        currentStatus = GetStatus.success(NsgBaseController.emptyData);
+        sendNotify();
+      }
+    }
     try {
       currentStatus = GetStatus.loading();
       sendNotify();
       final refreshed = await refreshItem(item, referenceList);
-      if (!ownsSelection()) return refreshed;
+      if (!ownsSelection()) {
+        finishDiscarded();
+        return refreshed;
+      }
       selectedItem = refreshed;
+      if (generation != _selectedRefreshGeneration || selectedItem?.id != itemId) {
+        finishDiscarded();
+        return refreshed;
+      }
+      // Замена результатом собственного чтения сохраняет поколение:
+      // параллельное чтение того же объекта тоже должно завершиться.
+      _selectedRefreshOwner = selectedItem;
+      _selectedRefreshOwnerId = itemId;
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       return selectedItem!;
-    } finally {
-      selectedItemChanged.unsubscribe(onSelectionChanged);
+    } catch (_) {
+      if (!ownsSelection()) finishDiscarded();
+      rethrow;
     }
   }
 
@@ -889,18 +910,28 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
     assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
-    final generation = ++_selectedRefreshGeneration;
-    selectedItem = item;
-    final owner = selectedItem;
     final itemId = item.id;
-    var selectionChanged = false;
-    void onSelectionChanged(EventArgs? _) => selectionChanged = true;
-    bool ownsSelection() => !selectionChanged &&
-        generation == _selectedRefreshGeneration &&
-        identical(selectedItem, owner) && selectedItem?.id == itemId;
-    selectedItemChanged.subscribe(onSelectionChanged);
+    if (!identical(_selectedRefreshOwner, item) || _selectedRefreshOwnerId != itemId) {
+      _selectedRefreshOwner = item;
+      _selectedRefreshOwnerId = itemId;
+      _selectedRefreshGeneration++;
+    }
+    final generation = _selectedRefreshGeneration;
+    selectedItem = item;
+    bool ownsSelection() => generation == _selectedRefreshGeneration &&
+        (identical(selectedItem, item) || identical(selectedItem, _selectedRefreshOwner)) &&
+        selectedItem?.id == itemId;
+    void finishDiscarded() {
+      if (generation == _selectedRefreshGeneration) {
+        currentStatus = GetStatus.success(NsgBaseController.emptyData);
+        sendNotify();
+      }
+    }
     try {
-      if (!ownsSelection()) return;
+      if (!ownsSelection()) {
+        finishDiscarded();
+        return;
+      }
       currentStatus = GetStatus.loading();
       status = GetStatus.loading();
       //11.02.2023 Зенков. Заменил на refresh, потому что иногда происходил конфликт обновления в процессе перерисовки
@@ -909,7 +940,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       //sendNotify();
       itemsRequested.broadcast();
       var newItem = await refreshItem(item, referenceList);
-      if (!ownsSelection()) return;
+      if (!ownsSelection()) {
+        finishDiscarded();
+        return;
+      }
       var index = dataItemList.indexOf(item);
       if (index >= 0) {
         dataItemList[index] = newItem;
@@ -929,14 +963,22 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       }
       backupItem = newItem;
       await afterRefreshItem(currentSelected, referenceList);
-      if (!ownsSelection()) return;
+      if (!ownsSelection()) {
+        finishDiscarded();
+        return;
+      }
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       selectedItemChanged.broadcast(null);
     } on Exception catch (e) {
-      if (ownsSelection()) _updateStatusError(e);
-    } finally {
-      selectedItemChanged.unsubscribe(onSelectionChanged);
+      if (ownsSelection()) {
+        _updateStatusError(e);
+      } else {
+        finishDiscarded();
+      }
+    } catch (_) {
+      if (!ownsSelection()) finishDiscarded();
+      rethrow;
     }
   }
 
