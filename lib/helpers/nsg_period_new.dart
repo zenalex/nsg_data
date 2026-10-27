@@ -247,7 +247,8 @@ class NsgTypedPeriod extends NsgDateTimePeriod {
       case NsgPeriodGranularity.week:
         return '${DateFormat.yMd(locale).format(begin)} - ${DateFormat.yMd(locale).format(end)}';
       case NsgPeriodGranularity.day:
-        return DateFormat.yMd(locale).format(begin);
+        // День недели рядом с датой: по дате не видно, какой это день (организатор, 27.10.2026).
+        return '${DateFormat.yMd(locale).format(begin)}, ${DateFormat.E(locale).format(begin)}';
       case NsgPeriodGranularity.days:
         return '${DateFormat.yMd(locale).format(begin)} - ${DateFormat.yMd(locale).format(end)}';
       case NsgPeriodGranularity.custom:
