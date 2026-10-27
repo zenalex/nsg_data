@@ -139,3 +139,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Author
 
 Aleksei Zenkov (zenkov25@gmail.com)
+
+## Results count metadata
+
+`NsgDataRequest.totalCount` accepts `resultsCount` as a decimal string, an integer,
+or a one-element array containing either scalar. Unsupported count
+metadata (including empty or multi-element arrays) produces `null`: the count
+is unknown. It does not discard result rows or invent a count from the array
+length. A malformed result-row payload still follows the normal response-error
+policy.
