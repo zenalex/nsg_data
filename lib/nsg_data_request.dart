@@ -18,6 +18,21 @@ class NsgDataRequest<T extends NsgDataItem> {
     if (dataItemType == NsgDataItem) dataItemType = T;
   }
 
+  /// Count metadata may be a scalar or a one-element array (#3328).
+  /// Ambiguous/absent metadata stays unknown; the array length is not a count.
+  static int? _parseResultsCount(dynamic value) {
+    if (value is List) {
+      if (value.length != 1) {
+        return null;
+      }
+      value = value.single;
+    }
+    if (value is int) {
+      return value;
+    }
+    return value is String ? int.tryParse(value) : null;
+  }
+
   ///Код ошибки «ответ не той формы». Номер из того же непротокольного ряда,
   ///что 1 (нет связи) и 2 (таймаут) в NsgApiError, — HTTP-статус здесь не при
   ///чём: сервер ответил 200, не той формой (NSG-SOFT/futbolista-tasks#1922).
@@ -477,7 +492,7 @@ class NsgDataRequest<T extends NsgDataItem> {
           NsgDataClient.client.addItemsToCache(items: newItems, tag: tag);
         }
       } else if (name == 'resultsCount') {
-        totalCount = int.tryParse(data);
+        totalCount = _parseResultsCount(data);
       } else {
         // var foundField = NsgDataClient.client.getReferentFieldByFullPath(dataItemType, name);
         // if (foundField != null) {
