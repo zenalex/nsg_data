@@ -170,6 +170,7 @@ class NsgDataRequest<T extends NsgDataItem> {
   ///Токен текущего запроса. При повторном вызове запроса, предыдущий запрос будет отменен автоматически
   ///В будущем, планируется добавить механизм, уведомляющий сервер об отмене запроса с целью прекращения подготовки ненужных данных
   NsgCancelToken? cancelToken;
+  bool _ownsCancelToken = false;
   Future<List<T>> _requestItems({
     NsgDataRequestParams? filter,
     String tag = '',
@@ -179,9 +180,14 @@ class NsgDataRequest<T extends NsgDataItem> {
     Map<String, dynamic>? postData,
     NsgCancelToken? externalCancelToken,
   }) async {
-    if (cancelToken != null && externalCancelToken != cancelToken && !cancelToken!.isCalceled) {
+    if (_ownsCancelToken && cancelToken != null && externalCancelToken != cancelToken && !cancelToken!.isCalceled) {
       cancelToken!.calcel();
     }
+    final suppliedToken = externalCancelToken ?? NsgCancelToken.current;
+    _ownsCancelToken = suppliedToken == null;
+    final attemptToken = suppliedToken ?? NsgCancelToken();
+    cancelToken = attemptToken;
+    attemptToken.throwIfCancelled();
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     if (dataItem.remoteProvider.usesServerpod) {
       return await _requestItemsFromServerpod(
@@ -230,14 +236,16 @@ class NsgDataRequest<T extends NsgDataItem> {
       method: method,
       params: filterMap,
       postData: postData,
-      cancelToken: cancelToken,
+      cancelToken: attemptToken,
     );
+    attemptToken.throwIfCancelled();
     items = <T>[];
     try {
       if (response == '' || response == null) {
       } else {
         if (response is Map) {
-          items = (await loadDataAndReferences(response, filter.referenceList!, tag, filter: filter)).cast();
+          items = (await NsgCancelToken.runScoped(attemptToken,
+              () => loadDataAndReferences(response, filter!.referenceList!, tag, filter: filter))).cast();
         } else {
           //Здесь стояло `if (response is! List) response = <dynamic>[response];`
           //— заворачивание скаляра в список из одного элемента. Успешно
@@ -256,7 +264,8 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
 
           //Check referent field list
-          await loadAllReferents(items, filter.referenceList, tag: tag, readDetached: filter.readDetached);
+          await NsgCancelToken.runScoped(attemptToken,
+              () => loadAllReferents(items, filter!.referenceList, tag: tag, readDetached: filter.readDetached));
         }
       }
     } catch (e) {
@@ -774,6 +783,7 @@ class NsgDataRequest<T extends NsgDataItem> {
   }
 
   FutureOr<bool> _retryIfInternal(Exception ex) async {
+    if (ex is NsgOperationCancelled || (cancelToken?.isCancelled ?? false)) return false;
     //400 - код ошибки сервера, не предполагающий повторного запроса данных
     if (ex is NsgApiException && (ex.error.code == 400 || ex.error.code == 401 || ex.error.code == 500)) {
       return false;

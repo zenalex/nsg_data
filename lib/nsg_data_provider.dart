@@ -542,6 +542,8 @@ class NsgDataProvider {
     final NsgCancelToken? cancelToken,
     FutureOr<void> Function(Exception)? onRetry,
   }) async {
+    final effectiveCancelToken = cancelToken ?? NsgCancelToken.current;
+    effectiveCancelToken?.throwIfCancelled();
     final dio = Dio(
       BaseOptions(
         headers: headers,
@@ -567,7 +569,7 @@ class NsgDataProvider {
 
       //сделать генерацию метода запроса GET/POST
       var method2 = 'POST';
-      var dioCancelToken = cancelToken?.dioCancelToken;
+      var dioCancelToken = effectiveCancelToken?.dioCancelToken;
       if (method2 == 'GET') {
         response = await dio.get(
           url!,
@@ -582,6 +584,7 @@ class NsgDataProvider {
           cancelToken: dioCancelToken,
         );
       }
+      effectiveCancelToken?.throwIfCancelled();
       NsgRequestOutcome.notify(
         url: url,
         function: function,
@@ -595,6 +598,9 @@ class NsgDataProvider {
       }
       return response.data;
     } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel || (effectiveCancelToken?.isCancelled ?? false)) {
+        throw const NsgOperationCancelled();
+      }
       NsgRequestOutcome.notifyDio(e, url: url, function: function);
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
       if (e.response != null) {
@@ -725,12 +731,15 @@ class NsgDataProvider {
         );
       }
     } catch (e) {
+      if (e is NsgOperationCancelled) rethrow;
       NsgRequestOutcome.notify(url: url, function: function, error: e);
       debugPrint(
         'network error. function: $function, error: $function + '
         ' + $e',
       );
       return NsgApiException(NsgApiError(code: 0, message: '$e'));
+    } finally {
+      dio.close(force: true);
     }
   }
 
@@ -767,7 +776,12 @@ class NsgDataProvider {
           attemptBudget: startupAuth ? effectiveTimeout : null,
           method: method,
         ),
-        retryIf: startupAuth ? (e) async => shouldRetryAuthConnect(e) && (retryIf == null || await retryIf(e)) : retryIf,
+        retryIf: (e) async {
+          if (e is NsgOperationCancelled) return false;
+          return startupAuth
+              ? shouldRetryAuthConnect(e) && (retryIf == null || await retryIf(e))
+              : retryIf == null || await retryIf(e);
+        },
         onRetry: onRetry,
       );
       // onRetry: (error) => _updateStatusError(error.toString()));
@@ -793,6 +807,8 @@ class NsgDataProvider {
     final Duration? attemptBudget,
     final String method = 'GET',
   }) async {
+    final scopeToken = NsgCancelToken.current;
+    scopeToken?.throwIfCancelled();
     final dio = Dio(
       BaseOptions(
         headers: headers,
@@ -812,7 +828,13 @@ class NsgDataProvider {
     );
 
     late Response<Map<String, dynamic>> response;
-    final cancelToken = attemptBudget == null ? null : CancelToken();
+    final cancelToken = attemptBudget == null ? scopeToken?.dioCancelToken : CancelToken();
+    var finished = false;
+    if (attemptBudget != null && scopeToken != null) {
+      unawaited(scopeToken.dioCancelToken.whenCancel.then((_) {
+        if (!finished) cancelToken?.cancel();
+      }));
+    }
     var deadlineExpired = false;
     final deadline = attemptBudget == null ? null : Timer(attemptBudget, () {
       deadlineExpired = true;
@@ -827,6 +849,7 @@ class NsgDataProvider {
       } else if (method == 'POST') {
         response = await dio.post(url!, data: params, cancelToken: cancelToken);
       }
+      scopeToken?.throwIfCancelled();
       // if (isDebug) {
       //   print('HTTP STATUS: ${response.statusCode}');
       //   print(response.data);
@@ -839,6 +862,7 @@ class NsgDataProvider {
       var curData = response.data;
       return curData;
     } on DioException catch (e) {
+      if (scopeToken?.isCancelled ?? false) throw const NsgOperationCancelled();
       final failure = deadlineExpired ? DioException(
         requestOptions: e.requestOptions,
         type: DioExceptionType.receiveTimeout,
@@ -858,12 +882,14 @@ class NsgDataProvider {
         ),
       );
     } catch (e) {
+      if (e is NsgOperationCancelled) rethrow;
       NsgRequestOutcome.notify(url: url, function: function, error: e);
       debugPrint('network error. function: $function, error: $e');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
     } finally {
+      finished = true;
       deadline?.cancel();
-      if (attemptBudget != null) dio.close(force: true);
+      dio.close(force: true);
     }
   }
 

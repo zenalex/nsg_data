@@ -53,6 +53,7 @@ class NsgSimpleRequest<T extends Object> {
   }
 
   FutureOr<bool> _retryIfInternal(Exception ex) async {
+    if (ex is NsgOperationCancelled || (cancelToken?.isCancelled ?? false)) return false;
     //400 - код ошибки сервера, не предполагающий повторного запроса данных
     if (ex is NsgApiException && (ex.error.code == 400 || ex.error.code == 401 || ex.error.code == 500)) {
       return false;
@@ -64,6 +65,7 @@ class NsgSimpleRequest<T extends Object> {
   ///Токен текущего запроса. При повторном вызове запроса, предыдущий запрос будет отменен автоматически
   ///В будущем, планируется добавить механизм, уведомляющий сервер об отмене запраса с целью прекращения подготовки ненужных данных
   NsgCancelToken? cancelToken;
+  bool _ownsCancelToken = false;
   Future<List<T>> _requestItems({
     required NsgDataProvider provider,
     required String function,
@@ -72,7 +74,7 @@ class NsgSimpleRequest<T extends Object> {
     Map<String, dynamic>? postData,
     NsgCancelToken? externalCancelToken,
   }) async {
-    if (cancelToken != null && externalCancelToken != cancelToken && !cancelToken!.isCalceled) {
+    if (_ownsCancelToken && cancelToken != null && externalCancelToken != cancelToken && !cancelToken!.isCalceled) {
       cancelToken!.calcel();
     }
     // Новый токен на КАЖДУЮ попытку. Раньше здесь стояло `??=`: повтор из
@@ -80,7 +82,11 @@ class NsgSimpleRequest<T extends Object> {
     // его же, уже отменённый, — запрос падал отменой, не уходя на сервер, и
     // вызывающий получал «Internet connection error» вместо ответа сервера
     // (NSG-SOFT/futbolista-tasks#2438).
-    cancelToken = NsgCancelToken();
+    final suppliedToken = externalCancelToken ?? NsgCancelToken.current;
+    _ownsCancelToken = suppliedToken == null;
+    final attemptToken = suppliedToken ?? NsgCancelToken();
+    cancelToken = attemptToken;
+    attemptToken.throwIfCancelled();
     var filterMap = <String, dynamic>{};
 
     filter ??= NsgDataRequestParams();
@@ -95,7 +101,8 @@ class NsgSimpleRequest<T extends Object> {
 
     var url = provider.serverUri + function;
     var response = await provider.baseRequestList(
-        function: url, headers: provider.getAuthorizationHeader(), url: url, method: method, params: filterMap, postData: postData, cancelToken: cancelToken);
+        function: url, headers: provider.getAuthorizationHeader(), url: url, method: method, params: filterMap, postData: postData, cancelToken: attemptToken);
+    attemptToken.throwIfCancelled();
     items = <T>[];
     try {
       if (response == '' || response == null) {

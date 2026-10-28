@@ -120,6 +120,32 @@ other type parameters and existing item values (`test/nsg_registration_retry_tes
 
 This package depends on `nsg_controls` which should be published first due to circular dependency.
 
+## Cooperative request cancellation (#3835)
+
+`NsgDataRequest` and `NsgSimpleRequest` forward an explicit `NsgCancelToken`
+to the transport. A scoped token also reaches ordinary `baseRequestList` and
+`baseRequest` calls (including nested requests):
+
+```dart
+final token = NsgCancelToken();
+await NsgCancelToken.runScoped(token, () async {
+  await NsgDataRequest<MyItem>().requestItems();
+});
+// A UI cancel action calls token.calcel() (legacy spelling retained).
+```
+
+Cancellation throws `NsgOperationCancelled`, never retries, and checks a late
+data response before merging it into the cache. Reusing a request does not
+cancel caller-owned tokens. `runScoped(null, body)` explicitly isolates an
+atomic operation from an outer cancellation scope. This cannot kill arbitrary
+Dart Futures or undo a server commit: callers must guard non-network work and
+reconcile an uncertain write before retrying it. Host provider overrides must
+preserve this cancellation exception instead of treating it as host failure.
+
+Regression: `test/request_cancellation_3835_test.dart` covers token forwarding,
+scope isolation, late cache protection, and actual Dio cancellation against a
+loopback HTTP server without another attempt.
+
 ## Publishing Instructions
 
 Due to circular dependency with `nsg_controls`, follow these steps:
