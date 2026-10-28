@@ -48,7 +48,47 @@ class _Provider extends NsgDataProvider {
   }
 }
 
+class _HydratingRequest extends NsgDataRequest<_Row> {
+  final started = Completer<void>();
+  final gate = Completer<void>();
+  NsgCancelToken? inherited;
+  @override
+  Future<List> loadDataAndReferences(
+    Map response,
+    List<String> loadReference,
+    String tag, {
+    NsgDataRequestParams? filter,
+  }) async {
+    inherited = NsgCancelToken.current;
+    started.complete();
+    await gate.future;
+    return [];
+  }
+}
+
 void main() {
+  test(
+    'cancel during referent hydration does not return a successful result',
+    () async {
+      NsgDataClient.client.registerDataItem(
+        _Row(),
+        remoteProvider: _Provider(),
+      );
+      final request = _HydratingRequest();
+      final token = NsgCancelToken();
+      final done = request.requestItems(
+        loadReference: [],
+        autoRepeate: false,
+        cancelToken: token,
+      );
+      final check = expectLater(done, throwsA(isA<NsgOperationCancelled>()));
+      await request.started.future;
+      token.calcel();
+      request.gate.complete();
+      await check;
+      expect(request.inherited, same(token));
+    },
+  );
   for (final typed in [false, true]) {
     test(
       '${typed ? 'data' : 'simple'} request forwards caller token',

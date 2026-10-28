@@ -283,6 +283,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     //
     // Это ломало разбор той самой диагностики недочитанных ссылок: понять, какой
     // запрос загрузил объект, было не из чего.
+    attemptToken.throwIfCancelled();
     return items;
   }
 
