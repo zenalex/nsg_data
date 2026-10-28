@@ -120,6 +120,51 @@ other type parameters and existing item values (`test/nsg_registration_retry_tes
 
 This package depends on `nsg_controls` which should be published first due to circular dependency.
 
+## Cooperative request cancellation (#3835)
+
+`NsgDataRequest` and `NsgSimpleRequest` forward an explicit `NsgCancelToken`
+to the transport. A scoped token also reaches ordinary `baseRequestList` and
+`baseRequest` calls (including nested requests):
+
+```dart
+final token = NsgCancelToken();
+await NsgCancelToken.runScoped(token, () async {
+  await NsgDataRequest<MyItem>().requestItems();
+});
+// A UI cancel action calls token.calcel() (legacy spelling retained).
+```
+
+Cancellation throws `NsgOperationCancelled`, never retries, and checks a late
+data response before merging it into the cache. Reusing a request does not
+cancel caller-owned tokens. `runScoped(null, body)` explicitly isolates an
+atomic operation from an outer cancellation scope. This cannot kill arbitrary
+Dart Futures or undo a server commit: callers must guard non-network work and
+reconcile an uncertain write before retrying it. Host provider overrides must
+preserve this cancellation exception instead of treating it as host failure.
+
+The scope expires when the body (or its returned Future) completes. Timers and
+stream subscriptions created inside it therefore do not retain a cancelled
+token for future background refreshes. Ordinary `NsgDataRequest` reads without
+an explicit/manual/scoped token keep passing null, without a new scope or
+implicit cancellation of overlapping reads. A manually assigned
+`request.cancelToken` is preserved. Controllers propagate cancellation without
+setting an error status; `refreshData` restores the previous status unless a
+newer request has already started.
+
+Card creation, refresh and copy also restore the preceding controller status
+and rethrow `NsgOperationCancelled`, so a progress wrapper cannot report
+cancellation as success. Refresh ownership is captured before calling an
+overridden `requestItems`, including overrides that await before `super`.
+
+`NsgSimpleRequest` retains its existing per-attempt internal token when no
+caller token exists. A superseded overlapping call now terminates as
+`NsgOperationCancelled` without retry, rather than the former
+`NsgApiException(code: 1)` and retry; normal sequential retries are unchanged.
+
+Regression: `test/request_cancellation_3835_test.dart` covers token forwarding,
+scope isolation, late cache protection, and actual Dio cancellation against a
+loopback HTTP server without another attempt.
+
 ## Publishing Instructions
 
 Due to circular dependency with `nsg_controls`, follow these steps:
