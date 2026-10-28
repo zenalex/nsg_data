@@ -167,10 +167,8 @@ class NsgDataRequest<T extends NsgDataItem> {
     }
   }
 
-  ///Токен текущего запроса. При повторном вызове запроса, предыдущий запрос будет отменен автоматически
-  ///В будущем, планируется добавить механизм, уведомляющий сервер об отмене запроса с целью прекращения подготовки ненужных данных
+  /// Optional caller-owned token. Ordinary reads do not create a token.
   NsgCancelToken? cancelToken;
-  bool _ownsCancelToken = false;
   Future<List<T>> _requestItems({
     NsgDataRequestParams? filter,
     String tag = '',
@@ -180,14 +178,8 @@ class NsgDataRequest<T extends NsgDataItem> {
     Map<String, dynamic>? postData,
     NsgCancelToken? externalCancelToken,
   }) async {
-    if (_ownsCancelToken && cancelToken != null && externalCancelToken != cancelToken && !cancelToken!.isCalceled) {
-      cancelToken!.calcel();
-    }
-    final suppliedToken = externalCancelToken ?? NsgCancelToken.current;
-    _ownsCancelToken = suppliedToken == null;
-    final attemptToken = suppliedToken ?? NsgCancelToken();
-    cancelToken = attemptToken;
-    attemptToken.throwIfCancelled();
+    final attemptToken = externalCancelToken ?? NsgCancelToken.current ?? cancelToken;
+    attemptToken?.throwIfCancelled();
     var dataItem = NsgDataClient.client.getNewObject(dataItemType);
     if (dataItem.remoteProvider.usesServerpod) {
       return await _requestItemsFromServerpod(
@@ -238,14 +230,14 @@ class NsgDataRequest<T extends NsgDataItem> {
       postData: postData,
       cancelToken: attemptToken,
     );
-    attemptToken.throwIfCancelled();
+    attemptToken?.throwIfCancelled();
     items = <T>[];
     try {
       if (response == '' || response == null) {
       } else {
         if (response is Map) {
-          items = (await NsgCancelToken.runScoped(attemptToken,
-              () => loadDataAndReferences(response, filter!.referenceList!, tag, filter: filter))).cast();
+          Future<List> read() => loadDataAndReferences(response, filter!.referenceList!, tag, filter: filter);
+          items = (await (attemptToken == null ? read() : NsgCancelToken.runScoped(attemptToken, read))).cast();
         } else {
           //Здесь стояло `if (response is! List) response = <dynamic>[response];`
           //— заворачивание скаляра в список из одного элемента. Успешно
@@ -264,8 +256,8 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
 
           //Check referent field list
-          await NsgCancelToken.runScoped(attemptToken,
-              () => loadAllReferents(items, filter!.referenceList, tag: tag, readDetached: filter.readDetached));
+          Future readReferences() => loadAllReferents(items, filter!.referenceList, tag: tag, readDetached: filter.readDetached);
+          await (attemptToken == null ? readReferences() : NsgCancelToken.runScoped(attemptToken, readReferences));
         }
       }
     } catch (e) {
@@ -283,7 +275,7 @@ class NsgDataRequest<T extends NsgDataItem> {
     //
     // Это ломало разбор той самой диагностики недочитанных ссылок: понять, какой
     // запрос загрузил объект, было не из чего.
-    attemptToken.throwIfCancelled();
+    attemptToken?.throwIfCancelled();
     return items;
   }
 
@@ -778,6 +770,8 @@ class NsgDataRequest<T extends NsgDataItem> {
           }
         }
       }
+    } on NsgOperationCancelled {
+      rethrow;
     } catch (ex) {
       debugPrint('ERROR LAR-375: dataType: $dataItemType, $ex');
     }

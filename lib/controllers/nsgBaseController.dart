@@ -271,9 +271,20 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     // Пока убрал генерацию ошибки, чтобы старый код корректно работал
     // assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
     //     'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
+    final previousStatus = currentStatus;
     currentStatus = GetStatus.loading();
     sendNotify(keys: keys);
-    await requestItems(keys: keys, filter: filter);
+    final request = requestItems(keys: keys, filter: filter);
+    final generation = _lastRequestId;
+    try {
+      await request;
+    } on NsgOperationCancelled {
+      if (_lastRequestId == generation) {
+        currentStatus = previousStatus;
+        sendNotify(keys: keys);
+      }
+      rethrow;
+    }
   }
 
   ///Идентификатор последнего запроса данных для того, чтобы можно было игнорировать старые данные после отправки нового запроса
@@ -281,6 +292,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Запрос данных
   Future _requestItems({NsgDataRequestParams? filter}) async {
+    final previousStatus = currentStatus;
+    final previousRequestId = _lastRequestId;
+    String? currentRequestId;
     try {
       if (masterController != null && selectedMasterRequired && masterController!.selectedItem == null) {
         if (dataItemList.isNotEmpty) {
@@ -294,7 +308,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         currentStatus = GetStatus.success(emptyData);
       } else {
         //Создаем идентификатор запроса
-        var currentRequestId = Guid.newGuid();
+        currentRequestId = Guid.newGuid();
         _lastRequestId = currentRequestId;
         newItemsList = await doRequestItems(filter: filter);
         //Проверяе, не изменился ли идентификатор запроса пока мы ждали данные. То есть, не был ли отправлено новый запрос
@@ -324,6 +338,9 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       // 20.06.2022 Зачем посылать refresh, если он будет отправлен позже в requestItems
       // sendNotify();
     } on NsgExceptionDataObsolete {
+      rethrow;
+    } on NsgOperationCancelled {
+      if (_lastRequestId == (currentRequestId ?? previousRequestId)) currentStatus = previousStatus;
       rethrow;
     } on Exception catch (e) {
       _updateStatusError(e);

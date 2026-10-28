@@ -739,7 +739,7 @@ class NsgDataProvider {
       );
       return NsgApiException(NsgApiError(code: 0, message: '$e'));
     } finally {
-      dio.close(force: true);
+      if (effectiveCancelToken != null) dio.close(force: true);
     }
   }
 
@@ -776,7 +776,9 @@ class NsgDataProvider {
           attemptBudget: startupAuth ? effectiveTimeout : null,
           method: method,
         ),
-        retryIf: (e) async {
+        retryIf: NsgCancelToken.current == null
+          ? (startupAuth ? (e) async => shouldRetryAuthConnect(e) && (retryIf == null || await retryIf(e)) : retryIf)
+          : (e) async {
           if (e is NsgOperationCancelled) return false;
           return startupAuth
               ? shouldRetryAuthConnect(e) && (retryIf == null || await retryIf(e))
@@ -889,7 +891,7 @@ class NsgDataProvider {
     } finally {
       finished = true;
       deadline?.cancel();
-      dio.close(force: true);
+      if (attemptBudget != null || scopeToken != null) dio.close(force: true);
     }
   }
 
