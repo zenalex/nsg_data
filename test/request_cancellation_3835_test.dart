@@ -92,6 +92,30 @@ class _ControlledController extends NsgDataController<_Row> {
   }
 }
 
+class _CancelledCardController extends NsgDataController<_Row> {
+  _CancelledCardController() : super(requestOnInit: false);
+  @override
+  Future<NsgDataItem> doCreateNewItem() async =>
+      throw const NsgOperationCancelled();
+  @override
+  Future<NsgDataItem> refreshItem(
+    NsgDataItem item,
+    List<String>? referenceList, {
+    bool changeStatus = false,
+  }) async => throw const NsgOperationCancelled();
+}
+
+class _DelayedCancellingController extends _CancellingController {
+  @override
+  Future requestItems({
+    List<NsgUpdateKey>? keys,
+    NsgDataRequestParams? filter,
+  }) async {
+    await Future<void>.delayed(Duration.zero);
+    return super.requestItems(keys: keys, filter: filter);
+  }
+}
+
 class _HydratingRequest extends NsgDataRequest<_Row> {
   final started = Completer<void>();
   final gate = Completer<void>();
@@ -111,6 +135,39 @@ class _HydratingRequest extends NsgDataRequest<_Row> {
 }
 
 void main() {
+  for (final action in ['create', 'refresh', 'copy', 'delayed list']) {
+    test(
+      'REVIEW $action cancellation restores status and propagates',
+      () async {
+        NsgDataClient.client.registerDataItem(
+          _Row(),
+          remoteProvider: _Provider(),
+        );
+        final controller = action == 'delayed list'
+            ? _DelayedCancellingController()
+            : _CancelledCardController();
+        final previous = GetStatus.success(NsgBaseController.emptyData);
+        controller.currentStatus = previous;
+        final row = _Row()..id = 'card-3835';
+        final Future result;
+        switch (action) {
+          case 'create':
+            result = controller.createAndSetSelectedItem();
+          case 'refresh':
+            result = controller.setAndRefreshSelectedItem(row, []);
+          case 'copy':
+            result = controller.copyAndSetItem(
+              row,
+              needRefreshSelectedItem: true,
+            );
+          default:
+            result = controller.refreshData();
+        }
+        await expectLater(result, throwsA(isA<NsgOperationCancelled>()));
+        expect(controller.currentStatus, same(previous));
+      },
+    );
+  }
   test(
     'REVIEW cancelled older controller request cannot restore over newer data',
     () async {

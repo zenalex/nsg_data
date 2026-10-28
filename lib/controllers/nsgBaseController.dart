@@ -272,14 +272,14 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
     // assert((this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
     //     'Использован неправильный контроллер для данного типа данных. $runtimeType != $dataType');
     final previousStatus = currentStatus;
+    final generation = ++_refreshStatusGeneration;
     currentStatus = GetStatus.loading();
     sendNotify(keys: keys);
     final request = requestItems(keys: keys, filter: filter);
-    final generation = _lastRequestId;
     try {
       await request;
     } on NsgOperationCancelled {
-      if (_lastRequestId == generation) {
+      if (_refreshStatusGeneration == generation && currentStatus.isLoading) {
         currentStatus = previousStatus;
         sendNotify(keys: keys);
       }
@@ -289,6 +289,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
 
   ///Идентификатор последнего запроса данных для того, чтобы можно было игнорировать старые данные после отправки нового запроса
   String _lastRequestId = '';
+  int _refreshStatusGeneration = 0;
 
   ///Запрос данных
   Future _requestItems({NsgDataRequestParams? filter}) async {
@@ -646,6 +647,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///Создает новый элемент БД и устанавливает его в текущее selectedItem (currentItem)
   ///На время чтерния статус контроллера будет loading
   Future createAndSetSelectedItem() async {
+    final previousStatus = currentStatus;
     currentStatus = GetStatus.loading();
     sendNotify();
     itemsRequested.broadcast();
@@ -666,6 +668,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
         controller.sendNotify();
         controller.selectedItemChanged.broadcast(null);
       }
+    } on NsgOperationCancelled {
+      currentStatus = previousStatus;
+      sendNotify();
+      rethrow;
     } on Exception catch (e) {
       _updateStatusError(e);
     }
@@ -926,6 +932,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future setAndRefreshSelectedItem(NsgDataItem item, List<String>? referenceList) async {
+    final previousStatus = currentStatus;
     assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     final itemId = item.id;
     if (!identical(_selectedRefreshOwner, item) || _selectedRefreshOwnerId != itemId) {
@@ -987,6 +994,12 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       selectedItemChanged.broadcast(null);
+    } on NsgOperationCancelled {
+      if (ownsSelection()) {
+        currentStatus = previousStatus;
+        sendNotify();
+      }
+      rethrow;
     } on Exception catch (e) {
       if (ownsSelection()) {
         _updateStatusError(e);
@@ -1004,6 +1017,7 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
   ///referenceList - ссылки для дочитывания. Если передан null - будут дочитаны все
   ///Одно из применений, перечитывание объекта с целью чтения его табличных частей при переходе из формы списка в форму элемента
   Future copyAndSetItem(NsgDataItem item, {bool needRefreshSelectedItem = false, List<String>? referenceList}) async {
+    final previousStatus = currentStatus;
     assert(item.isNotEmpty, 'Попытка перечитать с сервера объект с пустым guid (например, новый)');
     assert(
       (this is! NsgDataItemController || (this as NsgDataItemController).widgetId != null),
@@ -1028,6 +1042,10 @@ class NsgBaseController extends GetxController with StateMixin<NsgBaseController
       currentStatus = GetStatus.success(NsgBaseController.emptyData);
       sendNotify();
       selectedItemChanged.broadcast(null);
+    } on NsgOperationCancelled {
+      currentStatus = previousStatus;
+      sendNotify();
+      rethrow;
     } on Exception catch (e) {
       _updateStatusError(e);
     }

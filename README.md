@@ -151,6 +151,11 @@ implicit cancellation of overlapping reads. A manually assigned
 setting an error status; `refreshData` restores the previous status unless a
 newer request has already started.
 
+Card creation, refresh and copy also restore the preceding controller status
+and rethrow `NsgOperationCancelled`, so a progress wrapper cannot report
+cancellation as success. Refresh ownership is captured before calling an
+overridden `requestItems`, including overrides that await before `super`.
+
 `NsgSimpleRequest` retains its existing per-attempt internal token when no
 caller token exists. A superseded overlapping call now terminates as
 `NsgOperationCancelled` without retry, rather than the former

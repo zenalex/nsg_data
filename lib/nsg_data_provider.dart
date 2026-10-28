@@ -739,7 +739,7 @@ class NsgDataProvider {
       );
       return NsgApiException(NsgApiError(code: 0, message: '$e'));
     } finally {
-      if (effectiveCancelToken != null) dio.close(force: true);
+      if (effectiveCancelToken?.isCancelled ?? false) dio.close(force: true);
     }
   }
 
