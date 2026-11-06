@@ -42,6 +42,18 @@ String? nsgExtractServerMessage(dynamic data) {
   return null;
 }
 
+/// Текст 400/500 для пользователя.
+/// HTML/XML (строка с «<») не показываем: остаётся [fallback], как при пустом теле.
+/// Длиннее 300 символов обрезаем. 403 этот хелпер не вызывает.
+String nsgClientServerMessage(dynamic data, {required String fallback, bool splitTrace = false}) {
+  final extracted = nsgExtractServerMessage(data);
+  if (extracted == null) return fallback;
+  final text = splitTrace ? extracted.split('---> ').last : extracted;
+  if (text.trimLeft().startsWith('<')) return fallback;
+  if (text.length > 300) return text.substring(0, 300);
+  return text;
+}
+
 class NsgDataProvider {
   ///Версия протокола nsg_data. Передаётся серверу в заголовке X-Nsg-Protocol-Version.
   ///Сервер без поддержки трактует отсутствие заголовка как version=0 (legacy).
@@ -577,9 +589,14 @@ class NsgDataProvider {
         debugPrint('statusCode: ${e.response?.statusCode}');
       }
       if (e.response?.statusCode == 400) {
-        //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
+        //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено.
+        // Тело бывает строкой (прокси, HTML), не только JSON-объектом: data['message'] тогда падает.
         throw NsgApiException(
-          NsgApiError(code: 400, message: e.response == null ? 'Error with Empty server response' : e.response!.data['message'], errorType: e.type),
+          NsgApiError(
+            code: 400,
+            message: nsgClientServerMessage(e.response?.data, fallback: 'Error with Empty server response'),
+            errorType: e.type,
+          ),
         );
       }
       if (e.response?.statusCode == 401) {
@@ -628,15 +645,14 @@ class NsgDataProvider {
         );
       }
       if (e.response?.statusCode == 500) {
-        var msg = 'ERROR 500';
-        if (e.response!.data is Map && (e.response!.data as Map).containsKey('message')) {
-          var msgParts = e.response!.data['message'].split('---> ');
-          //TODO_FUTURE: в нулевом параметре функция, вызвавшая ишибку - надо где-то показывать
-          msg = msgParts.last;
-        }
+        // Строковое тело не индексируем. Хвост после '---> ' сохраняется.
+        // HTML и текст длиннее 300 символов пользователю не отдаём.
+        // Маркер прав ищем в полном хвосте, до замены HTML и обрезки.
+        final raw500 = (nsgExtractServerMessage(e.response?.data) ?? 'ERROR 500').split('---> ').last;
+        final msg = nsgClientServerMessage(e.response?.data, fallback: 'ERROR 500', splitTrace: true);
         // Backward compat: пока сервер не перешёл на 403, ловим по тексту.
         // Через 1-2 релиза после серверного fix этот блок можно убрать.
-        final msgLower = msg.toLowerCase();
+        final msgLower = raw500.toLowerCase();
         if (msgLower.contains('не хватает прав') || msgLower.contains('not enough rights') || msgLower.contains('insufficient permissions')) {
           throw NsgApiPermissionException(
             error: NsgApiError(code: 500, message: msg, errorType: e.type),
