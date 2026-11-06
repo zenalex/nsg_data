@@ -577,9 +577,14 @@ class NsgDataProvider {
         debugPrint('statusCode: ${e.response?.statusCode}');
       }
       if (e.response?.statusCode == 400) {
-        //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено
+        //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено.
+        // Тело бывает строкой (прокси, HTML), не только JSON-объектом: data['message'] тогда падает.
         throw NsgApiException(
-          NsgApiError(code: 400, message: e.response == null ? 'Error with Empty server response' : e.response!.data['message'], errorType: e.type),
+          NsgApiError(
+            code: 400,
+            message: nsgExtractServerMessage(e.response?.data) ?? 'Error with Empty server response',
+            errorType: e.type,
+          ),
         );
       }
       if (e.response?.statusCode == 401) {
@@ -628,12 +633,8 @@ class NsgDataProvider {
         );
       }
       if (e.response?.statusCode == 500) {
-        var msg = 'ERROR 500';
-        if (e.response!.data is Map && (e.response!.data as Map).containsKey('message')) {
-          var msgParts = e.response!.data['message'].split('---> ');
-          //TODO_FUTURE: в нулевом параметре функция, вызвавшая ишибку - надо где-то показывать
-          msg = msgParts.last;
-        }
+        // Строковое тело не индексируем. У объектного message по-прежнему берём хвост после '---> '.
+        var msg = (nsgExtractServerMessage(e.response?.data) ?? 'ERROR 500').split('---> ').last;
         // Backward compat: пока сервер не перешёл на 403, ловим по тексту.
         // Через 1-2 релиза после серверного fix этот блок можно убрать.
         final msgLower = msg.toLowerCase();
