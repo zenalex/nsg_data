@@ -81,4 +81,95 @@ void main() {
       ),
     );
   });
+
+  test('400 html body stays the empty-response text', () async {
+    final server = await serve((request) {
+      request.response
+        ..statusCode = 400
+        ..headers.contentType = ContentType.html
+        ..write('<html><body>upstream</body></html>');
+    });
+    final provider = providerFor(server);
+
+    await expectLater(
+      provider.baseRequestList(url: '${provider.serverUri}/Api/PlayerItem', method: 'POST'),
+      throwsA(
+        isA<NsgApiException>()
+            .having((error) => error.error.code, 'code', 400)
+            .having((error) => error.error.message, 'message', 'Error with Empty server response'),
+      ),
+    );
+  });
+
+  test('500 html body stays ERROR 500', () async {
+    final server = await serve((request) {
+      request.response
+        ..statusCode = 500
+        ..headers.contentType = ContentType.html
+        ..write('\n<html>boom</html>');
+    });
+    final provider = providerFor(server);
+
+    await expectLater(
+      provider.baseRequestList(url: '${provider.serverUri}/Api/PlayerItem', method: 'POST'),
+      throwsA(
+        isA<NsgApiException>()
+            .having((error) => error.error.code, 'code', 500)
+            .having((error) => error.error.message, 'message', 'ERROR 500'),
+      ),
+    );
+  });
+
+  test('400 long text is cut to 300 characters', () async {
+    final body = 'A' * 420;
+    final server = await serve((request) {
+      request.response
+        ..statusCode = 400
+        ..headers.contentType = ContentType.text
+        ..write(body);
+    });
+    final provider = providerFor(server);
+
+    await expectLater(
+      provider.baseRequestList(url: '${provider.serverUri}/Api/PlayerItem', method: 'POST'),
+      throwsA(
+        isA<NsgApiException>().having((error) => error.error.message, 'message', 'A' * 300),
+      ),
+    );
+  });
+
+  test('500 long tail is cut after the separator', () async {
+    final server = await serve((request) {
+      request.response
+        ..statusCode = 500
+        ..headers.contentType = ContentType.text
+        ..write('Caller ---> ${'B' * 420}');
+    });
+    final provider = providerFor(server);
+
+    await expectLater(
+      provider.baseRequestList(url: '${provider.serverUri}/Api/PlayerItem', method: 'POST'),
+      throwsA(
+        isA<NsgApiException>().having((error) => error.error.message, 'message', 'B' * 300),
+      ),
+    );
+  });
+
+  test('403 html body is not replaced or cut', () async {
+    final body = '<html>${'C' * 400}</html>';
+    final server = await serve((request) {
+      request.response
+        ..statusCode = 403
+        ..headers.contentType = ContentType.html
+        ..write(body);
+    });
+    final provider = providerFor(server);
+
+    await expectLater(
+      provider.baseRequestList(url: '${provider.serverUri}/Api/PlayerItem', method: 'POST'),
+      throwsA(
+        isA<NsgApiPermissionException>().having((error) => error.friendlyMessage, 'friendlyMessage', body),
+      ),
+    );
+  });
 }
