@@ -189,6 +189,21 @@ class NsgLocalDb {
     }
   }
 
+  /// Бокс строк табличной части. Строки пишутся в бокс по `typeName` строки
+  /// (`postItems` -> `getTable(firstItem.typeName)`), под этим же именем тип
+  /// зарегистрирован в коллекции. `referentElementType.toString()` для этого не
+  /// годится: в веб-сборке это минифицированное имя (`minified:a8y`), его нет в
+  /// `boxNames`, и чтение/правка документа с табличной частью падали на каждом
+  /// вызове (futbolista-tasks#4573, GlitchTip 5046).
+  static String rowTableName(NsgDataReferenceListField field) {
+    try {
+      return NsgDataClient.client.getNewObject(field.referentElementType).typeName;
+    } catch (_) {
+      // Тип строки не зарегистрирован — прежнее поведение.
+      return field.referentElementType.toString();
+    }
+  }
+
   Future<CollectionBox<Map>> getTable(String tableName) async {
     var box = tables[tableName];
     if (box != null) {
@@ -304,7 +319,7 @@ class NsgLocalDb {
       final ids = placeholders.whereType<NsgDataItem>().map((row) => row.id).where((id) => id.isNotEmpty).toList();
       if (ids.isEmpty) continue;
 
-      final rowBox = await getTable(field.referentElementType.toString());
+      final rowBox = await getTable(rowTableName(field));
       final storedRows = await rowBox.getAll(ids);
       final rowMaps = <Map<String, dynamic>>[];
       for (final storedRow in storedRows) {
@@ -383,7 +398,7 @@ class NsgLocalDb {
                 oldRowsId.remove(e);
               }
               if (oldRowsId.isNotEmpty) {
-                var tableBox = await getTable((item.getField(name) as NsgDataReferenceListField).referentElementType.toString());
+                var tableBox = await getTable(rowTableName(item.getField(name) as NsgDataReferenceListField));
                 tableBox.deleteAll(oldRowsId);
               }
             }
