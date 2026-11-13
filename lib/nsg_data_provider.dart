@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
@@ -45,6 +47,77 @@ String? nsgExtractServerMessage(dynamic data) {
 /// Текст 400/500 для пользователя.
 /// HTML/XML (строка с «<») не показываем: остаётся [fallback], как при пустом теле.
 /// Длиннее 300 символов обрезаем. 403 этот хелпер не вызывает.
+/// Таймаут для человека. Английский хвост оставляем: приложение глушит по нему
+/// шум в GlitchTip (`Timeout while receiving or sending data`).
+const String nsgTimeoutUserMessage = 'нет связи. Timeout while receiving or sending data';
+
+/// 403 без читаемого тела.
+const String nsgNoRightsUserMessage = 'Нет прав изменять этого игрока';
+
+bool nsgDioTimedOut(DioException e) =>
+    e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout || e.type == DioExceptionType.connectionTimeout;
+
+/// Текст отказа. «Internet connection error» — только когда ответа не было.
+String nsgUserMessageForStatus(DioException e) {
+  final server = nsgExtractServerMessage(e.response?.data);
+  if (server != null) return server;
+  final status = e.response?.statusCode;
+  if (status == 403) return nsgNoRightsUserMessage;
+  if (status != null) return 'Отказ сервера ($status)';
+  final underlying = e.error?.toString();
+  if (underlying != null && underlying.trim().isNotEmpty) return underlying;
+  return 'Internet connection error';
+}
+
+dynamic _decodeJsonString(String source) => jsonDecode(source);
+
+/// JSON-тело, которое не разбирается, не должно ронять весь ответ.
+///
+/// Dio при `responseType: json` декодирует тело ДО проверки статуса. FormatException
+/// вылетает без `response`, и 403 превращается в код 1 («ERROR 1»). Сырой текст
+/// сохраняем, статус остаётся на ответе (NSG-SOFT/futbolista-tasks#4370).
+class _StatusPreservingTransformer extends Transformer {
+  @override
+  Future<String> transformRequest(RequestOptions options) async {
+    return Transformer.defaultTransformRequest(options, jsonEncode);
+  }
+
+  @override
+  Future<dynamic> transformResponse(RequestOptions options, ResponseBody responseBody) async {
+    if (options.responseType == ResponseType.stream) return responseBody;
+    final builder = BytesBuilder(copy: false);
+    await for (final chunk in responseBody.stream) {
+      builder.add(chunk);
+    }
+    final bytes = builder.takeBytes();
+    if (options.responseType == ResponseType.bytes) return bytes;
+    if (bytes.isEmpty) return null;
+    final text = utf8.decode(bytes, allowMalformed: true);
+    final mime = responseBody.headers[Headers.contentTypeHeader]?.first;
+    final decodeJson = options.responseType == ResponseType.json && Transformer.isJsonMimeType(mime);
+    if (!decodeJson) return text;
+    try {
+      if (bytes.length >= 50 * 1024) {
+        try {
+          return await compute(_decodeJsonString, text);
+        } catch (e) {
+          if (e is FormatException) return text;
+          return jsonDecode(text);
+        }
+      }
+      return jsonDecode(text);
+    } on FormatException {
+      return text;
+    }
+  }
+}
+
+Dio _newDio(BaseOptions options) {
+  final dio = Dio(options);
+  dio.transformer = _StatusPreservingTransformer();
+  return dio;
+}
+
 String nsgClientServerMessage(dynamic data, {required String fallback, bool splitTrace = false}) {
   final extracted = nsgExtractServerMessage(data);
   if (extracted == null) return fallback;
@@ -538,7 +611,7 @@ class NsgDataProvider {
   }) async {
     final effectiveCancelToken = cancelToken ?? NsgCancelToken.current;
     effectiveCancelToken?.throwIfCancelled();
-    final dio = Dio(
+    final dio = _newDio(
       BaseOptions(
         headers: headers,
         method: method,
@@ -638,7 +711,7 @@ class NsgDataProvider {
         // дампом Map ({message: ..., code: ...}) прямо в friendlyMessage,
         // который показывается в snackbar/диалоге. Достаём message тем же
         // хелпером, что и остальные ветки.
-        final body = nsgExtractServerMessage(e.response?.data) ?? 'Permission denied';
+        final body = nsgExtractServerMessage(e.response?.data) ?? nsgNoRightsUserMessage;
         throw NsgApiPermissionException(
           error: NsgApiError(code: 403, message: body, errorType: e.type),
           friendlyMessage: body,
@@ -660,8 +733,8 @@ class NsgDataProvider {
           );
         }
         throw NsgApiException(NsgApiError(code: 500, message: msg, errorType: e.type));
-      } else if (e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
-        throw NsgApiException(NsgApiError(code: 2, message: 'Timeout while receiving or sending data', errorType: e.type));
+      } else if (nsgDioTimedOut(e)) {
+        throw NsgApiException(NsgApiError(code: 2, message: nsgTimeoutUserMessage, errorType: e.type));
       } else {
         debugPrint('###');
         debugPrint('### Error: ${e.error}, type: ${e.type}');
@@ -672,7 +745,7 @@ class NsgDataProvider {
             // status so callers can distinguish throttling/business responses
             // from a real connection failure.
             code: e.response?.statusCode ?? 1,
-            message: nsgExtractServerMessage(e.response?.data) ?? e.error?.toString() ?? 'Internet connection error',
+            message: nsgUserMessageForStatus(e),
             errorType: e.type,
           ),
         );
@@ -758,7 +831,7 @@ class NsgDataProvider {
   }) async {
     final scopeToken = NsgCancelToken.current;
     scopeToken?.throwIfCancelled();
-    final dio = Dio(
+    final dio = _newDio(
       BaseOptions(
         headers: headers,
         method: method,
@@ -819,11 +892,14 @@ class NsgDataProvider {
           : e;
       NsgRequestOutcome.notifyDio(failure, url: url, function: function);
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
+      if (nsgDioTimedOut(failure)) {
+        throw NsgApiException(NsgApiError(code: 2, message: nsgTimeoutUserMessage, errorType: failure.type));
+      }
       throw NsgApiException(
         NsgApiError(
           code: e.response?.statusCode,
           // Сначала — то, что сказал сервер; 'нет интернета' только если он молчит.
-          message: nsgExtractServerMessage(e.response?.data) ?? e.error?.toString() ?? 'Internet connection error',
+          message: nsgUserMessageForStatus(e),
           errorType: deadlineExpired ? DioExceptionType.receiveTimeout : e.type,
         ),
       );
@@ -852,7 +928,7 @@ class NsgDataProvider {
     final bool debug = false,
     final String method = 'GET',
   }) async {
-    final dio = Dio(
+    final dio = _newDio(
       BaseOptions(
         headers: headers,
         method: method,
@@ -890,10 +966,13 @@ class NsgDataProvider {
     } on DioException catch (e) {
       NsgRequestOutcome.notifyDio(e, url: url, function: function);
       debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
+      if (nsgDioTimedOut(e)) {
+        throw NsgApiException(NsgApiError(code: 2, message: nsgTimeoutUserMessage, errorType: e.type));
+      }
       throw NsgApiException(
         NsgApiError(
           code: e.response?.statusCode ?? 1,
-          message: nsgExtractServerMessage(e.response?.data) ?? e.error?.toString() ?? 'Internet connection error',
+          message: nsgUserMessageForStatus(e),
           errorType: e.type,
         ),
       );
