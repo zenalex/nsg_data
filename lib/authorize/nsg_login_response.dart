@@ -15,10 +15,22 @@ class NsgLoginResponse {
       token = rawToken == null ? '' : rawToken.toString();
       isError = (json['isError'] ?? false) as bool;
       errorMessage = (json['errorMessage'] ?? '').toString();
-      errorCode = (json['errorCode'] ?? 0) as int;
+      errorCode = _jsonInt(json['errorCode']);
       isAnonymous = (json['isAnonymous'] ?? false) as bool;
-      secondsRemaining = (json['secondsRemaining'] ?? 0.0) as double;
-      secondsBeforeRepeat = (json['secondsBeforeRepeat'] ?? 0.0) as double;
+      secondsRemaining = _jsonDouble(json['secondsRemaining']);
+      secondsBeforeRepeat = _jsonDouble(json['secondsBeforeRepeat']);
     }
   }
+}
+
+/// JSON numbers arrive as int or double. `as int` / `as double` throws on the other.
+int _jsonInt(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return 0;
+}
+
+double _jsonDouble(Object? value) {
+  if (value is num) return value.toDouble();
+  return 0;
 }
