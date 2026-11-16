@@ -54,8 +54,9 @@ class NsgSimpleRequest<T extends Object> {
 
   FutureOr<bool> _retryIfInternal(Exception ex) async {
     if (ex is NsgOperationCancelled || (cancelToken?.isCancelled ?? false)) return false;
-    //400 - код ошибки сервера, не предполагающий повторного запроса данных
-    if (ex is NsgApiException && (ex.error.code == 400 || ex.error.code == 401 || ex.error.code == 500)) {
+    // 4xx (кроме 408/409/429) и 500 повтором не лечатся. Иначе отказ сервера
+    // затирается обрывом следующей попытки (NSG-SOFT/futbolista-tasks#4370).
+    if (ex is NsgApiException && ex.isTerminalHttpError) {
       return false;
     }
     if (_retryIf != null) return (await _retryIf!(ex));

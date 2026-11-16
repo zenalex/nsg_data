@@ -51,16 +51,32 @@ class NsgApiException implements Exception {
   /// и показать соответствующее сообщение в UI.
   ///
   /// code == 1: connection error (SocketException, Connection reset by peer, …)
-  /// code == 2: timeout (receiveTimeout / sendTimeout из DioExceptionType)
+  /// code == 2: timeout (receiveTimeout / sendTimeout / connectionTimeout)
+  ///
+  /// HTTP-статус (400 и выше) — это ответ сервера, даже если обёртка Dio
+  /// помечена connectionError. Иначе 403 по правам выглядит как «нет связи»
+  /// (NSG-SOFT/futbolista-tasks#4370).
   ///
   /// См. NSG-SOFT/futbolista-tasks#407.
   bool get isNetworkError {
-    if (error.code == 1 || error.code == 2) return true;
+    final code = error.code;
+    if (code != null && code >= 100) return false;
+    if (code == 1 || code == 2) return true;
     final t = error.errorType;
     return t == DioExceptionType.connectionError ||
         t == DioExceptionType.connectionTimeout ||
         t == DioExceptionType.receiveTimeout ||
         t == DioExceptionType.sendTimeout;
+  }
+
+  /// Повтор запроса не изменит ответ. 408, 409 и 429 остаются повторяемыми:
+  /// таймаут шлюза, edit-lock (`retryAfterMs`) и лимит.
+  bool get isTerminalHttpError {
+    final code = error.code;
+    if (code == null || code < 400) return false;
+    if (code == 408 || code == 409 || code == 429) return false;
+    if (code >= 400 && code < 500) return true;
+    return code == 500;
   }
 
   @override
