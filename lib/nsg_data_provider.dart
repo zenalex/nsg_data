@@ -747,6 +747,12 @@ class NsgDataProvider {
     }
   }
 
+  /// Путь для отладочной строки. Query, fragment и user-info в лог не входят.
+  static String _logRequestPath(String? url) {
+    if (url == null || url.isEmpty) return '';
+    return Uri.tryParse(url)?.path ?? '';
+  }
+
   Future<Map<String, dynamic>?> _baseRequest({
     final String? function,
     final Map<String, dynamic>? params,
@@ -794,7 +800,11 @@ class NsgDataProvider {
 
     try {
       applyCertificatePolicy(dio);
-      debugPrint('BASE REQUEST: $url, url: $url!, params: $params');
+      // function и путь, и только в debug. Query, params и тела не печатаем:
+      // в них пароль, код входа и newPassword, а debugPrint жив и в релизе.
+      if (kDebugMode) {
+        debugPrint('BASE REQUEST: function=$function path=${_logRequestPath(url)}');
+      }
       if (method == 'GET') {
         response = await dio.get(url!, queryParameters: params, cancelToken: cancelToken);
       } else if (method == 'POST') {
@@ -818,7 +828,7 @@ class NsgDataProvider {
             )
           : e;
       NsgRequestOutcome.notifyDio(failure, url: url, function: function);
-      debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
+      debugPrint('dio error. function: $function, type: ${e.type}, status: ${e.response?.statusCode}');
       throw NsgApiException(
         NsgApiError(
           code: e.response?.statusCode,
@@ -830,7 +840,7 @@ class NsgDataProvider {
     } catch (e) {
       if (e is NsgOperationCancelled) rethrow;
       NsgRequestOutcome.notify(url: url, function: function, error: e);
-      debugPrint('network error. function: $function, error: $e');
+      debugPrint('network error. function: $function, type: ${e.runtimeType}');
       throw NsgApiException(NsgApiError(code: 0, message: '$e'));
     } finally {
       finished = true;
@@ -1207,10 +1217,10 @@ class NsgDataProvider {
       // `code == null` бывает у сетевых ошибок Dio: сервер не ответил, значит
       // серверного кода нет. Ставим 0 — «код неизвестен», а не 500, потому что
       // 500 означает «сервер ответил ошибкой», и это ложь.
-      debugPrint('requestSocialMethod error: code=${e.error.code} type=${e.error.errorType} ${e.error.message}');
+      debugPrint('requestSocialMethod error: code=${e.error.code} type=${e.error.errorType}');
       return NsgLoginResponse(isError: true, errorCode: e.error.code ?? 0, errorMessage: e.error.message ?? '');
     } catch (e) {
-      debugPrint('requestSocialMethod error: $e');
+      debugPrint('requestSocialMethod error: type=${e.runtimeType}');
       return NsgLoginResponse(isError: true, errorCode: 0, errorMessage: e.toString());
     }
   }
