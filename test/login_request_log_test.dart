@@ -127,4 +127,43 @@ void main() {
       expect(text, contains('status: 403'));
     },
   );
+
+  test('baseRequestList при обрыве не печатает query', () async {
+    final drop = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(() => drop.close(force: true));
+    drop.listen((HttpRequest request) {
+      request.response.detachSocket().then((socket) => socket.destroy());
+    });
+
+    final url = 'http://127.0.0.1:${drop.port}';
+    final dropProvider = NsgDataProvider(
+      applicationName: 'test_app',
+      applicationVersion: '1.0.0',
+      firebaseToken: '',
+      availableServers: NsgServerParams({url: 'main'}, url),
+    );
+    dropProvider.serverUri = url;
+    dropProvider.connectDuration = 2000;
+    dropProvider.requestDuration = 2000;
+
+    logs.clear();
+    Object? thrown;
+    try {
+      await dropProvider.baseRequestList(
+        function: 'PlayerItem',
+        url: '$url/Api/PlayerItem',
+        params: <String, dynamic>{'access': querySecret},
+        method: 'GET',
+      );
+    } catch (e) {
+      thrown = e;
+    }
+
+    expect(thrown, isA<NsgApiException>());
+    final text = logs.join('\n');
+    expect(text, isNot(contains(querySecret)), reason: text);
+    expect(text, contains('type:'));
+    expect(text, isNot(contains('uri =')));
+    expect(text, isNot(contains('/Api/PlayerItem?')));
+  });
 }

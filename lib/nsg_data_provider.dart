@@ -584,10 +584,9 @@ class NsgDataProvider {
         throw const NsgOperationCancelled();
       }
       NsgRequestOutcome.notifyDio(e, url: url, function: function);
-      debugPrint('dio error. function: $function, error: ${e.error ?? ''}');
-      if (e.response != null) {
-        debugPrint('statusCode: ${e.response?.statusCode}');
-      }
+      // Тип и статус, как в _baseRequest. Текст e.error — это HttpException
+      // с полным uri, а в query этого метода лежат params. debugPrint жив в релизе.
+      debugPrint('dio error. function: $function, type: ${e.type}, status: ${e.response?.statusCode}');
       if (e.response?.statusCode == 400) {
         //400 - Сервер отказался предоставлять данные. Повторять запрос бессмыслено.
         // Тело бывает строкой (прокси, HTML), не только JSON-объектом: data['message'] тогда падает.
@@ -663,9 +662,6 @@ class NsgDataProvider {
       } else if (e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
         throw NsgApiException(NsgApiError(code: 2, message: 'Timeout while receiving or sending data', errorType: e.type));
       } else {
-        debugPrint('###');
-        debugPrint('### Error: ${e.error}, type: ${e.type}');
-        debugPrint('###');
         throw NsgApiException(
           NsgApiError(
             // A response means the transport worked: preserve the server's HTTP
@@ -680,10 +676,7 @@ class NsgDataProvider {
     } catch (e) {
       if (e is NsgOperationCancelled) rethrow;
       NsgRequestOutcome.notify(url: url, function: function, error: e);
-      debugPrint(
-        'network error. function: $function, error: $function + '
-        ' + $e',
-      );
+      debugPrint('network error. function: $function, type: ${e.runtimeType}');
       return NsgApiException(NsgApiError(code: 0, message: '$e'));
     } finally {
       if (effectiveCancelToken?.isCancelled ?? false) dio.close(force: true);
